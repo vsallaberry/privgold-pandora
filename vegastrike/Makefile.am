@@ -22,7 +22,7 @@ BOOSTSOURCES = \
 	boost/1_28/src/converter/callback.cpp \
 	boost/1_28/src/classes.cpp \
 	boost/1_28/src/conversions.cpp
-else 
+else
 if BOOST1_35
 BOOSTSOURCES_CXXFLAGS = -DBOOST_PYTHON_NO_PY_SIGNATURES -DBOOST_PYTHON_STATIC_LIB
 BOOSTSOURCES = \
@@ -52,11 +52,11 @@ BOOSTSOURCES = \
   boost/1_35/src/converter/arg_to_python_base.cpp \
   boost/1_35/src/converter/builtin_converters.cpp \
   boost/1_35/src/converter/type_id.cpp \
-  boost/1_35/src/tuple.cpp 
-else 
+  boost/1_35/src/tuple.cpp
+else
 BOOSTSOURCES=
 endif
-endif 
+endif
 
 #This was in the acct server and networking library stuff
 #if MACOSX
@@ -65,7 +65,7 @@ endif
 #	 -I/System/Library/Frameworks/Carbon.framework/Versions/A/Headers
 #endif
 
-endif 
+endif
 
 PRECOMPILED = src/precompiled.h
 
@@ -391,7 +391,7 @@ libcollide2= \
   src/cmd/collide2/OPC_VolumeCollider.cpp \
   src/cmd/collide2/OPC_VolumeCollider.h \
   src/cmd/collide2/CSopcodecollider.cpp \
-  src/cmd/collide2/CSopcodecollider.h 
+  src/cmd/collide2/CSopcodecollider.h
 
 LIBCMD = \
   src/cmd/alphacurve.cpp \
@@ -712,7 +712,7 @@ if BOOSTSYSTEM
     -lboost_python-st
 else
   vegastrike_LDADD = $(vegastrike_LDADD_1)
-endif  
+endif
 
 vegastrike_DEPENDENCIES = $(noinst_LIBRARIES)
 
@@ -723,7 +723,7 @@ if BOOSTSYSTEM
     -lboost_python-st
 else
   vegaserver_LDADD = $(vegaserver_LDADD_1)
-endif  
+endif
 
 vegaserver_DEPENDENCIES = $(noinst_LIBRARIES)
 
@@ -844,7 +844,7 @@ librootserver = \
   src/gfxlib_struct_server.cpp \
   src/libaudioserver.cpp \
   src/libserver.cpp \
-  src/universe_util_server.cpp 
+  src/universe_util_server.cpp
 
 LIBAUDIO = \
   src/audio/CodecRegistry.cpp \
@@ -1030,8 +1030,8 @@ EXTRA_DIST += $(pkgdata_DATA)
 
 
 
-#base_maker_CXXFLAGS += -I../.. -I../../src $(BOOST_CPPFLAGS) -g 
-# ToDo: Fix so -L/usr/... is found in configure  
+#base_maker_CXXFLAGS += -I../.. -I../../src $(BOOST_CPPFLAGS) -g
+# ToDo: Fix so -L/usr/... is found in configure
 #base_maker_LDFLAGS = -lGL -lGLU -lSDL -lglut -ljpeg -lpng \
 #base_maker_LDFLAGS = -lGL -lGLU -lglut -ljpeg -lpng \
 #  -lpthread -L/usr/X11R6/lib -lXi -lXmu
@@ -1152,10 +1152,10 @@ AM_CXXFLAGS = $(PRECOMPILED_FLAGS)
 #src/cmd/script/c_alike/c_alike.tab.cpp: src/cmd/script/c_alike/c_alike.yacc
 
 #src/cmd/script/c_alike/lex.yy.cpp: src/cmd/script/c_alike/c_alike.lex
-#	flex -o src/cmd/script/c_alike/lex.yy.cpp src/cmd/script/c_alike/c_alike.lex 
+#	flex -o src/cmd/script/c_alike/lex.yy.cpp src/cmd/script/c_alike/c_alike.lex
 
 #The following is a way to get around the HUGE number of files that boost contains.
-if !BOOSTSYSTEM 
+if !BOOSTSYSTEM
 dist-hook:
 	$(mkdir_p) $(distdir)/$(BOOSTDIR)
 	for x in `find $(BOOSTDIR) -maxdepth 1 ! -wholename $(BOOSTDIR) -type d -printf '%f\n' |sort -r`; do \
@@ -1166,8 +1166,8 @@ endif
 
 all: boost_patched_gcc44
 
-boost_patched_gcc44: boost_gcc44.patch
-	patch -N -p0 < boost_gcc44.patch || true
+boost_patched_gcc44: $(top_srcdir)/boost_gcc44.patch
+	cd $(top_srcdir) && patch -N -p0 < boost_gcc44.patch || true
 
 %.h.gch: %.h
 	$(CXXCOMPILE) -o $@ $<

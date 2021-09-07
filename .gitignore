@@ -11,6 +11,30 @@
 **/.\#*
 
 **/Makefile.in
-/{vegastrike,engine}*/{configure,SystemInformation.in,INSTALL,aclocal.m4,config.guess,config.sub,depcomp,install-sh,missing}
+/vegastrike*/INSTALL
+/vegastrike*/configure
+/vegastrike*/compile
+/vegastrike*/SystemInformation.in
+/vegastrike*/aclocal.m4
+/vegastrike*/boost_patched_gcc44
+/vegastrike*/autom4te.cache
+/vegastrike*/config.guess
+/vegastrike*/config.sub
+/vegastrike*/depcomp
+/vegastrike*/install-sh
+/vegastrike*/missing
 
+/engine*/INSTALL
+/engine*/INSTALL
+/engine*/configure
+/engine*/compile
+/engine*/SystemInformation.in
+/engine*/aclocal.m4
+/engine*/boost_patched_gcc44
+/engine*/autom4te.cache
+/engine*/config.guess
+/engine*/config.sub
+/engine*/depcomp
+/engine*/install-sh
+/engine*/missing
 
