@@ -13,6 +13,9 @@ if (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
   set(Vorbis_FOUND TRUE)
 else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
   SET(Vorbis_FOUND FALSE)
+
+  string(REGEX REPLACE "([^ ])([ ]|$)" "\\1/include " _TMP_VS_FIND_PREFIX_MORE_PATHS "${VS_FIND_PREFIX_MORE_PATHS}")
+
   find_path(vorbis_INCLUDE_DIR
     NAMES
       vorbisfile.h
@@ -21,10 +24,11 @@ else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
       /usr/local/include
       /opt/local/include
       /sw/include
+      ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
     PATH_SUFFIXES
       vorbis
   )
-  
+
   find_path(ogg_INCLUDE_DIR
   	NAMES
   		ogg.h
@@ -33,11 +37,14 @@ else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
       /usr/local/include
       /opt/local/include
       /sw/include
+      ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
     PATH_SUFFIXES
       ogg
   )
 
- find_library(vorbis_LIBRARY
+  string(REGEX REPLACE "([^ ])([ ]|$)" "\\1/lib " _TMP_VS_FIND_PREFIX_MORE_PATHS "${VS_FIND_PREFIX_MORE_PATHS}")
+
+  find_library(vorbis_LIBRARY
     NAMES
       vorbis
     PATHS
@@ -45,6 +52,7 @@ else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
       /usr/local/lib
       /opt/local/lib
       /sw/lib
+      ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
   )
 
  find_library(vorbisfile_LIBRARY
@@ -55,6 +63,7 @@ else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
       /usr/local/lib
       /opt/local/lib
       /sw/lib
+      ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
   )
 
  find_library(ogg_LIBRARY
@@ -65,11 +74,12 @@ else (Vorbis_LIBRARIES AND Vorbis_INCLUDE_DIRS)
       /usr/local/lib
       /opt/local/lib
       /sw/lib
+      ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
   )
-	
+
   SET(Vorbis_INCLUDE_DIRS ${vorbis_INCLUDE_DIR} ${ogg_INCLUDE_DIR})
   SET(Vorbis_LIBRARIES ${vorbis_LIBRARY} ${vorbisfile_LIBRARY} ${ogg_LIBRARY})
-  
+
   IF(vorbis_LIBRARY AND ogg_LIBRARY AND vorbisfile_LIBRARY)
   	set(Vorbis_FOUND TRUE)
   ENDIF(vorbis_LIBRARY AND ogg_LIBRARY AND vorbisfile_LIBRARY)

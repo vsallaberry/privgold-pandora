@@ -1,5 +1,6 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
+#cmakedefine HAVE_BOOLEAN 1
 #cmakedefine HAVE_WCHAR_H 1
 #cmakedefine HAVE_FLOAT_H  1
 #cmakedefine HAVE_WCTYPE_H 1
@@ -13,6 +14,7 @@
 #cmakedefine HAVE_FINITE 1
 #cmakedefine HAVE__FINITE 1
 #cmakedefine HAVE_GETTIMEOFDAY 1
+#cmakedefine HAVE_INTMAX_T 1
 #cmakedefine HAVE_LSTAT 1
 #cmakedefine HAVE_PYTHON 1
 #cmakedefine _GNU_SOURCE 1
@@ -21,10 +23,17 @@
 #cmakedefine SDL_WINDOWING 1
 #cmakedefine HAVE_AL 1
 #cmakedefine HAVE_FFMPEG 1
+#cmakedefine HAVE_LIBSWSCALE_SWSCALE_H 1
+#cmakedefine HAVE_LIBAVCODEC_AVCODEC_H 1
+#cmakedefine HAVE_LIBAVFORMAT_AVFORMAT_H 1
+#cmakedefine HAVE_LIBAVFORMAT_AVIO_H 1
 #cmakedefine HAVE_TR1_UNORDERED_MAP 1
 #define HAVE_CONFIG_H 1
 #define ${HOSTOS} 1
 #cmakedefine UNIX 1
+#cmakedefine MACOSX 1
+#cmakedefine __APPLE 1
+#cmakedefine WITH_MACOSX_BUNDLE 1
 #cmakedefine USE_NET_THREAD_NONE 1
 #cmakedefine USE_NET_THREAD_POSIX 1
 #endif
