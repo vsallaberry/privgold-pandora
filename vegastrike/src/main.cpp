@@ -1,17 +1,17 @@
-/* 
+/*
  * Vega Strike
  * Copyright (C) 2001-2002 Daniel Horn
- * 
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -21,7 +21,10 @@
 #include <Python.h>
 
 #if defined(HAVE_SDL)
-#include <SDL/SDL.h>
+# include <SDL/SDL.h>
+# if ! defined(SDL_WINDOWING) && defined(__APPLE__)
+#  undef main
+# endif
 #endif
 #include "cmd/role_bitmask.h"
 #if defined(WITH_MACOSX_BUNDLE)
@@ -89,7 +92,7 @@ int nadanixnuthin() {
   return 0;
 }
 /*
- * Globals 
+ * Globals
  */
 Universe * _Universe;
 // GameUniverse _Universe;
@@ -103,7 +106,7 @@ void enableNetwork(bool usenetwork) {
 	ignore_network = !usenetwork;
 }
 
-/* 
+/*
  * Function definitions
  */
 
@@ -160,7 +163,7 @@ void cleanup(void)
   return;
 #endif
 #else
-  while (!cleanexit) 
+  while (!cleanexit)
     int i=1;
 #endif
   if( Network!=NULL)
@@ -186,7 +189,7 @@ void cleanup(void)
   //delete _Universe;
     delete [] CONFIGFILE;
 
-  
+
 }
 
 //Mission *mission;
@@ -206,7 +209,7 @@ void nothinghappens (unsigned int, unsigned int, bool,int,int) {
 //int allexcept=FE_DIVBYZERO|FE_INVALID;//|FE_OVERFLOW|FE_UNDERFLOW;
 extern void InitUnitTables();
 bool isVista=false;
-int main( int argc, char *argv[] ) 
+int main( int argc, char *argv[] )
 {
 	VSFileSystem::ChangeToProgramDirectory(argv[0]);
 	CONFIGFILE=0;
@@ -230,7 +233,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 	printf("Vega Strike "  " \n"
 		   "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n" );
     /* Seed the random number generator */
-    
+
 
     if(benchmark<0.0){
       srand( time(NULL) );
@@ -240,7 +243,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
       srand(171070);
     }
     //this sets up the vegastrike config variable
-    setup_game_data(); 
+    setup_game_data();
     // loads the configuration file .vegastrike/vegastrike.config from home dir if such exists
     {
       string subdir=ParseCommandLine(argc,argv);
@@ -249,7 +252,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
         CONFIGFILE=new char[42];
         sprintf(CONFIGFILE,"vegastrike.config");
       }
-      
+
       // Specify the config file and the possible mod subdir to play
       VSFileSystem::InitPaths( CONFIGFILE, subdir);
     }
@@ -293,7 +296,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 #endif
 
     AUDInit();
-    AUDListenerGain (XMLSupport::parse_float(vs_config->getVariable ("audio","sound_gain",".5")));   
+    AUDListenerGain (XMLSupport::parse_float(vs_config->getVariable ("audio","sound_gain",".5")));
     Music::InitMuzak();
     /* Set up a function to clean up when program exits */
     winsys_atexit( cleanup );
@@ -331,37 +334,37 @@ void SetStarSystemLoading (bool value) {
 bool GetStarSystemLoading () {
   return BootstrapMyStarSystemLoading;
 }
-void SetSplashScreen(Animation * ss) 
+void SetSplashScreen(Animation * ss)
 {
 	SplashScreen=ss;
 }
-Animation* GetSplashScreen() 
+Animation* GetSplashScreen()
 {
 	return SplashScreen;
 }
 void bootstrap_draw (const std::string &message, Animation * newSplashScreen) {
-    
+
     static Animation *ani=NULL;
     static bool reentryWatchdog = false;
-    
+
     if (!BootstrapMyStarSystemLoading || reentryWatchdog)
         return;
-  
+
     Music::MuzakCycle(); // Allow for loading music...
-    
+
     if(SplashScreen==NULL && newSplashScreen==NULL) {
         // if there's no splashscreen, we don't draw on it
         // this happens, when the splash screens texture is loaded
         return;
     }
-    
+
     reentryWatchdog = true;
-    
+
     if (newSplashScreen!=NULL)
         ani = newSplashScreen;
-    
+
     UpdateTime();
-    
+
     Matrix tmp;
     Identity (tmp);
     BootstrapMyStarSystemLoading=false;
@@ -379,7 +382,7 @@ void bootstrap_draw (const std::string &message, Animation * newSplashScreen) {
     GFXLoadIdentity(VIEW);
     GFXLoadMatrixModel (tmp);
     GFXBeginScene();
-    
+
     bs_tp->SetPos (-.99,-.97); // Leave a little bit of room for the bottoms of characters.
     bs_tp->SetCharSize (.4,.8);
     ScaleMatrix (tmp,Vector (6500,6500,0));
@@ -389,14 +392,14 @@ void bootstrap_draw (const std::string &message, Animation * newSplashScreen) {
         if (GetElapsedTime()<10) ani->UpdateAllFrame();
         ani->DrawNow(tmp);
     }
-    
+
     static std::string defaultbootmessage=vs_config->getVariable("graphics","default_boot_message","");
     static std::string initialbootmessage=vs_config->getVariable("graphics","initial_boot_message","Loading...");
     bs_tp->Draw (defaultbootmessage.length()>0?defaultbootmessage:message.length()>0?message:initialbootmessage);
-    
+
     GFXHudMode (GFXFALSE);
     GFXEndScene();
-    
+
     reentryWatchdog = false;
 }
 extern Unit **fighters;
@@ -413,8 +416,8 @@ bool SetPlayerLoc (QVector &sys, bool set) {
     if (isset)
       sys =mysys;
     return isset;
-  }  
-  
+  }
+
 }
 bool SetPlayerSystem (std::string &sys, bool set) {
   static std::string mysys;
@@ -453,7 +456,7 @@ void bootstrap_first_loop() {
     bs_tp=new TextPlane();
   }
   bootstrap_draw ("Vegastrike Loading...",SplashScreen);
-  
+
   if (i++>4) {
     if (_Universe) {
       if (isgamemenu) {
@@ -481,7 +484,7 @@ void bootstrap_main_loop () {
 
     UniverseUtil::showSplashScreen(""); // Twice for double or triple-buffering
     UniverseUtil::showSplashScreen("");
-    
+
     QVector pos;
     string planetname;
 
@@ -513,7 +516,7 @@ void bootstrap_main_loop () {
             pname=global_username;
           if (p==0&&global_password.length())
             ppasswd=global_password;
-          
+
 	  if ( !ignore_network )
 	  {
 		  // In network mode, test if all player sections are present
@@ -562,7 +565,7 @@ void bootstrap_main_loop () {
 	}
 
     _Universe->SetupCockpits(playername);
-    
+
 	/************************* NETWORK INIT ***************************/
     vector<std::string>::iterator it, jt;
     unsigned int k=0;
@@ -590,7 +593,7 @@ void bootstrap_main_loop () {
 		unsigned short port;
 		// Are we using the directly account server to identify us ?
 		Network[k].SetConfigServerAddress(srvipadr, port); // Sets from the config vars.
-	
+
         if (!Network[k].connectLoad(pname, ppasswd, err)) {
 			cout<<"error while connecting: "<<err<<endl;
 			VSExit(1);
@@ -636,12 +639,12 @@ void bootstrap_main_loop () {
 	//fighters[0]->SetPosition (Vector (0,0,0));
       }
     }
-    
+
     while (!savedun.empty()) {
       AddUnitToSystem (&savedun.back());
       savedun.pop_back();
     }
-    
+
 
     forcefeedback=new ForceFeedback();
 
@@ -708,8 +711,8 @@ void bootstrap_main_loop () {
         UniverseUtil::hideSplashScreen();
   }
   ///Draw Texture
-  
-} 
+
+}
 
 
 const char helpmessage[] =
@@ -778,7 +781,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
         break;
       case 'L':
       case 'l':
-        
+
 	if (3==sscanf (lpCmdLine[i]+2,"%lf,%lf,%lf",&PlayerLocation.i,&PlayerLocation.j,&PlayerLocation.k)) {
           SetPlayerLoc (PlayerLocation,true);
         }
@@ -789,7 +792,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
 	SetPlayerSystem (st ,true);
 	break;
       case 'A'://average rez
-      case 'a': 
+      case 'a':
 	g_game.y_resolution = 600;
 	g_game.x_resolution = 800;
 	break;
