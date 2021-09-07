@@ -1,4 +1,4 @@
-AC_DEFUN([VS_CHECK_VORBIS], 
+AC_DEFUN([VS_CHECK_VORBIS],
 [
 AC_ARG_ENABLE(vorbis_sound, AC_HELP_STRING([--disable-vorbis], [Disable vorbis support]),vorbis_sound=$enableval)
 
@@ -11,12 +11,12 @@ if test "x$vorbis_sound" != "xno" ;then
         VORBIS_LDOPTS="-L$with_vorbis_libs"
     fi
     saved_lIBS="$RRLIBS"
-    
+
     AC_MSG_CHECKING([for vorbis library])
     LIBS=" $VORBIS_LDOPTS -lvorbisfile -lvorbis -logg "
     AC_TRY_LINK( , , have_vorbis=yes, have_vorbis=no)
     AC_MSG_RESULT([$have_vorbis])
-    
+
 
     if test "x$have_openal_lib" = "xyes" ; then
        LIBS="$saved_LIBS"
@@ -34,14 +34,15 @@ if test "x$vorbis_sound" != "xno" ;then
 	   AC_MSG_RESULT([$have_vorbis_h])
 	   if test "x$have_vorbis_h" = "xyes" ; then
 	      VS_CPPFLAGS="${VS_CPPFLAGS} ${VORBIS_CFLAGS} -DHAVE_OGG "
-	      echo "found VORBIS header: Enabling ingame ogg support:: ${VS_CPPFLAGS}"
+	      AC_MSG_NOTICE([found VORBIS header: Enabling ingame ogg support:: ${VS_CPPFLAGS}])
 	   else
-	      echo "failed to locate VORBIS  install vorbis/vorbisfile.h"
+	      AC_MSG_NOTICE([failed to locate VORBIS  install vorbis/vorbisfile.h])
 	   fi
-	   
-       
+	   CPPFLAGS=$saved_CPPFLAGS
+
     else
-	echo "failed to locate VORBIS library"
+	      AC_MSG_NOTICE([failed to locate VORBIS library])
     fi
+    LIBS="$saved_LIBS"
 fi
 ])

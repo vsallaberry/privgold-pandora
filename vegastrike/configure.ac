@@ -19,7 +19,7 @@ dnl Lexx used to be used for a parser we use
 
 dnl dnl pmx - 22/09/2006
 dnl AC_CHECK_TOOL(BISON,bison)
-dnl dnl AS the converter code in src/cmd/script/c_alike relies on bison, 
+dnl dnl AS the converter code in src/cmd/script/c_alike relies on bison,
 dnl dnl we MUST be sure to use flex in bison compatibility mode
 dnl dnl (instad of the traditional 'lex')  pmx - 23/sept./2006
 dnl AC_CHECK_TOOL(LEX, flex)
@@ -134,7 +134,7 @@ fi
 AC_CHECK_FUNCS([vfscanf lstat])
 
 #check if we have tr1 headers or not
-AC_CHECK_HEADERS([tr1/unordered_map],have_unordered_map=yes,have_unordered_map=no) 
+AC_CHECK_HEADERS([tr1/unordered_map],have_unordered_map=yes,have_unordered_map=no)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -144,6 +144,7 @@ AC_TYPE_OFF_T
 AC_TYPE_PID_T
 AC_C_RESTRICT
 AC_TYPE_SIZE_T
+AC_TYPE_INTMAX_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 AC_C_VOLATILE
@@ -179,7 +180,7 @@ dnl Check if compiling for MacOSX
 dnl --------------------------------------------------------------------------
 AC_MSG_CHECKING([for MacOSX platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(__APPLE__) || defined(MACOSX)
   yes
 #endif
@@ -260,18 +261,18 @@ if test $ACENABLE = yes ; then
 	VS_CXXFLAGS="$VS_CXXFLAGS -fpermissive"
 fi
 
-AC_ARG_ENABLE(ggdb3, AC_HELP_STRING([--enable-ggdb3], [Add the -ggdb3 compiler flag.]), 
+AC_ARG_ENABLE(ggdb3, AC_HELP_STRING([--enable-ggdb3], [Add the -ggdb3 compiler flag.]),
 	if test $enableval = yes ; then
 		DEBUG_FLAGS="-O0 -ggdb3"
 	fi)
 
-AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [Produce an executable with debugging symbols]), 
+AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [Produce an executable with debugging symbols]),
 	if test $enableval = yes ; then
 		AC_MSG_NOTICE(Enabling debug mode with $DEBUG_FLAGS)
 		VS_CXXFLAGS="${VS_CXXFLAGS} ${DEBUG_FLAGS}"
 	fi)
 
-AC_ARG_ENABLE(release, AC_HELP_STRING([--enable-release=LEVEL], [Produce an executable with optimizations (LEVEL=2)]), 
+AC_ARG_ENABLE(release, AC_HELP_STRING([--enable-release=LEVEL], [Produce an executable with optimizations (LEVEL=2)]),
 	if test $enableval = no -o $enableval = 0; then
 		optimizationlevel=0
 		VS_CXXFLAGS="${VS_CXXFLAGS} -O0"
@@ -285,14 +286,14 @@ AC_ARG_ENABLE(release, AC_HELP_STRING([--enable-release=LEVEL], [Produce an exec
 	fi
 	)
 
-AC_ARG_ENABLE(client, AC_HELP_STRING([--disable-client], [Only build vegaserver binary]), 
+AC_ARG_ENABLE(client, AC_HELP_STRING([--disable-client], [Only build vegaserver binary]),
 	build_client=$enableval
 	if test $enableval = no; then
 		VS_CPPFLAGS="${VS_CPPFLAGS} -DNO_GFX"
 	fi
 	AC_MSG_NOTICE(Building client: $enableval))
 
-AC_ARG_ENABLE(static, AC_HELP_STRING([--enable-static], [Produce a statically linked executable]), 
+AC_ARG_ENABLE(static, AC_HELP_STRING([--enable-static], [Produce a statically linked executable]),
 	if test $enableval = yes ; then
 		VS_CXXFLAGS="${VS_CXXFLAGS} -static"
 		AC_MSG_NOTICE(Linking statically)
@@ -300,29 +301,29 @@ AC_ARG_ENABLE(static, AC_HELP_STRING([--enable-static], [Produce a statically li
 		AC_MSG_NOTICE(Linking dynamically)
 	fi)
 
-AC_ARG_ENABLE(profile, AC_HELP_STRING([--enable-profile], [Produce an executable with profiling code]),  
+AC_ARG_ENABLE(profile, AC_HELP_STRING([--enable-profile], [Produce an executable with profiling code]),
 	if test $enableval = yes ; then
 		VS_CXXFLAGS="${VS_CXXFLAGS} -pg"
 		AC_MSG_NOTICE(Enabling profiling)
 	fi)
 
-AC_ARG_ENABLE(wall, AC_HELP_STRING([--enable-wall], [Use the -Wall flag with the compiler.]), 
+AC_ARG_ENABLE(wall, AC_HELP_STRING([--enable-wall], [Use the -Wall flag with the compiler.]),
 	if test $enableval = yes ; then
 		VS_CXXFLAGS="${VS_CXXFLAGS} -Wall"
 	fi)
 
-AC_ARG_ENABLE(pedantic, AC_HELP_STRING([--enable-pedantic], [Enable -pedantic (and -ansi for C) modes]), 
+AC_ARG_ENABLE(pedantic, AC_HELP_STRING([--enable-pedantic], [Enable -pedantic (and -ansi for C) modes]),
 	if test $enableval = yes ; then
 		AC_MSG_NOTICE(Setting compiler to pedantic (don't expect a successful build))
 		VS_CXXFLAGS="${VS_CXXFLAGS} -pedantic"
 	fi)
 
-AC_ARG_ENABLE(macosx_bundle, AC_HELP_STRING([--enable-macosx-bundle], [Produce a MacOSX bundle executable]),  
+AC_ARG_ENABLE(macosx_bundle, AC_HELP_STRING([--enable-macosx-bundle], [Produce a MacOSX bundle executable]),
 	if test $enableval = yes ; then
 		AC_MSG_NOTICE(Producing a MacOSX bundle executable)
 		VS_CPPFLAGS="${VS_CPPFLAGS} -DWITH_MACOSX_BUNDLE=1"
 	fi)
-	
+
 AC_ARG_ENABLE(precompiled, AC_HELP_STRING([--enable-precompiled], [Use precompiled headers during build - remember to 'make precompiled' first]),
 	[case "$enableval" in
 	yes)	precompiled=true ;;
@@ -335,7 +336,7 @@ if test "x${build_client}" = "xno" ; then
     VS_CXXFLAGS="${VS_CXXFLAGS} -DNO_GFX"
 fi
 
-AM_CONDITIONAL([VS_MAKE_NO_CLIENT], [test "x$build_client" = "xno"]) 
+AM_CONDITIONAL([VS_MAKE_NO_CLIENT], [test "x$build_client" = "xno"])
 
 VS_CXXFLAGS="${VS_CXXFLAGS} ${USER_FLAGS}"
 
@@ -344,7 +345,7 @@ dnl Check if compiling for Win32
 dnl --------------------------------------------------------------------------
 AC_MSG_CHECKING([for Win32 platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(WIN32) || defined(_WIN32)
   yes
 #endif
@@ -364,7 +365,7 @@ fi
 
 AC_MSG_CHECKING([for CygWin platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(__CYGWIN__)
   yes
 #endif
@@ -373,7 +374,7 @@ AC_MSG_RESULT(${is_cygwin})
 
 AC_MSG_CHECKING([for Mingw32 platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(__MINGW32__)
   yes
 #endif
@@ -388,7 +389,7 @@ dnl Check if compiling for Linux
 dnl --------------------------------------------------------------------------
 AC_MSG_CHECKING([for Linux platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(linux)
   yes
 #endif
@@ -401,11 +402,11 @@ if test "x$is_linux" = "xyes" ; then
 fi
 
 dnl --------------------------------------------------------------------------
-dnl Check if compiling for FreeBSD 
+dnl Check if compiling for FreeBSD
 dnl --------------------------------------------------------------------------
 AC_MSG_CHECKING([for FreeBSD platform])
 AC_EGREP_CPP(yes,
-[ 
+[
 #if defined(__FreeBSD__)
   yes
 #endif
@@ -415,20 +416,53 @@ AC_MSG_RESULT([${is_freebsd}])
 #    VS_LIBS="$VS_LIBS -lutil"
 #fi
 
+AC_ARG_WITH(macos-sdk, AC_HELP_STRING([--with-macos-sdk=DIR], [MacOS SDK location]))
+if test "x$with_macos_sdk" = "x"; then
+    macos_sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+else
+    macos_sdk="$with_macos_sdk"
+fi
+
+AC_ARG_WITH(python-inc, AC_HELP_STRING([--with-python-inc=DIR], [Python Inc location]))
+AC_ARG_WITH(python-libs, AC_HELP_STRING([--with-python-libs=DIR], [Python Libs location]))
+#with_python_inc=${macos_sdk}//System/Library/Frameworks/Python.framework/Versions/Current/include/python2.7
+#with_python_libs=/System/Library/Frameworks/Python.framework/Versions/Current/lib
 
 if test "x$is_macosx" = "xyes" ; then
-	CXXFLAGS="$CXXFLAGS -I/Developer/SDKs/MacOSX10.2.8sdk/System/Library/Frameworks/Carbon.framework/Libraries/CIncludes -DHAVE_PYTHON=1 -I$with_python_inc "
-	CPPFLAGS="$CPPFLAGS -Wno-long-double"
+    AC_MSG_NOTICE([using MACOS SDK $macos_sdk])
+
+    #CXXFLAGS="$CXXFLAGS -I${with_macos_sdk}/System/Library/Frameworks/Carbon.framework/Libraries/CIncludes -DHAVE_PYTHON=1 -I$with_python_inc "
+    CXXFLAGS="$CXXFLAGS -I${macos_sdk}/System/Library/Frameworks/Carbon.framework/Headers -DHAVE_PYTHON=1 "
+    if test x$with_with_python_inc = x; then
+        true
+    else
+        CXXFLAGS="${CXXFLAGS}-I$with_python_inc "
+    fi
+    AC_MSG_CHECKING([for -Wno-long-double])
+    saved_CPPFLAGS="${CPPFLAGS}"
+    CPPFLAGS="-Werror -Wno-long-double"
+    AC_TRY_COMPILE(, , [wnolongdouble=yes], [wnolongdouble=no])
+    CPPFLAGS="${saved_CPPFLAGS}"
+    if test "x$wnolongdouble" = "xyes"; then
+    	CPPFLAGS="${CPPFLAGS} -Wno-long-double"
+    fi
+    AC_MSG_RESULT(${wnolongdouble})
+
     dnl GL_CPPFLAGS="$GL_CPPFLAGS -framework OpenGL"
     dnl GLUT_CPPFLAGS="$GLUT_CPPFLAGS -framework GLUT"
-	VS_LIBS="$VS_LIBS -F/Developer/SDKs/MacOSX10.3.0.sdk/System/Library/Frameworks  -framework OpenGL -framework GLUT -framework CoreAudio"
-    with_gl_inc=/Developer/SDKs/MacOSX10.3.0.sdk/System/Library/Frameworks/Carbon.framework/Libraries/CIncludes
-    with_gl_libs=/Developer/SDKs/MacOSX10.3.0.sdk/System/Library/Frameworks/OpenGL.framework/Libraries
-    with_al_inc="/System/Library/Frameworks/OpenAL.framework/Headers -I/sw/include"
-    with_al_libs="/System/Library/Frameworks/OpenAL.framework/ -L/sw/lib"
+	VS_LIBS="$VS_LIBS -F${macos_sdk}/System/Library/Frameworks  -framework OpenGL -framework GLUT -framework CoreAudio"
+    with_gl_inc=${macos_sdk}/System/Library/Frameworks/Carbon.framework/Libraries/CIncludes
+    with_gl_libs=${macos_sdk}/System/Library/Frameworks/OpenGL.framework/Libraries
+    with_al_inc="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/Headers -I/sw/include"
+    with_al_libs="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/ -L/sw/lib"
 #    PYTHON_LDOPTS="-L/System/Library/Frameworks/Python.framework"
 #    with_python_inc="/System/Library/Frameworks/Python.framework/Headers"
-    VS_LIBS="$VS_LIBS -lobjc -L$with_python_libs "
+    VS_LIBS="$VS_LIBS -lobjc "
+    if test x$with_with_python_libs = x; then
+        true
+    else
+        VS_LIBS="${VS_LIBS}-L$with_python_libs "
+    fi
 fi
 
 
@@ -437,17 +471,17 @@ VS_CHECK_PYTHON
 AC_LANG(C++)
 
 if test "x$build_client"  = "xno"; then
-    AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [false]) 
+    AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [false])
 else
     VS_CHECK_SDL
-    
+
     dnl Only build soundserver if we have SDL Mixer (this is defined in CHECK_SDL)
-    dnl AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [test "x$have_SDL_mixer" = "xyes"]) 
+    dnl AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [test "x$have_SDL_mixer" = "xyes"])
     dnl soundserver not used any more.
-    AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [false]) 
-    
+    AM_CONDITIONAL([VS_MAKE_SOUNDSERVER], [false])
+
     AC_LANG(C++)
-  if test "x$is_macosx" = "xno" ; then 
+  if test "x$is_macosx" = "xno" ; then
     dnl all macs have openGL  and this test no longer works for mac
     VS_CHECK_GL
   fi
@@ -462,13 +496,13 @@ AC_ARG_ENABLE(car, AC_HELP_STRING([--enable-car], [Produce an executable for car
 dnl --------------------------------------------------------------------------
 dnl Make sure that the scripts in m4scripts are available
 dnl --------------------------------------------------------------------------
-m4_ifdef([VS_CHECK_CRYPTO], [], 
+m4_ifdef([VS_CHECK_CRYPTO], [],
 [AC_FATAL([MISSING script(s) from m4scripts directory.
 An easy way to get these scripts is to use ./bootstrap-sh to create configure.
-If you get the message and are running bootstrap-sh, that probably means that 
-the m4scripts directory does not exist.  If you are using SVN to get 
-vegastrike, change to vegastrike directory, type 'svn update' and this 
-directory should be created.])])  
+If you get the message and are running bootstrap-sh, that probably means that
+the m4scripts directory does not exist.  If you are using SVN to get
+vegastrike, change to vegastrike directory, type 'svn update' and this
+directory should be created.])])
 m4_pattern_forbid([VS_CHECK_CRYPTO])
 
 
@@ -488,7 +522,7 @@ AC_ARG_WITH(gl-inc, AC_HELP_STRING([--with-gl-inc=DIR], [OpenGL header file loca
 
 if test "x$with_gl_inc" = "x" ; then
     GL_CPPFLAGS=""
-else 
+else
     GL_CPPFLAGS="$GL_CPPFLAGS -I$with_gl_inc"
 fi
 
@@ -528,7 +562,7 @@ AC_LANG(C++)
 if test "x$is_macosx" != "xyes" ; then
 AC_COMPILE_IFELSE(
 [[
-#include <GL/gl.h>    
+#include <GL/gl.h>
 #include <GL/glext.h>
 #if (!defined(GL_ARB_vertex_buffer_object) ) && GL_GLEXT_VERSION<21
 #error "Download http://oss.sgi.com/projects/ogl-sample/ABI/glext.h; Place it in the directory /usr/include/GL."
@@ -639,7 +673,7 @@ VS_CPPFLAGS="${VS_CPPFLAGS} $GLUT_CPPFLAGS"
 
 fi
 dnl ==============================
-dnl END if "$build_client" = "no" 
+dnl END if "$build_client" = "no"
 dnl ==============================
 
 dnl --------------------------------------------------------------------------
@@ -658,7 +692,7 @@ AC_DEFUN([CHECK_FOR_EXPAT_LIB], [
     LIBS="$EXPAT_LDOPTS -l$EXPAT_LIB_NAME"
     AC_TRY_LINK( , , have_expat_lib=yes, have_expat_lib=no )
     AC_MSG_RESULT([$have_expat_lib])
-]) 
+])
 
 saved_LIBS="$LIBS"
 
@@ -728,7 +762,7 @@ AC_DEFUN([CHECK_FOR_PNG_LIB], [
     LIBS="$PNG_LDOPTS -l$PNG_LIB_NAME"
     AC_TRY_LINK( , , have_png_lib=yes, have_png_lib=no )
     AC_MSG_RESULT([$have_png_lib])
-]) 
+])
 
 saved_LIBS="$LIBS"
 
@@ -751,7 +785,7 @@ if test "x$have_png_lib" = "xno" ; then
 fi
 
 LIBS="$saved_LIBS"
-VS_LIBS="$VS_LIBS $PNG_LDOPTS -l$PNG_LIB_NAME"
+VS_LIBS="$PNG_LDOPTS -l$PNG_LIB_NAME $VS_LIBS"
 
 
 dnl --------------------------------------------------------------------------
@@ -768,9 +802,9 @@ fi
 
 saved_CPPFLAGS="$CPPFLAGS"
 if test "x$is_macosx" = "xyes" ; then
-    CPPFLAGS="$saved_CPPFLAGS $PNG_CPPFLAGS "
+    CPPFLAGS="$PNG_CPPFLAGS $saved_CPPFLAGS "
 else
-    CPPFLAGS="$saved_CPPFLAGS $VS_CPPFLAGS $PNG_CPPFLAGS "
+    CPPFLAGS="$PNG_CPPFLAGS $saved_CPPFLAGS $VS_CPPFLAGS "
 fi
 AC_CHECK_HEADER([png.h], have_png_h=yes, have_png_h=no )
 
@@ -779,13 +813,12 @@ if test "x$have_png_h" = "xno" ; then
 fi
 
 CPPFLAGS="$saved_CPPFLAGS"
-VS_CPPFLAGS="${VS_CPPFLAGS} ${PNG_CPPFLAGS}"
-
+VS_CPPFLAGS="${PNG_CPPFLAGS} ${VS_CPPFLAGS}"
 
 VS_CHECK_JPEG
 
     VS_CHECK_OPENAL
-    
+
     VS_CHECK_VORBIS
 fi
 
@@ -811,7 +844,7 @@ AM_CONDITIONAL(BOOSTSYSTEM,test "x$ACENABLE" != "xno")
 dnl Turn use of stencil buffer on/off
 AC_ARG_ENABLE(stencil-buffer, AC_HELP_STRING([--enable-stencil-buffer], [Use if your hardware has a stencil buffer]),VS_CPPFLAGS="${VS_CPPFLAGS} -DUSE_STENCIL_BUFFER=1")
 
-AC_ARG_ENABLE(nvidia-cg, AC_HELP_STRING([--enable-nvidia-cg], 
+AC_ARG_ENABLE(nvidia-cg, AC_HELP_STRING([--enable-nvidia-cg],
 	[Use if you have the NVidia SDK and CG compiler or compatible to get shader support (very experimental)]))
 if test "x$nvidia-cg" = "xyes"; then
 saved_LIBS="$LIBS"
@@ -820,7 +853,7 @@ AC_TRY_LINK( , , cg_enable=yes, cg_enable=no)
 LIBS="${saved_LIBS}"
 
 if test "x$cg_enable" = "xyes"; then
-CG_CPPFLAGS="-DCG_SUPPORT=1" 
+CG_CPPFLAGS="-DCG_SUPPORT=1"
 CG_LIBS="-lCg -lCgGL"
 fi
 

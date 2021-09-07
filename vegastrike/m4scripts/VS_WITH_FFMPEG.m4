@@ -1,12 +1,32 @@
-AC_DEFUN([VS_WITH_FFMPEG], 
+AC_DEFUN([VS_WITH_FFMPEG],
 [dnl
 #--------------------------------------------------------------------------
-# Checking to see if OGRE is available and if it should be used 
+# Checking to see if OGRE is available and if it should be used
 #--------------------------------------------------------------------------
 AC_BEFORE([$0], [VS_WITH_FFMPEG])dnl
 [no_ffmpeg=0]
-AC_ARG_ENABLE(ffmpeg, AC_HELP_STRING([[--disable-ffmpeg]], 
+AC_ARG_ENABLE(ffmpeg, AC_HELP_STRING([[--disable-ffmpeg]],
 [Disables ffmpeg (video file support)]), [no_ffmpeg=1])
+
+AC_ARG_WITH(ffmpeg-inc, AC_HELP_STRING([[--with-ffmpeg-inc=<path>]], [specify ffmpeg inc dir]))
+AC_ARG_WITH(ffmpeg-libs, AC_HELP_STRING([[--with-ffmpeg-libs=<path>]], [specify ffmpeg lib dir]))
+
+if test x$with_ffmpeg_inc = x; then
+    FFMPEG_INC_DIR=
+else
+    FFMPEG_INC_DIR=$with_ffmpeg_inc
+    saved_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="-I${FFMPEG_INC_DIR} ${CPPFLAGS}"
+fi
+if test x$with_ffmpeg_libs = x; then
+    FFMPEG_LIBS_DIR=
+else
+    FFMPEG_LIBS_DIR=$with_ffmpeg_libs
+    saved_LIBS=$LIBS
+    LIBS="${LIBS} -L${FFMPEG_LIBS_DIR}"
+    VS_LIBS="-L${FFMPEG_LIBS_DIR} ${VS_LIBS}"
+fi
+
 if (test x$no_ffmpeg = x1); then
   AC_MSG_CHECKING([for ffmpeg])
   AC_MSG_RESULT([no (Disabled)])
@@ -16,17 +36,17 @@ if (test x$no_ffmpeg = x1); then
     AC_CHECK_HEADERS([libavcodec/avcodec.h libavformat/avformat.h libavformat/avio.h], no_ffmpeg=0, no_ffmpeg=1)
   fi
   if (test x$no_ffmpeg = x0); then
-    AC_MSG_CHECKING([for libavcodec and libavformat])
+    AC_MSG_CHECKING([for libavcodec, libavformat, libavutil])
     NEW_LIBS="-lavcodec -lavformat"
     saved_LIBS="${LIBS}"
-    LIBS="${LIBS} $NEW_LIBS"
+    LIBS="${LIBS} $NEW_LIBS -lavutil -lbz2"
     AC_TRY_LINK(, , [haveavcodec=yes], [haveavcodec=no; no_ffmpeg=1])
     LIBS="$saved_LIBS"
     AC_MSG_RESULT($haveavcodec)
-    
+
     if (test x$haveavcodec = xyes); then
       VS_LIBS="${VS_LIBS} ${NEW_LIBS}"
-      
+
       AC_MSG_CHECKING([for libswscale])
       NEW_LIBS="-lswscale"
       saved_LIBS="${LIBS}"
@@ -34,7 +54,7 @@ if (test x$no_ffmpeg = x1); then
       AC_TRY_LINK(, , [haveswscale=yes], [haveswscale=no])
       LIBS="$saved_LIBS"
       AC_MSG_RESULT($haveswscale)
-      
+
       if test "x$haveswscale" = "xyes"; then
         AC_CHECK_HEADERS([ffmpeg/swscale.h], haveswscale=yes, haveswscale=no)
         if test "x$haveswscale" = "xno"; then
@@ -57,6 +77,7 @@ if (test x$no_ffmpeg = x1); then
       fi
       if test "x$no_ffmpeg" = "x0"; then
         VS_CPPFLAGS="${VS_CPPFLAGS} -DHAVE_FFMPEG"
+        VS_LIBS="$VS_LIBS -lavutil -lbz2"
       fi
     fi
   fi

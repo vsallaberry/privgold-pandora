@@ -1,4 +1,4 @@
-AC_DEFUN([VS_CONFIG_GTKUTILS], 
+AC_DEFUN([VS_CONFIG_GTKUTILS],
 [CHECK_GTK=2
 HAVE_GTK=no
 HAVE_GTK1=no
@@ -85,7 +85,7 @@ if test x$HAVE_GTK = xno; then
     VS_CHECK_DIALOG
   fi
   if test x$HAVE_GTK = xyes; then
-    echo 'Using console interface for the setup utility.'
+    AC_MSG_NOTICE([Using console interface for the setup utility.])
   else
     if test x$CHECK_GTK = x1; then
       AC_MSG_WARN([[No version of GTK was found.  VSSETUP will not be built.]])
@@ -94,14 +94,14 @@ if test x$HAVE_GTK = xno; then
     fi
   fi
 else
-  echo -n 'Using GTK version '
   if test "x$HAVE_GTK1" = "xyes"; then
-    echo '1.2'
+    _gtk_version='1.2'
   elif test "x$HAVE_GTK2" = "xyes"; then
-    echo '2.0'
+    _gtk_version='2.0'
   fi
+  AC_MSG_NOTICE([Using GTK version $_gtk_version.])
 fi
 
-AM_CONDITIONAL([VS_MAKE_GTKUTILS], [test x$HAVE_GTK = xyes]) 
+AM_CONDITIONAL([VS_MAKE_GTKUTILS], [test x$HAVE_GTK = xyes])
 
 ])

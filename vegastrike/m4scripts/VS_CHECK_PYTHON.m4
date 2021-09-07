@@ -1,4 +1,4 @@
-AC_DEFUN([VS_CHECK_PYTHON], 
+AC_DEFUN([VS_CHECK_PYTHON],
 [
 AC_REQUIRE([AC_PROG_CXX])dnl
 #
@@ -7,7 +7,7 @@ AC_REQUIRE([AC_PROG_CXX])dnl
 dnl for now support automake versions < 1.5 for 2 reasons:
 dnl  - it is not available on some distros (SuSE, RedHat, ...)
 dnl  - it can not find python 2.2 in many other cases (debian, ...)
-dnl 
+dnl
 dnl AM_PATH_PYTHON(2.2)
 dnl
 AC_MSG_CHECKING([for python])
@@ -16,8 +16,8 @@ FOUND_PYTHON=no
 PYTHON_CXXFLAGS=""
 PYTHON_LIBS=""
 AC_ARG_WITH(python,AC_HELP_STRING([[--with-python-version[=VERSION]]],[ Enter 2, 2.2, 2.3, 2.4, 2.5 (default 2.4)]))
-case "$with_python_version" in 
-"") with_python_version=2.4 ;; 
+case "$with_python_version" in
+"") with_python_version=2.4 ;;
 "2" | "2.2" | "2.3" | "2.4" | "2.5") ;;
 *) AC_MSG_ERROR([${with_python_version} is not valid]) ;;
 esac
@@ -45,7 +45,7 @@ do
         then
             FOUND_PYTHON=yes
             PYTHON_SHORT=`echo ${PYTHON_VERSION} | sed -e 's/\./ /g; s/[a-z|A-Z|+]/ /g' | awk '{print $<<1>>"."$<<2>>}'`
-            PYTHON_incchk="/usr/include/python /usr/include/python${PYTHON_SHORT} /usr/local/include/python /usr/local/include/python${PYTHON_SHORT} /sw/include/python /sw/include/python${PYTHON_SHORT}"
+            PYTHON_incchk="/usr/include/python /usr/include/python${PYTHON_SHORT} /System/Library/Frameworks/Python.framework/Versions/Current/include /System/Library/Frameworks/Python.framework/Versions/Current/include/python${PYTHON_SHORT} /usr/local/include/python /usr/local/include/python${PYTHON_SHORT} /sw/include/python /sw/include/python${PYTHON_SHORT}"
 
 	    PYTHON_incdir=""
 	    if test "x${FOUND_PYTHON}" = "xyes";
@@ -94,7 +94,7 @@ then
     PYTHON_libchk="${PYTHON_LIBPATH} /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64 /usr/lib64/python${PYTHON_SHORT}/config /usr/local/lib64/python${PYTHON_SHORT}/config /sw/lib/python${PYTHON_SHORT}/config /usr/lib/python${PYTHON_SHORT} /usr/lib/python${PYTHON_SHORT}/config /usr/local/lib/python${PYTHON_SHORT} /usr/local/lib/python${PYTHON_SHORT}/config /lib/python2.2/config"
     for i in ${PYTHON_libchk};
     do
-        if test "x$is_macosx" = "xyes" ; then        	
+        if test "x$is_macosx" = "xyes" ; then
           dylix=dylib
         else
           dylix=so
@@ -111,7 +111,7 @@ then
             FOUND_LIBPYTHON_SO=yes
             break
 	else
-          if test -f $i/libpython${PYTHON_SHORT}.a;	   
+          if test -f $i/libpython${PYTHON_SHORT}.a;
 	  then
             echo "$i/libpython${PYTHON_SHORT}.a yes"
     	    PYTHON_CXXFLAGS="-I${PYTHON_incdir}"
@@ -123,7 +123,7 @@ then
             FOUND_LIBPYTHON_SO=yes
 	    break
           else
-            if test -f $i/libpython${PYTHON_SHORT}.dll.a;	   
+            if test -f $i/libpython${PYTHON_SHORT}.dll.a;
 	    then
     	      PYTHON_CXXFLAGS="-I${PYTHON_incdir}"
               echo "$i/libpython${PYTHON_SHORT}.dll.a yes"
