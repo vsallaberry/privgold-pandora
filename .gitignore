@@ -9,6 +9,7 @@
 **/*.sw?
 **/*~
 **/.\#*
+**/*.pyc
 
 **/Makefile.in
 /vegastrike*/INSTALL
