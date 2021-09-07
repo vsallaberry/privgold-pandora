@@ -45,4 +45,35 @@ git commit -m '[provgold] technique mac and hardcode texture2DLod to avoid error
 
 2021.09.07_06h13
 
+2021.09.08 0h23
+
+[vegastrike] add boost 1.50
+
+[vegastrike] build, improve c++11 compatibility
+
+Improve compatibility with more recent compilers/standards,
+Now we can build with gcc 6 with -std=gnu++11.
+Work in progress.
+
+* CMakeLists/configure.ac: supports internal boost 1.50
+
+* improve c++11 compliance
+  That required some source updates, including upgrade of internal boost:
+  + some conflicts with some std:: c++11 functions suchs as copysign,fmin,fmax,stoi,...
+  + some casts to void *
+
+* build.sh:
+  + use gnu++11,boost_1.50 by default
+  + add --cxx-flags to change -std= for instance
+  + fix sdk detection from compiler (gcc -v parsing)
+
+* CMakeLists.txt / configure.ac / m4scripts / Makefile.am / *config.h*
+  + boost 1.50 support
+  + use boost 1.50 by default on macos (CMAKELists only)
+  + detect include unordered_map (without tr1/)
+    this is not used yet as tr1 and std not compatible, but
+    source has the HAVE_* mamcros to do the job
+
+* Source is not compatible yet with clang or gcc > 7
+
 

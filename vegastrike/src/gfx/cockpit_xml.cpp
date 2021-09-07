@@ -51,11 +51,11 @@ namespace CockpitXML {
       KARMORB,
       KARMORR,
       KARMORL,
-      KFUEL, 
+      KFUEL,
       KSHIELDF,
       KSHIELDR,
       KSHIELDL,
-      KSHIELDB, 
+      KSHIELDB,
       KENERGY,
       KAUTO,
       KEJECT,
@@ -115,7 +115,7 @@ namespace CockpitXML {
     EnumMap::Pair ("Lock", UnitImages::LOCK),
 	EnumMap::Pair ("MissileLock",UnitImages::MISSILELOCK),
 	EnumMap::Pair ("Jump",UnitImages::JUMP),
-	EnumMap::Pair ("ECM",UnitImages::ECM),	
+	EnumMap::Pair ("ECM",UnitImages::ECM),
     EnumMap::Pair ("Hull", UnitImages::HULL),
 	EnumMap::Pair ("WarpEnergy", UnitImages::WARPENERGY),
     EnumMap::Pair ("Speed", UnitImages::KPS),
@@ -197,12 +197,12 @@ string getRes(string inp) {
   else if (x<1700) x=1600;
   else x=1600;
   string rez =XMLSupport::tostring(x);
-  
+
   if (where==string::npos) {
     return inp+"_"+rez+".spr";
   }else {
     return inp.substr(0,where)+"_"+rez+".spr";
-  } 
+  }
 }
 void GameCockpit::beginElement(const string &name, const AttributeList &attributes) {
   static bool cockpit_smooth=XMLSupport::parse_bool(vs_config->getVariable("graphics","cockpit_smooth_texture","false"));
@@ -229,7 +229,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
   int counter=0;
   switch (elem) {
   case COCKPIT:
-    for(iter = attributes.begin(); iter!=attributes.end(); iter++) { 
+    for(iter = attributes.begin(); iter!=attributes.end(); iter++) {
       attr = (Names)attribute_map.lookup((*iter).name);
       switch (attr) {
       case MYFONT:
@@ -296,13 +296,13 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
 	break;
 	  default:
 		  break;
-      } 
+      }
     }
     text = new TextPlane ();
     for (counter=0;counter<4;++counter) {
       if (!replaced[counter]) {
         delete Pit[counter];
-        Pit[counter]=false;
+        Pit[counter]=0;
       }
     }
     break;
@@ -360,7 +360,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
   case UnitImages::COLLISIONWARNING_MODAL:
   case UnitImages::CANJUMP_MODAL:
   case UnitImages::CANDOCK_MODAL:
-    for(iter = attributes.begin(); iter!=attributes.end(); iter++) { 
+    for(iter = attributes.begin(); iter!=attributes.end(); iter++) {
       switch (attribute_map.lookup((*iter).name)) {
       case XFILE:
 	gaugename = (*iter).value;
@@ -424,7 +424,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
     }
     break;
   case CROSSHAIRS:
-  case PANEL: 
+  case PANEL:
     if (elem==CROSSHAIRS) {
         if (Panel.size()==0)
             Panel.push_back(NULL);
@@ -452,7 +452,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
   case RVDU: vdu.push_back(NULL);newvdu = &vdu.back();mymodes=VDU::TARGETMANIFEST|VDU::NAV|VDU::TARGET;default_mode=VDU::TARGET;
   goto loadsprite;
   case AVDU:vdu.push_back(NULL);newvdu = &vdu.back();mymodes=VDU::MSG;
-    for(iter = attributes.begin(); iter!=attributes.end(); iter++) { 
+    for(iter = attributes.begin(); iter!=attributes.end(); iter++) {
       switch (attribute_map.lookup((*iter).name)) {
       case VDUTYPE:
         {
@@ -467,7 +467,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
     }
     goto loadsprite;
   loadsprite:
-    for(iter = attributes.begin(); iter!=attributes.end(); iter++) { 
+    for(iter = attributes.begin(); iter!=attributes.end(); iter++) {
       switch (attribute_map.lookup((*iter).name)) {
       case NETWORK:
         if ((Network!=NULL)!=XMLSupport::parse_bool((*iter).value)) {
@@ -485,7 +485,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
           }
 	  adjsprite = *newsprite;
 	} else if (newvdu) {
-          VDU * tmp=new VDU ((*iter).value.c_str(),text,mymodes,rows,cols,&StartArmor[0],&maxhull);         
+          VDU * tmp=new VDU ((*iter).value.c_str(),text,mymodes,rows,cols,&StartArmor[0],&maxhull);
 	  (*newvdu) =  tmp;
 	  adjsprite = *newvdu;
           if (tmp->getMode()!=default_mode)
@@ -550,7 +550,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
   default:
 	  break;
   }
-  
+
 }
 void GameCockpit::endElement(const string &name) {
 
@@ -581,7 +581,7 @@ void GameCockpit::LoadXML ( VSFileSystem::VSFile & f) {
   XML_Parser parser = XML_ParserCreate(NULL);
   XML_SetUserData(parser, this);
   XML_SetElementHandler(parser, &Cockpit::beginElement, &Cockpit::endElement);
-  
+
   XML_Parse (parser,(f.ReadFull()).c_str(),f.Size(),1);
   /*
   do {
@@ -591,7 +591,7 @@ void GameCockpit::LoadXML ( VSFileSystem::VSFile & f) {
     char buf[chunk_size];
 #endif
     int length;
-    
+
     length = VSFileSystem::vs_read (buf,1, chunk_size,inFile);
     //length = inFile.gcount();
 #ifdef BIDBG

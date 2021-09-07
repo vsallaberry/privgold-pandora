@@ -16,7 +16,7 @@ unset CFLAGS CXXFLAGS LDFLAGS CPPFLAGS OBJCFLAGS OBJCPPFLAGS
 cc_flags=""
 gcc_cc_flags=""
 clang_cc_flags=""
-cxx_flags="-std=gnu++03 -fpermissive -Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
+cxx_flags="-std=gnu++11 -fpermissive -Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
 #-std=c++03
 gcc_cxx_flags=""
 clang_cxx_flags="-stdlib=libc++"
@@ -60,14 +60,15 @@ force_clean=
 
 show_help() {
     local _ret=$1
-    echo "$(basename $0) [-h,--help] [--build=<builddir>] [--cc=<path-to-c-compiler>] "
-    echo "               [--jobs=<make-jobs>] [--target=<path_of_cmakelists.txt>]"
-    echo "               [-T,--type=<build-type] [--tool=auto|cmake|configure]"
-    echo "               [-c,--clean] [-i,--interactive] [--dist]"
-    echo "               [-s,--setup] [-r,--run] [-d,--debug] [-D,--data=<datadir>]"
-    echo "               [-- [<Configure/CMake args]]"
+    echo "$(basename $0) "
+    echo "    [-h,--help] [--tool=auto|cmake|configure] [--build=<builddir>]"
+    echo "    [-T,--type=<build-type] [--jobs=<make-jobs>]"
+    echo "    [--cc=<c-compiler>] [--target=<src-root-dir>] [--cxx-flags=<flags>]"
+    echo "    [-c,--clean] [-i,--interactive] [--dist]"
+    echo "    [-s,--setup] [-r,--run] [-d,--debug] [-D,--data=<datadir>]"
+    echo "    [-- [<Configure/CMake args]]"
     echo ""
-    echo "   compiler: ${compiler}"
+    echo "   compiler: ${compiler} (cxxflags: ${cxx_flags})"
     echo "  make_jobs: ${make_jobs}"
     echo "  build_dir: ${builddir}"
     echo "     target: ${target}"
@@ -89,6 +90,7 @@ parse_opts() {
             -h|--help) show_help 0;;
             --build=*) builddir=${_arg#--build=};;
             --cc=*) compiler=${_arg#--cc=};;
+            --cxx-flags=*) cxx_flags=${_arg#--cxx-flags=};;
             --jobs=*) make_jobs=${_arg#--jobs=};;
             --target=*) target=${_arg#--target=};;
             -T*|--type=*) build_type=${_arg#-T};build_type=${build_type#--type=};;
@@ -153,7 +155,7 @@ export CC="${cc_dir}/${cc_pref}${cc_suff} ${spec_cc_flags} ${cc_flags}"
 export CXX="${cc_dir}/${cxx_pref}${cc_suff} ${spec_cxx_flags} ${cxx_flags}"
 
 #### FIND SDK
-_test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\([^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
+_test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
 sysver=$(uname -r)
 if test ${sysver%%.*} -gt 15; then # 15 is capitan
     # sierra or later
@@ -174,8 +176,8 @@ echo "+ CC          ${CC}"
 echo "+ CXX         ${CXX}"
 echo "+ SDK         ${macos_sdk}"
 echo "+ SDK_FWK     ${macos_sdk_fwk}"
-echo "+ SRC         ${target}  (build:${builddir}"
-echo "+ BUILDER     ${build_tool}  (${build_type})"
+echo "+ SRC         ${target}  (BUILD_DIR: ${builddir})"
+echo "+ BUILDER     ${build_tool}  (TYPE: ${build_type})"
 echo
 
 ### DIST / make tarball
@@ -277,9 +279,9 @@ case "${build_tool}" in
         -DZLIB_ROOT=/usr \
         -DZLIB_INCLUDE_DIR=/usr/include \
         -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}" \
-        -DBOOST_ROOT=/opt/local/libexec/boost/1.69 \
+        -DBOOST_ROOT=/usr/local/specific/boost150 \
+        -DBOOST_INTERNAL=1_50 \
         -DPNG_INCLUDE_DIRS=/usr/local/specific/libpng12/include -DPNG_LIBRARIES=/usr/local/specific/libpng12/lib/libpng12.dylib \
-        -DBOOST_INTERNAL=1_35 \
         -DVS_FIND_PREFIX_MORE_PATHS="/usr/local/specific/ffmpeg1 /usr/local/specific/libsdl1 /opt/local" \
         -DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
         -DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
@@ -342,6 +344,7 @@ case "${build_tool}" in
              --with-sdl-prefix=/usr/local/specific/libsdl1 --with-sdl-exec-prefix=/usr/local/specific/libsdl1 \
             --enable-sdl --disable-sdl-windowing \
             --with-vorbis-inc=/opt/local/include --with-vorbis-libs=/opt/local/lib \
+            --with-boost=1.50 \
             ${debug_config_args} \
             --enable-macosx-bundle \
             "${spec_config_args[@]}"

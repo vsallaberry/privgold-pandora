@@ -5,8 +5,10 @@
 #include "universe_util.h"
 #include "gldrv/winsys.h"
 
-static inline float fmin(float a, float b) { return (a<b)?a:b; };
-static inline float fmax(float a, float b) { return (a>b)?a:b; };
+//fmin conflicted with c++11 double std::fmin(double,double)
+static inline float vs_fminf(float a, float b) { return (a<b)?a:b; };
+//fmax conflicted with c++11 double std::fmax(double,double)
+static inline float vs_fmaxf(float a, float b) { return (a>b)?a:b; };
 
 class ShipCommands {
 		Functor<ShipCommands> *csetkps;
@@ -48,11 +50,11 @@ class ShipCommands {
 					mi->Name.append("1"); //argument to access menu
 //					mi->action.append("python"); //adds this to the function  2 call as the argument
 					mi->display.append("Python One Line input"); // menu's display name
-					mi->func2call.append("python"); 
+					mi->func2call.append("python");
 					mi->inputbit = true; // set single-line input mode
 					mi->selectstring.append("Type a single line of Python"); // call function "Display" with this string
 //					mi->predisplay.append("Python");
-					
+
 					CommandInterpretor->addMenuItem(mi);
 				}
 				{
@@ -84,7 +86,7 @@ class ShipCommands {
 		void setkps(const char *in);
 };
 // these _would_ work if the physics routines polled the ship_commands object
-// for these bools.. 
+// for these bools..
 void ShipCommands::pymenu() {
         std::string response(CommandInterpretor->setMenu("python test"));
         CommandInterpretor->conoutf(response);
@@ -103,7 +105,7 @@ void ShipCommands::down(bool *isKeyDown) {
 }
 void ShipCommands::roll(bool *isKeyDown) {
 	broll = isKeyDown;
-} 
+}
 
 
 static ShipCommands *ship_commands=NULL;
@@ -117,11 +119,11 @@ void ShipCommands::setkps(const char *in)
 		static float game_speed = XMLSupport::parse_float (vs_config->getVariable("physics","game_speed","1"));
 		static bool display_in_meters = XMLSupport::parse_bool (vs_config->getVariable("physics","display_in_meters","true"));
 		static bool lie = XMLSupport::parse_bool (vs_config->getVariable("physics","game_speed_lying","true"));
-		if (lie) 
+		if (lie)
 			kps *= game_speed; else
 		kps /= display_in_meters?1.0f:3.6f;
 
-		player->GetComputerData().set_speed = fmin(player->GetComputerData().max_speed(),kps);
+		player->GetComputerData().set_speed = vs_fminf(player->GetComputerData().max_speed(),kps);
 	}
 }
 

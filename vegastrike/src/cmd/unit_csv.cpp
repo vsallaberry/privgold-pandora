@@ -23,11 +23,11 @@ CSVRow LookupUnitRow(const string &unitname, const string &faction) {
   for (vector<CSVTable*>::reverse_iterator i=unitTables.rbegin();i!=unitTables.rend();++i) {
     unsigned int where;
     if ((*i)->RowExists(hashname,where)) {
-      return CSVRow((*i),where); 
+      return CSVRow((*i),where);
     }else if ((*i)->RowExists(unitname,where)) {
       return CSVRow((*i),where);
     }
-  } 
+  }
   return CSVRow();
 }
 using namespace std;
@@ -49,7 +49,7 @@ static vector<string> parseSemicolon(string inp) {
   return ret;
 }
 static vector<vector<string> > parseBracketSemicolon(string inp) {
-  vector<vector<string> > ret;  
+  vector<vector<string> > ret;
   string::size_type where,when;
   string::size_type ofs=0;
   while ((where=inp.find('{',ofs))!=string::npos) {
@@ -74,13 +74,13 @@ static void UpgradeUnit (Unit * un, const std::string &upgrades) {
     string::size_type where1 = upgrade.find(';');
     string::size_type where2 = upgrade.rfind(';');
     if (where1!=string::npos) {
-      mountoffset=XMLSupport::parse_int(upgrade.substr(where1+1,where2!=where1?where2:upgrade.length()));      
+      mountoffset=XMLSupport::parse_int(upgrade.substr(where1+1,where2!=where1?where2:upgrade.length()));
       if (where2!=where1&&where2!=string::npos) {
         subunitoffset=XMLSupport::parse_int(upgrade.substr(where2+1));
       }
     }
     upgrade = upgrade.substr(0,where1);
-    if (upgrade.length()==0) 
+    if (upgrade.length()==0)
       continue;
     const Unit * upgradee = UnitConstCache::getCachedConst (StringIntKey(upgrade,FactionUtil::GetUpgradeFaction()));
 	if (!upgradee) {
@@ -93,15 +93,15 @@ static void UpgradeUnit (Unit * un, const std::string &upgrades) {
     un->Unit::Upgrade (upgradee,
                        mountoffset,
                        subunitoffset,
-                       GetModeFromName (upgrade.c_str()),true,percent,NULL); 
-  }  
+                       GetModeFromName (upgrade.c_str()),true,percent,NULL);
+  }
 }
 
 
 void AddMeshes(std::vector<Mesh*>&xmeshes, float&randomstartframe, float&randomstartseconds, float unitscale, const std::string &meshes,int faction,Flightgroup *fg,vector<unsigned int> *counts){
   string::size_type where,when,wheresf,wherest,ofs=0;
   if (counts) counts->clear();
-  {   
+  {
       int nelem=0;
       while ((ofs=meshes.find('{',ofs))!=string::npos) nelem++,ofs++;
       if (counts) counts->reserve(nelem);
@@ -112,19 +112,19 @@ void AddMeshes(std::vector<Mesh*>&xmeshes, float&randomstartframe, float&randoms
     when=meshes.find('}',where+1);//matching closing brace
     string mesh = meshes.substr(where+1,((when==string::npos) ? string::npos : when-where-1));
     ofs = ((when==string::npos) ? string::npos : when+1);
-    
+
     wheresf = mesh.find(';');
     string startf = "0";
     string startt="0";
     if (wheresf!=string::npos) {
       startf=mesh.substr(wheresf+1);
-      mesh = mesh.substr(0,wheresf); 
+      mesh = mesh.substr(0,wheresf);
       wherest = startf.find(';');
       if (wherest!=string::npos) {
         startt=startf.substr(wherest+1);
         startf=startf.substr(0,wherest);
       }
-    }    
+    }
     int startframe = startf=="RANDOM"?-1:(startf=="ASYNC"?-1:atoi(startf.c_str()));
     float starttime = startt=="RANDOM"?-1.0f:atof(startt.c_str());
     unsigned int s=xmeshes.size();
@@ -132,7 +132,7 @@ void AddMeshes(std::vector<Mesh*>&xmeshes, float&randomstartframe, float&randoms
 	if (counts) counts->push_back(xmeshes.size()-s);
   }
 }
-static pair<string::size_type,string::size_type> nextElementRange (const string &inp, string::size_type &start, string::size_type end) 
+static pair<string::size_type,string::size_type> nextElementRange (const string &inp, string::size_type &start, string::size_type end)
 {
   string::size_type ostart = start;
   start = inp.find(';',start);
@@ -145,7 +145,7 @@ static pair<string::size_type,string::size_type> nextElementRange (const string 
   }
 }
 
-static string nextElementString (const string &inp, string::size_type &start, string::size_type end) 
+static string nextElementString (const string &inp, string::size_type &start, string::size_type end)
 {
   pair<string::size_type,string::size_type> rng = nextElementRange(inp,start,end);
   if (rng.second == string::npos)
@@ -153,25 +153,25 @@ static string nextElementString (const string &inp, string::size_type &start, st
 	  return inp.substr(rng.first,rng.second-rng.first);
 }
 
-static int nextElementInt(const string &inp, string::size_type &start, string::size_type end, int def=0) 
+static int nextElementInt(const string &inp, string::size_type &start, string::size_type end, int def=0)
 {
   pair<string::size_type,string::size_type> rng = nextElementRange(inp,start,end);
   return (rng.first==rng.second)?def:atoi(inp.c_str()+rng.first);
 }
 
-static double nextElementFloat(const string &inp, string::size_type &start, string::size_type end, double def=0) 
+static double nextElementFloat(const string &inp, string::size_type &start, string::size_type end, double def=0)
 {
   pair<string::size_type,string::size_type> rng = nextElementRange(inp,start,end);
   return (rng.first==rng.second)?def:atof(inp.c_str()+rng.first);
 }
 
-static double nextElementBool(const string &inp, string::size_type &start, string::size_type end, bool def=false) 
+static double nextElementBool(const string &inp, string::size_type &start, string::size_type end, bool def=false)
 {
   pair<string::size_type,string::size_type> rng = nextElementRange(inp,start,end);
   return (rng.first==rng.second)?def:XMLSupport::parse_bool(inp.substr(rng.first,((rng.second==string::npos)?string::npos:(rng.second-rng.first))));
 }
 
-static string nextElement (string &inp) 
+static string nextElement (string &inp)
 {
   string::size_type start=0;
   pair<string::size_type,string::size_type> rng = nextElementRange(inp,start,string::npos);
@@ -182,16 +182,18 @@ static string nextElement (string &inp)
 
 
 static bool stob(const string &inp, bool defaul) {
-  if (inp.length()!=0) 
+  if (inp.length()!=0)
     return XMLSupport::parse_bool(inp);
   return defaul;
 }
-static double stof(const string &inp, double def=0) {
+//stof conflict with c++11 std::stof
+static double vs_stof(const string &inp, double def=0) {
   if (inp.length()!=0)
     return XMLSupport::parse_float(inp);
   return def;
 }
-static int stoi(const string &inp, int def=0) {
+//stof conflict with c++11 std::stoi
+static int vs_stoi(const string &inp, int def=0) {
   if (inp.length()!=0)
     return XMLSupport::parse_int(inp);
   return def;
@@ -207,7 +209,7 @@ static Mount * createMount(const std::string& name, int ammo, int volume, float 
 static void AddMounts(Unit * thus, Unit::XML &xml, const std::string &mounts) {
   string::size_type where,when,ofs=0;
   unsigned int first_new_mount = thus->mounts.size();
-  {   
+  {
       int nmountz=0;
       while ((ofs=mounts.find('{',ofs))!=string::npos) nmountz++,ofs++;
 	  thus->mounts.reserve(nmountz+thus->mounts.size());
@@ -222,7 +224,7 @@ static void AddMounts(Unit * thus, Unit::XML &xml, const std::string &mounts) {
       QVector Q = QVector (0,1,0);
       QVector R = QVector (0,0,1);
       QVector pos = QVector (0,0,0);
-      
+
       string filename = nextElementString(mounts,elemstart,elemend);
       int ammo = nextElementInt(mounts,elemstart,elemend,-1);
       int volume = nextElementInt(mounts,elemstart,elemend);
@@ -248,7 +250,7 @@ static void AddMounts(Unit * thus, Unit::XML &xml, const std::string &mounts) {
         Q.k=0;
       }
       R.Normalize();
-      
+
       CrossProduct (Q,R,P);
       CrossProduct (R,P,Q);
       Q.Normalize();
@@ -271,12 +273,12 @@ static void AddMounts(Unit * thus, Unit::XML &xml, const std::string &mounts) {
     static bool half_sounds = XMLSupport::parse_bool(vs_config->getVariable ("audio","every_other_mount","false"));
     if ((a&1)==parity) {
       int b=a;
-      if((a&3) == 2 && (int) a < (thus->GetNumMounts()-1)) 
+      if((a&3) == 2 && (int) a < (thus->GetNumMounts()-1))
         if (thus->mounts[a].type->type != weapon_info::PROJECTILE&&thus->mounts[a+1].type->type != weapon_info::PROJECTILE)
           b=a+1;
       thus->mounts[b].sound = AUDCreateSound (thus->mounts[b].type->sound,thus->mounts[b].type->type!=weapon_info::PROJECTILE);
     } else if ((!half_sounds)||thus->mounts[a].type->type == weapon_info::PROJECTILE) {
-      thus->mounts[a].sound = AUDCreateSound (thus->mounts[a].type->sound,thus->mounts[a].type->type!=weapon_info::PROJECTILE);    //lloping also flase in unit_customize  
+      thus->mounts[a].sound = AUDCreateSound (thus->mounts[a].type->sound,thus->mounts[a].type->type!=weapon_info::PROJECTILE);    //lloping also flase in unit_customize
     }
     if (a>0) {
       if (thus->mounts[a].sound==thus->mounts[a-1].sound&&thus->mounts[a].sound!=-1) {
@@ -303,7 +305,7 @@ struct SubUnitStruct{
 static vector<SubUnitStruct> GetSubUnits(const std::string &subunits) {
   string::size_type where,when,ofs=0;
   vector<SubUnitStruct> ret;
-  {   
+  {
       int nelem=0;
       while ((ofs=subunits.find('{',ofs))!=string::npos) nelem++,ofs++;
       ret.reserve(nelem);
@@ -315,7 +317,7 @@ static vector<SubUnitStruct> GetSubUnits(const std::string &subunits) {
       ofs = when+1;
 
       QVector pos,Q,R;
-      
+
       string filename = nextElementString(subunits,elemstart,elemend);
       pos.i = nextElementFloat(subunits,elemstart,elemend);
       pos.j = nextElementFloat(subunits,elemstart,elemend);
@@ -354,7 +356,7 @@ static void AddSubUnits (Unit *thus, Unit::XML &xml, const std::string &subunits
       xml.units.back()->limits.yaw=0;
       xml.units.back()->limits.pitch=0;
       xml.units.back()->limits.roll=0;
-      xml.units.back()->limits.lateral = xml.units.back()->limits.retro = xml.units.back()->limits.forward = xml.units.back()->limits.afterburn=0.0;        
+      xml.units.back()->limits.lateral = xml.units.back()->limits.retro = xml.units.back()->limits.forward = xml.units.back()->limits.afterburn=0.0;
     }
     if (!thus->isSubUnit()) //Useless to set recursive owner in subunits - as parent will do the same
         xml.units.back()->SetRecursiveOwner (thus);
@@ -370,7 +372,7 @@ static void AddSubUnits (Unit *thus, Unit::XML &xml, const std::string &subunits
     if (xml.units.back()->image->unitwriter!=NULL) {
       xml.units.back()->image->unitwriter->setName (filename);
     }
-    CheckAccessory(xml.units.back());//turns on the ceerazy rotation for the turr          
+    CheckAccessory(xml.units.back());//turns on the ceerazy rotation for the turr
   }
   for(int a=xml.units.size()-1; a>=0; a--) {
       bool randomspawn = xml.units[a]->name.get().find("randomspawn")!=string::npos;
@@ -416,7 +418,7 @@ void AddDocks (Unit* thus, Unit::XML &xml, const string &docks) {
     } else ofs=string::npos;
   }
 }
-void AddLights (Unit * thus, Unit::XML &xml, const string &lights) 
+void AddLights (Unit * thus, Unit::XML &xml, const string &lights)
 {
   static float default_halo_activation=XMLSupport::parse_float(vs_config->getVariable("graphics","default_engine_activation",".00048828125"));
   string::size_type where,when;
@@ -445,13 +447,13 @@ void AddLights (Unit * thus, Unit::XML &xml, const string &lights)
   }
 }
 
-static void ImportCargo(Unit * thus, const string &imports) 
+static void ImportCargo(Unit * thus, const string &imports)
 {
   if (Network!=NULL) {
     return; // Server takes care of this.
   }
   string::size_type where,when,ofs=0;
-  {   
+  {
       int nelem=0;
       while ((ofs=imports.find('{',ofs))!=string::npos) nelem++,ofs++;
       thus->image->cargo.reserve(nelem+thus->image->cargo.size());
@@ -461,21 +463,21 @@ static void ImportCargo(Unit * thus, const string &imports)
     if ((when=imports.find('}',where+1))!=string::npos) {
       string::size_type elemstart = where+1, elemend = when;
       ofs = when+1;
-      
+
       string filename = nextElementString(imports,elemstart,elemend);
       double price = nextElementFloat(imports,elemstart,elemend,1);
       double pricestddev = nextElementFloat(imports,elemstart,elemend);
       double quant = nextElementFloat(imports,elemstart,elemend,1);
       double quantstddev = nextElementFloat(imports,elemstart,elemend);
-      
+
       thus->ImportPartList(filename,price,pricestddev,quant,quantstddev);
     } else ofs=string::npos;
   }
 }
-static void AddCarg (Unit *thus, const string &cargos) 
+static void AddCarg (Unit *thus, const string &cargos)
 {
   string::size_type where,when,ofs=0;
-  {   
+  {
       int nelem=0;
       while ((ofs=cargos.find('{',ofs))!=string::npos) nelem++,ofs++;
       thus->image->cargo.reserve(nelem+thus->image->cargo.size());
@@ -487,7 +489,7 @@ static void AddCarg (Unit *thus, const string &cargos)
       string::size_type elemstart = where+1, elemend = when;
       ofs = when+1;
 
-      carg.content          = nextElementString(cargos,elemstart,elemend);      
+      carg.content          = nextElementString(cargos,elemstart,elemend);
       carg.category         = nextElementString(cargos,elemstart,elemend);
       carg.price            = nextElementFloat(cargos,elemstart,elemend);
       carg.quantity         = nextElementInt(cargos,elemstart,elemend);
@@ -502,7 +504,7 @@ static void AddCarg (Unit *thus, const string &cargos)
     } else ofs = string::npos;
   }
 }
-void HudDamage(float * dam, const string &damages) 
+void HudDamage(float * dam, const string &damages)
 {
 	if (dam) {
 		string::size_type elemstart = 0, elemend = string::npos;
@@ -587,7 +589,7 @@ void AddSounds(Unit * thus, string sounds) {
         thus->sound->jump=AUDCreateSound (ssound,false);
     }
 }
-void LoadCockpit(Unit * thus, const string &cockpit) 
+void LoadCockpit(Unit * thus, const string &cockpit)
 {
 	string::size_type elemstart=0, elemend=string::npos;
 	thus->image->cockpitImage   =nextElementString(cockpit,elemstart,elemend);
@@ -601,9 +603,9 @@ static string str(string inp, string def) {
 }
 static int AssignIf(const string &inp,float &val,float&val1, float&val2) {
   if (inp.length()) {
-    val=stof(inp);
-    val1=stof(inp);
-    val2=stof(inp);
+    val=vs_stof(inp);
+    val1=vs_stof(inp);
+    val2=vs_stof(inp);
     return 1;
   }
   return 0;
@@ -611,7 +613,7 @@ static int AssignIf(const string &inp,float &val,float&val1, float&val2) {
 
 static int AssignIfDeg(const string &inp,float &val) {
   if (inp.length()) {
-    val=stof(inp)*VS_PI/180;
+    val=vs_stof(inp)*VS_PI/180;
     return 1;
   }
   return 0;
@@ -651,7 +653,7 @@ void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
   xml.unitlevel=0;
   xml.unitscale=1;
   xml.data=xml.shieldmesh=xml.bspmesh=xml.rapidmesh=NULL;//was uninitialized memory
-  
+
   string tmpstr;
   csvRow = row[0];
   DEF_OPTIMIZER(FaceCamera);
@@ -917,7 +919,7 @@ void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
       deleteVSSprite(image->hudImage);
       image->hudImage = createVSSprite(tmpstr.c_str());
     }
-  }  
+  }
   if ((tmpstr=OPTIM_GET(row,table,FaceCamera)).length()!=0) {
     graphicOptions.FaceCamera=XMLSupport::parse_bool(tmpstr)?1:0;
   }
@@ -935,11 +937,11 @@ void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
   }else {
       this->setAttackPreference(lattack_preference);
   }
-  graphicOptions.NumAnimationPoints=stoi(OPTIM_GET(row,table,Num_Animation_Stages),0);
-  graphicOptions.NoDamageParticles=stoi(OPTIM_GET(row,table,NoDamageParticles),0);
+  graphicOptions.NumAnimationPoints=vs_stoi(OPTIM_GET(row,table,Num_Animation_Stages),0);
+  graphicOptions.NoDamageParticles=vs_stoi(OPTIM_GET(row,table,NoDamageParticles),0);
   if (graphicOptions.NumAnimationPoints>0)
     graphicOptions.Animating=0;
-  xml.unitscale = stof(OPTIM_GET(row,table,Unit_Scale),1);
+  xml.unitscale = vs_stof(OPTIM_GET(row,table,Unit_Scale),1);
   if (!xml.unitscale) xml.unitscale=1;
   image->unitscale=xml.unitscale;
   double meshest=queryTime();
@@ -956,31 +958,31 @@ void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
   double mountst=queryTime();
   AddMounts(this,xml,OPTIM_GET(row,table,Mounts));
   double cargot=queryTime();
-  this->image->CargoVolume=stof(OPTIM_GET(row,table,Hold_Volume));
-  this->image->HiddenCargoVolume=stof(OPTIM_GET(row,table,Hidden_Hold_Volume));
-  this->image->UpgradeVolume=stof(OPTIM_GET(row,table,Upgrade_Storage_Volume));
-  this->image->equipment_volume=stof(OPTIM_GET(row,table,Equipment_Space));
+  this->image->CargoVolume=vs_stof(OPTIM_GET(row,table,Hold_Volume));
+  this->image->HiddenCargoVolume=vs_stof(OPTIM_GET(row,table,Hidden_Hold_Volume));
+  this->image->UpgradeVolume=vs_stof(OPTIM_GET(row,table,Upgrade_Storage_Volume));
+  this->image->equipment_volume=vs_stof(OPTIM_GET(row,table,Equipment_Space));
   ImportCargo(this,OPTIM_GET(row,table,Cargo_Import));//if this changes change planet_generic.cpp
   AddCarg(this,OPTIM_GET(row,table,Cargo));
   double soundst=queryTime();
   AddSounds(this,OPTIM_GET(row,table,Sounds));
   LoadCockpit(this,OPTIM_GET(row,table,Cockpit));
-  image->CockpitCenter.i=stof(OPTIM_GET(row,table,CockpitX))*xml.unitscale;
-  image->CockpitCenter.j=stof(OPTIM_GET(row,table,CockpitY))*xml.unitscale;
-  image->CockpitCenter.k=stof(OPTIM_GET(row,table,CockpitZ))*xml.unitscale;
-  Mass=stof(OPTIM_GET(row,table,Mass),1.0);
-  Momentofinertia=stof(OPTIM_GET(row,table,Moment_Of_Inertia),1.0);
-  fuel=stof(OPTIM_GET(row,table,Fuel_Capacity));
-  hull=maxhull = stof(OPTIM_GET(row,table,Hull));
-  specInterdiction=stof(OPTIM_GET(row,table,Spec_Interdiction));
-  armor.frontlefttop=stof(OPTIM_GET(row,table,Armor_Front_Top_Left));
-  armor.frontrighttop=stof(OPTIM_GET(row,table,Armor_Front_Top_Right));
-  armor.backlefttop=stof(OPTIM_GET(row,table,Armor_Back_Top_Left));
-  armor.backrighttop=stof(OPTIM_GET(row,table,Armor_Back_Top_Right));
-  armor.frontleftbottom=stof(OPTIM_GET(row,table,Armor_Front_Bottom_Left));
-  armor.frontrightbottom=stof(OPTIM_GET(row,table,Armor_Front_Bottom_Right));
-  armor.backleftbottom=stof(OPTIM_GET(row,table,Armor_Back_Bottom_Left));
-  armor.backrightbottom=stof(OPTIM_GET(row,table,Armor_Back_Bottom_Right));
+  image->CockpitCenter.i=vs_stof(OPTIM_GET(row,table,CockpitX))*xml.unitscale;
+  image->CockpitCenter.j=vs_stof(OPTIM_GET(row,table,CockpitY))*xml.unitscale;
+  image->CockpitCenter.k=vs_stof(OPTIM_GET(row,table,CockpitZ))*xml.unitscale;
+  Mass=vs_stof(OPTIM_GET(row,table,Mass),1.0);
+  Momentofinertia=vs_stof(OPTIM_GET(row,table,Moment_Of_Inertia),1.0);
+  fuel=vs_stof(OPTIM_GET(row,table,Fuel_Capacity));
+  hull=maxhull = vs_stof(OPTIM_GET(row,table,Hull));
+  specInterdiction=vs_stof(OPTIM_GET(row,table,Spec_Interdiction));
+  armor.frontlefttop=vs_stof(OPTIM_GET(row,table,Armor_Front_Top_Left));
+  armor.frontrighttop=vs_stof(OPTIM_GET(row,table,Armor_Front_Top_Right));
+  armor.backlefttop=vs_stof(OPTIM_GET(row,table,Armor_Back_Top_Left));
+  armor.backrighttop=vs_stof(OPTIM_GET(row,table,Armor_Back_Top_Right));
+  armor.frontleftbottom=vs_stof(OPTIM_GET(row,table,Armor_Front_Bottom_Left));
+  armor.frontrightbottom=vs_stof(OPTIM_GET(row,table,Armor_Front_Bottom_Right));
+  armor.backleftbottom=vs_stof(OPTIM_GET(row,table,Armor_Back_Bottom_Left));
+  armor.backrightbottom=vs_stof(OPTIM_GET(row,table,Armor_Back_Bottom_Right));
 
   int shieldcount=0;
   Shield two;
@@ -1061,7 +1063,7 @@ shield.range[3].    thetamin=r180;
 shield.range[3].    thetamax=r270;
 shield.range[3].    rhomin=0;
 shield.range[3].    rhomax=r90;
-    
+
     shield.shield.cur[4]=shield.shield.max[4]=eight.shield8.frontleftbottommax;
 shield.range[4].    thetamin=0;
 shield.range[4].    thetamax=r90;
@@ -1085,7 +1087,7 @@ shield.range[7].   thetamin=r180;
 shield.range[7].   thetamax=r270;
 shield.range[7].   rhomin=-r90;
 shield.range[7].   rhomax=0;
-    
+
   }else if (shieldcount==4){
     shield.number=4;
 
@@ -1133,75 +1135,75 @@ shield.range[1].   rhomax=r90;
     shield.number=0;
   }
   for (iter =0;iter<shieldcount;++iter) {
-    std::string shieldname= "Shield_"+XMLSupport::tostring(iter);    
+    std::string shieldname= "Shield_"+XMLSupport::tostring(iter);
     AssignIfDeg(row[shieldname+"_Min_Theta"],shield.range[iter].thetamin);
     AssignIfDeg(row[shieldname+"_Max_Theta"],shield.range[iter].thetamax);
     AssignIfDeg(row[shieldname+"_Min_Rho"],shield.range[iter].rhomin);
     AssignIfDeg(row[shieldname+"_Max_Rho"],shield.range[iter].rhomax);
   }
-  shield.leak = (char)(stof(OPTIM_GET(row,table,Shield_Leak))*100.0);
-  shield.recharge=stof(OPTIM_GET(row,table,Shield_Recharge));
-  shield.efficiency=stof(OPTIM_GET(row,table,Shield_Efficiency),1.0);
+  shield.leak = (char)(vs_stof(OPTIM_GET(row,table,Shield_Leak))*100.0);
+  shield.recharge=vs_stof(OPTIM_GET(row,table,Shield_Recharge));
+  shield.efficiency=vs_stof(OPTIM_GET(row,table,Shield_Efficiency),1.0);
 
   static bool  WCfuelhack=XMLSupport::parse_bool (vs_config->getVariable("physics","fuel_equals_warp","false"));
-  maxwarpenergy=warpenergy=stof(OPTIM_GET(row,table,Warp_Capacitor));
+  maxwarpenergy=warpenergy=vs_stof(OPTIM_GET(row,table,Warp_Capacitor));
 
-  graphicOptions.MinWarpMultiplier=stof(OPTIM_GET(row,table,Warp_Min_Multiplier),1.0);
-  graphicOptions.MaxWarpMultiplier=stof(OPTIM_GET(row,table,Warp_Max_Multiplier),1.0);
+  graphicOptions.MinWarpMultiplier=vs_stof(OPTIM_GET(row,table,Warp_Min_Multiplier),1.0);
+  graphicOptions.MaxWarpMultiplier=vs_stof(OPTIM_GET(row,table,Warp_Max_Multiplier),1.0);
 
-  maxenergy=energy=stof(OPTIM_GET(row,table,Primary_Capacitor));
-  recharge=stof(OPTIM_GET(row,table,Reactor_Recharge));
+  maxenergy=energy=vs_stof(OPTIM_GET(row,table,Primary_Capacitor));
+  recharge=vs_stof(OPTIM_GET(row,table,Reactor_Recharge));
   jump.drive=XMLSupport::parse_bool(OPTIM_GET(row,table,Jump_Drive_Present))?-1:-2;
-  jump.delay = stoi(OPTIM_GET(row,table,Jump_Drive_Delay));
+  jump.delay = vs_stoi(OPTIM_GET(row,table,Jump_Drive_Delay));
   image->forcejump=XMLSupport::parse_bool(OPTIM_GET(row,table,Wormhole));
   graphicOptions.RecurseIntoSubUnitsOnCollision=stob(OPTIM_GET(row,table,Collide_Subunits),graphicOptions.RecurseIntoSubUnitsOnCollision?true:false)?1:0;
-  jump.energy=stof(OPTIM_GET(row,table,Outsystem_Jump_Cost));
-  jump.insysenergy=stof(OPTIM_GET(row,table,Warp_Usage_Cost));
+  jump.energy=vs_stof(OPTIM_GET(row,table,Outsystem_Jump_Cost));
+  jump.insysenergy=vs_stof(OPTIM_GET(row,table,Warp_Usage_Cost));
   if (WCfuelhack) fuel=warpenergy=warpenergy+jump.energy*0.1f; //this is required to make sure we don't trigger the "globally out of fuel" if we use all warp charges -- save some afterburner for later!!!
-  afterburnenergy=stof(OPTIM_GET(row,table,Afterburner_Usage_Cost),32767);
-  afterburntype = stoi(OPTIM_GET(row,table,Afterburner_Type)); //type 1 == "use fuel", type 0 == "use reactor energy", type 2 ==(hopefully) "use jump fuel" 3: NO AFTERBURNER
-  limits.yaw=stof(OPTIM_GET(row,table,Maneuver_Yaw))*VS_PI/180.;
-  limits.pitch=stof(OPTIM_GET(row,table,Maneuver_Pitch))*VS_PI/180.;
-  limits.roll=stof(OPTIM_GET(row,table,Maneuver_Roll))*VS_PI/180.;
+  afterburnenergy=vs_stof(OPTIM_GET(row,table,Afterburner_Usage_Cost),32767);
+  afterburntype = vs_stoi(OPTIM_GET(row,table,Afterburner_Type)); //type 1 == "use fuel", type 0 == "use reactor energy", type 2 ==(hopefully) "use jump fuel" 3: NO AFTERBURNER
+  limits.yaw=vs_stof(OPTIM_GET(row,table,Maneuver_Yaw))*VS_PI/180.;
+  limits.pitch=vs_stof(OPTIM_GET(row,table,Maneuver_Pitch))*VS_PI/180.;
+  limits.roll=vs_stof(OPTIM_GET(row,table,Maneuver_Roll))*VS_PI/180.;
   {
     std::string t,tn,tp;
     t=OPTIM_GET(row,table,Yaw_Governor);
     tn=OPTIM_GET(row,table,Yaw_Governor_Right);
     tp=OPTIM_GET(row,table,Yaw_Governor_Left);
-    computer.max_yaw_right=stof(tn.length()>0?tn:t)*VS_PI/180.;
-    computer.max_yaw_left=stof(tp.length()>0?tp:t)*VS_PI/180.;
+    computer.max_yaw_right=vs_stof(tn.length()>0?tn:t)*VS_PI/180.;
+    computer.max_yaw_left=vs_stof(tp.length()>0?tp:t)*VS_PI/180.;
     t=OPTIM_GET(row,table,Pitch_Governor);
     tn=OPTIM_GET(row,table,Pitch_Governor_Up);
     tp=OPTIM_GET(row,table,Pitch_Governor_Down);
-    computer.max_pitch_up=stof(tn.length()>0?tn:t)*VS_PI/180.;
-    computer.max_pitch_down=stof(tp.length()>0?tp:t)*VS_PI/180.;
+    computer.max_pitch_up=vs_stof(tn.length()>0?tn:t)*VS_PI/180.;
+    computer.max_pitch_down=vs_stof(tp.length()>0?tp:t)*VS_PI/180.;
     t=OPTIM_GET(row,table,Roll_Governor);
     tn=OPTIM_GET(row,table,Roll_Governor_Right);
     tp=OPTIM_GET(row,table,Roll_Governor_Left);
-    computer.max_roll_right=stof(tn.length()>0?tn:t)*VS_PI/180.;
-    computer.max_roll_left=stof(tp.length()>0?tp:t)*VS_PI/180.;
+    computer.max_roll_right=vs_stof(tn.length()>0?tn:t)*VS_PI/180.;
+    computer.max_roll_left=vs_stof(tp.length()>0?tp:t)*VS_PI/180.;
   }
   static float game_accel=XMLSupport::parse_float(vs_config->getVariable("physics","game_accel","1"));
   static float game_speed=XMLSupport::parse_float(vs_config->getVariable("physics","game_speed","1"));
-  limits.afterburn = stof(OPTIM_GET(row,table,Afterburner_Accel))*game_accel*game_speed;
-  limits.forward = stof(OPTIM_GET(row,table,Forward_Accel))*game_accel*game_speed;
-  limits.retro = stof(OPTIM_GET(row,table,Retro_Accel))*game_accel*game_speed;
-  limits.lateral = .5*(stof(OPTIM_GET(row,table,Left_Accel))+stof(OPTIM_GET(row,table,Right_Accel)))*game_accel*game_speed;
-  limits.vertical = .5*(stof(OPTIM_GET(row,table,Top_Accel))+stof(OPTIM_GET(row,table,Bottom_Accel)))*game_accel*game_speed;
-  computer.max_combat_speed=stof(OPTIM_GET(row,table,Default_Speed_Governor))*game_speed;
-  computer.max_combat_ab_speed=stof(OPTIM_GET(row,table,Afterburner_Speed_Governor))*game_speed;
+  limits.afterburn = vs_stof(OPTIM_GET(row,table,Afterburner_Accel))*game_accel*game_speed;
+  limits.forward = vs_stof(OPTIM_GET(row,table,Forward_Accel))*game_accel*game_speed;
+  limits.retro = vs_stof(OPTIM_GET(row,table,Retro_Accel))*game_accel*game_speed;
+  limits.lateral = .5*(vs_stof(OPTIM_GET(row,table,Left_Accel))+vs_stof(OPTIM_GET(row,table,Right_Accel)))*game_accel*game_speed;
+  limits.vertical = .5*(vs_stof(OPTIM_GET(row,table,Top_Accel))+vs_stof(OPTIM_GET(row,table,Bottom_Accel)))*game_accel*game_speed;
+  computer.max_combat_speed=vs_stof(OPTIM_GET(row,table,Default_Speed_Governor))*game_speed;
+  computer.max_combat_ab_speed=vs_stof(OPTIM_GET(row,table,Afterburner_Speed_Governor))*game_speed;
   computer.itts = stob(OPTIM_GET(row,table,ITTS),true);
   computer.radar.canlock = stob(OPTIM_GET(row,table,Can_Lock),true);
   {
     std::string iffval = OPTIM_GET(row,table,Radar_Color);
-    int iff=stoi(iffval,0);
+    int iff=vs_stoi(iffval,0);
     computer.radar.iff=iff?iff:stob(iffval,false);
   }
-  computer.radar.maxrange=stof(OPTIM_GET(row,table,Radar_Range),FLT_MAX);
-  computer.radar.maxcone=cos(stof(OPTIM_GET(row,table,Max_Cone),180)*VS_PI/180);
-  computer.radar.trackingcone=cos(stof(OPTIM_GET(row,table,Tracking_Cone),180)*VS_PI/180);
-  computer.radar.lockcone=cos(stof(OPTIM_GET(row,table,Lock_Cone),180)*VS_PI/180);
-  cloakmin=(int)(stof(OPTIM_GET(row,table,Cloak_Min))*2147483136);
+  computer.radar.maxrange=vs_stof(OPTIM_GET(row,table,Radar_Range),FLT_MAX);
+  computer.radar.maxcone=cos(vs_stof(OPTIM_GET(row,table,Max_Cone),180)*VS_PI/180);
+  computer.radar.trackingcone=cos(vs_stof(OPTIM_GET(row,table,Tracking_Cone),180)*VS_PI/180);
+  computer.radar.lockcone=cos(vs_stof(OPTIM_GET(row,table,Lock_Cone),180)*VS_PI/180);
+  cloakmin=(int)(vs_stof(OPTIM_GET(row,table,Cloak_Min))*2147483136);
   if (cloakmin<0) cloakmin=0;
   image->cloakglass=XMLSupport::parse_bool(OPTIM_GET(row,table,Cloak_Glass));
   if ((cloakmin&0x1)&&!image->cloakglass) {
@@ -1216,27 +1218,27 @@ shield.range[1].   rhomax=r90;
     cloaking=-1;
   else
     cloaking = (int)(-2147483647)-1;
-  image->cloakrate = (int)(2147483136.*stof(OPTIM_GET(row,table,Cloak_Rate))); //short fix  
-  image->cloakenergy=stof(OPTIM_GET(row,table,Cloak_Energy));
-  image->repair_droid=stoi(OPTIM_GET(row,table,Repair_Droid));
-  image->ecm = stoi(OPTIM_GET(row,table,ECM_Rating));
+  image->cloakrate = (int)(2147483136.*vs_stof(OPTIM_GET(row,table,Cloak_Rate))); //short fix
+  image->cloakenergy=vs_stof(OPTIM_GET(row,table,Cloak_Energy));
+  image->repair_droid=vs_stoi(OPTIM_GET(row,table,Repair_Droid));
+  image->ecm = vs_stoi(OPTIM_GET(row,table,ECM_Rating));
 
-  this->HeatSink = stof(OPTIM_GET(row,table,Heat_Sink_Rating));
+  this->HeatSink = vs_stof(OPTIM_GET(row,table,Heat_Sink_Rating));
   if (image->ecm<0) image->ecm*=-1;
   if (image->cockpit_damage){
     HudDamage(image->cockpit_damage,OPTIM_GET(row,table,Hud_Functionality));
     HudDamage(image->cockpit_damage+1+MAXVDUS+UnitImages::NUMGAUGES,OPTIM_GET(row,table,Max_Hud_Functionality));
   }
-  image->LifeSupportFunctionality=stof(OPTIM_GET(row,table,Lifesupport_Functionality));
-  image->LifeSupportFunctionalityMax=stof(OPTIM_GET(row,table,Max_Lifesupport_Functionality));
-  image->CommFunctionality=stof(OPTIM_GET(row,table,Comm_Functionality));
-  image->CommFunctionalityMax=stof(OPTIM_GET(row,table,Max_Comm_Functionality));
-  image->fireControlFunctionality=stof(OPTIM_GET(row,table,FireControl_Functionality));
-  image->fireControlFunctionalityMax=stof(OPTIM_GET(row,table,Max_FireControl_Functionality));
-  image->SPECDriveFunctionality=stof(OPTIM_GET(row,table,SPECDrive_Functionality));
-  image->SPECDriveFunctionalityMax=stof(OPTIM_GET(row,table,Max_SPECDrive_Functionality));
-  computer.slide_start=stoi(OPTIM_GET(row,table,Slide_Start));
-  computer.slide_end=stoi(OPTIM_GET(row,table,Slide_End));
+  image->LifeSupportFunctionality=vs_stof(OPTIM_GET(row,table,Lifesupport_Functionality));
+  image->LifeSupportFunctionalityMax=vs_stof(OPTIM_GET(row,table,Max_Lifesupport_Functionality));
+  image->CommFunctionality=vs_stof(OPTIM_GET(row,table,Comm_Functionality));
+  image->CommFunctionalityMax=vs_stof(OPTIM_GET(row,table,Max_Comm_Functionality));
+  image->fireControlFunctionality=vs_stof(OPTIM_GET(row,table,FireControl_Functionality));
+  image->fireControlFunctionalityMax=vs_stof(OPTIM_GET(row,table,Max_FireControl_Functionality));
+  image->SPECDriveFunctionality=vs_stof(OPTIM_GET(row,table,SPECDrive_Functionality));
+  image->SPECDriveFunctionalityMax=vs_stof(OPTIM_GET(row,table,Max_SPECDrive_Functionality));
+  computer.slide_start=vs_stoi(OPTIM_GET(row,table,Slide_Start));
+  computer.slide_end=vs_stoi(OPTIM_GET(row,table,Slide_End));
   double upgradet=queryTime();
   UpgradeUnit(this,OPTIM_GET(row,table,Upgrades));
 
@@ -1315,7 +1317,7 @@ shield.range[1].   rhomax=r90;
       }
       if (xml.rapidmesh_str.length())
         addRapidMesh(&xml,xml.rapidmesh_str.c_str(),xml.unitscale,faction,getFlightgroup());
-      else 
+      else
         xml.rapidmesh=NULL;
       if (xml.bspmesh_str.length())
         addBSPMesh(&xml,xml.bspmesh_str.c_str(),xml.unitscale,faction,getFlightgroup());
@@ -1328,7 +1330,7 @@ shield.range[1].   rhomax=r90;
         }
         if (CheckBSP (tmpname.c_str())) {
           bspTree = new BSPTree (tmpname.c_str());
-        }	
+        }
       } else {
         bspTree = NULL;
       }
@@ -1352,7 +1354,7 @@ shield.range[1].   rhomax=r90;
         for (int i=1;i<collideTreesMaxTrees;++i) {
           if (!this->colTrees->rapidColliders[i]) {
             unsigned int which = 1<<i;
-            this->colTrees->rapidColliders[i]= 
+            this->colTrees->rapidColliders[i]=
               getCollideTree(Vector (1,1,which),
                              &polies);
           }
@@ -1372,7 +1374,7 @@ shield.range[1].   rhomax=r90;
   CheckAccessory(this);//turns on the ceerazy rotation for any accessories
   this->setAverageGunSpeed();
   double endt=queryTime();
-  //printf ("spr %f mesh %f subun %f mount %f carg %f sound %f upg %f exp %f light %f tree %f\n",spritet-start,subunt-meshest,mountst-subunt,cargot-mountst,soundst-cargot,upgradet-soundst,explodet-upgradet, lightt-explodet, treet-lightt, endt-treet); 
+  //printf ("spr %f mesh %f subun %f mount %f carg %f sound %f upg %f exp %f light %f tree %f\n",spritet-start,subunt-meshest,mountst-subunt,cargot-mountst,soundst-cargot,upgradet-soundst,explodet-upgradet, lightt-explodet, treet-lightt, endt-treet);
 }
 
 CSVRow GetUnitRow(string filename, bool subu, int faction, bool readlast, bool &rread) {
@@ -1384,7 +1386,7 @@ CSVRow GetUnitRow(string filename, bool subu, int faction, bool readlast, bool &
       return CSVRow(unitTables[i],where);
     }else if (unitTables[i]->RowExists(filename,where)) {
       rread=true;
-      return CSVRow(unitTables[i],where); 
+      return CSVRow(unitTables[i],where);
     }
   }
   rread=false;
@@ -1423,7 +1425,7 @@ void Unit::WriteUnit (const char * modifications) {
       image->unitwriter->Write(modifications);
     for (un_iter ui= getSubUnits();(*ui)!=NULL;++ui) {
       (*ui)->WriteUnit(modifications);
-    } 
+    }
   }
 }
 using XMLSupport::tostring;
@@ -1460,8 +1462,8 @@ string Unit::WriteUnitString () {
       unsigned int where;
       string val;
       if (unitTables[i]->RowExists(csvRow,where)) {
-        CSVRow row(unitTables[i],where);        
-		vsUMap<string,string> unit;        
+        CSVRow row(unitTables[i],where);
+		vsUMap<string,string> unit;
         for (int jj=0;
              jj<row.size();
              ++jj) {
@@ -1474,7 +1476,7 @@ string Unit::WriteUnitString () {
         unit["Hidden_Hold_Volume"]=XMLSupport::tostring(image->HiddenCargoVolume);
         unit["Upgrade_Storage_Volume"]=XMLSupport::tostring(image->UpgradeVolume);
         string mountstr;
-        double unitScale=  stof(unit["Unit_Scale"],1);
+        double unitScale=  vs_stof(unit["Unit_Scale"],1);
         {//mounts
           for (int j=0;j<mounts.size();++j) {
             char mnt[1024];
@@ -1575,7 +1577,7 @@ string Unit::WriteUnitString () {
         unit["Armor_Front_Bottom_Left"]=tos(armor.frontleftbottom);
         unit["Armor_Front_Bottom_Right"]=tos(armor.frontrightbottom);
         unit["Armor_Back_Bottom_Left"]=tos(armor.backleftbottom);
-        unit["Armor_Back_Bottom_Right"]=tos(armor.backrightbottom);        
+        unit["Armor_Back_Bottom_Right"]=tos(armor.backrightbottom);
         {
           unit["Shield_Front_Top_Right"]="";
           unit["Shield_Front_Top_Left"]="";
@@ -1595,16 +1597,16 @@ string Unit::WriteUnitString () {
             unit["Shield_Front_Bottom_Right"]=tos(shield.shield8.frontrightbottommax);
             unit["Shield_Front_Bottom_Left"]=tos(shield.shield8.frontleftbottommax);
             unit["Shield_Back_Bottom_Right"]=tos(shield.shield8.backrightbottommax);
-            unit["Shield_Back_Bottom_Left"]=tos(shield.shield8.backleftbottommax);            
+            unit["Shield_Back_Bottom_Left"]=tos(shield.shield8.backleftbottommax);
             break;
           case 4:
-            unit["Shield_Front_Top_Right"]=tos(shield.shield4fbrl.frontmax);            
+            unit["Shield_Front_Top_Right"]=tos(shield.shield4fbrl.frontmax);
             unit["Shield_Back_Top_Right"]=tos(shield.shield4fbrl.backmax);
             unit["Shield_Front_Bottom_Right"]=tos(shield.shield4fbrl.rightmax);
-            unit["Shield_Front_Bottom_Left"]=tos(shield.shield4fbrl.leftmax);            
+            unit["Shield_Front_Bottom_Left"]=tos(shield.shield4fbrl.leftmax);
             break;
           case 2:
-            unit["Shield_Front_Top_Right"]=tos(shield.shield2fb.frontmax);            
+            unit["Shield_Front_Top_Right"]=tos(shield.shield2fb.frontmax);
             unit["Shield_Back_Top_Right"]=tos(shield.shield2fb.backmax);
             break;
           // NOTE: otherwise, no shields
@@ -1660,10 +1662,10 @@ string Unit::WriteUnitString () {
         unit["Hud_Functionality"]=WriteHudDamage(this);
         unit["Max_Hud_Functionality"]=WriteHudDamageFunc(this);
         unit["Heat_Sink_Rating"]=tos(this->HeatSink);
-        unit["Lifesupport_Functionality"]=tos(image->LifeSupportFunctionality);       
+        unit["Lifesupport_Functionality"]=tos(image->LifeSupportFunctionality);
         unit["Max_Lifesupport_Functionality"]=tos(image->LifeSupportFunctionalityMax);
         unit["Comm_Functionality"]=tos(image->CommFunctionality);
-        unit["Max_Comm_Functionality"]=tos(image->CommFunctionalityMax);        
+        unit["Max_Comm_Functionality"]=tos(image->CommFunctionalityMax);
         unit["Comm_Functionality"]=tos(image->CommFunctionality);
         unit["Max_Comm_Functionality"]=tos(image->CommFunctionalityMax);
         unit["FireControl_Functionality"]=tos(image->fireControlFunctionality);
@@ -1672,7 +1674,7 @@ string Unit::WriteUnitString () {
         unit["Max_SPECDrive_Functionality"]=tos(image->SPECDriveFunctionalityMax);
         unit["Slide_Start"]=tos(computer.slide_start);
         unit["Slide_End"]=tos(computer.slide_end);
-        unit["Cargo_Import"]=unit["Upgrades"]="";//make sure those are empty        
+        unit["Cargo_Import"]=unit["Upgrades"]="";//make sure those are empty
         {
             std::string trac;
             if (isTractorable(tractorPush)) trac += "p";
@@ -1747,16 +1749,16 @@ Unit * Unit::makeMasterPartList() {
 			 Cargo carg;
 			 carg.content=row["file"];
 			 carg.category=row["categoryname"];
-			 carg.volume=stof(row["volume"],1);
-			 carg.mass=stof(row["mass"],1);
+			 carg.volume=vs_stof(row["volume"],1);
+			 carg.mass=vs_stof(row["mass"],1);
 			 carg.quantity=1;
-			 carg.price=stoi(row["price"],1);
-			 carg.description=row["description"];    
+			 carg.price=vs_stoi(row["price"],1);
+			 carg.description=row["description"];
 			 ret->GetImageInformation().cargo.push_back(carg);
 		 }
   }
   UpdateMasterPartList(ret);
-  
+
   if (!ret->GetCargo("Pilot",i)) {//required items
     ret->AddCargo(Cargo("Pilot","Contraband",800,1,.01,1,1.0,1.0),true);
   }

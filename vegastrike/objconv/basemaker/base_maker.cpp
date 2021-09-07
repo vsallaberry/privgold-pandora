@@ -24,7 +24,7 @@
 #include <sys/types.h>
 
 /*
- * Globals 
+ * Globals
  */
 game_data_t g_game;
 ForceFeedback *forcefeedback = NULL;
@@ -154,7 +154,7 @@ VSSprite::VSSprite(const char *file, enum FILTER texturefilter,GFXBOOL force) {
     fscanf(f, "%63s %63s", texture, texturea);
     fscanf(f, "%f %f", &widtho2, &heighto2);
     fscanf(f, "%f %f", &xcenter, &ycenter);
-    
+
     widtho2/=2;
     heighto2/=-2;
     surface=NULL;
@@ -163,7 +163,7 @@ VSSprite::VSSprite(const char *file, enum FILTER texturefilter,GFXBOOL force) {
       } else {
 		surface = new Texture(texture);
       }
-      
+
       if (!surface) {
 		delete surface;
 		surface = NULL;
@@ -175,7 +175,7 @@ VSSprite::VSSprite(const char *file, enum FILTER texturefilter,GFXBOOL force) {
     xcenter = ycenter = 0;
   }
   chdir("..");
-}	
+}
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -316,7 +316,7 @@ static char * CreateLists() {
 }
 
 static unsigned char HexToChar (char a) {
-  if (a>='0'&&a<='9') 
+  if (a>='0'&&a<='9')
     return a-'0';
   else if (a>='a'&&a<='f') {
     return 10+a-'a';
@@ -400,7 +400,7 @@ int TextPlane::Draw(const string & newText, int offset,bool startlower, bool for
     if (*text_it=='\n')
       entercount++;
   }
-  glTranslatef(col,row,0);  
+  glTranslatef(col,row,0);
   //  glRasterPos2f (g_game.x_resolution*(1-(col+1)/2),g_game.y_resolution*(row+1)/2);
   glRasterPos2f (0,0);
   float scalex=1;
@@ -517,7 +517,7 @@ public:
                   	unsigned int parentindex;
 			virtual void Click (::Base* base,float x, float y, int button, int state);
 			explicit Link (unsigned int parind, std::string ind,std::string pfile) : parentindex(parind),pythonfile(pfile),index(ind) {}
-			virtual ~Link(){} 
+			virtual ~Link(){}
 #ifdef BASE_MAKER
 			virtual void EndXML(FILE *fp);
 #endif
@@ -656,7 +656,7 @@ public:
 			virtual void EndXML(FILE *fp);
 #endif
 			virtual ~BaseVSSprite () {}
-			BaseVSSprite (const char *spritefile, std::string ind) 
+			BaseVSSprite (const char *spritefile, std::string ind)
 				: BaseObj(ind),spr(spritefile,BILINEAR,GFXTRUE) {}
 		};
 		class BaseTalk : public BaseObj {
@@ -826,7 +826,7 @@ void Base::Room::Weapon::EndXML (FILE *fp) {
 	Indent(fp);fprintf(fp,"import weapons_lib\n");
 	Indent(fp);fprintf(fp,"weap = weapons_lib.MakeWeapon (room%d,time_of_day)\n",parentindex);
 	Indent(fp);
-    
+
 	fprintf(fp,"Base.Link (");
 	Link::EndXML(fp);
 	fprintf(fp,", weap)\n");
@@ -1025,7 +1025,7 @@ void EndGUIFrame(bool drawmouseover) {
   //  glEndScene();bad things...only call this once
 //  GFXHudMode(false);
 //  glEnable (GL_CULL_FACE);
-	
+
 
 }
 void SetSoftwareMousePosition (int x, int y) {
@@ -1359,7 +1359,7 @@ bool LinkStage3Goto(std::string input, unsigned int unusedindexdat, void *dat1, 
 }
 
 static inline string strtolower(const string &foo) {
-	
+
   string rval;
   string::const_iterator src = foo.begin();
   while(src!=foo.end()) rval += tolower(*src++);
@@ -1370,14 +1370,14 @@ bool LinkStage3Comp(std::string input, unsigned int unused, void *dat1, void *da
 
 	int modearg = DISPLAY_MODE_COUNT;
 	input=strtolower(input);
-	
+
 	     if (input=="cargo") modearg=CARGO;
 	else if (input=="upgrade") modearg=UPGRADE;
 	else if (input=="shipdealer") modearg=SHIP_DEALER;
 	else if (input=="missions") modearg=MISSIONS;
 	else if (input=="news") modearg=NEWS;
 	else if (input=="info") modearg=INFO;
-	
+
 	if (modearg<DISPLAY_MODE_COUNT) {
 		((std::vector<DisplayMode> *)dat1)->push_back((DisplayMode)(modearg));
 	}
@@ -1517,7 +1517,7 @@ void Base::Room::Click (Base* base,float x, float y, int button, int state) {
 #else
 		if (state==GLUT_UP&&links.size()) {
 			int count=0;
-			while (count++<links.size()) { 
+			while (count++<links.size()) {
 				Link *curlink=links[base->curlinkindex++%links.size()];
 				if (curlink) {
 					int x=(((curlink->x+(curlink->wid/2))+1)/2)*g_game.x_resolution;
@@ -1847,7 +1847,7 @@ void Base::DrawWin() {
 
 int main (int argc, char **argv) {
 	printf("Loading...\n");
-	Base::CurrentBase=false;
+	Base::CurrentBase=0;
 	glutInit(&argc,argv);
 	glutInitWindowSize(800,600);
 	g_game.x_resolution=800;
@@ -1866,7 +1866,7 @@ int main (int argc, char **argv) {
 //	glLoadIdentity();
 //	glOrtho(-1,1,-1,1,0,100);
 //	glMatrixMode(GL_MODELVIEW);
-	
+
 //	glOrtho(-1,1,1,-1,0,100);
 //	glPushMatrix();
 //	glLoadIdentity();

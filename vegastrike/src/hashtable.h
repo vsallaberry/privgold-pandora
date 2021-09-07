@@ -33,7 +33,7 @@
 #define HASH_SALT_1 0x9B
 class Unit;
 //const int hashsize = 1001;
-//Hashtable doesn't grow	
+//Hashtable doesn't grow
 template<class KEY, class VALUE, int SIZ> class Hashtable :public vsUMap <KEY,VALUE*> {
   typedef std::pair<KEY,VALUE*> HashElement;
   typedef vsUMap<KEY,VALUE* > supertype;
@@ -76,7 +76,7 @@ public:
           }
 	  return retval;
 	}
-  
+
 	VALUE *Get(const KEY &key) const
 	{
           typename supertype::const_iterator iter=this->find(key);

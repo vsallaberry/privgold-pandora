@@ -39,7 +39,7 @@ namespace VSFileSystem
 	enum VSFileMode {	ReadOnly, ReadWrite, CreateWrite };
 
 	// Different file type we have to deal with
-	enum VSFileType { 	
+	enum VSFileType {
 						// File types
 						UniverseFile,	// Loaded from universe subdir
 						SystemFile,		// Loaded from sectors subdir written in homedir/sectors/universename
@@ -291,7 +291,7 @@ namespace VSFileSystem
 			VSFile();
 			VSFile( const char * buffer, long size, VSFileType type=ZoneBuffer, VSFileMode=ReadOnly);
 			VSFile( const char * filename, VSFileType type=UnknownFile, VSFileMode=ReadOnly);
-			VSFile( const string &filename, VSFileType type=UnknownFile) { VSFile::VSFile( filename.c_str(), type); }
+			VSFile( const string &filename, VSFileType type=UnknownFile) { /*VSFile::*//*c++11/clang*/VSFile( filename.c_str(), type); }
   			~VSFile();
 
 			FILE *	GetFP() { return this->fp; } // This is still needed for special cases (when loading PNG files)

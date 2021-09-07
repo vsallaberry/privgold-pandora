@@ -1,17 +1,26 @@
 #ifndef _GNUHASH_H_
 #define _GNUHASH_H_
 #include "config.h"
-// The following block is to only use tr1 from at least 4.3 since 4.2 apparently bugs out.
-// Windows is untested at the moment. 
-#ifdef HAVE_TR1_UNORDERED_MAP
-#ifndef WIN32
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
-#undef HAVE_TR1_UNORDERED_MAP
-#endif
-#endif
+
+#ifdef HAVE_UNORDERED_MAP
+# undef HAVE_UNORDERED_MAP // Not supported
 #endif
 
+// The following block is to only use tr1 from at least 4.3 since 4.2 apparently bugs out.
+// Windows is untested at the moment.
 #ifdef HAVE_TR1_UNORDERED_MAP
+# ifndef WIN32
+#  if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 3)
+#   undef HAVE_TR1_UNORDERED_MAP
+#  endif
+# endif
+#endif
+
+#if defined(HAVE_UNORDERED_MAP)
+#define vsUMap std::unordered_map
+#define vsHashComp std::hash_compare
+#define vsHash std::hash
+#elif defined( HAVE_TR1_UNORDERED_MAP)
 #define vsUMap std::tr1::unordered_map
 #define vsHashComp std::tr1::hash_compare
 #define vsHash std::tr1::hash
@@ -22,16 +31,16 @@
 #endif
 
 #ifdef _WIN32
-#ifdef HAVE_TR1_UNORDERED_MAP
-#include <unordered_map>  // MSVC doesn't use tr1 dirs
+# if defined(HAVE_TR1_UNORDERED_MAP) || defined(HAVE_UNORDERED_MAP)
+#  include <unordered_map>  // MSVC doesn't use tr1 dirs
+# else
+#  include <hash_map>
+# endif
 #else
-#include <hash_map>
-#endif
-#else
-#if __GNUC__ == 2
-#include <map>
-#define hash_map map
-#define stdext std
+# if __GNUC__ == 2
+#  include <map>
+#  define hash_map map
+#  define stdext std
 namespace stdext {
     template<class Key, class Traits = std::less<Key> > class hash_compare
 	{
@@ -42,17 +51,22 @@ namespace stdext {
 }
 
 #include "hashtable.h"
-#else
-#ifdef HAVE_TR1_UNORDERED_MAP
-#include <tr1/unordered_map>
-#include "hashtable.h"
+# else
+#  if defined(HAVE_UNORDERED_MAP)
+#   include <unordered_map>
+#   include "hashtable.h"
 class Unit;
-namespace std{ 
+namespace std{
+#  elif defined(HAVE_TR1_UNORDERED_MAP)
+#   include <tr1/unordered_map>
+#   include "hashtable.h"
+class Unit;
+namespace std{
 namespace tr1{
-#else
-#include <ext/hash_map>
-#define stdext __gnu_cxx
-#include "hashtable.h"
+#  else
+#   include <ext/hash_map>
+#   define stdext __gnu_cxx
+#   include "hashtable.h"
 
 class Unit;
 namespace stdext{
@@ -71,10 +85,10 @@ namespace stdext{
         k  = (((k>>4)&0xF)|(k<<(_HASH_INTSIZE-4)));
         k ^= *start;
       }
-      return k;   
+      return k;
     }
   };
-#endif
+#  endif
   template<> class hash<void *> {
     hash<size_t> a;
   public:
@@ -114,11 +128,11 @@ namespace stdext{
 		static const size_t min_buckets = 8;
 	};
 
-#ifdef HAVE_TR1_UNORDERED_MAP
-}
-#endif
+#  ifdef HAVE_TR1_UNORDERED_MAP
+} /* namespace tr1 */
+#  endif
 }
 
+# endif
 #endif
-#endif
-#endif
+#endif /* ! GNUHASH_H */

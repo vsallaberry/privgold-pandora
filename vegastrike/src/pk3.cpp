@@ -1,41 +1,41 @@
-/*  
+/*
  *  Copyright 2002-2003 LibPK3, Inc. All rights reserved.
  *
- *  Redistribution and use in source and binary forms, with or without 
- *  modification, are permitted provided that the following conditions 
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
  *  are met:
  *
- *  Redistributions of source code must retain the above copyright 
- *  notice, this list of conditions and the following disclaimer. 
- *  Redistributions in binary form must reproduce the above copyright 
- *  notice, this list of conditions and the following disclaimer in 
- *  the documentation and/or other materials provided with the 
- *  distribution. 
- *  
- *  THIS SOFTWARE IS PROVIDED BY THE LIBPK3 PROJECT 
- *  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
- *  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND 
- *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
- *  IN NO EVENT SHALL THE LIBPK3 PROJECT OR CONTRIBUTORS 
- *  BE LIABLE FORANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, 
- *  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT 
- *  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR 
- *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
- *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
- *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE 
- *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
+ *  Redistributions of source code must retain the above copyright
+ *  notice, this list of conditions and the following disclaimer.
+ *  Redistributions in binary form must reproduce the above copyright
+ *  notice, this list of conditions and the following disclaimer in
+ *  the documentation and/or other materials provided with the
+ *  distribution.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE LIBPK3 PROJECT
+ *  ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING,
+ *  BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE LIBPK3 PROJECT OR CONTRIBUTORS
+ *  BE LIABLE FORANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+ *  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
+ *  OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ *  BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ *  USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
  *  DAMAGE.
  *
- *  The views and conclusions contained in the software and 
- *  documentation are those of the authors and should not be 
- *  interpreted as representing official policies, either expressed or 
+ *  The views and conclusions contained in the software and
+ *  documentation are those of the authors and should not be
+ *  interpreted as representing official policies, either expressed or
  *  implied, of the LibPK3 Project or Viktor Liehr alias picard.
  *
  *  $Id: pk3.cpp 11819 2008-02-11 01:37:56Z ace123 $
  *
  */
 
-/* 
+/*
  * Modified by Stephane Vaxelaire on 2003/09/23
  * - Turned longs into ints in the headers (long are 8 bytes on some (all?) 64 bits archs)
  * - Added endianness support (was not working on big endian machine)
@@ -191,7 +191,7 @@ bool CPK3::CheckPK3(FILE *f)
 
   long dhOffset = ftell(f);
   memset(&dh, 0, sizeof(dh));
-  
+
   fread(&dh, sizeof(dh), 1, f);
   dh.correctByteOrder();
 
@@ -208,14 +208,14 @@ bool CPK3::CheckPK3(FILE *f)
 
   // Allocate the data buffer, and read the whole thing.
   m_pDirData = new char[dh.dirSize + dh.nDirEntries*sizeof(*m_papDir)];
-  
+
   if (!m_pDirData)
   {
   	cerr<<"PK3 -- ERROR ALLOCATING DATA BUFFER !"<<endl;
 	exit(1);
     return false;
   }
-  
+
   memset(m_pDirData, 0, dh.dirSize + dh.nDirEntries*sizeof(*m_papDir));
   fread(m_pDirData, dh.dirSize, 1, f);
 
@@ -291,7 +291,7 @@ bool CPK3::ExtractFile( const char *lp_name, const char *new_filename)
   int size = -1;
 
   char *data_content = ExtractFile(lp_name,&size);
-  
+
   if(data_content)
   {
     if(size != -1)
@@ -303,7 +303,7 @@ bool CPK3::ExtractFile( const char *lp_name, const char *new_filename)
       return true;
     }
   }
-  
+
   return false; // probably file not found
 }
 
@@ -323,7 +323,7 @@ int vsstrcmp( const char * lp, const char * str)
 int  CPK3::FileExists( const char * lpname)
 {
   char	    str[PK3LENGTH];
-  int		idx = -1; 
+  int		idx = -1;
 
   memset(&str, 0, sizeof(str));
   //cerr<<"\t\tSearching through "<<m_nEntries<<" files"<<endl;
@@ -332,14 +332,14 @@ int  CPK3::FileExists( const char * lpname)
 		GetFilename(i, str);
 		//cerr<<"\t\tExamining file num."<<i<<" filename : "<<str<<"\tand compared to : "<<lpname<<endl;
 		int result = vsstrcmp(lpname,str);
-		
+
     	if(result == 0)
 		{
 		  cerr<<"FOUND IN PK3 FILE : "<<lpname<<" with index="<<i<<endl;
 		  idx = i;
 		}
   }
-  
+
   /*
   if( idx==-1)
   	cerr<<"DIDN'T FIND FILE : "<<lpname<<endl;
@@ -352,7 +352,7 @@ char *CPK3::ExtractFile( int index, int *file_size)
 {
   char *buffer;
   int flength = GetFileLen(index);
-     
+
   buffer = new char[flength];
 
   if (!buffer)
@@ -360,7 +360,7 @@ char *CPK3::ExtractFile( int index, int *file_size)
     cerr<<"Unable to allocate memory, probably to low memory !!!"<<endl;
     return NULL;
   }
-   else 
+   else
   {
     if (true == ReadFile(index, buffer))
     {
@@ -389,17 +389,17 @@ char *CPK3::ExtractFile(const char *lpname, int *file_size)
 		GetFilename(i, str);
     	//printf("%s",str);
 		int result = vsstrcmp(lpname,str);
-		
+
     if(result == 0)
 		  index = i;
   }
-  
+
   // if the file isn't in the archive
   if (index == -1)
-    return false;
+    return 0;
 
   int flength = GetFileLen(index);
-     
+
   buffer = new char[flength];
 
   if (!buffer)
@@ -407,7 +407,7 @@ char *CPK3::ExtractFile(const char *lpname, int *file_size)
     printf("Unable to allocate memory, probably to low memory !!!\n");
     return NULL;
   }
-   else 
+   else
   {
     if (true == ReadFile(index, buffer))
     {
@@ -519,7 +519,7 @@ bool CPK3::ReadFile(int i, void *pBuf)
   {
     cerr<<"PK3ERROR : Could not allocate memory buffer for decompression"<<endl;
     return false;
-  }	
+  }
 
   memset(pcData, 0, h.cSize);
   fread(pcData, h.cSize, 1, this->f);
@@ -569,7 +569,7 @@ bool CPK3::ReadFile(int i, void *pBuf)
   {
     cerr<<"PK3ERROR : Bad decompression return code"<<endl;
     ret = false;
-  }	
+  }
 
   delete[] pcData;
   return ret;

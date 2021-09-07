@@ -134,7 +134,10 @@ fi
 AC_CHECK_FUNCS([vfscanf lstat])
 
 #check if we have tr1 headers or not
-AC_CHECK_HEADERS([tr1/unordered_map],have_unordered_map=yes,have_unordered_map=no)
+AC_CHECK_HEADERS([unordered_map],have_std_unordered_map=yes,have_std_unordered_map=no)
+#if test x$have_std_unordered_map = xno; then ### Let header choose which one choose
+AC_CHECK_HEADERS([tr1/unordered_map],have_tr1_unordered_map=yes,have_tr1_unordered_map=no)
+#fi
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

@@ -54,7 +54,39 @@ BOOSTSOURCES = \
   boost/1_35/src/converter/type_id.cpp \
   boost/1_35/src/tuple.cpp
 else
+if BOOST1_50
+BOOSTSOURCES_CXXFLAGS = -DBOOST_PYTHON_NO_PY_SIGNATURES -DBOOST_PYTHON_STATIC_LIB
+BOOSTSOURCES = \
+  boost/1_50/src/list.cpp \
+  boost/1_50/src/module.cpp \
+  boost/1_50/src/object_protocol.cpp \
+  boost/1_50/src/dict.cpp \
+  boost/1_50/src/numeric.cpp \
+  boost/1_50/src/errors.cpp \
+  boost/1_50/src/exec.cpp \
+  boost/1_50/src/str.cpp \
+  boost/1_50/src/import.cpp \
+  boost/1_50/src/wrapper.cpp \
+  boost/1_50/src/object_operators.cpp \
+  boost/1_50/src/long.cpp \
+  boost/1_50/src/object/pickle_support.cpp \
+  boost/1_50/src/object/life_support.cpp \
+  boost/1_50/src/object/inheritance.cpp \
+  boost/1_50/src/object/function_doc_signature.cpp \
+  boost/1_50/src/object/stl_iterator.cpp \
+  boost/1_50/src/object/class.cpp \
+  boost/1_50/src/object/enum.cpp \
+  boost/1_50/src/object/function.cpp \
+  boost/1_50/src/object/iterator.cpp \
+  boost/1_50/src/converter/from_python.cpp \
+  boost/1_50/src/converter/registry.cpp \
+  boost/1_50/src/converter/arg_to_python_base.cpp \
+  boost/1_50/src/converter/builtin_converters.cpp \
+  boost/1_50/src/converter/type_id.cpp \
+  boost/1_50/src/tuple.cpp
+else
 BOOSTSOURCES=
+endif
 endif
 endif
 

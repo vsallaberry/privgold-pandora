@@ -40,7 +40,7 @@
 #include "networking/lowlevel/vsnet_clientstate.h"
 #include "networking/netclient.h"
 //#endif
-extern float copysign (float x, float y);
+#include "physics.h"
 
 // the rotation should be applied in world coordinates
 /** MISNOMER...not really clamping... more like renomalizing  slow too
@@ -51,7 +51,7 @@ Vector Unit::ClampTorque(const Vector &amt1) {
 
   if(max.Magnitude() > amt1.Magnitude())
     return amt1;
-  else 
+  else
     return max;
 }
 */
@@ -154,7 +154,7 @@ void GameUnit<UnitType>::UpdatePhysics2 (const Transformation &trans, const Tran
 	double blah1=queryTime();
     if (!tmp&&this->hull<0) {
       Explode(false,SIMULATION_ATOM);
-	
+
     }
 	double blah2=queryTime();
 	if (blah2-blah1>.001||blah1-blah>.001) {
@@ -168,7 +168,7 @@ void GameUnit<UnitType>::UpdatePhysics2 (const Transformation &trans, const Tran
 
 template <class UnitType>
 void GameUnit<UnitType>::Thrust(const Vector &amt1,bool afterburn){
-  
+
   if (this->afterburntype == 0)
   afterburn=afterburn&&this->energy>this->afterburnenergy*SIMULATION_ATOM;
   if (this->afterburntype == 1)
@@ -205,23 +205,23 @@ void GameUnit<UnitType>::Thrust(const Vector &amt1,bool afterburn){
           vel.Normalize();
           float dotprod=vel.Dot(pvel);
           if (dotprod<.86) {
-            
+
             lastbuzz=ttime;
             AUDPlay(this->sound->engine,this->Position(),this->GetVelocity(),1);
           } else {
 
-          }         
+          }
         }
       }
     }
-    
+
   }
 }
 
 template <class UnitType>
 Vector GameUnit<UnitType>::ResolveForces (const Transformation &trans, const Matrix &transmat) {
 #ifndef PERFRAMESOUND
-  AUDAdjustSound (this->sound->engine,this->cumulative_transformation.position, this->cumulative_velocity); 
+  AUDAdjustSound (this->sound->engine,this->cumulative_transformation.position, this->cumulative_velocity);
 #endif
 	return Unit::ResolveForces( trans, transmat);
 }

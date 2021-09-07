@@ -274,7 +274,7 @@ bool Unit::InsideCollideTree (Unit * smaller, QVector & bigpos, Vector &bigNorma
 
 Unit * Unit::BeamInsideCollideTree (const QVector & start,const QVector & end, QVector & pos, Vector &norm, double &distance)
 {
-	QVector r (end-start);	
+	QVector r (end-start);
 	double mag = r.Magnitude();
 	if (mag>0) {
 		r = r*(1./mag);
@@ -345,7 +345,7 @@ Unit * Unit::BeamInsideCollideTree (const QVector & start,const QVector & end, Q
 	}
 	//FIXME
 	//doesn't check all i*j options of subunits vs subunits
-	return false;
+	return 0;
 }
 
 
@@ -369,7 +369,7 @@ bool Unit::Collide (Unit * target)
 		return false;
 	std::multimap<Unit*,Unit*>* last_collisions=&_Universe->activeStarSystem()->last_collisions;
 
-// The following code was commented out to investigate it's effect on falling into textures 
+// The following code was commented out to investigate it's effect on falling into textures
 // where we dont want to when a unit is resting on it.
 /*	std::multimap<Unit*,Unit*>::iterator iter;
 	iter=last_collisions->find(target);

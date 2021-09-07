@@ -170,7 +170,7 @@ Vector  Unit::GetWarpVelocity()const {
   Vector VelocityRef(0,0,0);
   {
       Unit * vr=const_cast<UnitContainer*>(&computer.velocity_ref)->GetUnit();
-      if (vr) 
+      if (vr)
           VelocityRef=vr->cumulative_velocity;
   }
 
@@ -593,7 +593,7 @@ void Unit::reactToCollision(Unit * smalle, const QVector & biglocation, const Ve
 								 // for torque... smalllocation -- approximation hack of MR^2 for rotational inertia (moment of inertia currently just M)
 				Vector torque = smforce/(smalle->radial_size*smalle->radial_size);
 				Vector force = smforce-torque;
-				
+
 				float maxForce = maxForceMultiplier * (smalle->limits.forward+smalle->limits.retro+
 						smalle->limits.lateral+smalle->limits.vertical);
 				float maxTorque = maxTorqueMultiplier * (smalle->limits.yaw+
@@ -641,7 +641,7 @@ void Unit::reactToCollision(Unit * smalle, const QVector & biglocation, const Ve
 			float thismag=thisdelta.Magnitude();
 			static float collision_hack_distance=XMLSupport::parse_float(vs_config->getVariable("physics","collision_avoidance_hack_distance","10000"));
 			static float front_collision_hack_distance=XMLSupport::parse_float(vs_config->getVariable("physics","front_collision_avoidance_hack_distance","200000"));
-			
+
 			if (thcp==NULL&&smcp==NULL) {
 				if (smallmag>collision_hack_distance+this->rSize()&&thismag>collision_hack_distance) {
 					static float front_collision_hack_angle=cos(3.1415926536f*XMLSupport::parse_float(vs_config->getVariable("physics","front_collision_avoidance_hack_angle","40"))/180.0f);
@@ -728,7 +728,9 @@ void Unit::DeactivateJumpDrive ()
 }
 
 
-float copysign (float x, float y)
+//copysign conflicted with c++11 double copysign(double,double)
+//which does not do the same thing
+float vs_copysignf (float x, float y)
 {
 	if (y>0)
 		return x;
@@ -1406,7 +1408,7 @@ void Unit::Init(const char *filename, bool SubU, int faction,std::string unitMod
 	}
 
 	this->filename = filename;
-	
+
 	if(!foundFile) {
 		bool istemplate=(string::npos!=(string(filename).find(".template")));
 		static bool usingtemplates = XMLSupport::parse_bool(vs_config->getVariable("data","usingtemplates","true"));
@@ -2958,7 +2960,7 @@ void Unit::AddVelocity(float difficulty)
     Vector VelocityRef(0,0,0);
     {
         Unit * vr=computer.velocity_ref.GetUnit();
-        if (vr) 
+        if (vr)
             VelocityRef=vr->cumulative_velocity;
     }
 						 // for the heck of it.
@@ -3049,7 +3051,7 @@ void Unit::AddVelocity(float difficulty)
 	}
         if (graphicOptions.WarpFieldStrength!=1.0)
           v=GetWarpVelocity();
-        else 
+        else
           v=Velocity;
 	static float WARPMEMORYEFFECT = XMLSupport::parse_float (vs_config->getVariable ("physics","WarpMemoryEffect","0.9"));
 	graphicOptions.WarpFieldStrength=lastWarpField*WARPMEMORYEFFECT+(1.0-WARPMEMORYEFFECT)*graphicOptions.WarpFieldStrength;
@@ -3636,9 +3638,9 @@ void Unit::ApplyLocalTorque(const Vector &torque)
 Vector Unit::MaxTorque(const Vector &torque)
 {
 	// torque is a normal
-	return torque * (Vector(copysign(limits.pitch, torque.i),
-		copysign(limits.yaw, torque.j),
-		copysign(limits.roll, torque.k)) * torque);
+	return torque * (Vector(vs_copysignf(limits.pitch, torque.i),
+		vs_copysignf(limits.yaw, torque.j),
+		vs_copysignf(limits.roll, torque.k)) * torque);
 }
 
 
@@ -3663,11 +3665,11 @@ Vector Unit::ClampTorque (const Vector &amt1)
 	static float staticfuelclamp = XMLSupport::parse_float (vs_config->getVariable ("physics","NoFuelThrust",".4"));
 	float fuelclamp=(fuel<=0)?staticfuelclamp:1;
 	if (fabs(amt1.i)>fuelclamp*limits.pitch)
-		Res.i=copysign(fuelclamp*limits.pitch,amt1.i);
+		Res.i=vs_copysignf(fuelclamp*limits.pitch,amt1.i);
 	if (fabs(amt1.j)>fuelclamp*limits.yaw)
-		Res.j=copysign(fuelclamp*limits.yaw,amt1.j);
+		Res.j=vs_copysignf(fuelclamp*limits.yaw,amt1.j);
 	if (fabs(amt1.k)>fuelclamp*limits.roll)
-		Res.k=copysign(fuelclamp*limits.roll,amt1.k);
+		Res.k=vs_copysignf(fuelclamp*limits.roll,amt1.k);
 
 	//static float fuelenergytomassconversionconstant = XMLSupport::parse_float(vs_config->getVariable ("physics","FuelEnergyDensity","343596000000000.0")); // note that we have KiloJoules, so it's to the 14th
 	//static float Deuteriumconstant = XMLSupport::parse_float(vs_config->getVariable ("physics","DeuteriumRelativeEfficiency_Deuterium","1/0.6"));
@@ -3798,8 +3800,8 @@ Vector Unit::ClampAngVel (const Vector & velocity)
 Vector Unit::MaxThrust(const Vector &amt1)
 {
 	// amt1 is a normal
-	return amt1 * (Vector(copysign(limits.lateral, amt1.i),
-		copysign(limits.vertical, amt1.j),
+	return amt1 * (Vector(vs_copysignf(limits.lateral, amt1.i),
+		vs_copysignf(limits.vertical, amt1.j),
 		amt1.k>0?limits.forward:-limits.retro) * amt1);
 }
 
@@ -3857,9 +3859,9 @@ Vector Unit::ClampThrust (const Vector &amt1, bool afterburn)
 	float fuelclamp=(fuel<=0)?staticfuelclamp:1;
 	float abfuelclamp= (fuel<=0)?staticabfuelclamp:1;
 	if (fabs(amt1.i)>fabs(fuelclamp*limits.lateral))
-		Res.i=copysign(fuelclamp*limits.lateral,amt1.i);
+		Res.i=vs_copysignf(fuelclamp*limits.lateral,amt1.i);
 	if (fabs(amt1.j)>fabs(fuelclamp*limits.vertical))
-		Res.j=copysign(fuelclamp*limits.vertical,amt1.j);
+		Res.j=vs_copysignf(fuelclamp*limits.vertical,amt1.j);
 	float ablimit =
 		afterburn
 		?((limits.afterburn-limits.forward)*abfuelclamp+limits.forward*fuelclamp)
@@ -4302,7 +4304,7 @@ Vector Unit::ResolveForces (const Transformation &trans, const Matrix &transmat)
 	if (NetTorque.i||NetTorque.j||NetTorque.k) {
 		temp1 += InvTransformNormal(transmat,NetTorque);
 	}
-	if (GetMoment()){ 
+	if (GetMoment()){
 		temp1=temp1/GetMoment();
 	} else{
 		VSFileSystem::vs_fprintf (stderr,"zero moment of inertia %s\n",name.get().c_str());
@@ -4314,7 +4316,7 @@ Vector Unit::ResolveForces (const Transformation &trans, const Matrix &transmat)
 		if (!FINITE(temp.i)||FINITE (temp.j)||FINITE(temp.k)) {
 
 		}
-		AngularVelocity += temp; 
+		AngularVelocity += temp;
 		static float maxplayerrotationrate=XMLSupport::parse_float(vs_config->getVariable("physics","maxplayerrot","24"));
 		static float maxnonplayerrotationrate=XMLSupport::parse_float(vs_config->getVariable("physics","maxNPCrot","360"));
 		float caprate;
@@ -4326,7 +4328,7 @@ Vector Unit::ResolveForces (const Transformation &trans, const Matrix &transmat)
 		if(AngularVelocity.MagnitudeSquared()>caprate*caprate){
 			AngularVelocity=AngularVelocity.Normalize()*caprate;
 		}
-		
+
 	}
 								 //acceleration
 	Vector temp2 = (NetLocalForce.i*p + NetLocalForce.j*q + NetLocalForce.k*r );
@@ -6821,7 +6823,7 @@ bool Unit::UnDock (Unit * utdw)
 				auto_turn_towards = false;
 				launch_speed = -1;
 			}
-			
+
 			if (launch_speed>0)
 				computer.set_speed=launch_speed;
 			if (auto_turn_towards) {
@@ -7160,7 +7162,7 @@ bool Unit::UpgradeMounts (const Unit *up, int mountoffset, bool touchme, bool do
 
 		int jmod=j%GetNumMounts();
 		if (!downgrade) {		 //if we wish to add guns instead of remove
-			
+
 			if (up->mounts[i].type->weapon_name.find("_UPGRADE") == string::npos) { //check for capability increase rather than actual weapon upgrade
 								 //only look at this mount if it can fit in the rack
 				if (up->mounts[i].type->size==(up->mounts[i].type->size&mounts[jmod].size)) {
@@ -7179,7 +7181,7 @@ bool Unit::UpgradeMounts (const Unit *up, int mountoffset, bool touchme, bool do
 											}
 										}
 									}
-								}	
+								}
 									 //compute here
 							percentage+=mounts[jmod].Percentage(&upmount);
 								 //if we wish to modify the mounts
@@ -7436,7 +7438,7 @@ bool Unit::UpgradeSubUnitsWithFactory (const Unit * up, int subunitoffset, bool 
 
 static void GCCBugCheckFloat(float *f, int offset) {
       if (f[offset]>1) {
-        
+
         f[offset]=1;//keep it real
       }
 
@@ -7780,7 +7782,7 @@ bool Unit::UpAndDownGrade (const Unit * up, const Unit * templ, int mountoffset,
 				if (_Universe->getNumActiveStarSystem()&&!ss) ss=_Universe->activeStarSystem();
 				if (ss) {
 					Unit * un;
-					for (un_iter i = ss->gravitationalUnits().createIterator();un=*i;++i) {	
+					for (un_iter i = ss->gravitationalUnits().createIterator();un=*i;++i) {
 						if (un==this){
 							i.remove();
 							// NOTE: I think we can only be in here once
@@ -8332,7 +8334,7 @@ extern bool isWeapon (std::string name);
 bool Unit::RepairUpgradeCargo(Cargo *item, Unit *baseUnit, float *credits) {
 	double itemPrice = baseUnit?baseUnit->PriceCargo(item->content):item->price;
 	if (isWeapon(item->category)) {
-		const Unit * upgrade=getUnitFromUpgradeName(item->content,this->faction);    
+		const Unit * upgrade=getUnitFromUpgradeName(item->content,this->faction);
 		if (upgrade->GetNumMounts()) {
 			double price = itemPrice; // RepairPrice probably won't work for mounts.
 			if (!credits || price<=(*credits)) {
@@ -8367,7 +8369,7 @@ bool Unit::RepairUpgradeCargo(Cargo *item, Unit *baseUnit, float *credits) {
 		bool notadditive=(item->GetContent().find("add_")!=0&&item->GetContent().find("mult_")!=0);
 		if (notadditive||item->GetCategory().find(DamagedCategory)==0) {
 			Cargo itemCopy = *item;     // Copy this because we reload master list before we need it.
-			
+
 			//this->SellCargo(item->content, quantity, _Universe->AccessCockpit()->credits, sold, baseUnit);
 			//UnitUtil::RecomputeUnitUpgrades(this);
 			const Unit * un=  getUnitFromUpgradeName(item->content,this->faction);
@@ -8914,7 +8916,7 @@ int Unit::RemoveCargo (unsigned int i, int quantity,bool eraseZero)
 		quantity=carg->quantity;
 	if (Network && !_Universe->netLocked()) {
 		int playernum = _Universe->whichPlayerStarship( this);
-		
+
 		if (playernum>=0) {
 			Network[playernum].cargoRequest( 0, this->serial, carg->GetContent(), quantity, 0, 0);
 		} else {
