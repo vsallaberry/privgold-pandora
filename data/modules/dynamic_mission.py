@@ -93,10 +93,12 @@ def LoadList(filename):
 		bnl = f.readlines()
 		f.close()
 	except:
+                print filename + ': cannot import.'
 		return []
 	# strip newlines
 	for i in range(len(bnl)):
 		bnl[i]=bnl[i].rstrip()
+        print filename + ': ' + str(len(bnl)) + ' elements.'
 	return bnl
 
 def GetRandomFromList(list):
@@ -257,7 +259,7 @@ def writemissionname(name,path,isfixer):
             totalMissionNumber+=1
     Director.pushSaveString(plr, "mission_names", name)
 
-    
+
 def writedescription(name):
     Director.pushSaveString(plr, "mission_descriptions", name.replace("_"," "))
 def writemissionsavegame (name):
@@ -520,7 +522,7 @@ def pathWarning(path,isFixer):
             message+="following factions: "
             jj=0
             for fac in factions:
-                jj+=1               
+                jj+=1
                 message+=dnewsman_.data.getFactionData(fac,'full')[0]
                 if jj<len(factions)-1:
                     message+=", "
@@ -543,7 +545,7 @@ def generateCargoMission (path, numcargos,category, fac):
     #if (isNotWorthy(fac)):
     #    return
     if (vsrandom.random()<.25):
-        return  
+        return
     launchcap=0
     if (not launchcap) and not isHabitable(path[-1]):
         return
@@ -570,7 +572,7 @@ def generateCargoMission (path, numcargos,category, fac):
     if (randCompany==''):
         strStart = "We need to deliver some "
     else:
-    	  strStart = randCompany+" seeks delivery of "    	  
+    	  strStart = randCompany+" seeks delivery of "
     if len(path)==1:
         mistype = 'IN-SYSTEM CARGO'
     else:
@@ -678,7 +680,7 @@ def generateDefendMission (path,defendfg,defendfac, attackfg,attackfac):
     if (isNotWorthy(defendfac)):
         return
     #defendtyp = fg_util.RandomShipIn(defendfg,defendfac)
-    attacktyp = fg_util.RandomShipIn(attackfg,attackfac)                    
+    attacktyp = fg_util.RandomShipIn(attackfg,attackfac)
     isbase=fg_util.BaseFGInSystemName(path[-1])==defendfg
     creds=1200
     minq = 1
@@ -749,8 +751,8 @@ def generateWingmanMission(fg, faction):
     writedescription(s+" in the %s faction %s willing to help you out and fight with you as long as you pay %d credits."%(faction, are, creds))
     writemissionname("Wingmen/Hire_%d_%s_Wingm%sn"%(numships,faction,EorA),[VS.getSystemFile()],0)
     writemissionvars( { 'MISSION_TYPE' : 'CONTRACT WINGMAN' } )
-    
-    
+
+
 def GetFactionToDefend(thisfaction, fac, cursys):
     m = fg_util.FGsInSystem ("merchant",cursys)
     nummerchant=len(m)
@@ -875,7 +877,7 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                         num_ipatrol-=1
                     if checkMissionNum():
                         num_patrol-=1
-                        
+
                 else:   # 50% - Cargo mission
                     numcargos=vsrandom.randrange(1,25)
 
@@ -897,7 +899,7 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                             carg=VS.getRandCargo(numcargos,category)
                             category=carg.GetCategory()
                             if (category[:9] != 'Fragments' and category[:10]!='Contraband' and category.find('upgrades')!=0 and (category.find('starships')!=0 or rnd>.999)):
-                                break 
+                                break
                             if (myiter!=99):
                                 category=''
                         if baseship:
@@ -946,14 +948,14 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                                 mungeFixerPct()
                             #generateEscortLocal(j,k,f)
                             restoreFixerPct()
-                            if checkCreatedMission():                    
+                            if checkCreatedMission():
                                 num_iescort-=1
                     else:
                         if num_escort<=0:
                             mungeFixerPct()
                         generateEscortLocal(j,k,f)
                         restoreFixerPct()
-                        if checkCreatedMission():                    
+                        if checkCreatedMission():
                             num_escort-=1
 
                     count+=1
