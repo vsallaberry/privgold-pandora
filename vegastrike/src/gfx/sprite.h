@@ -50,7 +50,7 @@ public:
      * Construct a sprite out of a spritefile
      */
 	VSSprite (const char *file, enum FILTER texturefilter=BILINEAR, GFXBOOL force=GFXFALSE);
-    
+
     /**
      * Construct a sprite out of a preloaded texture
      *
@@ -58,19 +58,19 @@ public:
      */
     VSSprite (Texture *surface, float xcenter, float ycenter, float width, float height, float s=0.f, float t=0.f);
     VSSprite (const VSSprite& source);
-    
+
 	~VSSprite();
-    
+
     /**
      * Return true if sprite was loaded successfully
      */
-	bool LoadSuccess()const {return surface!=NULL;}
-    
+	bool LoadSuccess()const {return surface!=(Texture*)0/*NULL VSA*/;}
+
     /**
      * Draw
      */
 	void Draw();
-    
+
     /**
      * Draw at specified coordinates given by 4 endpoints.
      *
@@ -81,18 +81,18 @@ public:
      * @note Disregards sprite position but not maxs/maxt coordinates.
      */
 	void DrawHere (Vector &ll, Vector &lr, Vector &ur, Vector &ul);
-    
+
     /** Add specified rotation to an already-rotated sprite */
 	void Rotate(const float &rad){ rotation += rad;};
     void SetRotation(const float &rot);
     void GetRotation(float &rot);
-    
-    /** 
-     * Loads the sprite's texture from the given file 
+
+    /**
+     * Loads the sprite's texture from the given file
      * @deprecated Unused?
      */
     void ReadTexture( VSFileSystem::VSFile * f);
-    
+
     void GetST (float &s, float &t);
 	void SetST (const float s, const float t);
     void SetTime (double newtime);

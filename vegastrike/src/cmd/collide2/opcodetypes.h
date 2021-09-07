@@ -1,16 +1,16 @@
 /*
     Copyright (C) 1998-2004 by Jorrit Tyberghein
-  
+
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
     License as published by the Free Software Foundation; either
     version 2 of the License, or (at your option) any later version.
-  
+
     This library is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Library General Public License for more details.
-  
+
     You should have received a copy of the GNU Library General Public
     License along with this library; if not, write to the Free
     Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -20,7 +20,7 @@
 #define __CS_CSTYPES_H__
 
 // config.h is the VS ./configure determined header.
-#include "config.h" 
+#include "config.h"
 #include <float.h>
 #include <wchar.h>
 #if defined(_WIN32) && !defined(__CYGWIN__) // && defined(_MSC_VER)
@@ -41,7 +41,11 @@
 
 #endif
 // End Hack
-
+//VSA Hack
+#ifdef HAVE_INTMAX_T
+# define CS_HAVE_INTMAX_T 1
+#endif
+// ! VSA
 
 #if defined(HAVE_STDINT_H)
 #ifndef __STDC_CONSTANT_MACROS
@@ -223,10 +227,10 @@ typedef uint64 ulonglong;
 #ifdef HAVE_STDINT_H
 typedef int_least64_t longlong;
 typedef uint_least64_t ulonglong;
-#else 
+#else
 #error Do not know how to declare (u)longlong types
-#endif 
-#endif 
+#endif
+#endif
 
 /**
  * A time value measured in milliseconds (1/1000 of a second).  Ticks do not

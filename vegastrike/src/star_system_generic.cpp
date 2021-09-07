@@ -320,7 +320,7 @@ void StarSystem::endElement(void *userData, const XML_Char *name)
 
 
 extern string RemoveDotSystem (const char *input);
-string StarSystem::getFileName()const 
+string StarSystem::getFileName()const
 {
 	return getStarSystemSector (filename)+string("/")+RemoveDotSystem(getStarSystemName (filename).c_str());
 }

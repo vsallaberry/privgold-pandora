@@ -27,12 +27,16 @@ typedef int INT32;
 #undef HAVE_BOOLEAN
 #define boolean boolean1
 #endif
+#if 0 //VSA //jpeg lib header badly configured when including like this
 extern "C" {
 //#define XMD_H
 #include <jconfig.h>
 #include <jmorecfg.h>
 #include <jpeglib.h>
 }
+#else
+#include <jpeglib.h>
+#endif
 /*--------------
   A hack to hijack JPEG's innards to write into a memory buffer
 ----------------
@@ -78,10 +82,10 @@ METHODDEF(void)
 term_destination (j_compress_ptr cinfo)
 {
   /* expose the finale compressed image size */
-  
+
   mem_dest_ptr dest = (mem_dest_ptr) cinfo->dest;
   dest->datacount = dest->bufsize - dest->pub.free_in_buffer;
-  
+
 }
 
 GLOBAL(void) jpeg_memory_dest(j_compress_ptr cinfo, JOCTET *buffer,int bufsize);

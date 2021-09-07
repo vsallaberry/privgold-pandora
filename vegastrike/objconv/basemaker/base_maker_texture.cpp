@@ -39,7 +39,7 @@ static inline bool readPng (FILE *fp, Texture::FileData *data, Texture::TextureT
 	}*/
 	// The previous check could only be false if the image was modified after being opened (such as on *nix systems).  In that case, worse things will happen anyways.
 	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL,
-	(png_error_ptr)png_cexcept_error, 
+	(png_error_ptr)png_cexcept_error,
 	(png_error_ptr)NULL);
 	if (png_ptr == NULL) {
 		return false;

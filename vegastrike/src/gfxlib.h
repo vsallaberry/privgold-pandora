@@ -1,19 +1,19 @@
-/* 
+/*
  * Vega Strike
  * Copyright (C) 2001-2002 Daniel Horn
- * 
+ *
  * http://vegastrike.sourceforge.net/
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -91,7 +91,7 @@ void /*GFXDRVAPI*/ GFXSetOptimalIntensity (const float newint, const float satur
 GFXBOOL /*GFXDRVAPI*/ GFXSetOptimalNumLights (const int numlights);
 
 /**
- * GFXCreateLight gets a light as a parameter.  It sets light to have the 
+ * GFXCreateLight gets a light as a parameter.  It sets light to have the
  * index of the created light for modification in the future.
  * If the light is global, it will always affect objects in space.
  * if the light is not global, it is local and goes into a 3d hashtable
@@ -236,7 +236,7 @@ void /*GFXDRVAPI*/ GFXPrioritizeTexture (unsigned int handle, float priority);
 void /*GFXDRVAPI*/ GFXAttachPalette(unsigned char *palette, int handle);
 
 /**
- * Transfers texture to the graphics card with given buffer 
+ * Transfers texture to the graphics card with given buffer
  * in previously specified format. Scales texture approrpiately to
  * Max texture sizes gotten from vid card
  */
@@ -346,7 +346,7 @@ void /*GFXDRVAPI*/ GFXCullFace (const enum POLYFACE);
 void /*GFXDRVAPI*/ GFXBegin(const enum POLYTYPE);
 
 ///Specifies a color for henceforth drawn vertices to share
-void /*GFXDRVAPI*/ GFXColorf (const GFXColor & col); 
+void /*GFXDRVAPI*/ GFXColorf (const GFXColor & col);
 ///specifies the current blend color
 void /*GFXDRVAPI*/ GFXBlendColor (const GFXColor &col);
 ///Specifies a color for henceforth drawn vertices to share
@@ -377,7 +377,7 @@ void /*GFXDRVAPI*/ GFXVertexf (const QVector &v);
 ///Ends the current set of polytypes
 void /*GFXDRVAPI*/ GFXEnd();
 void /*GFXDRVAPI*/ GFXCircle (float x, float y, float r1,float r2);
-///Optimizes a list to reuse repeated vertices! 
+///Optimizes a list to reuse repeated vertices!
 void GFXOptimizeList (GFXVertex *old, int numV, GFXVertex **newlist, int *numnewVertices, unsigned int ** indices);
 
 void GFXFogMode (const FOGMODE fog);
@@ -413,7 +413,7 @@ void GFXTextureCoordGenMode(int stage, GFXTEXTURECOORDMODE tex, const float para
 
 int GFXCreateProgram(const char *vertex, const char *fragment);
 //program created if necessary and active
-int GFXActivateShader(const char *program = NULL/*null for default prog*/);
+int GFXActivateShader(const char *program = (const char*)0/*NULL VSA*//*null for default prog*/);
 int GFXActivateShader(int program);
 void GFXDeactivateShader();
 //return location of named value
