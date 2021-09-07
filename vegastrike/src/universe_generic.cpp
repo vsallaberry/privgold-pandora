@@ -1,5 +1,5 @@
 /// Various universe and star system helper functions
-/// 
+///
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -25,13 +25,26 @@ using namespace GalaxyXML;
 extern StarSystem *GetLoadedStarSystem(const char * file);
 vector <StarSystem *> deleteQueue;
 void Universe::clearAllSystems() {
+  static unsigned int n=0;
   while (star_system.size()) {
-    star_system.back()->RemoveStarsystemFromUniverse();
-    delete star_system.back();
+    StarSystem * deleted = star_system.back();
+    deleted->RemoveStarsystemFromUniverse();
+    //deleteQueue.push_back(deleted);
     star_system.pop_back();
+    try {
+        std::cout << "[Universe::clearAllSystems] leak " << ++n << std::endl;
+        //if (deleted) delete deleted;
+    } catch (...){
+        std::cout << "[Universe::clearAllSystems] oups" << std::endl;
+    }
   }
   active_star_system.clear();
   script_system=NULL;
+  while(deleteQueue.size()) {
+    StarSystem * deleted = deleteQueue.back();
+    deleteQueue.pop_back();
+    delete deleted;
+  }
 }
 
 Cockpit * Universe::createCockpit( std::string player)
@@ -73,7 +86,7 @@ Unit * DockToSavedBases (int playernum, QVector &safevec) {
 		}
 		dock_position = UniverseUtil::SafeEntrancePoint(dock_position,plr->rSize());
 		plr->SetPosAndCumPos(dock_position);
-		
+
 		vector <DockingPorts> dprt=closestUnit->image->dockingports;
 		int i;
 		for (i=0;;i++) {
@@ -104,7 +117,7 @@ Cockpit * Universe::isPlayerStarship(const Unit * doNotDereference) {
     return NULL;
 	for(std::vector<Cockpit *>::iterator iter = cockpit.begin(); iter < cockpit.end(); iter++) {
 		if(doNotDereference==(*(iter))->GetParent()) {
-			return (*(iter));	
+			return (*(iter));
 		}
 	}
 //  for (unsigned int i=0;i<cockpit.size();i++) {
@@ -127,7 +140,7 @@ void Universe::SetActiveCockpit (int i) {
   if (i<0||i>=cockpit.size()) {
     VSFileSystem::vs_fprintf (stderr,"ouch invalid cockpit %d",i);
   }
-#endif 
+#endif
   current_cockpit=i;
 }
 void Universe::SetActiveCockpit (Cockpit * cp) {
@@ -305,7 +318,7 @@ void Universe::Generate2( StarSystem * ss)
   static int num_times_to_simulate_new_star_system=XMLSupport::parse_int(vs_config->getVariable("physics","num_times_to_simulate_new_star_system","20"));
   for (int tume=0;tume<=num_times_to_simulate_new_star_system*SIM_QUEUE_SIZE+1;++tume) {
 	  //ss->ExecuteUnitAI();
-    ss->UpdateUnitPhysics(true);    
+    ss->UpdateUnitPhysics(true);
   }
   // notify the director that a new system is loaded (gotta have at least one active star system)
   StarSystem *old_script_system=script_system;
@@ -380,7 +393,7 @@ void InitUnitTables () {
 		string::size_type  where=unitdata.find(" "), where2=where;
 		if (where==string::npos)
 			where=unitdata.length();
-		string tmp = unitdata.substr(0,where);     
+		string tmp = unitdata.substr(0,where);
 		err = allUnits.OpenReadOnly(tmp,UnitFile);
 		if (err<=Ok) {
 			unitTables.push_back(new CSVTable(allUnits,allUnits.GetRoot()));
