@@ -209,7 +209,7 @@ if test -n "${do_dist}"; then
         --exclude "${mydirname}/engine*/build" \
         --exclude "${mydirname}/engine*/build-*" \
         --exclude "${mydirname}/tmp" \
-        --exclude "${mydirname}/**/.svn" --exclude "${mydirname}/**/.git" \
+        --exclude "**/.svn" --exclude "**/.git" --exclude "**/CVSROOT" \
         --exclude "**/*.sw?" --exclude "**/*~" --exclude "**/.\#*" \
         -f "${archive}" "${mydirname}" \
     && echo "+ archive created: ${archive} (`format_size "${archive}"`)"
