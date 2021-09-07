@@ -1,0 +1,234 @@
+-----------------------------------------------------------------------------
+           Privateer Gemini Gold v1.03 -- 12/12/2009 -- Changes
+-----------------------------------------------------------------------------
+
+This file contains information about the changes between the different
+Privateer Gemini Gold versions.
+
+-----------------------------------------------------------------------------
+                                 CHANGE HISTORY
+-----------------------------------------------------------------------------
+
+  5. CHANGES FROM 1.02a TO 1.03
+
+	A. Righteous Fire campaign voiceovers
+
+	B. High resolution interior/base graphics
+
+		- Perry Concourse with animations
+
+		- Mining Base Landing Pad animated light beam
+
+		- Mining Base Concourse with dust nebular and walking man
+
+		- New Detroit Landing Pad and Concourse animations
+
+		- New Constantinople Landing Pad and Concourse animations
+
+		- Some new damaged upgrade item graphics
+
+	C. High resolution MFD graphics (cockpit displays)
+
+	D. Privateer like communication options and radar colors for bases
+
+	E. Shields power down when playership runs out of energy
+
+	F. More detailed and better visible asteroid fields
+
+	G. Savegames can be named
+
+	H. Better readable Oxford Library computer screen
+
+	I. Bugfixes
+
+		- Level of Detail (might cause performance issues during spaceflight)
+
+		- loading of a saved mission causes infinite new waves of hostile ships
+
+		- missile lock light always on while in gun or missile lock
+
+		- scrolling hud down affects all other huds as well
+
+		- landing after collision with eden moon
+
+		- hitchhiker won't leave playership
+
+		- mission MFD shows nothing.mission
+
+		- bases and planets are not neutral
+
+		- positive militia responses take longer than negative
+
+		- cargo space calculation is wrong when using cargo expansion  
+
+		- hit autopilot while communicating in a centurion changes MFDs position
+
+
+  4. CHANGES FROM 1.02 TO 1.02a
+
+	A. new paradigm model with turrets
+
+	B. new "New Constantinople Superbase" model
+
+	C. Bugfixes
+
+		- "bounce back bug" which prevents you from landing
+
+		- Lynn Murphy mission: hostile militia wingmen
+
+		- Lynn Murphy mission: no mission payment
+
+		- Search for Mordichai Jones: Pirate doesn't deliver message
+
+		- cargo space calculation bug when using cargo expansion
+
+		- missing linux/ubuntu dependencies
+
+		- npcs are always hostile (linux)
+
+		- impossible rescue missions
+
+		- sound issues (linux)
+
+
+  3. CHANGES FROM 1.01 TO 1.02
+
+	A. planet/starbase resolution now twice as high
+
+	B. new base interfaces
+
+	C. new cargo/upgrade item pictures
+
+	D. new title and death screen
+
+	E. new autopilot info screen
+
+	F. new planet textures	
+
+	G. new explosion animations
+
+	H. new loading screens
+
+	I. some missing speech files added
+
+	J. different random mission descriptions
+
+	K. added new sector scanning animation
+
+	L. some reworked space backgrounds
+
+	M. limited missile/torpedo launcher support
+
+	N. new demon, kamekh and paradigm
+
+	O. easier AI, only one difficulty setting
+
+	P. key bindings changed
+
+		- sound volume de-/increase: [alt] + [,] / [.]
+
+		- roll left/right: [,] / [.]
+
+		- self destruct: [alt] + [d]
+
+	Q. Bugfixes
+
+		- tractor beam
+
+		- cargo offload problem in cargo missions
+
+		- patrol mission enemies, navpoints in mission descr.
+
+		- negative distances in ship MFD
+
+		- graphic errors: Tarsus energy/shield bar, beer sign
+
+		- npc's afterburner usage in regular flight 
+
+		- music for dead eden planet
+
+
+  2. CHANGES FROM 1.01 TO 1.01a
+
+	A. Bugfixes
+
+		- gamecrash upon rf campaign communication
+
+		- code cleanup
+
+
+  1. CHANGES FROM 1.0 TO 1.01
+
+	A. possible speed improvements during bootup and gameplay
+
+	B. Tarsus, luxury/natural goods get a new texture
+
+	c. rebalanced missions (Oxford and Palan) and ship attributes
+
+	D. New Constantinople, Perry and Mining Bases get new textures/lightmaps
+
+	E. clouds for planets; New Detroit and Oxford get new lightmaps
+
+	F. adds high-res explosion animations for asteroids and small fighters
+
+	G. a few campaign bosses got special shipnames and are displayed in com
+
+	H. bases and planets have an automatic landing zone 
+
+	I. adds jump activation sound
+
+	J. Oxford library computer animation added
+
+	K. reduces number of available cargo missions in mission bbs
+
+	L. sets the ship's starting speed to 150kps
+
+	M. removes unimportant information from commodity exchange computer
+
+	N. repair droids are working a lot faster now
+
+	O. uses wing Commander style missile lock animation
+
+	P. Bugfixes
+
+		- Ship Dealer graphic bug at Oxford
+
+		- drone mission bug
+
+		- sound-bug (asteroids)
+
+		- Derelict Base disapearance
+
+		- .blank shipname bug on the navigation computer
+
+		- "fix" button bug on the upgrade computer
+
+		- cargo-bug which prevented to accept and fly a mission
+
+		- artifact-loss-through ship purchase
+
+		- spawned cargo in cargo hold after ship purchase
+
+		- mercenary computer display graphic bug
+
+		- removes neutral com faces for the paradigm
+
+		- energy system fixed
+
+		- collision after ship explosion (with eject seats)
+
+		- never ending escort missions
+
+		- miggs now shows his face and has sound
+
+		- removes "news" and "ship dealer" from some computer consoles
+
+		- orion price fixed (75.000)
+
+		- tractor beams removed from talons
+
+		- "0" request landing removed (without function)
+
+		- minor fixes
+
+	

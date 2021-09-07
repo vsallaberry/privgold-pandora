@@ -1,0 +1,74 @@
+<?xml version="1.0" standalone="yes"?>
+<install product="privateer_gold" desc="Privateer Space Simulator Gold Edition" version="0.1.2a" binarypath="/usr/local/bin" url="Manual.pdf" localurl="Manual.pdf" 
+         promptbinaries="yes" express="no" splashpos="left">
+  <readme>
+   README
+  </readme>
+
+  <component name="Base" version="0.1.2a" default="yes">
+
+    <option required="true">
+      Base Data (the Vegastrike Universe)
+      <help>This contains the required binaries and data to play Vegastrike.</help>
+      <binary play="no" binpath="bin/fixmusic.sh" keepdirs="yes">
+        bin/fixmusic.sh
+      </binary>
+      <binary play="no" binpath="bin/vegastrike" keepdirs="yes">
+        bin/vegastrike
+      </binary>
+      <binary play="no" binpath="bin/soundserver" keepdirs="yes">
+        bin/soundserver
+      </binary>
+      <binary symlink="privgold" icon="vegastrike.xpm" name="Privateer" play="no" binpath="bin/vegastrike.sh" keepdirs="yes">
+        bin/vegastrike.sh
+      </binary>
+      <binary play="no" binpath="bin/setup" keepdirs="yes">
+        bin/setup
+      </binary>
+      <binary play="no" binpath="bin/vsinstall.sh" keepdirs="yes">
+        bin/vsinstall.sh
+      </binary>
+      <script message="Configuring Data Path">
+          echo 'cd '$SETUP_INSTALLPATH'/bin' >> $SETUP_INSTALLPATH/bin/vegastrike.sh
+          echo 'sh vsinstall.sh $SETUPARG' >> $SETUP_INSTALLPATH/bin/vegastrike.sh
+
+      </script>
+      <files>
+.privgold100
+New_Game
+tarsus.begin.csv
+Manual.pdf
+Version.txt
+ai
+animations
+bases
+cockpits
+communications
+factions.xml
+fixmusic.sh
+m3uloki_add.sh
+m3uloki_remove.sh
+makeloki.sh
+master_part_list.csv
+meshes
+mission
+modules
+music
+play_vs
+sectors
+setup.config
+sounds
+sprites
+textures
+units
+universe
+vegastrike.config
+vegastrike.sh
+vsinstall.sh
+weapon_list.xml
+      </files>
+    </option>
+
+  </component>
+  
+</install>

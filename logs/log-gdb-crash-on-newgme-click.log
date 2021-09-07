@@ -1,0 +1,687 @@
+(lldb) target create "vegastrike_priv-1.03/build-cmake/vegastrike"
+Current executable set to 'vegastrike_priv-1.03/build-cmake/vegastrike' (x86_64).
+(lldb) run -D/Applications/Jeux/privateer/Privateer\ Gold\ 1.03.app/Contents/Resources
+Process 75852 launched: '/Users/vincent/perso/prog/ext/privgold-work/vegastrike_priv-1.03/build-cmake/vegastrike' (x86_64)
+bt
+ In path /Users/vincent/perso/prog/ext/privgold-work/vegastrike_priv-1.03/build-cmake
+Vega Strike  
+See http://www.gnu.org/copyleft/gpl.html for license details.
+
+ARG #1 = -D/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources
+Using data dir specified on command line : /Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources
+GOT SUBDIR ARG = 
+Using .privgold100 as the home directory
+Found MODDIR = /Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/mods
+USING HOMEDIR : /Users/vincent/.privgold100 As the home directory 
+CONFIGFILE - Found a config file in home directory, using : /Users/vincent/.privgold100/vegastrike.config
+DATADIR - No datadir specified in config file, using ; /Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources
+SIMULATION_ATOM: 0.06
+MISSION_NAME is empty using : main_menu.mission
+running import sys
+print sys.path
+sys.path = [r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/builtin",r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/quests",r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/missions",r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/ai",r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules",r"/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/bases"]
+['/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python27.zip', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/plat-darwin', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/plat-mac', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/plat-mac/lib-scriptpackages', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/lib-tk', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/lib-old', '/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/lib-dynload', '/Library/Python/2.7/site-packages', '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python', '/System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/PyObjC']
+testing VS randomrunning import sys
+print sys.path
+['/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/builtin', '/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/quests', '/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/missions', '/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules/ai', '/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/modules', '/Applications/Jeux/privateer/Privateer Gold 1.03.app/Contents/Resources/bases']
+2021-09-04 05:03:03.894743+0200 vegastrike[75852:817506]   no saved enable hardware sample rate converter preference found
+Game Mode Params 1024x1024 at depth 32 @ 0 Hz
+2021-09-04 05:03:06.339764+0200 vegastrike[75852:817524] MessageTracer: Falling back to default whitelist
+Game Mode Params 1024x1024 at depth 32 @ 0 Hz
+OpenGL Extensions supported: GL_ARB_color_buffer_float GL_ARB_depth_buffer_float GL_ARB_depth_clamp GL_ARB_depth_texture GL_ARB_draw_buffers GL_ARB_draw_elements_base_vertex GL_ARB_draw_instanced GL_ARB_fragment_program GL_ARB_fragment_program_shadow GL_ARB_fragment_shader GL_ARB_framebuffer_object GL_ARB_framebuffer_sRGB GL_ARB_half_float_pixel GL_ARB_half_float_vertex GL_ARB_imaging GL_ARB_instanced_arrays GL_ARB_multisample GL_ARB_multitexture GL_ARB_occlusion_query GL_ARB_pixel_buffer_object GL_ARB_point_parameters GL_ARB_point_sprite GL_ARB_provoking_vertex GL_ARB_seamless_cube_map GL_ARB_shader_objects GL_ARB_shader_texture_lod GL_ARB_shading_language_100 GL_ARB_shadow GL_ARB_sync GL_ARB_texture_border_clamp GL_ARB_texture_compression GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map GL_ARB_texture_env_add GL_ARB_texture_env_combine GL_ARB_texture_env_crossbar GL_ARB_texture_env_dot3 GL_ARB_texture_float GL_ARB_texture_mirrored_repeat GL_ARB_texture_non_power_of_two GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_transpose_matrix GL_ARB_vertex_array_bgra GL_ARB_vertex_blend GL_ARB_vertex_buffer_object GL_ARB_vertex_program GL_ARB_vertex_shader GL_ARB_window_pos GL_EXT_abgr GL_EXT_bgra GL_EXT_bindable_uniform GL_EXT_blend_color GL_EXT_blend_equation_separate GL_EXT_blend_func_separate GL_EXT_blend_minmax GL_EXT_blend_subtract GL_EXT_clip_volume_hint GL_EXT_debug_label GL_EXT_debug_marker GL_EXT_depth_bounds_test GL_EXT_draw_buffers2 GL_EXT_draw_range_elements GL_EXT_fog_coord GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_geometry_shader4 GL_EXT_gpu_program_parameters GL_EXT_gpu_shader4 GL_EXT_multi_draw_arrays GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_provoking_vertex GL_EXT_rescale_normal GL_EXT_secondary_color GL_EXT_separate_specular_color GL_EXT_shadow_funcs GL_EXT_stencil_two_side GL_EXT_stencil_wrap GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_s3tc GL_EXT_texture_env_add GL_EXT_texture_filter_anisotropic GL_EXT_texture_integer GL_EXT_texture_lod_bias GL_EXT_texture_mirror_clamp GL_EXT_texture_rectangle GL_EXT_texture_shared_exponent GL_EXT_texture_sRGB GL_EXT_texture_sRGB_decode GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_APPLE_aux_depth_stencil GL_APPLE_client_storage GL_APPLE_element_array GL_APPLE_fence GL_APPLE_float_pixels GL_APPLE_flush_buffer_range GL_APPLE_flush_render GL_APPLE_object_purgeable GL_APPLE_packed_pixels GL_APPLE_pixel_buffer GL_APPLE_rgb_422 GL_APPLE_row_bytes GL_APPLE_specular_vector GL_APPLE_texture_range GL_APPLE_transform_hint GL_APPLE_vertex_array_object GL_APPLE_vertex_array_range GL_APPLE_vertex_point_size GL_APPLE_vertex_program_evaluators GL_APPLE_ycbcr_422 GL_ATI_separate_stencil GL_ATI_texture_env_combine3 GL_ATI_texture_float GL_ATI_texture_mirror_once GL_IBM_rasterpos_clip GL_NV_blend_square GL_NV_conditional_render GL_NV_depth_clamp GL_NV_fog_distance GL_NV_fragment_program_option GL_NV_fragment_program2 GL_NV_light_max_exponent GL_NV_multisample_filter_hint GL_NV_point_sprite GL_NV_texgen_reflection GL_NV_texture_barrier GL_NV_vertex_program2_option GL_NV_vertex_program3 GL_SGIS_generate_mipmap GL_SGIS_texture_edge_clamp GL_SGIS_texture_lod 
+OpenGL::Accurate Fog Distance supported
+OpenGL::Generic Texture Compression supported
+OpenGL::S3TC Texture Compression supported
+OpenGL::Multitexture supported (8 units)
+OpenGL::TextureCubeMapExt supported
+OpenGL::S3TC Texture Clamp-to-Edge supported
+OpenGL::S3TC Texture Clamp-to-Border supported
+ERROR: 0:44: Invalid call of undeclared identifier 'texture2DLod'
+
+Fragment Program Error: Failed to compile mac
+OpenGL::EXTColorTable unsupported
+axes: 3 buttons: 15 hats: 0
+axes: 3 buttons: 15 hats: 0
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1x1 texture, page 0 (eff: 1x1 - limited at 65536)
+FactionXML:LoadXML factions.xml
+Transferring 2x2 texture, page 0 (eff: 2x2 - limited at 65536)
+Transferring 2x2 texture, page 0 (eff: 2x2 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x64 texture, page 0 (eff: 128x64 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Reshaping 1024 7682021-09-04 05:03:08.228292+0200 vegastrike[75852:817506] SecTaskLoadEntitlements failed error=22 cs_flags=20, pid=75852
+2021-09-04 05:03:08.228374+0200 vegastrike[75852:817506] SecTaskCopyDebugDescription: vegastrike[75852]/0#-1 LF=0
+Compiling python module modules/dj.py
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Contents of star system:
+<system name="Empty" background="backgrounds/black" nearstars="0" stars="0" starspread="0"  y="0" z="0" x="0">
+</system>
+
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Min (0.000000, 0.000000, 0.000000) Max(0.000000, 0.000000, 0.000000) MinLumin 1.000000, MaxLumin 1.000000Read In Star Count 0 used: 1000
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Min (0.000000, 0.000000, 0.000000) Max(0.000000, 0.000000, 0.000000) MinLumin 1.000000, MaxLumin 1.000000Read In Star Count 0 used: 104
+Loading a starsystem
+Loading Star System Special/Empty
+No such special key: keypad-enter
+No such special key: keypad-minus
+No such special key: keypad-plus
+No such special key: keypad-divide
+No such special key: keypad-multiply
+No such special key: keypad-8
+No such special key: keypad-2
+No such special key: keypad-5
+No such special key: keypad-4
+No such special key: keypad-6
+No such special key: pause
+No such special key: keypad-3
+No such special key: keypad-9
+No such special key: keypad-7
+No such special key: keypad-0
+No such special key: keypad-1
+FOUND MODIFICATION = player FOR PLAYER #0
+CREATING A LOCAL SHIP : dumbfire
+Hi helper play 0
+HereInitializing optimizer
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1x1 texture, page 0 (eff: 1x1 - limited at 65536)
+Transferring 1x1 texture, page 0 (eff: 1x1 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+pox 18068.451000 -60.189000 -371.339000
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+
+ERROR: NULL Unit used in Python script; returning default value...
+ERROR: NULL Unit used in Python script; returning default value...Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+ +++ m/random_encounters.py:279: done loading rand enc
+ +++ m/random_encounters.py:45: init random enc
+ +++ m/random_encounters.py:61: end random enc
+Force feedback support disabled when compiled
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Unit file contraband not found
+Error picking comm animation for 25 faction with bas:0 dock:0
+Unit file contraband not found
+Error picking comm animation for 26 faction with bas:0 dock:0
+Unit file contraband not found
+Error picking comm animation for 27 faction with bas:0 dock:0
+Unit file contraband not found
+Error picking comm animation for 28 faction with bas:0 dock:0
+Unit file contraband not found
+Error picking comm animation for 29 faction with bas:0 dock:0
+Loading completed, now network init
+Loading active missions True
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+SITUATION IS 1force change 1 bool 1
+SITUATION IS RESET TO 1
+peaCce
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+ +++ m/random_encounters.py:26: init playerdata
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Unit file upgrading_dummy_unit not found
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x64 texture, page 0 (eff: 256x64 - limited at 65536)
+Transferring 256x64 texture, page 0 (eff: 256x64 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 32x128 texture, page 0 (eff: 32x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 16x16 texture, page 0 (eff: 16x16 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 16x16 texture, page 0 (eff: 16x16 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 16x16 texture, page 0 (eff: 16x16 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x512 texture, page 0 (eff: 256x512 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x128 texture, page 0 (eff: 256x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 8x8 texture, page 0 (eff: 8x8 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 1024x1024 texture, page 0 (eff: 1024x1024 - limited at 65536)
+Unit file cargobrick not found
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+ +++ m/random_encounters.py:42: done playerdat
+Launching bases for Special/Empty
+conditioning
+nonzeroing
+finding quest
+quest_drone
+ +++ m/random_encounters.py:97: resetting sigdist=3000.000000 detdist=5000.000000
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 64x64 texture, page 0 (eff: 64x64 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 128x128 texture, page 0 (eff: 128x128 - limited at 65536)
+Transferring 256x256 texture, page 0 (eff: 256x256 - limited at 65536)
+Transferring 512x512 texture, page 0 (eff: 512x512 - limited at 65536)
+UNIT HAS DIED: dumbfire dumbfire (file dumbfire)
+Found ship named : tarsus.begin
+Faction not found assigning default one : privateer !!!
+	Exiting ReadSavedPackets
+Process 75852 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=EXC_I386_GPFLT)
+    frame #0: 0x000000010009da88 vegastrike`std::tr1::_Hashtable<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, unsigned int>, std::allocator<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, unsigned int> >, std::_Select1st<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, unsigned int> >, std::equal_to<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::tr1::hash<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >, std::tr1::__detail::_Mod_range_hashing, std::tr1::__detail::_Default_ranged_hash, std::tr1::__detail::_Prime_rehash_policy, false, false, true>::_M_erase_node(this=0x0000000101349f60, __p=0x000000010714f070, __b=0x00000001040ff970) at hashtable.h:961
+   958 		  while (__next != __p)
+   959 		    {
+   960 		      __cur = __next;
+-> 961 		      __next = __cur->_M_next;
+   962 		    }
+   963 		  __cur->_M_next = __next->_M_next;
+   964 		}
+Target 0: (vegastrike) stopped.

@@ -1,0 +1,16 @@
+/vegastrike*/build
+/vegastrike*/build-*
+/engine*/build
+/engine*/build-*
+/tmp
+**/.svn
+**/.git
+**/CVSROOT
+**/*.sw?
+**/*~
+**/.\#*
+
+**/Makefile.in
+/{vegastrike,engine}*/{configure,SystemInformation.in,INSTALL,aclocal.m4,config.guess,config.sub,depcomp,install-sh,missing}
+
+
