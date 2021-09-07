@@ -11,6 +11,8 @@
 **/.\#*
 **/*.pyc
 
+logs/log
+
 **/Makefile.in
 /vegastrike*/INSTALL
 /vegastrike*/configure

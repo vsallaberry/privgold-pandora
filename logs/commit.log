@@ -1,0 +1,48 @@
+[vegastrike] initial mac built fixes
+
+* trailing whitespaces
+* aggressive.cpp: global temporary test variables not visible
+* fire.cpp: : global temporary test variables not visible
+* opcodetypes.h: INTMAX config macros
+* jpeg_memory.h: fix jpeglib.h inclusion to avoid compile error
+* sprite.h: NULL not defined
+* gfxlib.h: NULL not defined
+* packetmem.cpp: NULL/0 cpp cast
+
+[vegastrike] cmake config update for macos/gcc6
+
+* CMakeLists: no case sensitive for the CMAKE_BUILD_TYPE
+* CMakeLists: detect MACOS and act in consequence
+* CMakeLists: add possibility to force includes/libraries path from commandline
+* CMakeLists: temporary hack to fix include/library ordering
+* CMakeLists: possibility to force to INTERNAL BOOST VERSION via commandline
+* CMakeLists: MacOS: add AGL
+* CMakeLists: MacOS: specific GLUT detection
+* CMakeLists: possibility to force static libraries (not tested then not working)
+* CMakeLists: possibility to disable SDL
+* CMakeLists: PNG/FFMpeg/Ogg include,-L order temporary move
+* CMakeLists: FFMpeg include bz2 and avutil + detect headers ffmpeg/.... or lib.../...
+* CMakeLists: INTMAX_T detection
+* CMakeLists: SDL: possibility to disable SDL windowing (and use glut)
+* CMakeLists:
+* setup/CMakeLists: build 2 diffrents progrmas, with dialog and with gtk
+
+[vegastrike] autoconf update for macos/gcc6
+
+* configure/m4: similar as cmake updates
+* configure/m4: temporary update in -L,-I orders for some libs
+* configure/m4: bison detection on macos
+* configure/m4: ffmpeg with avutil and bz2
+* configure/m4: INMAX_T
+* configure/m4: can choose macos sdk/frameworks
+* configure/m4: ffmpeg: possibility to choose inc/libs dirs
+
+[privgold] r258 2010 fix about pirates bases contrebands
+
+git commit -m '[provgold] technique mac and hardcode texture2DLod to avoid error'
+
+[privgold] dynamic_mission: add error log when loading file
+
+2021.09.07_06h13
+
+
