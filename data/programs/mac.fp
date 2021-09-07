@@ -38,6 +38,11 @@ float selfshadowStep(float VNdotL) { return smoothstep(0.0,0.25,VNdotL); } // co
 float shininessMap(float shininess, vec4 specmap) { return clamp(dot(specmap.rgb,vec3(1.0/3.0))*shininess,1.0,256.0); } // luma-based shininess modulation
 float shininess2Lod(float shininess) { return max(0.0,7.0-log2(shininess+1.0))+3.0; }
 
+vec4 texture2DLod(sampler2D sampler, vec2 P, float lod)
+{
+    // Turn into bias
+    return texture2D(sampler, P, lod);
+}
 vec3 envMapping(in vec3 reflection, in float shininess, in vec4 specmap)
 {
    float envLod = shininess2Lod(shininessMap(shininess,specmap));
@@ -47,7 +52,7 @@ vec3 envMapping(in vec3 reflection, in float shininess, in vec4 specmap)
 
 void main() {
   //begin bumpmapping
-    
+
   vec3 iNormal=tc1.xyz;
   vec3 iTangent=tc2.xyz;
   vec3 iBinormal=tc3.xyz;
@@ -55,7 +60,7 @@ void main() {
   iBinormal=vec3(gl_ModelViewMatrix[2][0],gl_ModelViewMatrix[2][1],gl_ModelViewMatrix[2][2]);
   iTangent=normalize(cross(iBinormal,iNormal));
   iBinormal=normalize(cross(iNormal,iTangent));
-  
+
 
   vec3 iLightVec=tc5.xyz;
   vec3 pos=vec3(tc0.z,tc0.w,tc1.w);
