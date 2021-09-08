@@ -77,7 +77,7 @@ static const char _lomap[] = "0123456789-=\';/.,`\\";
 static const char _himap[] = ")!@#$%^&*(_+\":?><~|";
 
 int shiftup (int ch) {
-  if (ch == (ch&0xFF)) {
+  if (ch == (ch&0xFF) && /*VSA priv/macos*/ kbHasBinding(ch,KB_MOD_SHIFT)) {
     const char *c = strchr(_lomap,ch);
     if (c) 
 	return _himap[c-_lomap]; else
@@ -86,7 +86,7 @@ int shiftup (int ch) {
 }
 
 int shiftdown (int ch) {
-  if (ch == (ch&0xFF)) {
+  if (ch == (ch&0xFF) && /*VSA priv/macos*/ kbHasBinding(ch,KB_MOD_SHIFT)) {
     const char *c = strchr(_himap,ch);
     if (c) 
 	return _lomap[c-_himap]; else
