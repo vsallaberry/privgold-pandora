@@ -418,8 +418,13 @@ void winsys_process_events()
 	    case SDL_KEYDOWN:
 		if ( keyboard_func ) {
 		    SDL_GetMouseState( &x, &y );
-
 			bool maybe_unicode = handle_unicode_kb && !(event.key.keysym.sym&~0xFF);
+#if __APPLE__
+            // on MacOS, the alt+ascii gives unicode, then messes around the following
+            // and nothing with alt key works, so, dirty hack, don't do this with alt enabled
+            // I know this disables the unicode power of my alt+... keys, but i prefer to have alt working.
+            maybe_unicode &= !(event.key.keysym.mod&(KMOD_LALT|KMOD_RALT));
+#endif
 			// Translate untranslated release events
 			if (   state && maybe_unicode
 				&& keysym_to_unicode[event.key.keysym.sym&0xFF]  )
@@ -481,13 +486,17 @@ void winsys_process_events()
 
 	    case SDL_VIDEORESIZE:
 #if !(defined(_WIN32)&&defined(SDL_WINDOWING))
+# if !(defined(__APPLE__)&&defined(SDL_WINDOWING))
 		g_game.x_resolution=event.resize.w;
 		g_game.y_resolution=event.resize.h;
 		setup_sdl_video_mode();
-		if ( reshape_func ) {
-		    (*reshape_func)( event.resize.w,
-				     event.resize.h );
-		}
+        if ( reshape_func ) {
+                (*reshape_func)( event.resize.w,
+                                 event.resize.h );
+        }
+# else
+
+# endif
 #endif
 		break;
 	    }
@@ -562,6 +571,7 @@ void winsys_exit( int code )
 /*---------------------------------------------------------------------------*/
 
 static winsys_keyboard_func_t keyboard_func = NULL;
+static winsys_mouse_func_t mouse_func = NULL;
 
 static bool redisplay = false;
 
@@ -634,7 +644,6 @@ char AdjustKeyCtrl(char ch) {
 /* Keyboard callbacks */
 static void glut_keyboard_cb( unsigned char ch, int x, int y )
 {
-
     if ( keyboard_func ) {
       int gm = glutGetModifiers();
       if (gm) {
@@ -651,8 +660,19 @@ static void glut_keyboard_cb( unsigned char ch, int x, int y )
 static void glut_special_cb( int key, int x, int y )
 {
     if ( keyboard_func ) {
-
-	(*keyboard_func)( key+128, glutGetModifiers(), false, x, y );
+#ifdef __APPLE__ //Apple glut does not have wheel support
+        int gm = glutGetModifiers();
+        if (gm) {
+          printf ("Down Modifier %d for special %d %c\n",gm,(int)key,key);
+        }
+        if (gm == GLUT_ACTIVE_CTRL && mouse_func) {
+            if (key == GLUT_KEY_UP)
+                (*mouse_func)(WS_WHEEL_UP, 0, x, y);
+            else if (key == GLUT_KEY_DOWN)
+                (*mouse_func)(WS_WHEEL_DOWN, 0, x, y);
+        }
+#endif
+        (*keyboard_func)( key+128, glutGetModifiers(), false, x, y );
     }
 }
 
@@ -700,6 +720,7 @@ void winsys_set_keyboard_func( winsys_keyboard_func_t func )
 */
 void winsys_set_mouse_func( winsys_mouse_func_t func )
 {
+    mouse_func = func;
     glutMouseFunc( func );
 }
 
