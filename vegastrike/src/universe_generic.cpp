@@ -25,26 +25,25 @@ using namespace GalaxyXML;
 extern StarSystem *GetLoadedStarSystem(const char * file);
 vector <StarSystem *> deleteQueue;
 void Universe::clearAllSystems() {
-  static unsigned int n=0;
   while (star_system.size()) {
     StarSystem * deleted = star_system.back();
     deleted->RemoveStarsystemFromUniverse();
     //deleteQueue.push_back(deleted);
     star_system.pop_back();
     try {
+#if 0 //unordered map impl/usage issue?
+        static unsigned int n=0;
         std::cout << "[Universe::clearAllSystems] leak " << ++n << std::endl;
-        //if (deleted) delete deleted;
+#else
+        if (deleted) delete deleted;
+        std::cout << "[Universe::clearAllSystems] system cleared." << std::endl;
+#endif
     } catch (...){
         std::cout << "[Universe::clearAllSystems] oups" << std::endl;
     }
   }
   active_star_system.clear();
   script_system=NULL;
-  while(deleteQueue.size()) {
-    StarSystem * deleted = deleteQueue.back();
-    deleteQueue.pop_back();
-    delete deleted;
-  }
 }
 
 Cockpit * Universe::createCockpit( std::string player)

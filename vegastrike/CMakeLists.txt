@@ -510,6 +510,14 @@ SET( CMAKE_C_FLAGS_RELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -
     "Flags used by the C compiler during release builds."
     FORCE )
 
+SET(CMAKE_CXX_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+    "Flags used by the C++ compiler during release builds."
+    FORCE )
+SET( CMAKE_C_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+    "Flags used by the C compiler during release builds."
+    FORCE )
+
+
 SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O2 -g3 -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
     "Flags used by the C++ compiler during release builds - optimized with debug info."
     FORCE )
@@ -568,9 +576,9 @@ IF(CMAKE_BUILD_TYPE)
     string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE)
 ENDIF(CMAKE_BUILD_TYPE)
 IF(NOT CMAKE_BUILD_TYPE
-        OR NOT (CMAKE_BUILD_TYPE MATCHES "^\(MAINTAINER|DEBUG|RELEASE|RELWITHDEBINFO|MINSIZEREL|PROFILER\)$"))
+        OR NOT (CMAKE_BUILD_TYPE MATCHES "^\(MAINTAINER|DEBUG|RELEASE|NATIVERELEASE|RELWITHDEBINFO|MINSIZEREL|PROFILER\)$"))
   SET(CMAKE_BUILD_TYPE "MAINTAINER" CACHE STRING
-      "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Maintainer Profiler."
+      "Choose the type of build, options are: None Debug Release NativeRelease RelWithDebInfo MinSizeRel Maintainer Profiler."
       FORCE)
 ENDIF()
 

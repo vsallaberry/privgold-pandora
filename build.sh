@@ -73,7 +73,7 @@ show_help() {
     echo "  build_dir: ${builddir}"
     echo "     target: ${target}"
     echo "       tool: ${build_tool}"
-    echo " build_type: ${build_type}  (Debug|Release|Maintainer|RelWithDebInfo|MinSizeRel|Profiler|...)"
+    echo " build_type: ${build_type}  (Debug|Release|NativeRelease|Maintainer|RelWithDebInfo|MinSizeRel|Profiler|...)"
     echo "  priv_data ${priv_data}"
     echo ""
     exit ${_ret}
@@ -305,6 +305,7 @@ case "${build_tool}" in
     configure)
         case "$(echo "${build_type}" | tr "[:upper:]" "[:lower:]")" in
             release) debug_config_args="--disable-debug --enable-release=2";;
+            nativerelease) debug_config_args="--disable-debug --enable-release=3";;
             debug) debug_config_args="--enable-debug";;
             maintainer) debug_config_args="--enable-debug";;
             relwithdebinfo) debug_config_args="--enable-debug --enable-release=2";;
