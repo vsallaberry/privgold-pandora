@@ -310,7 +310,8 @@ case "${build_tool}" in
             profiler) debug_config_args="--enable-debug --enable-profile";;
             *) debug_config_args="--enable-debug --enable-release=2";;
         esac
-        test "${target}/configure.ac" -nt "${target}/configure" \
+        ! test -f "config.log" \
+        || test "${target}/configure.ac" -nt "${target}/configure" \
         || for f in "${target}"/m4scripts/*; do
             test "${f}" -nt "${target}/configure" && break
         done \
