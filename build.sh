@@ -288,6 +288,7 @@ case "${build_tool}" in
         -DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
         -DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers" \
         -D_GNU_SOURCE=1 \
+        -DHAVE_UNORDERED_MAP=0 -DHAVE_TR1_UNORDERED_MAP=0 \
         -DCMAKE_BUILD_TYPE="${build_type}" \
         -DCMAKE_OSX_SYSROOT="${macos_sdk}" \
         -DSDL_DISABLE=0 -DSDL_WINDOWING_DISABLE=1 \
@@ -346,6 +347,7 @@ case "${build_tool}" in
             --enable-sdl --disable-sdl-windowing \
             --with-vorbis-inc=/opt/local/include --with-vorbis-libs=/opt/local/lib \
             --with-boost=1.50 \
+            --disable-unordered-map \
             ${debug_config_args} \
             --enable-macosx-bundle \
             "${spec_config_args[@]}"
