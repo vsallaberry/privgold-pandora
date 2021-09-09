@@ -791,10 +791,12 @@ void winsys_init( int *argc, char **argv, char *window_title,
 {
     int width, height;
     int glutWindow;
+    int maximized;
     g_game.x_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","x_resolution","1024"));
     g_game.y_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","y_resolution","768"));
     gl_options.fullscreen = XMLSupport::parse_bool (vs_config->getVariable ("graphics","fullscreen","false"));
     gl_options.color_depth = XMLSupport::parse_int (vs_config->getVariable ("graphics","colordepth","32"));
+    maximized = XMLSupport::parse_bool (vs_config->getVariable ("graphics","maximized","false"));
     glutInit( argc, argv );
     static bool get_stencil=XMLSupport::parse_bool (vs_config->getVariable ("graphics","glut_stencil","true"));
     if (get_stencil) {
@@ -838,6 +840,10 @@ void winsys_init( int *argc, char **argv, char *window_title,
 	    (void) VSFileSystem::vs_fprintf(stderr, "Couldn't create a window.\n");
 	    exit(1);
 	}
+    }
+    if (maximized) {
+        VSFileSystem::vs_fprintf(stderr, "GLUT: enter fullscreen\n");
+        glutFullScreen();
     }
 }
 
@@ -895,6 +901,14 @@ void winsys_show_cursor( bool visible )
 }
 
 
+void entry_cb(int state) {
+    VSFileSystem::vs_fprintf(stderr, "GLUT entry %d\n", state);
+    if (state == GLUT_LEFT) {
+        glutPositionWindow(0,0);
+        glutReshapeWindow(g_game.x_resolution, g_game.y_resolution);
+        glutEntryFunc(0);
+    }
+}
 
 /*---------------------------------------------------------------------------*/
 /*!
@@ -912,6 +926,10 @@ void winsys_process_events()
     glutSpecialFunc( glut_special_cb );
     glutSpecialUpFunc( glut_special_up_cb );
 
+    if (!gl_options.fullscreen && XMLSupport::parse_bool(vs_config->getVariable ("graphics","maximized","false"))) {
+        glutEntryFunc(entry_cb);
+    }
+    
     glutMainLoop();
 }
 
