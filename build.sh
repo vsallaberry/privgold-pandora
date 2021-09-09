@@ -273,6 +273,7 @@ echo "+ Build (${build_tool})"
 
 case "${build_tool}" in
     cmake)
+        export SDLDIR=/usr/local/specific/libsdl1
         add_config_args \
         -DCMAKE_VERBOSE_MAKEFILE=ON \
         -DCMAKE_FIND_FRAMEWORK=LAST \
