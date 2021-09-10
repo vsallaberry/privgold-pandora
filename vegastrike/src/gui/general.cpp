@@ -15,7 +15,7 @@
  *                                                                         *
  **************************************************************************/
 
-/* This include has been designed to act independant of the other modules. 
+/* This include has been designed to act independant of the other modules.
  * This allows it to be used with other programs with minimal changes */
 
 #include "general.h"
@@ -27,13 +27,15 @@
 #endif
 using std::vector;
 using std::string;
-#if defined(__APPLE__) || defined(MACOSX) 
+#if defined(__APPLE__) || defined(MACOSX)
 #include <sys/param.h> // For MAXPATHLEN
 #endif
 
 #ifdef _G_RANDOM
 int RANDOMIZED = 0;
 #endif    // _G_RANDOM
+
+static char * empty_string = "";
 
 // Gets the next parameter from the string, sorted by a space
 // Sticks a \0 at the space and returns a pointer to the right side.
@@ -130,7 +132,7 @@ char *replace(char *line, char *search, char *replace, int LENGTH) {
 	current= new char [LENGTH+1];
 	length = strlen(line);
 	strcpy(current, line);
-	while ((location = strstr(current, search)) > 0) {
+	while ((location = strstr(current, search))) {
 		chr_new[0] = '\0';
 		calc = strlen(current) - strlen(search) + strlen(replace);
 		if (calc > LENGTH) { strcpy(line, current); return line; }
@@ -139,7 +141,7 @@ char *replace(char *line, char *search, char *replace, int LENGTH) {
 		strncat(chr_new, replace, strlen(replace));
 		ptr_new = current + dif + strlen(search);
 		strncat(chr_new, ptr_new, strlen(ptr_new));
-		strcpy(current, chr_new); 
+		strcpy(current, chr_new);
 	}
 	strcpy(line, current);
 	delete [] chr_new;
@@ -350,12 +352,12 @@ char *NewString(char *line) {
 
 #ifdef __cplusplus
 char *GetString(char *line) {
-        if (line == 0) { return '\0'; }
+        if (line == 0) { return empty_string; }
         return line;
 }
 
 void SetString(char **ptr, char *line) {
-        if (*ptr > 0) { delete *ptr; }
+        if (*ptr) { delete *ptr; }
         *ptr = strdup(line);
 }
 

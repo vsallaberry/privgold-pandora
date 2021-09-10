@@ -74,7 +74,7 @@
 
 #include <stdio.h>
 #include "gl_init.h"
-#define WINDOW_TITLE "Vega Strike "VERSION
+#define WINDOW_TITLE "Vega Strike " VERSION
 
 #if defined(CG_SUPPORT)
 #include "cg_global.h"
@@ -565,10 +565,10 @@ void GFXInit (int argc, char ** argv){
     glEnable(GL_LIGHTING);
 
     glDisable(GL_NORMALIZE);
-    
+
     glDisable(GL_LINE_SMOOTH);
     glDisable(GL_POINT_SMOOTH);
-    
+
     int con;
     GFXCreateLightContext(con);
     //    glutSetCursor(GLUT_CURSOR_NONE);

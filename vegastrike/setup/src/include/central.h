@@ -25,7 +25,7 @@
 //#define GTK
 //#define CONSOLE
 
-#define VERSION "1.1"
+#define SETUP_VERSION "1.1"
 
 #ifdef GTK
 #include <gtk/gtk.h>

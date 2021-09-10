@@ -38,11 +38,11 @@ extern "C" int _url_open(URLContext *h, const char *filename, int flags)
 {
     if (strncmp(filename,"vsfile:",7)!=0)
         return AVERROR(ENOENT);
-    
+
     const char* type = strchr(filename+7, '|');
     std::string path(filename+7, type?type-filename-7:strlen(filename+7));
     VSFileType vstype = ( type ? (VSFileType)atoi(type) : VideoFile );
-    
+
     VSFile *f = new VSFile();
     if (f->OpenReadOnly(path, vstype) > Ok) {
         delete f;
@@ -61,14 +61,14 @@ extern "C" int _url_close(URLContext *h)
 
 extern "C" int _url_read(URLContext *h, unsigned char *buf, int size)
 {
-    return ((VSFile*)(h->priv_data))->Read(buf, size);
-} 
+    return ((VSFile*)(h->priv_data))->Read(static_cast<void*>(buf), size);
+}
 
-extern "C" int _url_write(URLContext *h, unsigned char *buf, int size)
+extern "C" int _url_write(URLContext *h, const unsigned char *buf, int size)
 {
     // read-only please
     return 0;
-} 
+}
 
 extern "C" offset_t _url_seek(URLContext *h, offset_t pos, int whence)
 {
@@ -80,7 +80,7 @@ extern "C" offset_t _url_seek(URLContext *h, offset_t pos, int whence)
     }
 }
 
-    
+
 struct URLProtocol vsFileProtocol = {
     "vsfile",
     _url_open,

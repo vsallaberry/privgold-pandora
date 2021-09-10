@@ -32,7 +32,7 @@ void LoadMainConfig(void) {
 	if ((fp = fopen(CONFIG_FILE, "r")) == NULL) {
 		string opath (origpath);
 		opath+=string("/")+CONFIG_FILE;
-		if ((fp = fopen(opath.c_str(), "r")) == NULL) {		
+		if ((fp = fopen(opath.c_str(), "r")) == NULL) {
 			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
 			exit(-1);
 		}
@@ -138,7 +138,7 @@ void LoadConfig(void) {
 		n_parm = next_parm(parm);		// next_parm is a line splitter included with general.c
 		if (strcmp("groups", parm) == 0) {
 			parm = n_parm;
-			while ((n_parm = next_parm(parm)) > 0) {	
+			while ((n_parm = next_parm(parm))) {
 				G_CURRENT->name = NewString(parm);
 				G_NEXT = (struct group *)malloc(sizeof(struct group));
 				if (G_NEXT == 0) { fprintf (stderr,"Out of memory\n");exit(-1); }
@@ -156,7 +156,7 @@ void LoadConfig(void) {
 			n_parm = next_parm(parm);
 			group = NewString(parm);
 			parm = n_parm;
-			while ((n_parm = next_parm(parm)) > 0) {
+			while ((n_parm = next_parm(parm))) {
 				C_CURRENT->name = NewString(parm);
 				C_NEXT = (struct catagory *)malloc(sizeof(struct catagory));
 				if (C_NEXT == 0) { fprintf (stderr,"Out of memory\n");exit(-1); }
@@ -197,7 +197,7 @@ void Modconfig(int setting, char *name, char *group) {
 	char *p, *parm, *n_parm, *start_write, *end_write;
 	int commenting = 0;		// 0 if scanning, 1 if adding comments, 2 if removing comments
 	int skip;
-	
+
 	if (useGameConfig() || (rp = fopen(CONFIG.config_file, "r")) == NULL) {
 		if ((rp = fopen(mangle_config(CONFIG.config_file).c_str(), "r")) == NULL) {
 			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
@@ -271,7 +271,7 @@ void Modconfig(int setting, char *name, char *group) {
 		if (strcmp(name, parm) == 0) { commenting = setting; }
 		else {
 			parm = n_parm;
-			while ((n_parm = next_parm(parm)) > 0) {
+			while ((n_parm = next_parm(parm))) {
 				if (parm[0] == '<') { break; }
 				if (strcmp(name, parm) == 0) {
 					commenting = setting;
@@ -294,9 +294,9 @@ void Modconfig(int setting, char *name, char *group) {
 	fclose(rp);
 	// Now we commit the changes
 	if ((rp = fopen(CONFIG.temp_file, "r")) == NULL) {
-		if ((rp = fopen(mangle_config(CONFIG.temp_file).c_str(), "r")) == NULL) {	  
+		if ((rp = fopen(mangle_config(CONFIG.temp_file).c_str(), "r")) == NULL) {
 			fprintf (stderr, "Unable to read from %s\n", CONFIG.temp_file );
-			
+
 			exit(-1);
 		}
 	}

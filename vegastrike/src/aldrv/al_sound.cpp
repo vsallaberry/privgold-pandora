@@ -707,8 +707,8 @@ void AUDDeleteSound (int sound, bool music){
 void AUDAdjustSound (const int sound, const QVector &pos, const Vector &vel){
 #ifdef HAVE_AL
   if (sound>=0&&sound<(int)sounds.size()) {
-    float p []= {scalepos*pos.i,scalepos*pos.j,scalepos*pos.k};
-    float v []= {scalevel*vel.i,scalevel*vel.j,scalevel*vel.k};
+    float p []= {static_cast<float>(scalepos*pos.i),static_cast<float>(scalepos*pos.j),static_cast<float>(scalepos*pos.k)};
+    float v []= {static_cast<float>(scalevel*vel.i),static_cast<float>(scalevel*vel.j),static_cast<float>(scalevel*vel.k)};
     sounds[sound].pos = pos.Cast();
 	sounds[sound].vel=vel;
 	if (usepositional&&sounds[sound].source) {

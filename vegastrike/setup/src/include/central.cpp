@@ -20,6 +20,8 @@ struct catagory CATS;
 struct group GROUPS;
 struct global_settings CONFIG;
 
+static char * empty_string = "";
+
 // Primary initialization function. Sets everything up and takes care of the program
 void Start(int * argc, char ***argv) {
 	LoadMainConfig();
@@ -34,7 +36,7 @@ void SetGroup(char *group, char *setting) {
 	do {
 		if (CURRENT->name == NULL) { continue; }
 		if (strcmp(group, CURRENT->name) == 0) { CURRENT->setting = NewString(setting); return; }
-	} while ((CURRENT = CURRENT->next) > 0);
+	} while ((CURRENT = CURRENT->next));
 }
 void SetInfo(char *catagory, char *info) {
 	struct catagory *CURRENT;
@@ -42,7 +44,7 @@ void SetInfo(char *catagory, char *info) {
 	do {
 		if (CURRENT->name == NULL) { continue; }
 		if (strcmp(catagory, CURRENT->name) == 0) { CURRENT->info = NewString(info); return; }
-	} while ((CURRENT = CURRENT->next) > 0);
+	} while ((CURRENT = CURRENT->next));
 }
 
 char *GetInfo(char *catagory) {
@@ -54,18 +56,18 @@ char *GetInfo(char *catagory) {
 			if (CURRENT->info) { return CURRENT->info; }
 			else { return catagory; }
 		}
-	} while ((CURRENT = CURRENT->next) > 0);
+	} while ((CURRENT = CURRENT->next));
 	return catagory;
 }
 
 char *GetSetting(char *group) {
-	struct group *CUR;
+    struct group *CUR;
 	CUR = &GROUPS;
 	do {
 		if (CUR->name == NULL) { continue; }
 		if (strcmp(CUR->name, group) == 0) { return CUR->setting; }
-	} while ((CUR = CUR->next) > 0);
-	return '\0';
+	} while ((CUR = CUR->next));
+	return empty_string;
 }
 
 struct catagory *GetCatStruct(char *name) {
@@ -74,7 +76,7 @@ struct catagory *GetCatStruct(char *name) {
 	do {
 		if (CUR->name == NULL) { continue; }
 		if (strcmp(CUR->name, name) == 0) { return CUR; }
-	} while ((CUR = CUR->next) > 0);
+	} while ((CUR = CUR->next));
 	return 0;
 }
 
@@ -84,7 +86,7 @@ struct group *GetGroupStruct(char *name) {
         do {
                 if (CUR->name == NULL) { continue; }
                 if (strcmp(CUR->name, name) == 0) { return CUR; }
-        } while ((CUR = CUR->next) > 0);
+        } while ((CUR = CUR->next));
         return 0;
 }
 

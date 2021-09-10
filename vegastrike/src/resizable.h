@@ -1,4 +1,5 @@
 #include<cstdlib>
+#include<cstring>
 template <class ITEM> class Resizable {
   unsigned int num;
   unsigned int alloc;

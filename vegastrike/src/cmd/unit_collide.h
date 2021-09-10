@@ -15,7 +15,7 @@
 #define COLLIDETABLEACCURACY sizeof (CTACCURACY)
 ///objects that go over 16 sectors are considered huge and better to check against everything.
 #define HUGEOBJECT sizeof (CTHUGE)
-//const int HUGEOBJECT=12; 
+//const int HUGEOBJECT=12;
 class StarSystem;
 /**
  * Hashtable3d is a 3d datastructure that holds various starships that are
@@ -39,13 +39,17 @@ template <class CTSIZ, class CTACCURACY, class CTHUGE> class UnitHash3d {
   ///hashes 3 values into the appropriate spot in the hash table
 
   static void hash_vec (double i, double j, double k, int &x, int &y, int &z) {
-    x = hash_int(i);
-    y = hash_int(j);
-    z = hash_int(k);
+    x = hash_int_s(i);
+    y = hash_int_s(j);
+    z = hash_int_s(k);
   }
   ///hashes 3 vals into the appropriate place in hash table
   static void hash_vec (const QVector & t,int &x, int&y,int&z) {
     hash_vec(t.i,t.j,t.k,x,y,z);
+  }
+  //Hashes a single value to a value on the collide table truncated to all 3d constraints.  Consider using a swizzle
+  static inline int hash_int_s (const double aye) {
+    return ((int)(((aye<0)?(aye-COLLIDETABLEACCURACY):aye)/COLLIDETABLEACCURACY))%(COLLIDETABLESIZE/2)+(COLLIDETABLESIZE/2);
   }
 public:
   UnitHash3d (StarSystem * ss) {
@@ -74,7 +78,7 @@ public:
 	active_huge->prepend(un);
       }
     }
-    
+
   }
   void updateBloc (unsigned int whichblock) {
     un_iter ui =table  [whichblock%COLLIDETABLESIZE][(whichblock/COLLIDETABLESIZE)%COLLIDETABLESIZE][((whichblock/COLLIDETABLESIZE)/COLLIDETABLESIZE)%COLLIDETABLESIZE].createIterator();
@@ -90,16 +94,16 @@ public:
   }
   ///Hashes a single value to a value on the collide table truncated to all 3d constraints.  Consider using a swizzle
   int hash_int (const double aye) {
-    return ((int)(((aye<0)?(aye-COLLIDETABLEACCURACY):aye)/COLLIDETABLEACCURACY))%(COLLIDETABLESIZE/2)+(COLLIDETABLESIZE/2); 
+    return UnitHash3d::hash_int_s(aye);
   }
   ///clears entire table
   void Clear () {
     if (!hugeobjects.empty()) {
       hugeobjects.clear();
     }
-    if (this->active_huge.size())
+    if (this->active_huge->size())
       ha.clear();
-    if (this->accum_huge.size())
+    if (this->accum_huge->size())
       hb.clear();
     acc_huge.clear();
     act_huge.clear();
@@ -128,7 +132,7 @@ public:
     return hugeobjects;
   }
   ///Returns all objects within sector(s) occupied by target
-  int Get (const LineCollide* target, UnitCollection *retval[], bool GetHuge) {    
+  int Get (const LineCollide* target, UnitCollection *retval[], bool GetHuge) {
     unsigned int sizer =1;
     //int minx,miny,minz,maxx,maxy,maxz;
     //    hash_vec(Min,minx,miny,minz);
@@ -148,7 +152,7 @@ public:
     }
     for (double i=target->Mini.i;i<=maxx;i+=COLLIDETABLEACCURACY) {
       x = hash_int (i);
-      for (double j=target->Mini.j;j<=maxy;j+=COLLIDETABLEACCURACY) {   
+      for (double j=target->Mini.j;j<=maxy;j+=COLLIDETABLEACCURACY) {
 	y = hash_int(j);
 	for (double k=target->Mini.k;k<=maxz;k+=COLLIDETABLEACCURACY) {
 	  z = hash_int(k);
@@ -174,7 +178,7 @@ public:
     double minx= (floor(target->Mini.i/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
     double miny= (floor(target->Mini.j/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
     double minz= (floor(target->Mini.k/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
-    if (target->Mini.i==maxx) 
+    if (target->Mini.i==maxx)
       maxx+=COLLIDETABLEACCURACY/2;
     if (target->Mini.j==maxy) maxy+=COLLIDETABLEACCURACY/2;
     if (target->Mini.k==maxz) maxz+=COLLIDETABLEACCURACY/2;
@@ -187,7 +191,7 @@ public:
     }
     for (double i=target->Mini.i;i<maxx;i+=COLLIDETABLEACCURACY) {
       x = hash_int(i);
-      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {    
+      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {
 	y = hash_int(j);
 	for (double k=target->Mini.k;k<maxz;k+=COLLIDETABLEACCURACY) {
 	  z = hash_int(k);
@@ -237,7 +241,7 @@ public:
     if (!target->hhuge) {
       for (double i=target->Mini.i;i<maxx;i+=COLLIDETABLEACCURACY) {
 	x = hash_int(i);
-	for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {    
+	for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {
 	  y = hash_int(j);
 	  for (double k=target->Mini.k;k<maxz;k+=COLLIDETABLEACCURACY) {
 	    z = hash_int(k);
@@ -289,13 +293,13 @@ struct collideTrees {
 
   bool usingColTree()const {return rapidColliders[0]!=NULL;}
 
-  csOPCODECollider *colTree(Unit *un, const Vector & othervelocity);//gets the appropriately scaled unit collide tree	
+  csOPCODECollider *colTree(Unit *un, const Vector & othervelocity);//gets the appropriately scaled unit collide tree
   ///The bsp tree of the shields of this unit (used for beams)
   csOPCODECollider *colShield;
 
   int refcount;
-  
-  collideTrees (const std::string &hk, BSPTree *bT, BSPTree *bS, csOPCODECollider *cT, csOPCODECollider *cS);  
+
+  collideTrees (const std::string &hk, BSPTree *bT, BSPTree *bS, csOPCODECollider *cT, csOPCODECollider *cS);
   void Inc () {refcount++;}
   void Dec ();
   static collideTrees * Get(const std::string &hash_key);

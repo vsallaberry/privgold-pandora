@@ -16,7 +16,7 @@ static string elimiQuote(string s, string delim="\"\"\""){
   int sl=s.length();
   ret.reserve(sl);
   for (int i=0; i<sl; i++) {
-      if ((i+1<sl)&&(s[i]=='\"')&&(s[i+1]=='\"')) 
+      if ((i+1<sl)&&(s[i]=='\"')&&(s[i+1]=='\"'))
           ret+=s[i++]; else if (s[i]!='\"')
           ret+=s[i];
   }
@@ -37,9 +37,8 @@ static string elimiQuote(string s, string delim="\"\"\""){
     s=s.substr(where+delim.length());
     where=findQuot(s,delim);
   }
-  ret=ret+s;
+  ret=ret+s;*/
   return ret;
-  */
 }
 vector <std::string> readCSV (std::string s,std::string delim) {
     // Proposed readCSV code -- begin
@@ -60,8 +59,8 @@ vector <std::string> readCSV (std::string s,std::string delim) {
         insert=true;
         if (quote) {
             if (s[epos]=='\"') {
-                if ((epos+1<sl)&&(s[epos+1]=='\"')) 
-                    epos++; else 
+                if ((epos+1<sl)&&(s[epos+1]=='\"'))
+                    epos++; else
                     quote=insert=false;
             };
         } else {
@@ -77,8 +76,8 @@ vector <std::string> readCSV (std::string s,std::string delim) {
                 as.erase();
             } else {
                 if (s[epos]=='\"') {
-                    if ((epos+1<sl)&&(s[epos+1]=='\"')) 
-                        epos++; else 
+                    if ((epos+1<sl)&&(s[epos+1]=='\"'))
+                        epos++; else
                         insert=!(quote=true);
                 };
             };
@@ -108,7 +107,7 @@ vector <std::string> readCSV (std::string s,std::string delim) {
         }else{
           quot=quot3;
         }
-	sem = s.find(delim);	
+	sem = s.find(delim);
 	while (sem!=string::npos){
           string::size_type equot=0;
           while (quot<sem && quot!=string::npos){
@@ -276,7 +275,7 @@ void CSVTable::Init (std::string data) {
          rows[strs[0] ] = row;
       }else {
          table.pop_back();
-      }      
+      }
    }
    // Original Init code -- end
    */
@@ -308,7 +307,7 @@ const string& CSVRow::operator [] (const string &col) const
 {
 	static std::string empty_string;
 	vsUMap<string,int>::iterator i = parent->columns.find(col);
-	if (i==parent->columns.end()) 
+	if (i==parent->columns.end())
 		return empty_string; else
 		return parent->table[iter+(*i).second];
 }
@@ -341,7 +340,7 @@ string CSVRow::getRoot()  {
   fprintf (stderr,"Error getting root for unit\n");
   return "";
 }
-void CSVTable::SetupOptimizer(std::vector<std::string> keys, unsigned int type) 
+void CSVTable::SetupOptimizer(std::vector<std::string> keys, unsigned int type)
 {
     optimizer_setup = true;
     optimizer_type = type;

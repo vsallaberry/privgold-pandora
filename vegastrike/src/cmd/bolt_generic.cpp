@@ -40,7 +40,7 @@ Bolt::Bolt (const weapon_info * typ, const Matrix &orientationpos,  const Vector
 size_t nondecal_index(Collidable::CollideRef b) {
   return b.bolt_index>>8;
 }
- 
+
 bool Bolt::Update (Collidable::CollideRef index) {
   const weapon_info *type=this->type;
   float speed=type->Speed;
@@ -59,7 +59,7 @@ bool Bolt::Update (Collidable::CollideRef index) {
 /*
 void bolt_draw::UpdatePhysics () {
   vector <vector <Bolt> > *tmp = &bolts;
-  for (int l=0;l<2;l++) {    
+  for (int l=0;l<2;l++) {
     for (vector <vector <Bolt> >::iterator i= tmp->begin();i!=tmp->end();i++) {
       for (int j=0;j<i->size();j++) {
         int size=i->size();
@@ -98,7 +98,7 @@ public:
 namespace vsalg {
 	template<typename IT, typename F> void for_each(IT start, IT end, F f)
 	{
-		// This way, deletion of current item is allowed 
+		// This way, deletion of current item is allowed
 		// - drawback: iterator copy each iteration
 		while (start != end)
 			f(*start++);
@@ -108,7 +108,7 @@ namespace vsalg {
 class UpdateBolts{
   UpdateBolt sub;
 public:
-  UpdateBolts(StarSystem * ss, CollideMap * collidemap):sub(ss,collidemap) {}  
+  UpdateBolts(StarSystem * ss, CollideMap * collidemap):sub(ss,collidemap) {}
   template <class T> void operator () (T & collidableList) {
 	  vsalg::for_each(collidableList.begin(),collidableList.end(),sub);
   }
@@ -149,14 +149,14 @@ bool Bolt::Collide (Unit * target) {
     //float phasdam =type->PhaseDamage;
     //if (damage>0) { This was needed back in the "I don't share code" ApplyDamage days
       target->ApplyDamage ((prev_position+tmp).Cast(),
-                           normal, 
+                           normal,
                            this->type->Damage* ((1-distance)+distance*this->type->Longrange),
                            affectedSubUnit,
                            coltmp,
-                           owner, 
+                           owner,
                            this->type->PhaseDamage* ((1-distance)+distance*this->type->Longrange));
 	  //}else if (damage<0) {
-      //target->leach (1,phasdam<0?-phasdam:1,appldam<0?-appldam:1);      
+      //target->leach (1,phasdam<0?-phasdam:1,appldam<0?-appldam:1);
 	  //}
     return true;
   }
@@ -179,21 +179,21 @@ bool Bolt::CollideAnon(Collidable::CollideRef b, Unit *un) {
   }
   return false;
 }
-union Collidable::CollideRef;
+//union Collidable::CollideRef;
 Collidable::CollideRef Bolt::BoltIndex(int index, int decal, bool isBall) {
   Collidable::CollideRef temp;
   temp.bolt_index=index;
   temp.bolt_index<<=8;
   temp.bolt_index|=decal;
   temp.bolt_index|=isBall?128:0;
-  return temp;  
+  return temp;
 }
 
 void BoltDestroyGeneric (Bolt * whichbolt, int index, int decal, bool isBall) {
   VSDESTRUCT2
   bolt_draw *q = _Universe->activeStarSystem()->bolts;
   vector <vector <Bolt> > *target;
-  if (!isBall) { 
+  if (!isBall) {
     target = &q->bolts;
   } else {
     target = &q->balls;
@@ -204,18 +204,18 @@ void BoltDestroyGeneric (Bolt * whichbolt, int index, int decal, bool isBall) {
     int tsize=vec->size();
     CollideMap*cm=_Universe->activeStarSystem()->collidemap[Unit::UNIT_BOLT];
     cm->UpdateBoltInfo(vec->back().location,(*(*vec)[index].location)->ref);
-    
+
     assert (index<tsize);
     cm->erase((*vec)[index].location);
     if(index+1!=vec->size())
-      (*vec)[index]=vec->back();//just a memcopy, yo    
+      (*vec)[index]=vec->back();//just a memcopy, yo
     vec->pop_back();//pop that back up
   }else {
     VSFileSystem::vs_fprintf (stderr,"Bolt Fault Nouveau! Not found in draw queue! No Chance to recover\n");
     fflush(stderr);
     assert(0);
     /*
-    vector <Bolt>::iterator tmp= std::find ((*target)[decal].begin(),(*target)[decal].end(),*whichbolt); 
+    vector <Bolt>::iterator tmp= std::find ((*target)[decal].begin(),(*target)[decal].end(),*whichbolt);
     if (tmp!=(*target)[decal].end()) {
       (*target)[decal].erase(tmp);
     } else {
@@ -225,7 +225,7 @@ void BoltDestroyGeneric (Bolt * whichbolt, int index, int decal, bool isBall) {
         for (unsigned int mdecal=0;mdecal<(*srch).size();mdecal++) {
           vector <Bolt>::iterator mtmp= (*srch)[mdecal].begin();
           while (mtmp!=(*srch)[mdecal].end()) {
-            std::find ((*srch)[mdecal].begin(),(*srch)[mdecal].end(),*whichbolt);       
+            std::find ((*srch)[mdecal].begin(),(*srch)[mdecal].end(),*whichbolt);
             if (mtmp!=(*srch)[mdecal].end()) {
               (*srch)[mdecal].erase (mtmp);
               VSFileSystem::vs_fprintf (stderr,"Bolt Fault Recovered\n");
@@ -235,7 +235,7 @@ void BoltDestroyGeneric (Bolt * whichbolt, int index, int decal, bool isBall) {
         if (srch==&q->balls) {
           break;
         }
-      }     
+      }
     }
     */
   }

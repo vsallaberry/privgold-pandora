@@ -58,7 +58,7 @@ void usedSerial(ObjSerial ser, bool used) {
 ObjSerial	getUniqueSerial()
 {
 	int offset = (SERVER ? 2 : 1);
-	
+
 	std::map<ObjSerial,bool>::const_iterator iter;
 	ObjSerial ret;
 	do {
@@ -66,7 +66,7 @@ ObjSerial	getUniqueSerial()
 		ret = serial_seed+offset;
 	} while ((iter=usedSerials.find(ret))!=usedSerials.end()
 			 && (*iter).second);
-	
+
 	usedSerial(ret, true);
 	return ret;
 }
@@ -78,7 +78,7 @@ string selectcurrentdir;
 
 
 
-#if defined (__FreeBSD__) || defined(__APPLE__)
+#if (defined (__FreeBSD__) || defined(__APPLE__)) && !(defined(_LIBCPP_VERSION) || (defined(__GLIBCXX__) && __GLIBCXX__ >= 20080101))// _LIBCPP_VERSION Mojave:8000 ElCapitan:3700
 int	selectdirs( struct dirent * entry)
 #else
 int	selectdirs( const struct dirent * entry)
@@ -100,7 +100,7 @@ int	selectdirs( const struct dirent * entry)
 	/*
 	  // Everything shows up as DT_UNKNOWN (0) on Linux since it's just that cool.
 #else
-	if( entry->d_type==DT_DIR) 
+	if( entry->d_type==DT_DIR)
 		return 1;
 #endif
 	*/
@@ -152,10 +152,10 @@ std::string vegastrike_cwd;
 			char linkname[128]; /* /proc/<pid>/exe */
 			linkname[0]='\0';
 			pid_t pid;
-	
+
 			/* Get our PID and build the name of the link in /proc */
 			pid = getpid();
-	
+
 			sprintf(linkname, "/proc/%d/exe", pid);
 			ret = readlink(linkname, buf, 65535);
 			if (ret <= 0) {
@@ -181,17 +181,17 @@ std::string vegastrike_cwd;
 		c = (char*) parentdir;
 		while (*c != '\0')     /* go to end */
 			c++;
-    
+
 		while ((*c != '/')&&(*c != '\\')&&c>parentdir)      /* back up to parent */
 			c--;
-    
+
 		*c = '\0';             /* cut off last part (binary name) */
 		if (strlen (parentdir)>0) {
 			chdir (parentdir);/* chdir to the binary app's parent */
 		}
 		delete []parentdir;
 	}
-	
+
 	VSError CachedFileLookup(FileLookupCache &cache, const string& file, VSFileType type)
 	{
 		string hashName = GetHashName(file);
@@ -326,7 +326,7 @@ std::string vegastrike_cwd;
 		std::string GetHashName (const std::string &name, const Vector &scale, int faction) {
 		  std::string result("");
 		  result = current_path.back()+current_directory.back()+current_subdirectory.back()+name;
-		  
+
 		  result+=XMLSupport::VectorToString(scale)+"|"+XMLSupport::tostring(faction);
 		  return result;
 		}
@@ -343,7 +343,7 @@ std::string vegastrike_cwd;
 
 		std::string MakeSharedPathReturnHome (const std::string &newpath) {
 		  CreateDirectoryHome( newpath);
-		  return newpath+string("/");	  
+		  return newpath+string("/");
 		}
 		std::string MakeSharedPath (const std::string &s) {
 		  VSFileSystem::vs_fprintf (stderr,"MakingSharedPath %s",s.c_str());
@@ -419,7 +419,7 @@ std::string vegastrike_cwd;
 				fp = fopen( fullpath.c_str(), mode);
 				if( fp)
 				{
-                                  if (VSFS_DEBUG()>2) 
+                                  if (VSFS_DEBUG()>2)
 					cerr<<fullpath<<" opened for writing SUCCESS !!!"<<endl;
 				}
 				else
@@ -428,7 +428,7 @@ std::string vegastrike_cwd;
                                     cerr<<fullpath<<" FAILED !!!"<<endl;
 				}
 			}
-		
+
 			return fp;
 
 		return NULL;
@@ -571,7 +571,7 @@ std::string vegastrike_cwd;
 			data_paths.push_back( vegastrike_cwd+"/../data");
 			data_paths.push_back( vegastrike_cwd+"/../Resources");
 		}
-		
+
 		data_paths.push_back( ".");
 		data_paths.push_back( "..");
 		data_paths.push_back( "../data4.x");
@@ -597,7 +597,7 @@ std::string vegastrike_cwd;
 		data_paths.push_back( "/usr/games/vegastrike/data4.x");
 		data_paths.push_back( "/opt/share/vegastrike/data4.x");
 */
-		
+
 		// Win32 data should be "."
 		char tmppath[16384];
 		for( vector<string>::iterator vsit=data_paths.begin(); vsit!=data_paths.end(); vsit++)
@@ -646,9 +646,9 @@ std::string vegastrike_cwd;
 			if (hsd.length()) {
 				HOMESUBDIR=hsd;
 				printf ("Using %s as the home directory\n",hsd.c_str());
-			}			
+			}
 		}
-		
+
 		// Load default VS config file
 		char * conffile = new char[config_file.length()+1];
 		conffile[config_file.length()] = 0;
@@ -669,7 +669,7 @@ std::string vegastrike_cwd;
 		if( subdir!="")
 		{
 			modname=subdir;
-			
+
 			if( DirectoryExists( homedir+"/mods/"+subdir))
 			{
 				if( FileExists( homedir+"/mods/"+subdir, config_file)>=0)
@@ -683,8 +683,8 @@ std::string vegastrike_cwd;
 					found = true;
 				}
 			}
-			
-			
+
+
                           if (!found)
                             cout<<"WARNING : coudn't find a mod named '"<<subdir<<"' in homedir/mods"<<endl;
 				if( DirectoryExists( moddir+"/"+subdir))
@@ -707,7 +707,7 @@ std::string vegastrike_cwd;
 				}
 			//}
 		}
-		
+
 
 		if( !found)
 		{
@@ -783,11 +783,11 @@ std::string vegastrike_cwd;
 	{
 		string curpath;
 		struct dirent ** dirlist;
-		// new config program should insert hqtextures variable 
-		// with value "hqtextures" in data section. 
+		// new config program should insert hqtextures variable
+		// with value "hqtextures" in data section.
 		string hq = vs_config->getVariable("data","hqtextures","");
 		if(hq != ""){
-			// HQ Texture dir sits alongside data dir. 
+			// HQ Texture dir sits alongside data dir.
 			selectcurrentdir = datadir+"/..";
 			int ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 			if(ret >=0){
@@ -802,7 +802,7 @@ std::string vegastrike_cwd;
 			}
 			free( dirlist);
 		}
-		
+
 		selectcurrentdir = moddir;
 		int ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 		if( ret <0)
@@ -865,7 +865,7 @@ std::string vegastrike_cwd;
 		// Cockpits are in cockpits/ (also a config var)
 		// Animations are in animations/
 		// VSSprite are in sprites/ or in ./ (when full subpath is provided) or in the current cockpit dir that is being loaded
-		
+
 		// First allocate an empty directory list for each file type
 		for( i=0; i<UnknownFile; i++)
 		{
@@ -962,7 +962,7 @@ std::string vegastrike_cwd;
 		// Also : Have to try with systems, not sure it would work well
 		// Setup the use of volumes for certain VSFileType
 		volume_format = vs_config->getVariable( "data", "volume_format", "pk3");
-        if (volume_format=="vsr") 
+        if (volume_format=="vsr")
             q_volume_format=vfmtVSR; else if (volume_format=="pk3")
             q_volume_format=vfmtPK3; else
             q_volume_format=vfmtUNK;
@@ -1285,8 +1285,8 @@ std::string vegastrike_cwd;
 		VSFileType curtype=type;
 		// First try in the current path
         switch(type) {
-        case UnitFile: 
-            extra = "/"+GetUnitDir( f.GetFilename()); 
+        case UnitFile:
+            extra = "/"+GetUnitDir( f.GetFilename());
             break;
         case CockpitFile:
 		    // For cockpits we look in subdirectories that have the same name as the cockpit itself
@@ -1320,7 +1320,7 @@ std::string vegastrike_cwd;
 			else
 			{
 				// Set curtype back to original type if we didn't find the file in the current dir
-				
+
 				curtype = type;
 				shared = true;
 			}
@@ -1334,7 +1334,7 @@ std::string vegastrike_cwd;
 			if( extra!="")
 				subdir += extra;
 			found = FileExists( curpath, (subdir+"/"+f.GetFilename()).c_str(), type, false);
-	
+
 			for( j=0; found<0 && j<SubDirectories[curtype].size(); j++)
 			{
 				subdir = SubDirectories[curtype][j];
@@ -1381,7 +1381,7 @@ std::string vegastrike_cwd;
 					subdir = SubDirectories[curtype][j];
 					if( extra!="")
 						subdir += extra;
-	
+
 					found = FileExists( curpath, (subdir+"/"+f.GetFilename()).c_str(), curtype);
 				}
 			}
@@ -1662,7 +1662,7 @@ std::string vegastrike_cwd;
                                   DisplayType( type);
                                   cerr<<endl;
                                 }
-                
+
 			}
 		}
 	}
@@ -2089,7 +2089,7 @@ std::string vegastrike_cwd;
 		}
 		return ret;
 	}
-	
+
 	bool  VSFile::Eof()
 	{
 		bool eof = false;
@@ -2162,7 +2162,7 @@ std::string vegastrike_cwd;
 		this->offset = 0;
 		this->file_index = -1;
 	}
-    
+
     static void pathAppend(string &dest, string &suffix)
     {
         if (suffix.empty())
@@ -2305,7 +2305,7 @@ int scandir(const char *dirname, struct dirent ***namelist,
   if ((len==1)&& (d[-1]=='.')) { strcpy(findIn, ".\\*"); }
   if ((len>0) && (d[-1]=='\\')) { *d++ = '*'; *d = 0; }
   if ((len>1) && (d[-1]=='.') && (d[-2]=='\\')) { d[-1] = '*'; }
-  
+
   if ((h=FindFirstFile(findIn, &find))==INVALID_HANDLE_VALUE) {
     ret = GetLastError();
     if (ret != ERROR_NO_MORE_FILES) {

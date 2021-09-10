@@ -80,17 +80,17 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
 	AUDStopAllSounds();
 	savedStarSystem = pendingjump[kk]->dest;
 	pendingjump[kk]->dest->SwapIn();
-        
-	
+
+
       }
-      
+
       _Universe->setActiveStarSystem(pendingjump[kk]->dest);
       vector <Unit *> possibilities;
       Unit * primary;
       if (pendingjump[kk]->final_location.i==0&&
           pendingjump[kk]->final_location.j==0&&
-          pendingjump[kk]->final_location.k==0){     
-     	
+          pendingjump[kk]->final_location.k==0){
+
 
 		for(un_iter iter = pendingjump[kk]->dest->getUnitList().createIterator();primary = *iter;++iter){
           vector <Unit *> tmp;
@@ -119,21 +119,21 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
                             this->UpdateCollideQueue(pendingjump[kk]->dest,jumpnode->location);
                           }
                   }
-                  jumpdest+=23231;      
+                  jumpdest+=23231;
       }
       Unit * tester;
       for (unsigned int jjj=0;jjj<2;++jjj) {
         for (un_iter i= _Universe->activeStarSystem()->getUnitList().createIterator();
              (tester=*i)!=NULL; ++i){
-          
+
           if (tester->isUnit()==UNITPTR && tester!=this){
             if ((this->LocalPosition()-tester->LocalPosition()).Magnitude()<this->rSize()+tester->rSize()) {
-              SetCurPosition(this->LocalPosition()+this->cumulative_transformation_matrix.getR()*(4*(this->rSize()+tester->rSize())));
-              
+              this->SetCurPosition(this->LocalPosition()+this->cumulative_transformation_matrix.getR()*(4*(this->rSize()+tester->rSize())));
+
             }
           }
         }
-      }      
+      }
       DealPossibleJumpDamage (this);
       static int jumparrive=AUDCreateSound(vs_config->getVariable ("unitaudio","jumparrive", "sfx43.wav"),false);
       if (dosightandsound)

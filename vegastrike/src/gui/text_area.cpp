@@ -20,6 +20,8 @@
 #include <cstdlib>
 #include <cstring>
 
+static char * empty_string = "";
+
 // Array of textures for the text area
 //GUITexture *Images;
 
@@ -307,7 +309,7 @@ char *TextArea::GetSelectedItemDesc(void) {
 char *TextArea::GetSelectedItem(int type) {
 	TextAreaItem *search;
 	search = ItemList->FindCount(cur_selected, 0);
-	if (search == 0) { return '\0'; }
+	if (search == 0) { return empty_string; }
 	if (type == 1) { return search->name; }
 	else { return search->description; }
 }
@@ -567,7 +569,7 @@ void TextArea::ChompIntoItems(const char *text, const char *parent) {
 }*/
 //#include <stdlib.h>
 //#define rnd (((float)rand())/((float)RAND_MAX))
-TextAreaItem::TextAreaItem(const char *new_name, const char *desc, TextAreaItem *parent_class) 
+TextAreaItem::TextAreaItem(const char *new_name, const char *desc, TextAreaItem *parent_class)
 	: col (1,1,1,1) {
 //{	col = GFXColor (rnd,rnd,rnd,1);
 	if (new_name != 0 ) { name = strdup(new_name); }
@@ -618,7 +620,7 @@ void TextAreaItem::Sort(void) {
 			}
 		}
 	}
-	
+
 }
 
 TextAreaItem *TextAreaItem::FindCount(int count, int cur) {

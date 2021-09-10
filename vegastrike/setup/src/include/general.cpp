@@ -15,7 +15,7 @@
  *                                                                         *
  **************************************************************************/
 
-/* This include has been designed to act independant of the other modules. 
+/* This include has been designed to act independant of the other modules.
  * This allows it to be used with other programs with minimal changes */
 
 #include "general.h"
@@ -121,7 +121,7 @@ char *replace(char *line, char *search, char *replace, int LENGTH) {
 	if (calc > LENGTH) { return line; }
 	length = strlen(line);
 	strcpy(current, line);
-	while ((location = strstr(current, search)) > 0) {
+	while ((location = strstr(current, search))) {
 		chr_new[0] = '\0';
 		calc = strlen(current) - strlen(search) + strlen(replace);
 		if (calc > LENGTH) { strcpy(line, current); free(current); free(chr_new); return line; }
@@ -130,7 +130,7 @@ char *replace(char *line, char *search, char *replace, int LENGTH) {
 		strncat(chr_new, replace, strlen(replace));
 		ptr_new = current + dif + strlen(search);
 		strncat(chr_new, ptr_new, strlen(ptr_new));
-		strcpy(current, chr_new); 
+		strcpy(current, chr_new);
 	}
 	strcpy(line, current);
 	free(chr_new);

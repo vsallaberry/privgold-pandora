@@ -825,7 +825,7 @@ void ExecuteDirector ()
 }
 
 Unit *StarSystem::nextSignificantUnit() {
-	return sigIter.current();
+	return *sigIter;
 }
 
 void StarSystem::Update( float priority)
@@ -955,7 +955,7 @@ void StarSystem::Update(float priority , bool executeDirector)
 	} else {
 		sigIter.advance();
 	}
-	while (!sigIter.isDone() && !UnitUtil::isSignificant(sigIter.current())) {
+	while (!sigIter.isDone() && !UnitUtil::isSignificant(*sigIter)) {
 		sigIter.advance();
 	}
 	// If it is done, leave it NULL for this frame then.

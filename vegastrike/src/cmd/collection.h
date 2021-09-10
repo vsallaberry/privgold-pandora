@@ -7,8 +7,8 @@
 #define _UNITCOLLECTION_H_
 
 // Collection type:
-#define USE_OLD_COLLECTION
-// #define USE_STL_COLLECTION
+//#define USE_OLD_COLLECTION
+ #define USE_STL_COLLECTION
 
 #if defined(USE_OLD_COLLECTION)
 #include "oldcollection.h"
@@ -16,6 +16,7 @@
 
 #include <list>
 #include <vector>
+#include <cstdlib>
 
 class Unit;
 

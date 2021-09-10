@@ -21,11 +21,15 @@ template <class T, int COLLIDETABLESIZE, int COLLIDETABLEACCURACY, int HUGEOBJEC
   std::vector <T> hugeobjects;
   ///The hash table itself. Holds most units to be collided with
   std::vector <T> table [COLLIDETABLESIZE][COLLIDETABLESIZE][COLLIDETABLESIZE];
+  ///Hashes a single value to a value on the collide table truncated to all 3d constraints.  Consider using a swizzle
+  static inline int hash_int_s (const double aye) {
+    return ((int)(((aye<0)?(aye-COLLIDETABLEACCURACY):aye)/COLLIDETABLEACCURACY))%(COLLIDETABLESIZE/2)+(COLLIDETABLESIZE/2);
+  }
   ///hashes 3 values into the appropriate spot in the hash table
   static void hash_vec (double i, double j, double k, int &x, int &y, int &z) {
-    x = hash_int(i);
-    y = hash_int(j);
-    z = hash_int(k);
+    x = hash_int_s(i);
+    y = hash_int_s(j);
+    z = hash_int_s(k);
   }
   ///hashes 3 vals into the appropriate place in hash table
   static void hash_vec (const QVector & t,int &x, int&y,int&z) {
@@ -34,7 +38,7 @@ template <class T, int COLLIDETABLESIZE, int COLLIDETABLEACCURACY, int HUGEOBJEC
 public:
   ///Hashes a single value to a value on the collide table truncated to all 3d constraints.  Consider using a swizzle
   int hash_int (const double aye) {
-    return ((int)(((aye<0)?(aye-COLLIDETABLEACCURACY):aye)/COLLIDETABLEACCURACY))%(COLLIDETABLESIZE/2)+(COLLIDETABLESIZE/2); 
+    return hash_int_s(aye);
   }
   ///clears entire table
   void Clear () {
@@ -61,7 +65,7 @@ public:
     return hugeobjects;
   }
   ///Returns all objects within sector(s) occupied by target
-  int Get (const LineCollide* target, std::vector <T> *retval[]) {    
+  int Get (const LineCollide* target, std::vector <T> *retval[]) {
     unsigned int sizer =1;
     //int minx,miny,minz,maxx,maxy,maxz;
     //    hash_vec(Min,minx,miny,minz);
@@ -76,10 +80,10 @@ public:
     retval[0] = &hugeobjects;
     if (target->hhuge) {
       return sizer;//we can't get _everything
-    } 
+    }
     for (double i=target->Mini.i;i<maxx;i+=COLLIDETABLEACCURACY) {
       x = hash_int (i);
-      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {   
+      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {
 	y = hash_int(j);
 	for (double k=target->Mini.k;k<maxz;k+=COLLIDETABLEACCURACY) {
 	  z = hash_int(k);
@@ -105,7 +109,7 @@ public:
     double minx= (floor(target->Mini.i/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
     double miny= (floor(target->Mini.j/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
     double minz= (floor(target->Mini.k/COLLIDETABLEACCURACY))*COLLIDETABLEACCURACY;
-    if (target->Mini.i==maxx) 
+    if (target->Mini.i==maxx)
       maxx+=COLLIDETABLEACCURACY/2;
     if (target->Mini.j==maxy) maxy+=COLLIDETABLEACCURACY/2;
     if (target->Mini.k==maxz) maxz+=COLLIDETABLEACCURACY/2;
@@ -118,7 +122,7 @@ public:
     }
     for (double i=target->Mini.i;i<maxx;i+=COLLIDETABLEACCURACY) {
       x = hash_int(i);
-      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {    
+      for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {
 	y = hash_int(j);
 	for (double k=target->Mini.k;k<maxz;k+=COLLIDETABLEACCURACY) {
 	  z = hash_int(k);
@@ -169,7 +173,7 @@ public:
     if (!target->hhuge) {
       for (double i=target->Mini.i;i<maxx;i+=COLLIDETABLEACCURACY) {
 	x = hash_int(i);
-	for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {    
+	for (double j=target->Mini.j;j<maxy;j+=COLLIDETABLEACCURACY) {
 	  y = hash_int(j);
 	  for (double k=target->Mini.k;k<maxz;k+=COLLIDETABLEACCURACY) {
 	    z = hash_int(k);

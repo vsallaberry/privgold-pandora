@@ -77,3 +77,28 @@ Work in progress.
 * Source is not compatible yet with clang or gcc > 7
 
 
+2021.09.11
+[vegastrike] improve c++11 and clang / gcc>6 compatibility
+
+It nows builds with apple clang 11, clang 12, gcc 6 to 11
+
+* removed a lot of pointers signed comparison (eg ptr > 0)
+
+* removed some functions returning char as char*
+
+* use global vegastrike version in setup
+
+* detect clang libc++ or gnu libstdc++ version (base_computer.cpp)
+
+* some static_cast double to float needed (al_sound,
+
+* size_t/unisgned int , void */char* casts
+
+* remove some static class method calls from instance (unit_collide,hashtable_3d)
+
+* remove some strings literals with MACROS without space ("abc"VERSION)
+
+* src/cmd/collection.h -> use the STL collection (new)
+  c++11 error with active_huge.size()
+
+* ...

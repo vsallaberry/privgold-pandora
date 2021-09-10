@@ -149,7 +149,7 @@ struct TurretBin{
   void AssignTargets(const TargetAndRange &finalChoice, const Matrix & pos) {
     //go through modularly assigning as you go;
     int count=0;
-    const unsigned int lotsize[2]={listOfTargets[0].size(),listOfTargets[1].size()};
+    const size_t lotsize[2]={listOfTargets[0].size(),listOfTargets[1].size()};
     for (vector<RangeSortedTurrets>::iterator uniter=turret.begin();uniter!=turret.end();++uniter) {
       bool foundfinal=false;
       uniter->tur->Target(NULL);
@@ -395,7 +395,7 @@ void FireAt::ChooseTargets (int numtargs, bool force) {
   static int maxnumpollers = float_to_int(XMLSupport::parse_float(vs_config->getVariable ("AI","Targetting","MaxNumberofpollersperframe","49"))); // maximum number of vessels allowed to search for a target in a given physics frame
   static int numpollers[2]={maxnumpollers,maxnumpollers};
 
-  static float nextframenumpollers[2]={maxnumpollers,maxnumpollers};
+  static float nextframenumpollers[2]={static_cast<float>(maxnumpollers),static_cast<float>(maxnumpollers)};
   if (lastchangedtarg+mintimetoswitch>0)
     return;//don't switch if switching too soon
   Unit * curtarg=parent->Target();

@@ -1,5 +1,5 @@
 /// Draws VDU parts
-/// Draws shield, armor, comm strings and animation, messages, manifest, 
+/// Draws shield, armor, comm strings and animation, messages, manifest,
 /// target info, and objectives
 
 #include "vdu.h"
@@ -56,20 +56,20 @@ string getUnitNameAndFgNoBase (Unit * target) {
 
 	  if (fg->name!="Base"&&fg->name!="Asteroid"&&fg->name!="Nebula") {
 
-		 
+
                   static bool printfgname = XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","print_fg_name","true"));
                   static bool printshiptype = XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","print_ship_type","true"));
                   if (printfgname)fgname+=fg->name+(printshiptype?((confignums&&(""!=fgnstring))?" =":" : "):"");
-                  if (confignums&&(""!=fgnstring)) 
+                  if (confignums&&(""!=fgnstring))
                     fgname+=fgnstring+"= ";
                   if (printshiptype)
                     return fgname+reformatName(target->getFullname());
-                  return fgname;		  
+                  return fgname;
 	  } else if(fg->name=="Base"){
             static bool namecolonname=XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","basename:basename","true"));
-            
+
             if(namecolonname==false||reformatName(target->name)==(reformatName(target->getFullname()))){
-              
+
               std::string retval( reformatName(target->getFullname()));
 			  if (confignums&&(""!=fgnstring)) retval+=" : "+fgnstring;
               return retval;
@@ -81,7 +81,7 @@ string getUnitNameAndFgNoBase (Unit * target) {
 					std::string retval(reformatName(target->name)+" : "+target->getFullname());
 					return retval;
 				}
-              
+
             }
 	  }
 	} else if (Network!=NULL) {
@@ -89,7 +89,7 @@ string getUnitNameAndFgNoBase (Unit * target) {
 		return retval;
 	}
   }
-  
+
   return reformatName(target->name);
 }
 
@@ -105,7 +105,7 @@ int vdu_lookup (char * &s) {
       s+=i+1;
       break;
     }
-  } 
+  }
   if (t[i]=='\0') {
     s[0]='\0';
   }
@@ -135,7 +135,7 @@ char tohexdigit(int x) {
   if (x<=9&&x>=0) {
     return (char)(x+'0');
   }else {
-    return (char)(x-10+'A');    
+    return (char)(x-10+'A');
   }
 
 }
@@ -235,7 +235,7 @@ static void DrawHUDSprite (VDU * thus, VSSprite* s, float per, float &sx, float 
 	  }else {
 		  GFXBlendMode (ONE,ZERO);
 		  GFXAlphaTest(GREATER,.4);
-	  }	  
+	  }
 	  s->SetPosition (sx,sy);
 	  s->GetSize (nw,nh);
 	  w= fabs(nw*h/nh);
@@ -258,13 +258,13 @@ static void DrawHUDSprite (VDU * thus, VSSprite* s, float per, float &sx, float 
 		GFXColorf(getDamageColor(top_view?adown:aleft));
   		GFXTexCoord2f(0, 0);
   		GFXVertexf(ul);
-		GFXColorf(getDamageColor(top_view?adown:aup));		
+		GFXColorf(getDamageColor(top_view?adown:aup));
   		GFXTexCoord2f(1, 0);
   		GFXVertexf(ur);
-		GFXColorf(getDamageColor(hull,true));		
-  		GFXTexCoord2f(middle_point, middle_point_small);		
+		GFXColorf(getDamageColor(hull,true));
+  		GFXTexCoord2f(middle_point, middle_point_small);
   		GFXVertexf(mur);
-		GFXColorf(getDamageColor(hull,true));		
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point_small, middle_point_small);
   		GFXVertexf(mul);
 		GFXColorf(getDamageColor(top_view?aright:aup));
@@ -273,34 +273,34 @@ static void DrawHUDSprite (VDU * thus, VSSprite* s, float per, float &sx, float 
 		GFXColorf(getDamageColor(aright));
   		GFXTexCoord2f(1, 1);
   		GFXVertexf(lr);
-		GFXColorf(getDamageColor(hull,true));				
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point, middle_point);
   		GFXVertexf(mlr);
-		GFXColorf(getDamageColor(hull,true));				
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point, middle_point_small);
   		GFXVertexf(mur);
 		GFXColorf(getDamageColor(top_view?aup:aright));
   		GFXTexCoord2f(1, 1);
   		GFXVertexf(lr);
-		GFXColorf(getDamageColor(top_view?aup:adown));		
+		GFXColorf(getDamageColor(top_view?aup:adown));
   		GFXTexCoord2f(0, 1);
   		GFXVertexf(ll);
-		GFXColorf(getDamageColor(hull,true));				
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point_small, middle_point);
   		GFXVertexf(mll);
-		GFXColorf(getDamageColor(hull,true));				
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point, middle_point);
   		GFXVertexf(mlr);
 		GFXColorf(getDamageColor(top_view?aleft:adown));
   		GFXTexCoord2f(0, 1);
   		GFXVertexf(ll);
-		GFXColorf(getDamageColor(aleft));		
+		GFXColorf(getDamageColor(aleft));
   		GFXTexCoord2f(0, 0);
   		GFXVertexf(ul);
   		GFXTexCoord2f(middle_point_small, middle_point_small);
-		GFXColorf(getDamageColor(hull,true));		
+		GFXColorf(getDamageColor(hull,true));
   		GFXVertexf(mul);
-		GFXColorf(getDamageColor(hull,true));		
+		GFXColorf(getDamageColor(hull,true));
   		GFXTexCoord2f(middle_point_small, middle_point);
   		GFXVertexf(mll);
 		GFXColorf(getDamageColor(hull,true));
@@ -316,7 +316,7 @@ static void DrawHUDSprite (VDU * thus, VSSprite* s, float per, float &sx, float 
   		GFXTexCoord2f(middle_point_small, middle_point);
   		GFXVertexf(mll);
   		GFXEnd();
-		
+
   		GFXEnable (CULLFACE);
 	  }
 	  s->SetSize (nw,nh);
@@ -380,11 +380,11 @@ static void DrawShield (float fs, float rs, float ls, float bs, float x, float y
       {innershield,middleshield,outershield}
   };
   static bool do_shield_fade=XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","shield_vdu_fade","true"));
-  
+
   static float shthresh[3]={
-    XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh0",do_shield_fade?"0":".25")),
-    XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh1",do_shield_fade?".33":".50")),
-    XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh2",do_shield_fade?".66":".75"))  }; // PM me if you don't know why I did this.
+    static_cast<float>(XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh0",do_shield_fade?"0":".25"))),
+    static_cast<float>(XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh1",do_shield_fade?".33":".50"))),
+    static_cast<float>(XMLSupport::parse_float(vs_config->getVariable("graphics","hud","shield_vdu_thresh2",do_shield_fade?".66":".75")))  }; // PM me if you don't know why I did this.
   float shtrans[3]={1.0f,1.0f,1.0f};
   if (do_shield_fade) {
     shcolor[0][0].a *= mymax(0.0f,mymin(1.0f,(fs-shthresh[0])/(shthresh[1]-shthresh[0])*shtrans[0]));
@@ -535,7 +535,7 @@ static void DrawShieldArmor(Unit * parent, const float StartArmor[8], float x, f
   static float iBarmorcolor[4]={.75,.45,.1,1};
   static float mBarmorcolor[4]={.75,.45,.1,1};
   static float oBarmorcolor[4]={.75,.45,.1,1};
-  
+
   static bool iarmorcolorloaded=(vs_config->getColor("default","inner_armor_color",iarmorcolor,true),true);
   static bool marmorcolorloaded=(vs_config->getColor("default","middle_armor_color",marmorcolor,true),true);
   static bool oarmorcolorloaded=(vs_config->getColor("default","outer_armor_color",oarmorcolor,true),true);
@@ -750,7 +750,7 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
   if (target->isUnit()==PLANETPTR){
 	  au=ar=al=ad=target->GetHullPercent();
   }
- 
+
   DrawHUDSprite (this,((target->isUnit()!=PLANETPTR||target->getHudImage()!=NULL)?target->getHudImage ():
     (target->GetDestinations().size()!=0? getJumpImage():
     (((Planet *)target)->hasLights()?getSunImage():
@@ -787,7 +787,7 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
   float delautotime=UniverseUtil::GetGameTime()-cp->autoMessageTime;
 
   bool draw_auto_message=(delautotime<auto_message_lim&&cp->autoMessage.length()!=0);
-  if (inrange) {  
+  if (inrange) {
   int i=0;
   char st[1024];
   memset(st,'\n',1023);
@@ -815,7 +815,7 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
   GFXColor tpbg=tp->bgcol;
   bool automatte=(0==tpbg.a);
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-  tp->Draw (MangleString (newst,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);  
+  tp->Draw (MangleString (newst,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);
   tp->bgcol=tpbg;
 
   static float ishieldcolor[4]={.4,.4,1,1};
@@ -824,7 +824,7 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
   static bool ishieldcolorloaded=(vs_config->getColor("default","inner_shield_color",ishieldcolor,true),true);
   static bool mshieldcolorloaded=(vs_config->getColor("default","middle_shield_color",mshieldcolor,true),true);
   static bool oshieldcolorloaded=(vs_config->getColor("default","outer_shield_color",oshieldcolor,true),true);
-  
+
   // code replaced by target shields defined in cockpit.cpt files, preserve for mods
   static bool builtin_shields=XMLSupport::parse_bool(vs_config->getVariable("graphics","vdu_builtin_shields","false"));
   if (builtin_shields)
@@ -977,7 +977,7 @@ bool VDU::SetCommAnimation (Animation * ani, Unit * un, bool force) {
       else if (comm_ani!=NULL&&thismode.size()>1&&ani!=NULL)
         thismode.back()=COMM;
       if (ani){
-        comm_ani = ani;       
+        comm_ani = ani;
         ani->Reset();
       }
       communicating.SetUnit(un);
@@ -989,7 +989,7 @@ bool VDU::SetCommAnimation (Animation * ani, Unit * un, bool force) {
 
 Unit *VDU::GetCommunicating() {
   if (comm_ani) {
-    if (!comm_ani->Done()) 
+    if (!comm_ani->Done())
       return communicating.GetUnit();
   }
   return NULL;
@@ -1024,7 +1024,7 @@ void VDU::DrawNav (GameCockpit *cp, Unit* you, Unit*targ, const Vector & nav) {
   GFXColor tpbg=tp->bgcol;
   bool automatte=(0==tpbg.a);
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-  tp->Draw (MangleString (navdata+(draw_auto_message?msg:std::string()),_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,true,automatte);  
+  tp->Draw (MangleString (navdata+(draw_auto_message?msg:std::string()),_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,true,automatte);
   tp->bgcol=tpbg;
 
 }
@@ -1060,7 +1060,7 @@ void VDU::DrawComm () {
 	GFXColor tpbg=tp->bgcol;
 	bool automatte=(0==tpbg.a);
 	if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-    tp->Draw (message_prefix + MangleString (_Universe->AccessCockpit()->communication_choices.c_str(),_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,false,automatte);  
+    tp->Draw (message_prefix + MangleString (_Universe->AccessCockpit()->communication_choices.c_str(),_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,false,automatte);
 	tp->bgcol=tpbg;
   }
 }
@@ -1152,17 +1152,17 @@ static void DrawGun (Vector  pos, float w, float h, weapon_info::MOUNT_SIZE sz) 
       GFXVertex3d (pos.i,pos.j+h/5,0);
       GFXVertex3d (pos.i,pos.j+h/5+ooy*4,0);
       GFXVertex3d (pos.i,pos.j+h/5+ooy*5,0);
-      GFXVertex3d (pos.i+oox,pos.j+h/5+ooy*2,0);      
-      GFXVertex3d (pos.i-oox,pos.j+h/5+ooy*2,0);      
+      GFXVertex3d (pos.i+oox,pos.j+h/5+ooy*2,0);
+      GFXVertex3d (pos.i-oox,pos.j+h/5+ooy*2,0);
     }else if (sz==weapon_info::HEAVY) {
       GFXVertex3d (pos.i,pos.j,0);
       GFXVertex3d (pos.i,pos.j+h/5,0);
       GFXVertex3d (pos.i,pos.j+h/5+ooy*4,0);
       GFXVertex3d (pos.i,pos.j+h/5+ooy*5,0);
-      GFXVertex3d (pos.i+2*oox,pos.j+h/5+ooy*3,0);      
-      GFXVertex3d (pos.i,pos.j+h/5+ooy*2,0);      
-      GFXVertex3d (pos.i-2*oox,pos.j+h/5+ooy*3,0);      
-      GFXVertex3d (pos.i,pos.j+h/5+ooy*2,0);      
+      GFXVertex3d (pos.i+2*oox,pos.j+h/5+ooy*3,0);
+      GFXVertex3d (pos.i,pos.j+h/5+ooy*2,0);
+      GFXVertex3d (pos.i-2*oox,pos.j+h/5+ooy*3,0);
+      GFXVertex3d (pos.i,pos.j+h/5+ooy*2,0);
     }else {//capship gun
       GFXVertex3d (pos.i,pos.j,0);
       GFXVertex3d (pos.i,pos.j+h/6,0);
@@ -1179,7 +1179,7 @@ static void DrawGun (Vector  pos, float w, float h, weapon_info::MOUNT_SIZE sz) 
     GFXBegin (GFXPOINT);
     GFXVertexf (pos);
     GFXEnd ();
-    GFXPointSize (1);//classified...  FIXME    
+    GFXPointSize (1);//classified...  FIXME
   } else if (sz<weapon_info::HEAVYMISSILE) {
     GFXBegin (GFXLINE);
     GFXVertex3d (pos.i,pos.j-h/8,0);
@@ -1218,7 +1218,7 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
   Unit * thr = parent->Threat();
   std::string fullname (getUnitNameAndFgNoBase(parent));
   //sprintf (st,"%s\nHull: %.3f",blah.c_str(),parent->GetHull());
-  //tp->Draw (MangleString (st,_Universe->AccessCamera()->GetNebula()!=NULL?.5:0),0,true);  
+  //tp->Draw (MangleString (st,_Universe->AccessCamera()->GetNebula()!=NULL?.5:0),0,true);
   char ecmstatus[256];
   ecmstatus[0]='\0';
   static bool print_ecm = XMLSupport::parse_bool(vs_config->getVariable("graphics","print_ecm_status","true"));
@@ -1226,13 +1226,13 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
     if (parent->GetImageInformation().ecm>0) {
       GFXColor4f(0,1,0,.5);
       strcpy (ecmstatus,"ECM Active");
-      
+
     }
     if (((parent->GetImageInformation().ecm<0))) {
       GFXColor4f(.6,.6,.6,.5);
       strcpy (ecmstatus,"ECM Inactive");
     }
-  
+
     if (parent->GetImageInformation().ecm>0) {
       static float s=0;
       s+=.125*SIMULATION_ATOM;
@@ -1242,7 +1242,7 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
     }
   }
   GFXColor4f (1,1,1,1);
-  
+
 
 /*
 
@@ -1280,7 +1280,7 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
     double percent_working = 0.88;
     static std::string non_repair_screen_cargo=vs_config->getVariable("graphics","hud","not_included_in_damage_report","plasteel_hull tungsten_hull isometal_hull");
     for (unsigned int i=0;i<numCargo;i++) {
-      
+
       percent_working = 0.88;// cargo.damage
       Cargo& the_cargo = parent->GetCargo(i);
       bool damaged=the_cargo.GetCategory().find(DamagedCategory)==0;
@@ -1295,7 +1295,7 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
         if(percent_working == 0.0){final_color = GFXColor(cdestroyed[0],cdestroyed[1],cdestroyed[2],cdestroyed[3]);}	//	dead = grey
         std::string trailer;
         if (percent_working<1.0) {
-          retval+=colToString(final_color).str;          
+          retval+=colToString(final_color).str;
 
         }else {
           retval+=fpstring.str;
@@ -1306,8 +1306,8 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
         if (print_percent_working)
           retval+=string (" (")+tostring (int(percent_working*100))+string ("%)");
         retval+=trailer+std::string("\n");
-        
-        
+
+
       }
     }
     retval+=ecmstatus;
@@ -1315,7 +1315,7 @@ void VDU::DrawDamage(Unit * parent) {	//	VDUdamage
   GFXColor tpbg=tp->bgcol;
   bool automatte=(0==tpbg.a);
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-    tp->Draw (MangleString (retval,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,false,automatte);     
+    tp->Draw (MangleString (retval,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true,false,automatte);
 	tp->bgcol=tpbg;
     //*******************************************************
 }
@@ -1353,8 +1353,8 @@ void VDU::DrawStarSystemAgain (float x,float y,float w,float h, VIEWSTYLE viewSt
   GFXBlendMode (ONE,ZERO);
   GFXDisable(TEXTURE1);
   GFXDisable(TEXTURE0);
-  GFXDisable(DEPTHTEST);   
-  GFXDisable(DEPTHWRITE);   
+  GFXDisable(DEPTHTEST);
+  GFXDisable(DEPTHWRITE);
 #ifndef CAR_SIM
   char buf[1024];
   bool inrange=false;
@@ -1371,7 +1371,7 @@ static float background_alpha=XMLSupport::parse_float(vs_config->getVariable("gr
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
   tp->Draw(MangleString (buf,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);
 tp->bgcol=tpbg;
-  if (inrange) {  
+  if (inrange) {
     int i=0;
     char st[1024];
     for (i=0;i<rows-1&&i<128;i++) {
@@ -1384,7 +1384,7 @@ tp->bgcol=tpbg;
   GFXColor tpbg=tp->bgcol;
   bool automatte=(0==tpbg.a);
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-    tp->Draw (MangleString (st,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);  
+    tp->Draw (MangleString (st,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);
 	tp->bgcol=tpbg;
     GFXColor4f (.4,.4,1,1);
     GetPosition (x,y);
@@ -1424,7 +1424,7 @@ tp->bgcol=tpbg;
 		  GFXColor tpbg=tp->bgcol;
 		  bool automatte=(0==tpbg.a);
 		  if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-          tp->Draw (MangleString ("\n[OutOfRange]",_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);      
+          tp->Draw (MangleString ("\n[OutOfRange]",_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);
 	      tp->bgcol=tpbg;
 	  }
   }
@@ -1441,16 +1441,16 @@ static GFXColor MountColor(Mount * mnt) {
     if (mnt->type->type==weapon_info::BEAM) {
       if (mnt->ref.gun) {
         cref = mnt->ref.gun->refireTime();
-      }          
+      }
     }else {
-      cref=  mnt->ref.refire;        
+      cref=  mnt->ref.refire;
     }
     if (cref>tref) {
       ref=1;
     }else {
       ref=cref/tref;
     }
-    mountcolor=colLerp(GFXColor(.2,.2,.2),GFXColor(0,1,1),ref);      
+    mountcolor=colLerp(GFXColor(.2,.2,.2),GFXColor(0,1,1),ref);
     if (ref==1.0)
       mountcolor=GFXColor(0,1,.2);
   }else {
@@ -1466,7 +1466,7 @@ static GFXColor MountColor(Mount * mnt) {
   drawme:
   case Mount::INACTIVE:
     mountcolor=GFXColor(1,1,1,1);
-    return mountcolor;    
+    return mountcolor;
   case Mount::UNCHOSEN:
     return GFXColor (1,1,1,1);
   case 127:
@@ -1497,7 +1497,7 @@ void VDU::DrawWeapon (Unit * parent) {
       Vector pos (parent->mounts[i].GetMountLocation());
       pos.i=-pos.i*fabs(w)/parent->rSize()*percent+x;
       pos.j=pos.k*fabs(h)/parent->rSize()*percent+y;
-      pos.k=0;      
+      pos.k=0;
       DrawGun (pos,w,h,parent->mounts[i].type->size);
     }
   string ammo =(parent->mounts[i].ammo>=0)?string("(")+tostring(parent->mounts[i].ammo)+string(")"):string("");
@@ -1522,7 +1522,7 @@ void VDU::DrawWeapon (Unit * parent) {
       }
       numave=0;
       average=GFXColor(0,0,0,0);
-    }    
+    }
   }
   if (mbuf.length()!=(unsigned int)mlen) {
     buf+=mbuf;
@@ -1538,10 +1538,10 @@ void VDU::DrawWeapon (Unit * parent) {
 
 using std::vector;
 /*
-static GFXColor GetColorFromSuccess (float suc){ 
+static GFXColor GetColorFromSuccess (float suc){
   suc +=1.;
   suc/=2.;
-  return GFXColor(1-suc,suc,0);    
+  return GFXColor(1-suc,suc,0);
 }
 */
 
@@ -1570,7 +1570,7 @@ inline char *GetColorFromSuccess (float suc) {
   suc_col_str[4]=printHex(tmp2%16);
   suc_col_str[5]='0';
   suc_col_str[6]='0';
-  
+
   return suc_col_str;
 }
 
@@ -1657,7 +1657,7 @@ void VDU::DrawWebcam( Unit * parent) {
 	}
 	else
 	{
-	    tp->Draw (MangleString ("No webcam to view",_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true);  
+	    tp->Draw (MangleString ("No webcam to view",_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),scrolloffset,true);
 	}
 }
 
@@ -1694,7 +1694,7 @@ void VDU::Draw (GameCockpit*parentcp, Unit * parent, const GFXColor & color) {
   tp->SetPos (x-w,y+h);
   tp->SetSize (x+w,y-h-.5*fabs(w/cols));
   targ = parent->GetComputerData().target.GetUnit();
-  if (thismode.back()!=COMM&&comm_ani!=NULL) {    
+  if (thismode.back()!=COMM&&comm_ani!=NULL) {
     if (comm_ani->Done()) {
       comm_ani=NULL;
       communicating.SetUnit(NULL);
