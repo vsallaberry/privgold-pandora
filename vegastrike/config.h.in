@@ -16,6 +16,15 @@
 /* Define to 1 if the `closedir' function returns void instead of int. */
 #undef CLOSEDIR_VOID
 
+/* compiler */
+#undef COMPILER
+
+/* Flags passed to compiler */
+#undef COMPILER_FLAGS
+
+/* Flags passed to configure */
+#undef CONFIGURE_CMD
+
 /* Define to 1 if you have the `alarm' function. */
 #undef HAVE_ALARM
 
@@ -37,6 +46,9 @@
 
 /* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
 #undef HAVE_DOPRNT
+
+/* expat */
+#undef HAVE_EXPAT
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #undef HAVE_FCNTL_H
@@ -103,6 +115,9 @@
 
 /* Define to 1 if you have the `iswprint' function. */
 #undef HAVE_ISWPRINT
+
+/* jpeg */
+#undef HAVE_JPEG
 
 /* Define to 1 if you have the <libavcodec/avcodec.h> header file. */
 #undef HAVE_LIBAVCODEC_AVCODEC_H
@@ -180,6 +195,9 @@
 
 /* Define to 1 if you have the <OS.h> header file. */
 #undef HAVE_OS_H
+
+/* png */
+#undef HAVE_PNG
 
 /* Define to 1 if you have the `pow' function. */
 #undef HAVE_POW

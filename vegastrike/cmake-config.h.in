@@ -1,5 +1,9 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
+#define VERSION "${VERSION}"
+#define CONFIGURE_CMD "${CMAKE_COMMAND} ${CMAKE_COMMAND_ARGS}"
+#define COMPILER "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}"
+#define COMPILER_FLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}"
 #cmakedefine HAVE_BOOLEAN 1
 #cmakedefine HAVE_WCHAR_H 1
 #cmakedefine HAVE_FLOAT_H  1
@@ -22,6 +26,9 @@
 #cmakedefine HAVE_SDL 1
 #cmakedefine SDL_WINDOWING 1
 #cmakedefine HAVE_AL 1
+#cmakedefine HAVE_PNG 1
+#cmakedefine HAVE_JPEG 1
+#cmakedefine HAVE_EXPAT 1
 #cmakedefine HAVE_FFMPEG 1
 #cmakedefine HAVE_LIBSWSCALE_SWSCALE_H 1
 #cmakedefine HAVE_LIBAVCODEC_AVCODEC_H 1

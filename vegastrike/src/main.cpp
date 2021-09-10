@@ -102,6 +102,15 @@ char SERVER=0;
 // false if command line option --net is given to start without network
 static bool ignore_network = true;
 
+enum {
+    VPB_NONE        = 0,
+    VPB_VERSION     = 1 << 0,
+    VPB_BUILD       = 1 << 1,
+    VPB_LIBS        = 1 << 2,
+    VPB_ALL         = 0xffffffff
+};
+static void vs_print_buildinfo(std::ostream & out, int flags);
+
 void enableNetwork(bool usenetwork) {
 	ignore_network = !usenetwork;
 }
@@ -230,8 +239,8 @@ int main( int argc, char *argv[] )
 printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 #endif
     /* Print copyright notice */
-	printf("Vega Strike "  " \n"
-		   "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n" );
+	printf("Vega Strike " VERSION " \n"
+		   "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
     /* Seed the random number generator */
 
 
@@ -247,6 +256,10 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     // loads the configuration file .vegastrike/vegastrike.config from home dir if such exists
     {
       string subdir=ParseCommandLine(argc,argv);
+
+      vs_print_buildinfo(std::cerr, VPB_ALL & (~VPB_VERSION));
+      std::cerr << std::endl;
+        
       cerr<<"GOT SUBDIR ARG = "<<subdir<<endl;
       if (CONFIGFILE==0) {
         CONFIGFILE=new char[42];
@@ -714,7 +727,6 @@ void bootstrap_main_loop () {
 
 }
 
-
 const char helpmessage[] =
 "Command line options for vegastrike\n"
 "\n"
@@ -727,6 +739,7 @@ const char helpmessage[] =
 " -H -h     High resolution (1024x768)\n"
 " -V -v     Super high resolution (1280x1024)\n"
 " --net     Networking Enabled (Experimental)\n"
+" --version Version information\n"
 "\n";
 std::string ParseCommandLine(int argc, char ** lpCmdLine) {
   std::string st;
@@ -825,6 +838,10 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
           cout << helpmessage;
           exit(0);
         }
+        else if(strcmp(lpCmdLine[i], "--version")==0) {
+          vs_print_buildinfo(std::cout, VPB_ALL & (~VPB_VERSION));
+          exit(0);
+        }
       }
     }
     else{
@@ -834,4 +851,106 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
     }
   }
   return retstr;
+}
+
+#ifdef HAVE_FFMPEG
+# include "ffmpeg_init.h"
+#endif
+#if defined HAVE_OGG
+# include <vorbis/vorbisfile.h>
+#endif
+#if defined HAVE_PNG
+# include <png.h>
+#endif
+#if defined HAVE_JPEG
+# include <jpeglib.h>
+#endif
+#if defined(HAVE_AL)
+# include "aldrv/al_globals.h"
+#endif
+static void vs_print_buildinfo(std::ostream & out, int flags) {
+    (void)flags;
+  #if defined(HAVE_SDL)
+  # if defined(SDL_MAJOR_VERSION) && defined(SDL_MINOR_VERSION) && defined(SDL_PATCHLEVEL)
+    char sdlstr[32];
+    snprintf(sdlstr, sizeof(sdlstr), "%d.%d.%d",
+             SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+  # else
+    std::string sdlstr = "?";
+  # endif
+  #endif
+    
+    if ((flags & VPB_VERSION)) {
+        out << "Vegastrike v" << VERSION
+        << std::endl;
+    }
+    if (!(flags & (~VPB_VERSION)))
+        return ;
+    out << "configured with:";
+    if ((flags & VPB_BUILD)) {
+        out << std::endl << "  " << CONFIGURE_CMD
+        << std::endl
+        << std::endl << "  COMPILER: " << COMPILER
+        << std::endl << "  COMPILER_FLAGS: " << COMPILER_FLAGS
+        << std::endl;
+    }
+    if ((flags & VPB_LIBS)) {
+        out
+      #if defined(HAVE_SDL)
+        << std::endl << "  " << "SDL: " << sdlstr
+      #endif
+      #if defined(GLUT_API_VERSION)
+        << std::endl << "  " << "GLUT api: " << GLUT_API_VERSION
+      #endif
+      #if defined(HAVE_FFMPEG)
+        << std::endl << "  " << "FFMPEG:"
+      # if defined(FFMPEG_VERSION)
+        << " " << FFMPEG_VERSION
+      # endif
+      # if defined(LIBAVCODEC_IDENT)
+        << " " << LIBAVCODEC_IDENT
+      # endif
+      # if defined(LIBAVFORMAT_IDENT)
+        << " " << LIBAVFORMAT_IDENT
+      # endif
+      # if defined(LIBAVUTIL_IDENT)
+        << " " << LIBAVUTIL_IDENT
+      # endif
+      # if defined(LIBSWSCALE_IDENT)
+        << " " << LIBSWSCALE_IDENT
+      # endif
+      #endif
+      #if defined(HAVE_PYTHON)
+        << std::endl << "  " << "PYTHON:"
+      # if defined(PY_VERSION)
+        << " " << PY_VERSION
+      # endif
+      #endif
+      #if defined(BOOST_LIB_VERSION)
+        << std::endl << "  " << "BOOST: " << BOOST_LIB_VERSION
+      #elif defined(BOOST_VERSION)
+        << std::endl << "  " << "BOOST: " << BOOST_VERSION
+      #endif
+      #ifdef HAVE_AL
+        << std::endl << "  " << "OpenAL: " << AL_VERSION
+      #endif
+      #if defined(HAVE_OGG)
+        << std::endl << "  " << "VORBIS: " << vorbis_version_string()
+      #endif
+      #ifdef PNG_LIBPNG_VER_STRING
+        << std::endl << "  " << "PNG: " << PNG_LIBPNG_VER_STRING
+      #endif
+      #ifdef JPEG_LIB_VERSION
+        << std::endl << "  " << "JPEG: " << JPEG_LIB_VERSION
+      #endif
+      #ifdef HAVE_EXPAT
+        << std::endl << "  " << "EXPAT: " << XML_ExpatVersion()
+      #endif
+      #if defined(zlib_version)
+        << std::endl << "  " << "ZLIB: " << zlib_version
+      #elif defined(ZLIB_VERSION)
+        << std::endl << "  " << "ZLIB_h: " << ZLIB_VERSION
+      #endif
+        << std::endl;
+    }
 }

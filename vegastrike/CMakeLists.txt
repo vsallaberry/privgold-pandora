@@ -8,8 +8,14 @@
 
 cmake_minimum_required(VERSION 2.4)
 
-project (vsUTCS)
+#SET(CMAKE_CXX_STANDARD_REQUIRED 1) ## ERROR instead of DECAYING value is not supported
+if(NOT CMAKE_CXX_STANDARD)
+    SET(CMAKE_CXX_STANDARD 11)
+endif()
+#set (CMAKE_CXX_EXTENSIONS FALSE)
 
+project (vsUTCS)
+set(VERSION "0.4.4.1")
 
 
 include_directories(${vsUTCS_SOURCE_DIR}/src
@@ -462,7 +468,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 ###
-message ("CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}")
+message ("-- CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     SET(HOSTOS "APPLE")
@@ -493,6 +499,22 @@ else()
     SET(WITH_MACOSX_BUNDLE 1)
   endif(UNIX)
 endif()
+
+## Get cmake command line arguments
+get_cmake_property(CACHE_VARS CACHE_VARIABLES)
+foreach(CACHE_VAR ${CACHE_VARS})
+  get_property(CACHE_VAR_HELPSTRING CACHE ${CACHE_VAR} PROPERTY HELPSTRING)
+  if(CACHE_VAR_HELPSTRING STREQUAL "No help, variable specified on the command line.")
+    get_property(CACHE_VAR_TYPE CACHE ${CACHE_VAR} PROPERTY TYPE)
+    if(CACHE_VAR_TYPE STREQUAL "UNINITIALIZED")
+      set(CACHE_VAR_TYPE)
+    else()
+      set(CACHE_VAR_TYPE :${CACHE_VAR_TYPE})
+    endif()
+    set(CMAKE_COMMAND_ARGS "${CMAKE_COMMAND_ARGS} -D${CACHE_VAR}${CACHE_VAR_TYPE}=\"${${CACHE_VAR}}\"")
+  endif()
+endforeach()
+string(REPLACE "\"" "\\\"" CMAKE_COMMAND_ARGS "${CMAKE_COMMAND_ARGS}")
 
 ###
 SET(CMAKE_CXX_FLAGS_DEBUG " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -g2 -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden" CACHE STRING
@@ -593,7 +615,25 @@ ENDIF(NOT DISABLE_CLIENT)
 
 add_executable(vegaserver ${VEGASERVER_SOURCES})
 
+## VSA PAckage info
+#CMAKE_CXX_COMPILER_VERSION
+#CMAKE_C_COMPILER_VERSION
 
+### test source sample
+include(CheckCXXSourceCompiles)
+
+#set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+#set (CMAKE_CXX_STANDARD_REQUIRED TRUE)
+#set (CMAKE_CXX_STANDARD 11)
+#set (CMAKE_CXX_EXTENSIONS FALSE)
+set(CMAKE_REQUIRED_FLAGS)
+check_cxx_source_compiles("
+#include <atomic>
+int main() {
+  std::atomic<int> u{5};
+  return u;
+}" HAVE_STDLIB_ATOMIC)
+## ! VSA
 
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
@@ -732,6 +772,7 @@ ENDIF(Vorbis_FOUND)
 #Find JPEG # VSA MOVED because of Include dir priority
 find_package(JPEG REQUIRED)
 IF(JPEG_FOUND)
+    SET(HAVE_JPEG 1)
 	SET(TST_INCLUDES ${JPEG_INCLUDE_DIR} ${TST_INCLUDES})
 	SET(TST_LIBS ${TST_LIBS} ${JPEG_LIBRARIES})
 ELSE(JPEG_FOUND)
@@ -741,6 +782,7 @@ ENDIF(JPEG_FOUND)
 #Find PNG # VSA MOVED because of Include dir priority
 find_package(PNG REQUIRED)
 IF(PNG_FOUND)
+    SET(HAVE_PNG 1)
 	SET(TST_INCLUDES ${PNG_INCLUDE_DIRS} ${TST_INCLUDES})
 	SET(TST_LIBS ${TST_LIBS} ${PNG_LIBRARIES})
     message("-- PNG: INCDIRS=${PNG_INCLUDE_DIRS}")
@@ -762,6 +804,7 @@ ENDIF(ZLIB_FOUND)
 #find Expat
 find_package(EXPAT REQUIRED)
 IF(EXPAT_FOUND)
+    SET(HAVE_EXPAT 1)
 	SET(TST_INCLUDES ${TST_INCLUDES} ${EXPAT_INCLUDE_DIRS})
 	SET(TST_LIBS ${TST_LIBS} ${EXPAT_LIBRARIES})
 ELSE(EXPAT_FOUND)
@@ -873,16 +916,26 @@ target_link_libraries(vegaserver ${TST_SERVER_LIBS})
 set_target_properties(vegaserver PROPERTIES LINK_FLAGS "-L/usr/lib -L${vsUTCS_BINARY_DIR}")
 add_dependencies(vegaserver mesh_tool)
 add_dependencies(vegaserver vssetup)
+
 # Debug crap
 #message("Linking with : ${TST_LIBS}")
 #message("Including : ${TST_INCLUDES}")
 #message("including : ${TEMP_DIRECTORY}")
-get_directory_property(TEMP_DIRECTORY INCLUDE_DIRECTORIES)
+get_directory_property(TEMP_DIRECTORIES INCLUDE_DIRECTORIES)
+IF(NOT DISABLE_CLIENT)
+    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS}")
+    get_target_property(TEMP_LDFLAGS     vegastrike LINK_FLAGS)
+    get_target_property(TEMP_LIBRARIES   vegastrike LINK_LIBRARIES)
+ELSE()
+    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS} ${TST_INCLUDES}")
+    set(TEMP_LDFLAGS ${TST_LIBS})
+    set(TEMP_LIBRARIES "")
+ENDIF()
 message("--------------")
 message("Building with:")
-message("  CXXFLAGS (${CMAKE_BUILD_TYPE}) : ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS}")
-message("  INCLUDES : ${TST_INCLUDES}")
-message("  LIBS     : ${TST_LIBS}")
+message("  CXXFLAGS (${CMAKE_BUILD_TYPE}) : ${TEMP_CFLAGS}")
+message("  INCLUDES : ${TEMP_DIRECTORIES}")
+message("  LIBS     : ${TEMP_LDFLAGS} ${TEMP_LIBRARIES}")
 message("")
 # End Debug Crap
 

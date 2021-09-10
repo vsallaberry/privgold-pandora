@@ -16,11 +16,13 @@ unset CFLAGS CXXFLAGS LDFLAGS CPPFLAGS OBJCFLAGS OBJCPPFLAGS
 cc_flags=""
 gcc_cc_flags=""
 clang_cc_flags=""
-cxx_flags="-std=gnu++11 -fpermissive -Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
+#cxx_flags="-fpermissive -Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
+cxx_flags="-Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
 #-std=c++03
 gcc_cxx_flags=""
 clang_cxx_flags="-stdlib=libc++"
-compiler=/usr/local/gcc/gcc-6.5.0_ada/bin/gcc
+#compiler=/usr/local/gcc/gcc-6.5.0_ada/bin/gcc
+compiler=clang
 make_jobs=$(sysctl hw.ncpu | awk '{ print $2 }')
 test -n "${make_jobs}" && make_jobs=$((make_jobs+1)) || make_jobs=2
 
@@ -151,8 +153,10 @@ case "${cc_pref}" in
     *) cc_pref=${cc_pref%++}; cxx_pref=${cc_pref}++;;
 esac
 
-export CC="${cc_dir}/${cc_pref}${cc_suff} ${spec_cc_flags} ${cc_flags}"
-export CXX="${cc_dir}/${cxx_pref}${cc_suff} ${spec_cxx_flags} ${cxx_flags}"
+export CC="${cc_dir}/${cc_pref}${cc_suff}"
+export CFLAGS="${spec_cc_flags} ${cc_flags}"
+export CXX="${cc_dir}/${cxx_pref}${cc_suff}"
+export CXXFLAGS="${spec_cxx_flags} ${cxx_flags}"
 
 #### FIND SDK
 _test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
@@ -172,8 +176,8 @@ fi
 
 
 #### START CONFIG & BUILD
-echo "+ CC          ${CC}"
-echo "+ CXX         ${CXX}"
+echo "+ CC          ${CC}  (${CFLAGS})"
+echo "+ CXX         ${CXX}  (${CXXFLAGS})"
 echo "+ SDK         ${macos_sdk}"
 echo "+ SDK_FWK     ${macos_sdk_fwk}"
 echo "+ SRC         ${target}  (BUILD_DIR: ${builddir})"
@@ -273,6 +277,7 @@ echo "+ Build (${build_tool})"
 
 case "${build_tool}" in
     cmake)
+        #-DCMAKE_CXX_STANDARD=gnu++14
         export SDLDIR=/usr/local/specific/libsdl1
         add_config_args \
         -DCMAKE_VERBOSE_MAKEFILE=ON \

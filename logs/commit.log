@@ -102,3 +102,19 @@ It nows builds with apple clang 11, clang 12, gcc 6 to 11
   c++11 error with active_huge.size()
 
 * ...
+
+[vegastrike] cxx -std= detection, vegastrike --version,
+
+* set version in CMakeLists.txt (as in configure.ac)
+
+* detect cxx -std standard (c++11 prefered, fallback to c++98)
+
+* add vegastrike --version option
+  + display version
+  + display compiler and flags
+  + display most of libs versions
+
+* build.sh
+  + remove -fpermisive
+  + default compiler is clang
+

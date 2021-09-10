@@ -1,4 +1,6 @@
-AC_INIT(vegastrike, 0.4.4)
+AC_INIT(vegastrike, 0.4.4.1)
+config_flags="$@"
+AC_DEFINE_UNQUOTED([CONFIGURE_CMD],["$config_flags"],[Flags passed to configure])
 AC_CONFIG_SRCDIR(src/vegastrike.h)
 AC_PREREQ(2.53)
 
@@ -14,6 +16,8 @@ AC_PROG_CXX
 AC_PROG_CXXCPP
 dnl Install is used by make install
 AC_PROG_INSTALL
+
+AC_DEFINE_UNQUOTED([COMPILER],["$CXX"],[compiler])
 
 dnl Lexx used to be used for a parser we use
 
@@ -66,6 +70,25 @@ if test "x${CPPFLAGS:-notset}" = "xnotset" ; then
    CPPFLAGS=""
 fi
 
+dnl vegastrike compilation flags
+VS_CPPFLAGS=""
+VS_CXXFLAGS="-pipe "
+VS_LIBS=""
+
+dnl checking cxx -std argument
+for dialect in "-std=gnu++11" "-std=c++11" "-std=gnu++98" "-std=c++98"; do
+    AC_MSG_CHECKING([for cxx $dialect])
+    saved_CXXFLAGS="${CXXFLAGS}"
+    CXXFLAGS="-Werror $dialect"
+    AC_TRY_COMPILE(, , [cxxstdfound=yes], [cxxstdfound=no])
+    CXXFLAGS="${saved_CXXFLAGS}"
+    AC_MSG_RESULT([$cxxstdfound])
+    if test "x$cxxstdfound" = "xyes"; then
+        CXXFLAGS="$CXXFLAGS $dialect"
+        VS_CXXFLAGS="${VS_CXXFLAGS}${dialect}"
+        break
+    fi
+done
 
 case $target in
   *Darwin* | *darwin*)
@@ -201,11 +224,6 @@ AC_CHECK_HEADERS([ieeefp.h zlib.h])
 dnl --------------------------------------------------------------------------
 dnl General options
 dnl --------------------------------------------------------------------------
-VS_CPPFLAGS=""
-VS_CXXFLAGS="-pipe "
-VS_LIBS=""
-
-
 
 if test "x${bsdthread}" = "xyes"; then
 PTHREAD_CXXFLAGS="-pthread"
@@ -340,6 +358,8 @@ AC_ARG_ENABLE(precompiled, AC_HELP_STRING([--enable-precompiled], [Use precompil
 	*)	AC_MSG_ERROR(Bad value $enableval for --enable-precompiled) ;;
 	esac], [precompiled=false])
 AM_CONDITIONAL(USE_PRECOMPILED_HEADERS, test x$precompiled = xtrue)
+
+AC_DEFINE_UNQUOTED([COMPILER_FLAGS],["$VS_CXXFLAGS"],[Flags passed to compiler])
 
 if test "x${build_client}" = "xno" ; then
     VS_CXXFLAGS="${VS_CXXFLAGS} -DNO_GFX"
@@ -717,7 +737,10 @@ done
 
 if test "x$have_expat_lib" = "xno" ; then
     AC_MSG_ERROR([Expat library not found])
+else
+    AC_DEFINE_UNQUOTED([HAVE_EXPAT],[1],[expat])
 fi
+
 
 LIBS="$saved_LIBS"
 VS_LIBS="$VS_LIBS $EXPAT_LDOPTS -l$EXPAT_LIB_NAME"
@@ -793,6 +816,10 @@ if test "x$have_png_lib" = "xno" ; then
      fi
 fi
 
+if test "x$have_png_lib" = "xyes" ; then
+    AC_DEFINE_UNQUOTED([HAVE_PNG],[1],[png])
+fi
+
 LIBS="$saved_LIBS"
 VS_LIBS="$PNG_LDOPTS -l$PNG_LIB_NAME $VS_LIBS"
 
@@ -825,6 +852,9 @@ CPPFLAGS="$saved_CPPFLAGS"
 VS_CPPFLAGS="${PNG_CPPFLAGS} ${VS_CPPFLAGS}"
 
 VS_CHECK_JPEG
+if test "x$have_jpeg_lib" = "xyes" ; then
+    AC_DEFINE_UNQUOTED([HAVE_JPEG],[1],[jpeg])
+fi
 
     VS_CHECK_OPENAL
 
@@ -877,7 +907,6 @@ AC_SUBST(VS_LIBS)
 AC_SUBST(PYTHON_CPPFLAGS)
 AC_SUBST(CG_CPPFLAGS)
 AC_SUBST(CG_LIBS)
-
 
 VS_WITH_BOOST
 VS_WITH_NET_THREADS
