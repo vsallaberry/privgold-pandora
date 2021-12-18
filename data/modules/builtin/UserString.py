@@ -11,7 +11,8 @@ import sys
 __all__ = ["UserString","MutableString"]
 
 class UserString:
-    def __init__(self, seq):
+    def __init__(self, seq, encoding=None):
+        self.encoding=encoding
         if isinstance(seq, StringType) or isinstance(seq, UnicodeType):
             self.data = seq
         elif isinstance(seq, UserString):
@@ -35,23 +36,23 @@ class UserString:
         return char in self.data
 
     def __len__(self): return len(self.data)
-    def __getitem__(self, index): return self.__class__(self.data[index])
+    def __getitem__(self, index): return self.__class__(self.data[index], self.encoding)
     def __getslice__(self, start, end):
         start = max(start, 0); end = max(end, 0)
-        return self.__class__(self.data[start:end])
+        return self.__class__(self.data[start:end], self.encoding)
 
     def __add__(self, other):
         if isinstance(other, UserString):
-            return self.__class__(self.data + other.data)
+            return self.__class__(self.data + other.data, self.encoding)
         elif isinstance(other, StringType) or isinstance(other, UnicodeType):
-            return self.__class__(self.data + other)
+            return self.__class__(self.data + other, self.encoding)
         else:
-            return self.__class__(self.data + str(other))
+            return self.__class__(self.data + str(other), self.encoding)
     def __radd__(self, other):
         if isinstance(other, StringType) or isinstance(other, UnicodeType):
-            return self.__class__(other + self.data)
+            return self.__class__(other + self.data, self.encoding)
         else:
-            return self.__class__(str(other) + self.data)
+            return self.__class__(str(other) + self.data, self.encoding)
     def __iadd__(self, other):
         if isinstance(other, UserString):
             self.data += other.data
@@ -61,15 +62,15 @@ class UserString:
             self.data += str(other)
         return self
     def __mul__(self, n):
-        return self.__class__(self.data*n)
+        return self.__class__(self.data*n, self.encoding)
     __rmul__ = __mul__
     def __imul__(self, n):
         self.data *= n
         return self
 
     # the following methods are defined in alphabetical order:
-    def capitalize(self): return self.__class__(self.data.capitalize())
-    def center(self, width): return self.__class__(self.data.center(width))
+    def capitalize(self): return self.__class__(self.data.capitalize(), self.encoding)
+    def center(self, width): return self.__class__(self.data.center(width), self.encoding)
     def count(self, sub, start=0, end=sys.maxint):
         return self.data.count(sub, start, end)
     def decode(self, encoding=None, errors=None): # XXX improve this?
@@ -78,6 +79,11 @@ class UserString:
                 return self.__class__(self.data.decode(encoding, errors))
             else:
                 return self.__class__(self.data.decode(encoding))
+        elif self.encoding:
+            if errors:
+                return self.__class__(self.data.decode(self.encoding), errors)
+            else:
+                return self.__class__(self.data.decode(self.encoding))
         else:
             return self.__class__(self.data.decode())
     def encode(self, encoding=None, errors=None): # XXX improve this?
@@ -86,12 +92,17 @@ class UserString:
                 return self.__class__(self.data.encode(encoding, errors))
             else:
                 return self.__class__(self.data.encode(encoding))
+        elif self.encoding:
+            if errors:
+                return self.__class__(self.data.encode(self.encoding, errors))
+            else:
+                return self.__class__(self.data.encode(self.encoding))
         else:
             return self.__class__(self.data.encode())
     def endswith(self, suffix, start=0, end=sys.maxint):
         return self.data.endswith(suffix, start, end)
     def expandtabs(self, tabsize=8):
-        return self.__class__(self.data.expandtabs(tabsize))
+        return self.__class__(self.data.expandtabs(tabsize), self.encoding)
     def find(self, sub, start=0, end=sys.maxint):
         return self.data.find(sub, start, end)
     def index(self, sub, start=0, end=sys.maxint):
@@ -106,28 +117,28 @@ class UserString:
     def istitle(self): return self.data.istitle()
     def isupper(self): return self.data.isupper()
     def join(self, seq): return self.data.join(seq)
-    def ljust(self, width): return self.__class__(self.data.ljust(width))
-    def lower(self): return self.__class__(self.data.lower())
-    def lstrip(self): return self.__class__(self.data.lstrip())
+    def ljust(self, width): return self.__class__(self.data.ljust(width), self.encoding)
+    def lower(self): return self.__class__(self.data.lower(), self.encoding)
+    def lstrip(self): return self.__class__(self.data.lstrip(), self.encoding)
     def replace(self, old, new, maxsplit=-1):
-        return self.__class__(self.data.replace(old, new, maxsplit))
+        return self.__class__(self.data.replace(old, new, maxsplit), self.encoding)
     def rfind(self, sub, start=0, end=sys.maxint):
         return self.data.rfind(sub, start, end)
     def rindex(self, sub, start=0, end=sys.maxint):
         return self.data.rindex(sub, start, end)
-    def rjust(self, width): return self.__class__(self.data.rjust(width))
-    def rstrip(self): return self.__class__(self.data.rstrip())
+    def rjust(self, width): return self.__class__(self.data.rjust(width), self.encoding)
+    def rstrip(self): return self.__class__(self.data.rstrip(), self.encoding)
     def split(self, sep=None, maxsplit=-1):
         return self.data.split(sep, maxsplit)
     def splitlines(self, keepends=0): return self.data.splitlines(keepends)
     def startswith(self, prefix, start=0, end=sys.maxint):
         return self.data.startswith(prefix, start, end)
-    def strip(self): return self.__class__(self.data.strip())
-    def swapcase(self): return self.__class__(self.data.swapcase())
-    def title(self): return self.__class__(self.data.title())
+    def strip(self): return self.__class__(self.data.strip(), self.encoding)
+    def swapcase(self): return self.__class__(self.data.swapcase(), self.encoding)
+    def title(self): return self.__class__(self.data.title(), self.encoding)
     def translate(self, *args):
-        return self.__class__(self.data.translate(*args))
-    def upper(self): return self.__class__(self.data.upper())
+        return self.__class__(self.data.translate(*args), self.encoding)
+    def upper(self): return self.__class__(self.data.upper(), self.encoding)
 
 class MutableString(UserString):
     """mutable string objects

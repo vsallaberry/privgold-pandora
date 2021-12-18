@@ -44,6 +44,8 @@ class Unit *from_python(PyObject *p,boost::python::type<class Unit *>);
 #include "cmd/ai/fire.h"
 #include <memory>
 #include "init.h"
+#include "log.h"
+
 #if BOOST_VERSION == 102800
 #define PYTHONCALLBACK(rtype, ptr, str) \
   boost::python::callback<rtype>::call_method(ptr, str)
@@ -207,7 +209,8 @@ template <class SuperClass> class PythonClass:public SuperClass {
 	return LastPythonClass();
   }
   virtual ~PythonClass(){
-    fprintf (stderr,"Destruct called. If called from C++ this is death %ld (0x%lx)",(unsigned long)this,(unsigned long)this);
+    VS_LOG("python", logvs::INFO, "PythonClass Destruct called. If called from C++ this is death %ld (0x%lx)",
+           (unsigned long)this,(unsigned long)this);
   }
 };
 template <class SuperClass> class PythonAI: public PythonClass <SuperClass> {
@@ -278,4 +281,5 @@ public:
 	  return PythonClass<PythonMissionBaseClass>::FactoryString(code);
   }
 };
+
 #endif

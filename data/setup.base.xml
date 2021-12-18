@@ -1,5 +1,5 @@
 <?xml version="1.0" standalone="yes"?>
-<install product="privateer_gold" desc="Privateer Space Simulator Gold Edition" version="0.1.2a" binarypath="/usr/local/bin" url="Manual.pdf" localurl="Manual.pdf" 
+<install product="privateer_gold" desc="Privateer Space Simulator Gold Edition" version="0.1.2a" binarypath="/usr/local/bin" url="Manual.pdf" localurl="Manual.pdf"
          promptbinaries="yes" express="no" splashpos="left">
   <readme>
    README
@@ -34,7 +34,7 @@
 
       </script>
       <files>
-.privgold100
+.privgold120
 New_Game
 tarsus.begin.csv
 Manual.pdf
@@ -70,5 +70,5 @@ weapon_list.xml
     </option>
 
   </component>
-  
+
 </install>

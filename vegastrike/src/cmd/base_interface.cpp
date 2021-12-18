@@ -1,5 +1,26 @@
+/*
+ * Vega Strike
+ * Copyright (C) 2001-2021 VegaStrike developers
+ *
+ * http://vegastrike.sourceforge.net/
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 #include "config.h"
 #include <Python.h>
+#include <string.h>
 #include "base.h"
 #include "gldrv/winsys.h"
 #include "vsfilesystem.h"
@@ -29,6 +50,12 @@
 #include "main_loop.h"
 #include "in_mouse.h"
 #include "in_kb.h"
+#include "in_joystick.h"
+#include "options.h"
+#include "log.h"
+#include "vs_log_modules.h"
+
+extern vs_options game_options;
 
 static unsigned int& getMouseButtonMask()
 {
@@ -100,20 +127,292 @@ static void SetupViewport() {
         }
 }
 #undef mymin
-BaseInterface::Room::~Room () {
-	int i;
-	for (i=0;i<links.size();i++) {
-		if (links[i])
-			delete links[i];
+
+// MultiMap BaseObj & Link Pretty-Printers
+namespace ChainedMultimapUtil {
+	template <> std::string multimap_debug_key(BaseInterface::Room::BaseObj * obj) {
+		if (obj == NULL) return "(null)";
+		std::ostringstream oss; oss << "(" << obj->index << "," << (const void *) obj << ")";
+		return oss.str();
 	}
-	for (i=0;i<objs.size();i++) {
-		if (objs[i])
-			delete objs[i];
+	template <> std::string multimap_debug_key(BaseInterface::Room::Link * link) {
+		if (link == NULL) return "(null)";
+		std::ostringstream oss; oss << "(" << link->index << "," << (const void *) link << ")";
+		return oss.str();
+	}
+} // ! namespace ChainedMultimapUtil
+
+BaseInterface::Room::~Room () {
+	BASE_LOG(logvs::INFO, "ByeBye Room %s - %zu objs, %zu links",
+			 this->deftext.c_str(), objsmap.size(), linksmap.size());
+	for (linksmap_type::iterator it = linksmap.begin(); it != linksmap.end(); ++it) {
+		if (it->second) {
+		   #ifdef BASELINK_CHAINED_MULTIMAP
+			if (it->second->elt) { // destructor of ChainedMultimap will delete it->second
+				delete (it->second->elt);
+				it->second->elt = NULL;
+			}
+		   #else
+			delete (it->second);
+			it->second = NULL;
+		   #endif
+		}
+	}
+	for (objsmap_type::iterator it = objsmap.begin(); it != objsmap.end(); ++it) {
+		if (it->second) {
+	       #ifdef BASEOBJ_CHAINED_MULTIMAP
+			if (it->second->elt) {
+				delete (it->second->elt); // destructor of ChainedMultimap will delete it->second
+				it->second->elt = NULL;
+			}
+		   #else
+			delete (it->second);
+			it->second = NULL;
+		   #endif
+		}
 	}
 }
 
-BaseInterface::Room::Room () {
-//		Do nothing...
+bool BaseInterface::Room::ObjsKeyCompare::operator()(const std::string & s1, const std::string & s2) const {
+	return s1 < s2;
+}
+
+BaseInterface::Room::Room ()
+: objsmap(objsmap_type(/*ObjsKeyCompare()*/)),
+  linksmap(linksmap_type(/*ObjsKeyCompare()*/))
+#if defined(BASEOBJ_ALPHAORDER_MULTIMAP)
+  , _busyobj(false)
+#endif
+#if defined(BASELINK_CHAINED_MULTIMAP)
+, hotlink_it(linksmap.none())
+#elif defined(BASELINK_ALPHAORDER_MULTIMAP)
+  , _busylink(false), hotlink_it(linksmap.end())
+#endif
+{
+	Enter();
+}
+
+void BaseInterface::Room::Enter() {
+#if defined(BASELINK_CHAINED_MULTIMAP)
+	hotlink_it = linksmap.none();
+#elif defined(BASELINK_ALPHAORDER_MULTIMAP)
+	hotlink_it = linksmap.end();
+#else
+	hotlink_idx = (size_t)-1;
+#endif
+}
+
+#if defined(BASEOBJ_CHAINED_MULTIMAP)
+# define BASEOBJ_VECSZ (0LU)
+# define BASEOBJ_BUSY(map) ((map).busy())
+#elif defined(BASEOBJ_ALPHAORDER_MULTIMAP)
+# define BASEOBJ_VECSZ (0LU)
+# define BASEOBJ_BUSY(map) (_busyobj)
+#else
+# define BASEOBJ_VECSZ (objs.size())
+# define BASEOBJ_BUSY(map) (true)
+#endif
+
+BaseInterface::Room::objsmap_type::iterator
+BaseInterface::Room::AddObj(BaseObj* obj, bool front) {
+	BASE_DBG(logvs::DBG+1, "AddObj(%s): %s new obj (%p) mapSz:%zu vecSz:%zu",
+		     obj ? obj->index.c_str() : "(null)", front? "inserting" : "pushing", obj, objsmap.size(), BASEOBJ_VECSZ);
+
+	objsmap_type::iterator it = objsmap.insert(std::make_pair(obj->index, obj)
+#if defined(BASEOBJ_CHAINED_MULTIMAP)
+			       , front);
+#else
+	               );
+# if !defined(BASEOBJ_ALPHAORDER_MULTIMAP)
+	if (front) {
+		objs.insert(objs.begin(), obj);
+	} else {
+		objs.push_back(obj);
+	}
+# endif
+#endif
+	BASE_DBG(logvs::DBG+3, "AddObj(%s) %s", obj ? obj->index.c_str() : "(null)", it != objsmap.end() ? "ok" : "failed");
+	return it;
+}
+
+BaseInterface::Room::objsmap_type::iterator
+BaseInterface::Room::EraseObj(const std::string & index, bool on_ptr, BaseObj * obj, bool only_notvalid, bool force) {
+	objsmap_range_type its = this->GetObjRange(index);
+	for ( ; its.first != its.second; ) {
+		BaseObj * zombie = GetObj(its.first);
+		if ((on_ptr && obj != zombie)
+		||  (only_notvalid && CheckObj(zombie))) { ++its.first; continue ; }
+
+		if (!force && BASEOBJ_BUSY(objsmap)) {
+			if (CheckObj(zombie)) {
+				BASE_DBG(logvs::DBG+1, "EraseObj(%s): INVALIDATING '%s' (%p) mapSz:%zu vecSz:%zu",
+						index.c_str(), zombie ? zombie->index.c_str() : "(null)", zombie, objsmap.size(), BASEOBJ_VECSZ);
+				zombie->valid = false;
+			} else if (!zombie) {
+				BASE_LOG(logvs::WARN, "EraseObj(%s): Trying to INVALIDATE NULL Object!", index.c_str());
+			}
+			++its.first;
+			continue;
+		}
+		BASE_DBG(logvs::DBG+1, "EraseObj(%s): DELETING obj '%s' (%p) mapSz:%zu vecSz:%zu",
+				 index.c_str(), zombie ? zombie->index.c_str() : "(null)", zombie, objsmap.size(), BASEOBJ_VECSZ);
+
+	   #if defined(BASEOBJ_CHAINED_MULTIMAP) || defined(MULTIMAP_HAVE_CXX11_ERASE) // only ChainedMultimap or CXX11 std::multimap
+		its.first = objsmap.erase(its.first);
+	   #else
+		its.first = ChainedMultimapUtil::multimap_cxx11_erase(objsmap, its.first);
+	   #endif
+		if (zombie)
+			delete zombie;
+	}
+	return its.first;
+}
+
+#if defined(BASELINK_CHAINED_MULTIMAP)
+# define BASELINK_VECSZ (0LU)
+# define BASELINK_BUSY(map) ((map).busy() > 1) // Room::hotlink_it holds one reference then: busy if > 1
+# define BASELINK_FOREACH(_room, _link) BASELINK_FOREACH0(_room, _link, _it, *(_it), ++(_it))
+# define BASELINK_FOREACH2(_room, _link) BASELINK_FOREACH0(_room, _link, _it, *((_it)++), (void)0)
+# define BASELINK_FOREACH0(_room, _link, _it, _assign, _postincr) \
+	for (Room::Link * _link = (Room::Link*)1; _link; _link = 0) \
+		for (Room::linksmap_type::chained_iterator _it = (_room)->linksmap.first(); \
+		     ! _it.end() && ((_link=(_assign))||1); _postincr)
+#elif defined(BASELINK_ALPHAORDER_MULTIMAP)
+# define BASELINK_VECSZ (0LU)
+# define BASELINK_BUSY(map) (_busylink)
+# define BASELINK_FOREACH(_room, _link) BASELINK_FOREACH0(_room, _link, _it, (_it)->second, ++(_it))
+# define BASELINK_FOREACH2(_room, _link) BASELINK_FOREACH0(_room, _link, _it, (_it++)->second, (void)0)
+# define BASELINK_FOREACH0(_room, _link, _it, _assign, _postincr) \
+	for (Room::Link * _link = (Room::Link*)1; _link && ((_room->_busylink = true)||1); _link = 0, _room->_busylink=false) \
+		for (linksmap_type::iterator _it = (_room)->linksmap.begin(); \
+		     _it != (_room)->linksmap.end() && ((_link=(_assign))||1); _postincr)
+#else
+# define BASELINK_VECSZ (links.size())
+# define BASELINK_BUSY(map) (true)
+# define BASELINK_FOREACH(_room, _link) BASELINK_FOREACH0(_room, _link, _it, *(_it), ++(_it))
+# define BASELINK_FOREACH2(_room, _link) BASELINK_FOREACH0(_room, _link, _it, *((_it)++), (void)0)
+# define BASELINK_FOREACH0(_room, _link, _it, _assign, _postincr) \
+	for (Room::Link * _link = (Room::Link*)1; _link; _link = 0) \
+		for (BaseInterface::Room::links_type::iterator _it = (_room)->links.begin(); \
+		    _it != (_room)->links.end() && ((_link=(_assign))||1); _postincr)
+#endif
+
+BaseInterface::Room::linksmap_type::iterator
+BaseInterface::Room::AddLink(Link * lnk, bool front) {
+	BASE_DBG(logvs::DBG+1, "AddLink(%s): %s new link (%p) mapSz:%zu vecSz:%zu",
+			lnk ? lnk->index.c_str() : "(null)", front? "inserting" : "pushing", lnk, linksmap.size(), BASELINK_VECSZ);
+
+	linksmap_type::iterator it = linksmap.insert(std::make_pair(lnk->index, lnk)
+#ifdef BASELINK_CHAINED_MULTIMAP
+						           , front);
+#else
+	                               );
+# if !defined(BASELINK_ALPHAORDER_MULTIMAP)
+	if (front) {
+		links.insert(links.begin(), lnk);
+	} else {
+		links.push_back(lnk);
+	}
+# endif
+#endif
+	BASE_DBG(logvs::DBG+2, "AddLink(%s) %s", lnk ? lnk->index.c_str() : "(null)", it != linksmap.end() ? "ok" : "failed");
+	return it;
+}
+
+BaseInterface::Room::linksmap_type::iterator
+BaseInterface::Room::EraseLink(const std::string & index, bool on_ptr, Link * lnk, bool only_notvalid, bool force) {
+	Link * curlink = GetCurrentLink(0, false);
+	linksmap_range_type its = this->GetLinkRange(index);
+	for ( ; its.first != its.second; ) {
+		Link * zombie = GetLink(its.first);
+		if ((on_ptr && lnk != zombie)
+		||  (only_notvalid && CheckLink(zombie))) { ++its.first; continue ; }
+
+		if ((!force && BASELINK_BUSY(linksmap)) || zombie == curlink) {
+			if (CheckLink(zombie)) {
+				BASE_DBG(logvs::DBG+1, "EraseLink(%s): INVALIDATING '%s' (%p) mapSz:%zu vecSz:%zu",
+						index.c_str(), zombie ? zombie->index.c_str() : "(null)", zombie, linksmap.size(), BASELINK_VECSZ);
+				zombie->valid = false;
+			} else if (!zombie) {
+				BASE_LOG(logvs::WARN, "EraseLink(%s): Trying to INVALIDATE NULL Link!", index.c_str());
+			}
+			++its.first;
+			continue;
+		}
+		BASE_DBG(logvs::DBG+1, "EraseLink(%s): DELETING link '%s' (%p) mapSz:%zu vecSz:%zu",
+				index.c_str(), zombie ? zombie->index.c_str() : "(null)", zombie, linksmap.size(), BASELINK_VECSZ);
+
+		// PERFORM MULTIMAP ERASE
+	   #if defined(BASELINK_CHAINED_MULTIMAP) || defined(MULTIMAP_HAVE_CXX11_ERASE) // only ChainedMultimap or CXX11 std::multimap
+		its.first = linksmap.erase(its.first);
+	   #else
+		its.first = ChainedMultimapUtil::multimap_cxx11_erase(linksmap, its.first);
+	   #endif
+
+		if (zombie)
+			delete zombie;
+	}
+   #if defined(BASELINK_ALPHAORDER_MULTIMAP) // erase has invalidated hotlink_it, whereever it was
+	hotlink_it = (curlink == NULL ? linksmap.end() : linksmap.find(curlink->index));
+   #endif
+	return its.first;
+}
+
+BaseInterface::Room::Link * BaseInterface::Room::GetCurrentLink(int offset, bool only_valid, bool set) {
+	if (linksmap.size() == 0) return NULL;
+	size_t count = 0;
+#if defined(BASELINK_CHAINED_MULTIMAP)
+	linksmap_type::chained_iterator hotlink_it = this->hotlink_it;
+	if (hotlink_it.end()) {
+		if (offset == 0) return NULL;
+		hotlink_it = offset > 0 ? linksmap.last() : linksmap.first();
+	}
+	if (offset < 0) {
+		do {
+			if ((--hotlink_it).end()) hotlink_it = linksmap.last();
+		} while (++count < linksmap.size() && ((only_valid && !CheckLink(*hotlink_it)) || ++offset < 0));
+	} else if (offset > 0) {
+		do {
+			if ((++hotlink_it).end()) hotlink_it = linksmap.first();
+		} while (++count < linksmap.size() && ((only_valid && !CheckLink(*hotlink_it)) || --offset > 0));
+	}
+	if (set) this->hotlink_it = hotlink_it;
+	return hotlink_it.end() || (only_valid && !CheckLink(*hotlink_it)) ? NULL : *hotlink_it;
+#elif defined(BASELINK_ALPHAORDER_MULTIMAP)
+	linksmap_type::iterator hotlink_it = this->hotlink_it;
+	if (hotlink_it == linksmap.end()) {
+		if (offset == 0) return NULL;
+		hotlink_it = offset < 0 ? linksmap.begin() : linksmap.end() - 1;
+	}
+	if (offset < 0) {
+		do {
+			if (hotlink_it == linksmap.begin()) hotlink_it = linksmap.end(); --hotlink_it;
+		} while (++count < linksmap.size() && ((only_valid && !CheckLink(*hotlink_it)) || ++offset < 0));
+	} else if (offset > 0) {
+		do {
+			if ((++hotlink_it) == linksmap.end()) hotlink_it = linksmap.begin();
+		} while (++count < linksmap.size() && ((only_valid && !CheckLink(*hotlink_it)) || --offset > 0));
+	}
+	if (set) this->hotlink_it = hotlink_it;
+	return hotlink_it == linksmap.end() || (only_valid && !CheckLink(*hotlink_it)) ? NULL : *hotlink_it;
+#else
+	size_t hotlink_idx = this->hotlink_idx;
+	if (hotlink_idx >= links.size()) {
+		if (offset == 0) return NULL;
+		hotlink_idx = offset > 0 : linksmap.size() - 1 : 0;
+	}
+	if (offset < 0) {
+		do {
+			if (hotlink_idx == 0) hotlink_idx = links.size() - 1; else (--hotlink_idx);
+		} while (++count < links.size() && ((only_valid && !CheckLink(links[hotlink_idx])) || ++offset < 0));
+	} else if (offset > 0) {
+		do {
+			if ((++hotlink_idx) == links.size()) hotlink_idx = 0;
+		} while (++count < links.size() && ((only_valid && !CheckLink(links[hotlink_idx])) || --offset > 0));
+	}
+	if (set) this->hotlink_idx = hotlink_idx;
+	return hotlink_idx >= links.size() || (only_valid && !CheckLink(links[hotlink_idx])) ? NULL : links[hotlink_idx];
+#endif
 }
 
 void BaseInterface::Room::BaseObj::Draw (BaseInterface *base) {
@@ -127,7 +426,7 @@ static FILTER BlurBases() {
 BaseInterface::Room::BaseVSSprite::BaseVSSprite (const std::string &spritefile, const std::string &ind) 
   : BaseObj(ind),spr(spritefile.c_str(),BlurBases(),GFXTRUE) {}
 
-BaseInterface::Room::BaseVSMovie::BaseVSMovie(const std::string &moviefile, const std::string &ind) 
+BaseInterface::Room::BaseVSMovie::BaseVSMovie(const std::string &moviefile, const std::string &ind)
   : BaseVSSprite(ind, VSSprite(AnimatedTexture::CreateVideoTexture(moviefile), 0, 0, 2, 2)) {}
 
 void BaseInterface::Room::BaseVSSprite::SetSprite (const std::string &spritefile)
@@ -167,7 +466,7 @@ void BaseInterface::Room::BaseVSMovie::SetTime(float t)
 }
 
 void BaseInterface::Room::BaseVSSprite::Draw (BaseInterface *base) {
-  static float AlphaTestingCutoff = XMLSupport::parse_float(vs_config->getVariable("graphics","base_alpha_test_cutoff","0"));  
+  static float AlphaTestingCutoff = XMLSupport::parse_float(vs_config->getVariable("graphics","base_alpha_test_cutoff","0"));
   GFXAlphaTest (GREATER,AlphaTestingCutoff);
   GFXBlendMode(SRCALPHA,INVSRCALPHA);
   GFXEnable(TEXTURE0);
@@ -225,13 +524,49 @@ void BaseInterface::Room::BaseShip::Draw (BaseInterface *base) {
 }
 
 void BaseInterface::Room::Draw (BaseInterface *base) {
-	int i;
-	for (i=0;i<objs.size();i++) {
-		if (objs[i]) {
+	std::string index;
+	bool erase_needed = false;
+	size_t i = 0;
+   #if defined(BASEOBJ_CHAINED_MULTIMAP)
+	for (objsmap_type::chained_iterator it = objsmap.first(); !it.end(); ++i) {
+		BaseObj * obj = *it++;
+   #elif defined BASEOBJ_ALPHAORDER_MULTIMAP
+	for (_busyobj=true, objsmap_type::iterator it = objsmap.begin(); it != objsmap.end() || (_busyobj=/*ASSIGN*/false); ) {
+		BaseObj * (it++)->second;
+   #else
+	for ( ; i < objs.size() ; ) {
+		BaseObj * obj = objs[i++];
+   #endif
+		bool obj_valid = CheckObj(obj);
+		if (obj_valid) {
+			BASE_DBG(logvs::DBG+3, "Drawing BaseObj #%zu '%s' (%p) (mapsz:%zu,vsz:%zu)!",
+				     i, obj->index.c_str(), obj, objsmap.size(), BASEOBJ_VECSZ);
+
 			GFXBlendMode(SRCALPHA,INVSRCALPHA);
-			objs[i]->Draw(base);			
+			obj->Draw(base);
+
+		}
+		if (!obj_valid || !CheckObj(obj)) {
+			BASE_DBG(logvs::DBG+2, "detected INVALIDATED BaseObj #%zu '%s' (%p) (mapsz:%zu,vsz:%zu)!",
+					 i, obj == NULL ? "(null)" : obj->index.c_str(), obj, objsmap.size(), BASEOBJ_VECSZ);
+			// this will be faster to delete while traversing the whole tree than erasing one by one
+			// and if there is only one obj, index is kept.
+			if (!erase_needed) {
+				erase_needed = true;
+				if (obj) index = obj->index;
+			} else if (!index.empty()) {
+				index.clear();
+			}
+		   #if !defined(BASEOBJ_CHAINED_MULTIMAP) && !defined(BASEOBJ_ALPHAORDER_MULTIMAP)
+			objs.erase(objs.begin()+(--i));
+		   #endif
 		}
 	}
+
+	if (erase_needed) {
+		this->EraseObj(index, false, NULL, true, true); // delete invalid objects.
+	}
+
 	GFXBlendMode(SRCALPHA,INVSRCALPHA);
 	// draw location markers
 	//<!-- config options in the "graphics" section -->
@@ -251,7 +586,9 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 	static bool draw_always    = XMLSupport::parse_bool(vs_config->getVariable("graphics","base_locationmarker_drawalways","false"));
 	static float y_lower       = -0.9; // shows the offset on the lower edge of the screen (for the textline there) -> Should be defined globally somewhere
 	static float base_text_background_alpha=XMLSupport::parse_float(vs_config->getVariable("graphics","base_text_background_alpha","0.0625"));
-	if (enable_markers) {
+    static std::string marker_font = vs_config->getVariable("graphics","base_locationmarker_font", "");
+
+    if (enable_markers) {
 		float x, y, text_wid, text_hei;
 		//get offset from config;
 		static float text_offset_x = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textoffset_x","0"));
@@ -259,12 +596,12 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 		static float text_color_r  = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textcolor_r","1"));
 		static float text_color_g  = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textcolor_g","1"));
 		static float text_color_b  = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textcolor_b","1"));
-		for (int i=0; i<links.size(); i++) { //loop through all links and draw a marker for each
-			if (links[i]) {
-				if ((links[i]->alpha < 1) || (draw_always)) {
-					if (draw_always) { links[i]->alpha = 1; }  // set all alphas to visible
-					x = (links[i]->x + (links[i]->wid / 2));   // get the center of the location
-					y = (links[i]->y + (links[i]->hei / 2));   // get the center of the location
+		BASELINK_FOREACH(this, link) { //loop through all links and draw a marker for each
+        	if (this->CheckLink(link)) {
+				if ((link->alpha < 1) || (draw_always)) {
+					if (draw_always) { link->alpha = 1; }  // set all alphas to visible
+					x = (link->x + (link->wid / 2));   // get the center of the location
+					y = (link->y + (link->hei / 2));   // get the center of the location
 
 					/* draw marker */
 					static string spritefile_marker = vs_config->getVariable("graphics","base_locationmarker_sprite","");
@@ -280,18 +617,20 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 						spr_marker->SetPosition(x, y);
 						GFXDisable(TEXTURE1);
 						GFXEnable(TEXTURE0);
-						GFXColor4f(1,1,1,links[i]->alpha);
+						GFXColor4f(1,1,1,link->alpha);
 						spr_marker->Draw();
 					} // if spritefile
 
 					if (draw_text) {
 						GFXDisable(TEXTURE0);
 						TextPlane text_marker;
-						text_marker.SetText(links[i]->text);
+                        if (!marker_font.empty())
+                            text_marker.SetFont(marker_font);
+						text_marker.SetText(link->text);
 						text_marker.GetCharSize(text_wid, text_hei);     // get average charactersize
 						float text_pos_x = x + text_offset_x;            // align right ...
 						float text_pos_y = y + text_offset_y + text_hei; // ...and on top
-						text_wid = text_wid * links[i]->text.length() * 0.25;     // calc ~width of text (=multiply the average characterwidth with the number of characters)
+						text_wid = text_wid * link->text.length() * 0.25;     // calc ~width of text (=multiply the average characterwidth with the number of characters)
 						if ((text_pos_x + text_offset_x + text_wid) >= 1) {       // check right screenborder
 							text_pos_x = (x - fabs(text_offset_x) - text_wid);     // align left
 						}
@@ -301,9 +640,9 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 						if ((text_pos_y + text_offset_y - text_hei) <= y_lower) { // check lower screenborder
 							text_pos_y = (y + fabs(text_offset_y) + text_hei);     // align on top
 						}
-						text_marker.col = GFXColor(text_color_r, text_color_g, text_color_b, links[i]->alpha);
+						text_marker.col = GFXColor(text_color_r, text_color_g, text_color_b, link->alpha);
 						text_marker.SetPos(text_pos_x, text_pos_y);
-						if(links[i]->pythonfile != "#" && text_marker.GetText().find("XXX")!=0){
+						if(link->pythonfile != "#" && text_marker.GetText().find("XXX")!=0){
 							GFXColor tmpbg=text_marker.bgcol;
 							bool automatte=(0==tmpbg.a);
 							if(automatte){text_marker.bgcol=GFXColor(0,0,0,base_text_background_alpha);}
@@ -324,19 +663,21 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 		//get offset from config;
 		static float text_offset_x = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textoffset_x","0"));
 		static float text_offset_y = XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_textoffset_y","0"));
-		for (int i=0; i<links.size(); i++) { //loop through all links and draw a marker for each
-			if (links[i]) {
+		BASELINK_FOREACH(this, link) {
+			if (CheckLink(link)) {
 				// Debug marker
 				if (debug_markers) {
 					//compute label position
-					x = (links[i]->x + (links[i]->wid / 2));   // get the center of the location
-					y = (links[i]->y + (links[i]->hei / 2));   // get the center of the location
+					x = (link->x + (link->wid / 2));   // get the center of the location
+					y = (link->y + (link->hei / 2));   // get the center of the location
 					TextPlane text_marker;
-					text_marker.SetText(links[i]->index);
+                    if (!marker_font.empty())
+                        text_marker.SetFont(marker_font);
+					text_marker.SetText(link->index);
 					text_marker.GetCharSize(text_wid, text_hei);     // get average charactersize
 					float text_pos_x = x + text_offset_x;            // align right ...
 					float text_pos_y = y + text_offset_y + text_hei; // ...and on top
-					text_wid = text_wid * links[i]->text.length() * 0.25;     // calc ~width of text (=multiply the average characterwidth with the number of characters)
+					text_wid = text_wid * link->text.length() * 0.25;     // calc ~width of text (=multiply the average characterwidth with the number of characters)
 					if ((text_pos_x + text_offset_x + text_wid) >= 1)         // check right screenborder
 						text_pos_x = (x - fabs(text_offset_x) - text_wid);     // align left
 					if ((text_pos_y + text_offset_y) >= 1)                    // check upper screenborder
@@ -359,8 +700,8 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 				}
 				// link border
 				GFXColor4f(1,1,1,1);
-				Vector c1(links[i]->x,links[i]->y,0);
-				Vector c3(links[i]->wid+c1.i,links[i]->hei+c1.j,0);
+				Vector c1(link->x,link->y,0);
+				Vector c3(link->wid+c1.i,link->hei+c1.j,0);
 				Vector c2(c1.i,c3.j,0);
 				Vector c4(c3.i,c1.j,0);
 				GFXDisable(TEXTURE0);
@@ -430,6 +771,9 @@ void RunPython(const char *filnam) {
 #endif
 	if (filnam[0]) {
 		if (filnam[0]=='#' && filnam[1]!='\0') {
+            if (BASE_DBG(logvs::DBG+1, "Running python string '%s'...", filnam) <= 0) {
+                BASE_DBG(logvs::DBG, "Running python string...");
+            }
 			::Python::reseterrors();
 			PyRun_SimpleString(const_cast<char*>(filnam));
 			::Python::reseterrors();
@@ -448,6 +792,7 @@ void RunPython(const char *filnam) {
 			} else {
 				fprintf(stderr,"Warning:python link file '%s' not found\n",filnam);
 			}*/
+            BASE_DBG(logvs::DBG, "Running python script %s...", filnam);
             CompileRunPython(filnam);
 		}
 	}
@@ -456,9 +801,14 @@ void RunPython(const char *filnam) {
 void BaseInterface::Room::BasePython::Draw (BaseInterface *base) {
 	timeleft+=GetElapsedTime()/getTimeCompression();
 	if (timeleft>=maxtime) {
+        const char * script = this->pythonfile.c_str();
 		timeleft=0;
-		printf("Running python script... ");
-		RunPython(this->pythonfile.c_str());
+        if (BASE_LOG(logvs::NOTICE, "Room display: Running python script%s...",
+                     *script == '#' ? " (string)" : script) > 0) {
+            if (*script == '#')
+                BASE_LOG(logvs::VERBOSE, "script: '%s'", script);
+        }
+		RunPython(script);
 		return; //do not do ANYTHING with 'this' after the previous statement...
 	}
 }
@@ -477,27 +827,23 @@ void BaseInterface::Room::BaseTalk::Draw (BaseInterface *base) {
 		GFXVertex3f(caller->x,caller->y+caller->hei,0);
 		GFXVertex3f(caller->x,caller->y,0);
 	GFXEnd();*/
-	
+
 	// FIXME: should be called from draw()
 	if (hastalked) return;
 	curtime+=GetElapsedTime()/getTimeCompression();
 	static float delay=XMLSupport::parse_float(vs_config->getVariable("graphics","text_delay",".05"));
-	if ((std::find(active_talks.begin(),active_talks.end(),this)==active_talks.end())||(curchar>=message.size()&&curtime>((delay*message.size())+2))) {
+
+	std::vector<BaseTalk *>::iterator ind2=std::find(active_talks.begin(), active_talks.end(), this);
+	if (ind2==active_talks.end()
+	||  (curchar>=message.size()&&curtime>((delay*message.size())+2))) {
 		curtime=0;
-		BaseObj * self=this;
-		std::vector<BaseObj *>::iterator ind=std::find(base->rooms[base->curroom]->objs.begin(),
-				base->rooms[base->curroom]->objs.end(),
-				this);
-		if (ind!=base->rooms[base->curroom]->objs.end()) {
-			*ind=NULL;
-		}
-		std::vector<BaseTalk *>::iterator ind2=std::find(active_talks.begin(),active_talks.end(),this);
-		if (ind2!=active_talks.end()) {
-			*ind2=NULL;
+		this->valid = false; // will be deleted
+
+		if (ind2 != active_talks.end()) {
+			active_talks.erase(ind2);
 		}
 		base->othtext.SetText("");
-		delete this;
-		return; //do not do ANYTHING with 'this' after the previous statement...
+		return ;
 	}
 	if (curchar<message.size()) {
 		static float inbetween=XMLSupport::parse_float(vs_config->getVariable("graphics","text_speed",".025"));
@@ -509,22 +855,89 @@ void BaseInterface::Room::BaseTalk::Draw (BaseInterface *base) {
 	hastalked=true;
 }
 
-int BaseInterface::Room::MouseOver (BaseInterface *base,float x, float y) {
-	for (int i=0;i<links.size();i++) {
-		if (links[i]) {
-			if (x>=links[i]->x&&
-					x<=(links[i]->x+links[i]->wid)&&
-					y>=links[i]->y&&
-					y<=(links[i]->y+links[i]->hei)) {
-				return i;
-			}
+BaseInterface::Room::Link * BaseInterface::Room::LinkAtPosition(float x, float y) {
+	BASELINK_FOREACH(this, link) {
+		if (this->CheckLink(link)
+				&& x >= link->x
+				&& x <= (link->x + link->wid)
+				&& y >= link->y
+				&& y <= (link->y + link->hei)) {
+	   	   #if defined(BASELINK_CHAINED_MULTIMAP) || defined(BASELINK_ALPHAORDER_MULTIMAP)
+			hotlink_it = _it;
+		   #else
+			hotlink_idx = _it - objs.begin()
+	   	   #endif
+			return link;
 		}
 	}
-	return -1;
+   #if defined(BASELINK_CHAINED_MULTIMAP)
+	if (!(hotlink_it.end())) hotlink_it = linksmap.none();
+   #elif defined(BASELINK_ALPHAORDER_MULTIMAP)
+	hotlink_it = linksmap.end();
+   #else
+	hotlink_idx = (size_t)-1;
+   #endif
+	return NULL;
+}
+
+BaseInterface::Room::Link * BaseInterface::Room::MouseOver (BaseInterface *base,float x, float y) {
+	Room::Link * hotlink = this->GetCurrentLink(0, false);
+	Link * link = this->LinkAtPosition(x, y);
+	BASELINK_FOREACH(this, _dummy) { // this will not loop but will forbid python to delete objects (only invalidate)
+		if (hotlink && hotlink != link)
+			hotlink->MouseLeave(base,x,y,getMouseButtonMask());
+		if (link && link != hotlink)
+			link->MouseEnter(base,x,y,getMouseButtonMask());
+		if (link)
+			link->MouseMove(base,x,y,getMouseButtonMask());
+		break ;
+	}
+	if (link && !(this->CheckLink(link))) {
+   	   #if !defined(BASELINK_CHAINED_MULTIMAP) && !defined(BASELINK_ALPHAORDER_MULTIMAP)
+		for (size_t i = 0; i < objs.size(); /*no_incr*/ ) {
+			if (this->CheckLink(objs[i])) ++i; else objs.erase(objs.begin()+i);
+		}
+   	   #endif
+		this->EraseLink("", false, NULL, true, true);
+		link = this->LinkAtPosition(x, y);
+	}
+	return link;
+}
+
+// This is a hack to emulate link navigation with joystick.
+// We could use the KeyBindings mechanism provided by in_sdl/in_joystick
+// (assuming we can differenciate game bindings and base bindings).
+void BaseInterface::Joystick(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
+	static const bool joy_link_nav_emul = XMLSupport::parse_bool(vs_config->getVariable("joystick", "base_link_nav", "true"));
+	static unsigned int prev_key[MAX_JOYSTICKS] = { (unsigned int)-1, };
+	BaseInterface * base = CurrentBase;
+	if (!joy_link_nav_emul || base == NULL || !(base->python_kbhandler.empty()) || which >= GetNumJoysticks())
+		return ;
+	if (prev_key[0] == (unsigned int)-1) memset(prev_key, 0, sizeof(prev_key));
+	unsigned int key = 0;
+	if (buttons != 0) {
+		key = ' ';
+	} else if (fabs(x) >= 0.8 && x*x > y*y) {
+		key = x>0 ? WSK_RIGHT : WSK_LEFT;
+	} else if (fabs(y) >= 0.8 && y*y > x*x) {
+		key = y>0 ? WSK_RIGHT : WSK_LEFT;
+	}
+	if (key != prev_key[which]) {
+		prev_key[which] = key;
+		if (key != 0) {
+			BASE_LOG(logvs::VERBOSE, "joystick: #%d x:%g y:%g z:%g buttons:%x", which, x, y, z, buttons);
+			if (base != BaseInterface::CurrentBase) return ;
+			base->Key(key, (unsigned int)-1, false, 0, 0);
+			if (base != BaseInterface::CurrentBase) return ;
+			base->Key(key, (unsigned int)-1, true, 0, 0);
+		}
+	}
 }
 
 BaseInterface *BaseInterface::CurrentBase=NULL;
 static BaseInterface *lastBaseDoNotDereference=NULL;
+
+void * BaseInterface::CurrentFont = NULL;
 
 bool RefreshGUI(void) {
 	bool retval=false;
@@ -547,7 +960,6 @@ bool RefreshGUI(void) {
 	}
 	return retval;
 }
-
 
 void base_main_loop() {
 	UpdateTime();
@@ -577,15 +989,36 @@ void base_main_loop() {
 	BaseComputer::dirty = false;
 }
 
-
+void BaseInterface::Room::Key(BaseInterface* base, unsigned int ch, unsigned int mod, bool release, float x, float y) {
+	static const bool kb_link_nav_emul = XMLSupport::parse_bool(vs_config->getVariable("keyboard", "base_link_nav", "true"));
+	BASE_DBG(logvs::DBG+1, "Room::Key() %x mod:%x release:%d", ch, mod, release);
+	if ((mod == (unsigned int)-1 || kb_link_nav_emul) && !release && (ch == ' ' || ch == WSK_RETURN
+	||  ch == WSK_DOWN || ch == WSK_UP || ch == WSK_LEFT || ch == WSK_RIGHT)) {
+		int button;
+		if (ch == WSK_RETURN || ch == ' ') button = WS_LEFT_BUTTON;
+		else if (ch == WSK_UP || ch == WSK_LEFT) button = WS_WHEEL_UP;
+		else button = WS_WHEEL_DOWN;
+		Link * link = GetCurrentLink(0, false);
+		if (link != NULL) {
+			x = link->x + link->wid / 2.;
+			y = link->y + link->hei / 2.;
+		}
+		if (base && base == BaseInterface::CurrentBase)
+			this->Click(base, x, y, button, WS_MOUSE_DOWN);
+		if (base && base == BaseInterface::CurrentBase)
+			this->Click(base, x, y, button, WS_MOUSE_UP);
+	}
+}
 
 void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int button, int state) {
+	BASE_DBG(logvs::DBG+1, "Room::Click() button:%d state:%d", button, state);
 	if (button==WS_LEFT_BUTTON) {
-		int linknum=MouseOver (base,x,y);
-		if (linknum>=0) {
-			Link * link=links[linknum];
-			if (link) {
+		Link * link = LinkAtPosition(x,y);
+		if (CheckLink(link)) {
+			BASELINK_FOREACH(this, _dummy) { // Prevents python to delete objects (only invalidate)
 				link->Click(base,x,y,button,state);
+				// this and base could be deleted at this point.
+				break ;
 			}
 		}
 	} else {
@@ -679,19 +1112,16 @@ void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int butto
 				}
 			}
 		}
-#else
-		if (state==WS_MOUSE_UP&&links.size()) {
-			int count=0;
-			while (count++<links.size()) { 
-				Link *curlink=links[base->curlinkindex++%links.size()];
-				if (curlink) {
-					int x=int((((curlink->x+(curlink->wid/2))+1)/2)*g_game.x_resolution);
-					int y=-int((((curlink->y+(curlink->hei/2))-1)/2)*g_game.y_resolution);
-					biModifyMouseSensitivity(x,y,true);
-					winsys_warp_pointer(x,y);
-					PassiveMouseOverWin(x,y);
-					break;
-				}
+#else // ! #ifdef BASE_MAKER
+		if (state==WS_MOUSE_UP && linksmap.size()) {
+			int offset = button == WS_WHEEL_UP ? -1 : +1;
+			Link *curlink = this->GetCurrentLink(offset);
+			if (CheckLink(curlink)) {
+				int x=int((((curlink->x+(curlink->wid/2))+1)/2)*g_game.x_resolution);
+				int y=-int((((curlink->y+(curlink->hei/2))-1)/2)*g_game.y_resolution);
+				biModifyMouseSensitivity(x,y,true);
+				winsys_warp_pointer(x,y);
+				PassiveMouseOverWin(x,y);
 			}
 		}
 #endif
@@ -701,22 +1131,8 @@ void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int butto
 void BaseInterface::MouseOver (int xbeforecalc, int ybeforecalc) {
 	float x, y;
 	CalculateRealXAndY(xbeforecalc,ybeforecalc,&x,&y);
-	int i=rooms[curroom]->MouseOver(this,x,y);
-	Room::Link *link=0;
-	Room::Link *hotlink=0;
-	if (i>=0)
-		link=rooms[curroom]->links[i];
-	if (lastmouseindex>=0 && lastmouseindex<rooms[curroom]->links.size())
-		hotlink=rooms[curroom]->links[lastmouseindex];
+	Room::Link *link=rooms[curroom]->MouseOver(this,x,y);
 
-	if (hotlink && (lastmouseindex != i))
-		hotlink->MouseLeave(this,x,y,getMouseButtonMask());
-	if (link && (lastmouseindex != i))
-		link->MouseEnter(this,x,y,getMouseButtonMask());
-	if (link)
-		link->MouseMove(this,x,y,getMouseButtonMask());
-	lastmouseindex = i;
-	
 	static float overcolor[4]={1,.666666667,0,1};
 	static bool donecolor1=(vs_config->getColor("default","base_mouse_over",overcolor,true),true);
 	static float inactivecolor[4]={0,1,0,1};
@@ -733,30 +1149,36 @@ void BaseInterface::MouseOver (int xbeforecalc, int ybeforecalc) {
           curtext.col=GFXColor(inactivecolor[0],inactivecolor[1],inactivecolor[2],inactivecolor[3]);
           drawlinkcursor=false;
 	}
-        static bool  draw_always      = XMLSupport::parse_bool(vs_config->getVariable("graphics","base_locationmarker_drawalways","false"));
-        static float defined_distance = fabs(XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_distance","0.5")));
-        if (!draw_always) {
-          float cx, cy, wid, hei;
-          float dist_cur2link;
-          for (i=0; i<rooms[curroom]->links.size(); i++) {
-            cx = (rooms[curroom]->links[i]->x + (rooms[curroom]->links[i]->wid / 2));   //get the center of the location
-            cy = (rooms[curroom]->links[i]->y + (rooms[curroom]->links[i]->hei / 2));   //get the center of the location
-            dist_cur2link = sqrt(pow((cx-x),2) + pow((cy-y),2));
-            if ( dist_cur2link < defined_distance ) {
-              rooms[curroom]->links[i]->alpha = (1 - (dist_cur2link / defined_distance));
-            }
-            else {
-              rooms[curroom]->links[i]->alpha = 1;
-            } //if
-          } // for i
-        } // if !draw_always
+	static const bool draw_borders      = XMLSupport::parse_bool(vs_config->getVariable("graphics","base_drawlocationborders","false"));
+	static const bool debug_markers     = XMLSupport::parse_bool(vs_config->getVariable("graphics","base_enable_debugmarkers","false"));
+	static const bool enable_markers    = XMLSupport::parse_bool(vs_config->getVariable("graphics","base_enable_locationmarkers","false"));
+    static const bool draw_always     	= XMLSupport::parse_bool(vs_config->getVariable("graphics","base_locationmarker_drawalways","false"));
+    static const bool attenuate_markers = !draw_always && (draw_borders || debug_markers || enable_markers);
+    if (attenuate_markers) {
+    	static const float defined_distance = fabs(XMLSupport::parse_float(vs_config->getVariable("graphics","base_locationmarker_distance","0.5")));
+    	float cx, cy, wid, hei;
+    	float dist_cur2link;
+    	for (Room::linksmap_range_type its = rooms[curroom]->GetLinkRange(""); its.first != its.second; ++its.first) {
+    		Room::Link * link = rooms[curroom]->GetLink(its.first);
+    		if (!rooms[curroom]->CheckLink(link)) continue ;
+    		cx = (link->x + (link->wid / 2));   //get the center of the location
+    		cy = (link->y + (link->hei / 2));   //get the center of the location
+    		dist_cur2link = sqrt(pow((cx-x),2) + pow((cy-y),2));
+    		if ( dist_cur2link < defined_distance ) {
+    			link->alpha = (1 - (dist_cur2link / defined_distance));
+    		}
+    		else {
+    			link->alpha = 1;
+    		} //if
+    	} // for i
+    } // if !draw_always
 }
-
 
 void BaseInterface::Click (int xint, int yint, int button, int state) {
 	float x,y;
 	CalculateRealXAndY(xint,yint,&x,&y);
 	rooms[curroom]->Click(this,x,y,button,state);
+	//this could be deleted at this point
 }
 
 void BaseInterface::ClickWin (int button, int state, int x, int y) {
@@ -833,18 +1255,24 @@ void BaseInterface::Key(unsigned int ch, unsigned int mod, bool release, int x, 
 		BaseUtil::SetKeyEventData(*evtype,ch);
 		RunPython(python_kbhandler.c_str());
 	}
+	else {
+		float fx, fy;
+		CalculateRealXAndY(x, y, &fx, &fy);
+		rooms[curroom]->Key(this, ch, mod, release, fx, fy);
+	}
 }
 
 void BaseInterface::GotoLink (int linknum) {
 	othtext.SetText("");
 	if (rooms.size()>linknum&&linknum>=0) {
-		curlinkindex=0;
+		BASE_LOG(logvs::INFO, "Setting current room: %d", linknum);
+		rooms[linknum]->Enter();
+		curtext.SetText(rooms[linknum]->deftext);
 		curroom=linknum;
-		curtext.SetText(rooms[curroom]->deftext);
 		drawlinkcursor=false;
 	} else {
 #ifndef BASE_MAKER
-		VSFileSystem::vs_fprintf(stderr,"\nWARNING: base room #%d tried to go to an invalid index: #%d",curroom,linknum);
+		BASE_LOG(logvs::ERROR, "WARNING: base room #%d tried to go to an invalid index: #%d",curroom,linknum);
 		assert(0);
 #else
 		while(rooms.size()<=linknum) {
@@ -868,7 +1296,7 @@ BaseInterface::~BaseInterface () {
 #endif
 	CurrentBase=0;
 	restore_main_loop();
-	for (int i=0;i<rooms.size();i++) {
+	for (size_t i=0;i<rooms.size();i++) {
 		delete rooms[i];
 	}
 }
@@ -897,6 +1325,7 @@ static void base_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, i
 void BaseInterface::InitCallbacks () {
 	winsys_set_keyboard_func(base_keyboard_cb);	
 	winsys_set_mouse_func(ClickWin);
+	winsys_set_joystick_func(Joystick);
 	winsys_set_motion_func(ActiveMouseOverWin);
 	winsys_set_passive_motion_func(PassiveMouseOverWin);
 	CurrentBase=this;
@@ -910,7 +1339,7 @@ void BaseInterface::InitCallbacks () {
 
 BaseInterface::Room::Talk::Talk (const std::string & ind,const std::string & pythonfile)
 		: BaseInterface::Room::Link(ind,pythonfile) {
-	index=-1;
+	curroom = -1;
 #ifndef BASE_MAKER
 	gameMessage last;
 	int i=0;
@@ -949,7 +1378,7 @@ double compute_light_dot (Unit * base,Unit *un) {
 	  QVector v2 = (st->Position()-base->Position()).Normalize();
 	  double dot = v1.Dot(v2);
 	  if (dot>ret) {
-	    VSFileSystem::vs_fprintf (stderr,"dot %lf",dot);
+	    BASE_LOG(logvs::NOTICE, "light dot %lf", dot);
 	    ret=dot;
 	  }
 	} else {
@@ -984,18 +1413,26 @@ const char * compute_time_of_day (Unit * base,Unit *un) {
 }
 
 extern void ExecuteDirector();
+
 BaseInterface::BaseInterface (const char *basefile, Unit *base, Unit*un)
 		: curtext(getConfigColor("Base_Text_Color_Foreground",GFXColor(0,1,0,1)),getConfigColor("Base_Text_Color_Background",GFXColor(0,0,0,1))) , othtext(getConfigColor("Fixer_Text_Color_Foreground",GFXColor(1,1,.5,1)),getConfigColor("FixerTextColor_Background",GFXColor(0,0,0,1))) {
+    
+    static const std::string speechfont = vs_config->getVariable("graphics", "base_speech_font", "");
+    static const std::string linkfont = vs_config->getVariable("graphics", "base_link_font", "");
 	CurrentBase=this;
 	CallComp=false;
-	lastmouseindex=0;
         createdbase=true;
         createdmusic=-1;
 	caller=un;
         curroom=0;
-	curlinkindex=0;
 	this->baseun=base;
 	float x,y;
+    if (!linkfont.empty()) {
+        curtext.SetFont(linkfont);
+    }
+    if (!speechfont.empty()) {
+        othtext.SetFont(speechfont);
+    }
 	curtext.GetCharSize(x,y);
 	curtext.SetCharSize(x*2,y*2);
 	//	curtext.SetSize(2-(x*4 ),-2);
@@ -1019,11 +1456,12 @@ BaseInterface::BaseInterface (const char *basefile, Unit *base, Unit*un)
 			saveStringList(cpt,mission_key,vec);
 	}
 	if (!rooms.size()) {
-		VSFileSystem::vs_fprintf(stderr,"ERROR: there are no rooms in basefile \"%s%s%s\" ...\n",basefile,compute_time_of_day(base,un),BASE_EXTENSION);
+		BASE_LOG(logvs::ERROR, "ERROR: there are no rooms in basefile \"%s%s%s\" ...",
+                 basefile,compute_time_of_day(base,un),BASE_EXTENSION);
 		rooms.push_back(new Room ());
 		rooms.back()->deftext="ERROR: No rooms specified...";
 #ifndef BASE_MAKER
-		rooms.back()->objs.push_back(new Room::BaseShip (-1,0,0,0,0,-1,0,1,0,QVector(0,0,2),"default room"));
+		rooms.back()->AddObj(new Room::BaseShip (-1,0,0,0,0,-1,0,1,0,QVector(0,0,2),"default room"));
 		BaseUtil::Launch(0,"default room",-1,-1,1,2,"ERROR: No rooms specified... - Launch");
 		BaseUtil::Comp(0,"default room",0,-1,1,2,"ERROR: No rooms specified... - Computer",
 				"Cargo Upgrade Info ShipDealer News Missions");
@@ -1115,7 +1553,12 @@ void BaseInterface::Room::Launch::Click (BaseInterface *base,float x, float y, i
               }
           }
 	  if ((playa && bas)&&(auto_undock || (playa->name=="return_to_cockpit"))) {
-              playa->UnDock (bas);
+              if (playa->UnDock (bas)) {
+                  static bool wipe_oldmissions = XMLSupport::parse_bool(
+                                    vs_config->getVariable("general", "wipe_oldmissions", "true"));
+                  if (wipe_oldmissions)
+                      Mission::wipeDeletedMissions();
+              }
               CommunicationMessage c(bas,playa,NULL,0);
               c.SetCurrentState (c.fsm->GetUnDockNode(),NULL,0);
               if (playa->getAIState())
@@ -1199,29 +1642,37 @@ inline QVector randyVector (float min, float max) {
 void BaseInterface::Room::Goto::Click (BaseInterface *base,float x, float y, int button, int state) {
 	if (state==WS_MOUSE_UP) {
 		Link::Click(base,x,y,button,state);
-		base->GotoLink(index);
+		base->GotoLink(lnkindex);
 	}
 }
 
 void BaseInterface::Room::Talk::Click (BaseInterface *base,float x, float y, int button, int state) {
+	if (base == NULL)
+		return;
 	if (state==WS_MOUSE_UP) {
 		Link::Click(base,x,y,button,state);
-		if (index>=0) {
-			delete base->rooms[curroom]->objs[index];
-			base->rooms[curroom]->objs[index]=NULL;
-			index=-1;
+		if (!objindex.empty()) {
+			if (curroom < 0 || curroom >= base->rooms.size())
+				return ;
+			valid = false;
+			BaseUtil::EraseObj(curroom, objindex);
+			objindex="";
 			base->othtext.SetText("");
 		} else if (say.size()) {
 			curroom=base->curroom;
+			if (curroom < 0 || curroom >= base->rooms.size())
+				return ;
 //			index=base->rooms[curroom]->objs.size();
 			int sayindex=rand()%say.size();
-			base->rooms[curroom]->objs.push_back(new Room::BaseTalk(say[sayindex],"currentmsg",true));
-//			((Room::BaseTalk*)(base->rooms[curroom]->objs.back()))->sayindex=(sayindex);
-//			((Room::BaseTalk*)(base->rooms[curroom]->objs.back()))->curtime=0;
+			objindex = index + "::room::talk::currentmsg";
+			BaseTalk * newobj = new Room::BaseTalk(say[sayindex],objindex,true);
+			base->rooms[curroom]->AddObj(newobj);
+//			newobj->sayindex=(sayindex);
+//			newobj->curtime=0;
 			if (soundfiles[sayindex].size()>0) {
 				int sound = AUDCreateSoundWAV (soundfiles[sayindex],false);
 				if (sound==-1) {
-					VSFileSystem::vs_fprintf(stderr,"\nCan't find the sound file %s\n",soundfiles[sayindex].c_str());
+					BASE_LOG(logvs::WARN, "Can't find the sound file %s",soundfiles[sayindex].c_str());
 				} else {
 //					AUDAdjustSound (sound,_Universe->AccessCamera ()->GetPosition(),Vector(0,0,0));
 					AUDStartPlaying (sound);
@@ -1229,7 +1680,7 @@ void BaseInterface::Room::Talk::Click (BaseInterface *base,float x, float y, int
 				}
 			}
 		} else {
-			VSFileSystem::vs_fprintf(stderr,"\nThere are no things to say...\n");
+			BASE_LOG(logvs::ERROR, "There are no things to say...");
 			assert(0);
 		}
 	}
@@ -1238,6 +1689,7 @@ void BaseInterface::Room::Talk::Click (BaseInterface *base,float x, float y, int
 void BaseInterface::Room::Link::Click (BaseInterface *base,float x, float y, int button, int state) 
 {
 	unsigned int buttonmask = getMouseButtonMask();
+	BASE_DBG(logvs::DBG+1, "Link::Click(%s, %p) button:%d state:%d", index.c_str(), this, button, state);
 	if (state==WS_MOUSE_UP) {
 		if (eventMask & UpEvent) {
 			static std::string evtype("up");
@@ -1272,6 +1724,7 @@ void BaseInterface::Room::Link::MouseMove (::BaseInterface* base,float x, float 
 	
 	if (eventMask & MoveEvent) {
 		static std::string evtype("move");
+		BASE_DBG(logvs::DBG+1, "Link::MouseMove(%s, %p)", index.c_str(), this);
 		BaseUtil::SetMouseEventData(evtype,x,y,buttonmask);
 		RunPython(this->pythonfile.c_str());
 	}
@@ -1282,6 +1735,7 @@ void BaseInterface::Room::Link::MouseEnter (::BaseInterface* base,float x, float
 {
 	if (eventMask & EnterEvent) {
 		static std::string evtype("enter");
+		BASE_DBG(logvs::DBG+1, "Link::MouseEnter(%s, %p)", index.c_str(), this);
 		BaseUtil::SetMouseEventData(evtype,x,y,buttonmask);
 		RunPython(this->pythonfile.c_str());
 	}
@@ -1291,13 +1745,12 @@ void BaseInterface::Room::Link::MouseLeave (::BaseInterface* base,float x, float
 {
 	if (eventMask & LeaveEvent) {
 		static std::string evtype("leave");
+		BASE_DBG(logvs::DBG+1, "Link::MouseLeave(%s, %p)", index.c_str(), this);
 		BaseUtil::SetMouseEventData(evtype,x,y,buttonmask);
 		RunPython(this->pythonfile.c_str());
 	}
 	clickbtn = -1;
 }
-
-
 
 void BaseInterface::Room::Link::Relink(const std::string &pfile)
 {
@@ -1349,11 +1802,16 @@ void BaseInterface::Draw () {
 	Room::BaseTalk::hastalked=false;
 	rooms[curroom]->Draw(this);
         AnimationDraw();
-
+    
 	float x,y;
         glViewport (0, 0, g_game.x_resolution,g_game.y_resolution);
     static float base_text_background_alpha=XMLSupport::parse_float(vs_config->getVariable("graphics","base_text_background_alpha","0.0625"));
-    
+
+    if (game_options.show_msgcenter_base && mission) {
+        mission->gametime += GetElapsedTime(); //DirectorLoop not run in base
+        Mission::RenderMessages(NULL);
+    }
+
 	curtext.GetCharSize(x,y);
 	curtext.SetPos(-.99,-1+(y*1.5));
 //	if (!drawlinkcursor)
@@ -1382,7 +1840,7 @@ void BaseInterface::Draw () {
 	Unit *un=caller.GetUnit();
 	Unit *base=baseun.GetUnit();
 	if (un&&(!base)) {
-		VSFileSystem::vs_fprintf(stderr,"Error: Base NULL");
+		BASE_LOG(logvs::ERROR, "Error: Base NULL");
 		mission->msgcenter->add("game","all","[Computer] Docking unit destroyed. Emergency launch initiated.");
 		for (int i=0;i<un->image->dockedunits.size();i++) {
 			if (un->image->dockedunits[i]->uc.GetUnit()==base) {

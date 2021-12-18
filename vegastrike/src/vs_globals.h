@@ -3,8 +3,10 @@
 #include "config.h"
 #include <vector>
 
+#include "configxml.h"
 #include "universe_generic.h"
 #include "command.h"
+
 extern commandI *CommandInterpretor;
 extern Universe * _Universe;
 /*
@@ -21,11 +23,15 @@ extern void cleanup();
 extern void VSExit( int code);
 extern bool STATIC_VARS_DESTROYED;
 extern char SERVER;
-extern int	loop_count;
-extern double	avg_loop;
-extern int	nb_checks;
-extern double last_check;
-extern double cur_check;
+extern int	            loop_count;
+extern int              glswap_count;
+extern double	        avg_loop;
+extern double           cur_loop;
+extern double           avg_fps;
+extern double           cur_fps;
+extern unsigned long    nb_checks;
+extern double           last_check;
+extern double           cur_check;
 extern bool cleanexit;
 extern bool run_only_player_starsystem;
 

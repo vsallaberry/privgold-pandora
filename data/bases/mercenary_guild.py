@@ -5,6 +5,10 @@ def Can():
 	return guilds.CanMercenaryGuild()
 
 def MakeMercenaryGuild(concourse,timeofdayignored="_day"):
+	# Custom Font
+	global _missioncomputer_font
+	Base.SetTextBoxFont(-1, '', _missioncomputer_font)
+	
 	# create the initial mercenary guild screen
 	room0 = Base.Room ('Mercenary_Guild')
 	Base.Texture (room0, 'background', 'bases/merchant_guild/mercernaryguild.spr', 0, 0)
@@ -59,4 +63,12 @@ def MakeMercenaryGuild(concourse,timeofdayignored="_day"):
 	Base.TextBox(room1, 'hack', '', -100, -100, (0, 0, 1), (0,0,0), 0, (1.0,1.0,1.0)) #Hack to fix missing glColor() in older VegaStrike versions
 	guildroom.AddTextBox('mercenarybox');
 	guilds.CreateGuild(guildroom)
+	Base.SetTextBoxFont(-1, '', '')
+	
 	return room0
+
+try:
+	global _missioncomputer_font
+	_missioncomputer_font = VS.getVariable("graphics/privateer", "missioncomputer_font", "")
+except:
+	_missioncomputer_font = ''

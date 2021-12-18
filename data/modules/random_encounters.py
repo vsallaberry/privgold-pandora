@@ -43,7 +43,7 @@ class random_encounters:
     def __init__(self, sigdis, detectiondis, gendis,  minnships, gennships, unitprob, enemyprob, capprob, capdist):
         unitprob=1
         debug.debug("init random enc")
-        
+
         self.capship_gen_distance=capdist
         #    player_num=player
         self.enprob = enemyprob
@@ -58,12 +58,13 @@ class random_encounters:
         self.capship_prob=capprob
         self.cur_player=0
         self.sig_distance_table = {"enigma_sector/heavens_gate":(2000,4000,.4)}
-        debug.debug("end random enc")
+        debug.debug("end random enc init")
     def AddPlayer (self):
 #    print "begin add player"
         self.players+=[random_encounters.playerdata(self.sig_distance,self.det_distance)]
 #    print "add player"
     def NewSystemHousekeeping(self,oldsystem,newsystem):
+        debug.debug('New System '+str(newsystem)+' (old:'+str(oldsystem)+')')
         fg_util.launchBases(newsystem)
         news.newNews()
         newquest = adventure.newAdventure (self.cur_player,oldsystem,newsystem)
@@ -104,7 +105,7 @@ class random_encounters:
         i = VS.getUnitList()
         dd = self.cur.detection_distance
         while i.notDone():
-            un = i.current()            
+            un = i.current()
             if (uni.getSignificantDistance(un)<how):
                 if (unit.isAsteroid (un)):
                     debug.debug("asty near")
@@ -123,11 +124,11 @@ class random_encounters:
         for fac in ["mining", "refinery","naval","commerce"]:
             reldel=VS.GetRelation("privateer",fac)
             VS.AdjustRelation("privateer",fac,-reldel,1);
-            print "adjusting by "+str(reldel)
+            debug.debug("privateer/"+fac+" relation: adjusting by "+str(reldel))
             reldel=VS.GetRelation(fac,"privateer")
             VS.AdjustRelation(fac,"privateer",-reldel,1);
-            print "adjusting by "+str(reldel)
-            
+            debug.debug(fac+"/privateer relation: adjusting by "+str(reldel))
+
     def launch_near(self,un, forceLaunch=False):
         if (VS.GetGameTime()<10 and not forceLaunch):
             debug.debug("hola!")
@@ -139,23 +140,23 @@ class random_encounters:
             faction=faction_ships.intToFaction(factionnum)
             fglist=fg_util.FGsInSystem(faction,cursys)
             if not len(fglist):
-                print 'no flight group for faction: '+faction+' in system '+cursys+'.'
+                debug.debug('no flight group for faction: '+faction+' in system '+cursys+'.',debug.INFO)
                 continue
             num=len(fglist)
-            print 'Probability numbers: ',num, fg_util.MaxNumFlightgroupsInSystem(cursys)#,numsigs
+            debug.debug('Probability numbers: ' + str(num) + str(fg_util.MaxNumFlightgroupsInSystem(cursys)),debug.INFO)#,numsigs
             avg=float(num)/float(fg_util.MaxNumFlightgroupsInSystem(cursys))#/float(numsigs)
             fortress_level=0
             if cursys in faction_ships.fortress_systems:
                 foretress_level=faction_ships.fortress_systems[cursys]
             avg*=(not (VS.GetRelation(VS.GetGalaxyFaction(cursys),faction)<0 and cursys in faction_ships.fortress_systems))*fortress_level+(1-fortress_level)
-            print 'Chance for %s ship: %g'%(faction, avg)
+            debug.debug('Chance for %s ship: %g'%(faction, avg))
             rndnum=vsrandom.random()
-            print 'Random number: %g; will generate ship: %d'%(rndnum,rndnum<avg)
+            debug.debug('Random number: %g; will generate ship: %d'%(rndnum,rndnum<avg))
             if rndnum<avg:
                 #now we know that we will generate some ships!
                 flightgroup=fglist[vsrandom.randrange(len(fglist))]
                 typenumbers=fg_util.GetShipsInFG(flightgroup,faction)
-                print 'FG Name: "%s", ShipTypes: %s'%(flightgroup,str(typenumbers))
+                debug.debug('FG Name: "%s", ShipTypes: %s'%(flightgroup,str(typenumbers)))
                 launch_recycle.launch_types_around(flightgroup,faction,typenumbers,'default',self.generation_distance*vsrandom.random()*0.9,un,self.generation_distance*vsrandom.random()*2,'')
     def atLeastNInsignificantUnitsNear (self,uni, n):
         num_ships=0
@@ -225,7 +226,7 @@ class random_encounters:
             #significant_unit is something.... lets see what it is
             cursys = VS.getSystemFile()
             if (self.DifferentSystemP()):
-                debug.debug("different")
+                debug.debug("different system")
                 self.SetModeZero()
                 significant_unit.setNull ()
             else:
@@ -259,12 +260,12 @@ class random_encounters:
         else:
             self.cur.curquest=0
         un = self.decideMode ()
-	if VS.getPlayerX(self.cur_player) and (self.cur.curmode!=self.cur.lastmode):
+        if VS.getPlayerX(self.cur_player) and (self.cur.curmode!=self.cur.lastmode):
             #lastmode=curmode#processed this event don't process again if in critical zone
             self.cur.lastmode=self.cur.curmode
-            print "curmodechange %d" % (self.cur.curmode)#?
+            debug.debug("curmodechange %d" % (self.cur.curmode))#?
+            #if ((vsrandom.random()<(self.fighterprob*self.cur.UpdatePhaseAndAmplitude())) and un):
             if un:
-#      if ((vsrandom.random()<(self.fighterprob*self.cur.UpdatePhaseAndAmplitude())) and un):
                 if (not self.atLeastNInsignificantUnitsNear (un,self.min_num_ships)):
                     #determine whether to launch more ships next to significant thing based on ships in that range
                     debug.debug("launch near")
@@ -272,8 +273,8 @@ class random_encounters:
         self.cur_player+=1
         if (self.cur_player>=VS.getNumPlayers()):
             self.cur_player=0
-	
-	# This could cause some issues, don'cha think?
+
+        # This could cause some issues, don'cha think?
         #VS.setMissionOwner(self.cur_player)
 
 debug.debug("done loading rand enc")

@@ -196,7 +196,7 @@ bool GameUnit<UnitType>::queryFrustum(double frustum [6][4]) const{
 	}
   }
   const Unit * un;
-  for(un_fkiter iter = this->SubUnits.constFastIterator();un = *iter;++iter){
+  for(un_fkiter iter = this->SubUnits.constFastIterator();(un = *iter)!=NULL;++iter){
     if (((GameUnit<UnitType>*)un)->queryFrustum (frustum)) {
       return true;
     }
@@ -269,7 +269,7 @@ void GameUnit<UnitType>::DrawNow (const Matrix &mato, float lod) {
       }
     }
     Unit * un;
-	for(un_iter iter = this->SubUnits.createIterator();un = *iter;++iter){
+	for(un_iter iter = this->SubUnits.createIterator();(un = *iter)!=NULL;++iter){
       Matrix temp;
       un->curr_physical_state.to_matrix (temp);
       Matrix submat;
@@ -280,7 +280,7 @@ void GameUnit<UnitType>::DrawNow (const Matrix &mato, float lod) {
     if (cloak>=0) {
       haloalpha=((float)cloak)/2147483647;
     }
-    float enginescale = this->GetVelocity().MagnitudeSquared();
+    //float enginescale = this->GetVelocity().MagnitudeSquared();
 #ifdef CAR_SIM
     Vector Scale (1,image->ecm,computer.set_speed);
 #else
@@ -464,7 +464,7 @@ void GameUnit<UnitType>::Draw(const Transformation &parent, const Matrix &parent
           Unit * un;
           double backup = interpolation_blend_factor;
           int cur_sim_frame = _Universe->activeStarSystem()->getCurrentSimFrame();
-		  for(un_iter iter = this->SubUnits.createIterator();un = *iter;++iter){
+		  for(un_iter iter = this->SubUnits.createIterator();(un = *iter)!=NULL;++iter){
               float backup=SIMULATION_ATOM;
               if (this->sim_atom_multiplier&&un->sim_atom_multiplier)
                   SIMULATION_ATOM = SIMULATION_ATOM*un->sim_atom_multiplier/this->sim_atom_multiplier;
@@ -569,7 +569,7 @@ void GameUnit<UnitType>::Draw(const Transformation &parent, const Matrix &parent
 	if (damagelevel<.99&&numm>0&&this->GetHull()>0) {
 		unsigned int switcher=(damagelevel>.8)?1:
 			(damagelevel>.6)?2:(damagelevel>.4)?3:(damagelevel>.2)?4:5;
-		const unsigned long thus=(unsigned long)this;
+		//const unsigned long thus=(unsigned long)this;
 
         static float sparklerate = XMLSupport::parse_float ( vs_config->getVariable("graphics","sparklerate","5") );
         sparkle_accum += GetElapsedTime()*sparklerate;

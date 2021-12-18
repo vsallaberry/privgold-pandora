@@ -30,7 +30,8 @@
 #include <ctype.h>
 #include <assert.h>
 #ifndef WIN32
-// this file isn't available on my system (all win32 machines?) i dun even know what it has or if we need it as I can compile without it
+// this file isn't available on my system (all win32 machines?) i dun even know
+// what it has or if we need it as I can compile without it
 #include <unistd.h>
 #endif
 
@@ -48,60 +49,63 @@
 //#include "vs_globals.h"
 //#include "vegastrike.h"
 
-void MessageCenter::add(string from,string to,string message,double delay){
-  gameMessage msg;
-  
-  msg.from=from;
-  msg.to=to;
-  msg.message=message;
+const MessageTruePredicate MessageCenter::_true_predicate = MessageTruePredicate();
+const MessageCenter::FilterList MessageCenter::_emptyFilterList = MessageCenter::FilterList();
 
-
-  msg.time=mission->getGametime()+delay;
-
-  if (SERVER) {
-    VSServer->sendMessage(from,to,message,(float)delay);
-  }
-  messages.push_back(msg);
-}
-void MessageCenter::clear (const std::vector<std::string> &who, const std::vector<std::string> &whoNOT) {
-  if (who.empty()&&whoNOT.empty()) {
-	  messages.clear();
-  }
-  for (int i=messages.size()-1;i>=0;i--) {
-      if (std::find(whoNOT.begin(),whoNOT.end(),messages[i].to.get())==whoNOT.end()&& (who.empty()||std::find (who.begin(),who.end(),messages[i].to.get())!=who.end())) {
-		  messages.erase(messages.begin()+i);
-	  }
-  }
-
-}
-bool MessageCenter::last(unsigned int n, gameMessage & m, const std::vector <std::string> & who, const std::vector <std::string> & whoNOT){
-  if (who.empty()&&whoNOT.empty()) {
-    int size=messages.size();
+void MessageCenter::add(std::string from, std::string to, std::string message, double delay) {
+    gameMessage msg;
     
-    int index=size-1-n;
+    msg.from = from;
+    msg.to = to;
+    msg.message = message;
     
-    if(index>=0){
-      m=messages[index];
-	  return true;
+    msg.time = mission->getGametime() + delay;
+    
+    if (SERVER) {
+        VSServer->sendMessage(from, to, message, (float)delay);
     }
-    else{
-      return false;
-    }
-  }else {
-    int j=0;
-    int i=0;
-    for (i=messages.size()-1;i>=0;i--) {
-      if (std::find(whoNOT.begin(),whoNOT.end(),messages[i].to.get())==whoNOT.end()&& (who.empty()||std::find (who.begin(),who.end(),messages[i].to.get())!=who.end())) {
-	if (j==(int)n)
-	  break;
-	j++;
-	
-      }
-    }
-    if (i<0)
-      return false;
 
-	m= messages[i];
-    return true;
-  }
+#ifdef VS_DEBUG_LOG
+    static unsigned int msgcenter_lvl = logvs::vs_log_level("msgcenter");
+    if (msgcenter_lvl >= logvs::DBG+1) {
+		unsigned int flags = logvs::vs_log_setflag(logvs::F_MSGCENTER, false);
+		logvs::vs_log("msgcenter", logvs::DBG+1, logvs::F_NO_LVL_CHECK, __FILE__, __func__, __LINE__,
+					  "pushing message (%s>%s) %s",
+					  msg.from.get().c_str(), msg.to.get().c_str(), msg.message.get().c_str());
+		logvs::vs_log_setflags(flags);
+    }
+#endif
+
+    messages.push_back(msg);
 }
+
+bool MessageCenter::last(unsigned int n, gameMessage & m,
+                         const FilterList & who,
+                         const FilterList & whoNOT,
+                         const FilterList & from,
+                         const FilterList & fromNOT) {
+    if (who.empty() && whoNOT.empty() && from.empty() && fromNOT.empty()) {
+        int size  = messages.size();
+        int index = size-1-n;
+        
+        if (index>=0) {
+            m=messages[index];
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return last(n, m, MessageWhoPredicate<MessageStrEqualPred>(who, whoNOT, from, fromNOT));
+}
+
+void MessageCenter::clear(const FilterList & who,
+                          const FilterList & whoNOT,
+                          const FilterList & from,
+                          const FilterList & fromNOT) {
+    if (who.empty() && whoNOT.empty() && from.empty() && fromNOT.empty()) {
+        messages.clear();
+    } else {
+        clear(MessageWhoPredicate<MessageStrEqualPred>(who, whoNOT, from, fromNOT));
+    }
+}
+

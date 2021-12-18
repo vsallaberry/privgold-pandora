@@ -8,6 +8,7 @@ import ShowProgress
 import methodtype
 import mission_lib
 import os
+import debug
 
 pirate_bases = {
 	'Gemini/Capella': 'Drake',
@@ -98,7 +99,8 @@ def time_sorted_listdir(dir):
 
 def savelist():
 	global savefilters
-	return [ GUI.GUISimpleListPicker.listitem(path,path) 
+	# here path is accessed with item.data, item.string contains escape sequence for GUI object
+	return [ GUI.GUISimpleListPicker.listitem(path.replace('#','##').replace('_','#_'),path)
 		for path in time_sorted_listdir(VS.getSaveDir())
 		if path[:1] != '.' and path not in savefilters ]
 
@@ -161,6 +163,10 @@ class QuineComputer:
 		# when a button is clicked, this will allow us to get the QuineComputer instance from the x_click functions
 		guiroom.owner = self
 
+		# The default font for Quine
+		global _quine_font
+		Base.SetTextBoxFont(-1, "", _quine_font)
+
 		# add background sprite; no need to keep a variable around for this, as it doesn't change
 		GUI.GUIStaticImage(guiroom, 'background', ( 'interfaces/quine/main.spr' , GUI.GUIRect(0, 0, 1, 1, "normalized") )).draw()
 	
@@ -170,7 +176,7 @@ class QuineComputer:
 		self.mode = ''
 		self.saveGameNameEntryBox = None
 
-		# in the following, 
+		# in the following,
 		#   coordinates are given in a GUI.GUIRect(left,right,width,height, "pixel", (screen_W, screen_H)
 		#      where left/right/width/height are in pixels, assuming the screen is at resolution screen_W, screen_H
 		#      (if not, proper conversions will be applied)
@@ -194,7 +200,7 @@ class QuineComputer:
 		#
 		#   Later the self.add_button function will provide the button with a custom click callback
 		#   that will be called when the button is clicked
-		
+
 		if enable_finances:
 			hot_loc = GUI.GUIRect(545, 287, 105, 60, "pixel", (800,600))
 			spr_loc = hot_loc
@@ -351,10 +357,12 @@ class QuineComputer:
 		self.txt_screen.show()
 		self.picker_screen.hide()
 		self.mode = None
+		VS.restoreKeyRepeat()
+		Base.SetTextBoxFont(-1, "", "")
 
 	def change_text(self, button_index):
 		# this method performs the necessary action of a button click
- 		text_screens = {
+		text_screens = {
 			'btn_finances' : lambda:get_relations_text(VS.getPlayer()),
 			'btn_manifest' : lambda:get_manifest_text(VS.getPlayer()),
 			'btn_missions' : lambda:get_missions_text()
@@ -392,10 +400,11 @@ class QuineComputer:
 					# new game
 					# show save text box
 				
+					VS.enableKeyRepeat()
 					savename = ''
 					#savename = makeNewSaveName()
 					self.oldSaveName = None				# why?
-	
+
 					#enter a modal line editor
 					boxloc = GUI.GUIRect(120,130,200,20,"pixel",(800,600))
 					self.saveGameNameEntryBox = GUI.GUILineEdit(self.saveNameEntryEntered,
@@ -420,7 +429,7 @@ class QuineComputer:
 				elif self.picker_screen.visible:
 					# not new game, and pick screen visible
 					# so, show confirm screen
-					trace(0, "::: picker_screen.visible")
+					trace(TRACE_INFO, "::: picker_screen.visible")
 	
 					self.picker_screen.hide()
 					self.txt_screen.setText( 
@@ -433,7 +442,7 @@ class QuineComputer:
 				else:
 					# not new game, and pick screen not visible
 					# that means confirm screen IS visible, so do save
-					trace(0, "::: picker_screen NOT visible")
+					trace(TRACE_INFO, "::: picker_screen NOT visible")
 
 					savename = self.picker_screen.items[self.picker_screen.selection].data
 					VS.saveGame(savename)
@@ -445,25 +454,38 @@ class QuineComputer:
 					self.txt_screen.hide()
 					
 					# or should this call reset? or show "game saved" text?
+					VS.restoreKeyRepeat()
 
 		else:
 			# some other button was pressed
 			self.picker_screen.hide()
 			self.txt_screen.hide()
+			VS.restoreKeyRepeat()
 		self.mode = button_index
 	
 	#line editor callback
 	def saveNameEntryEntered(self,textbox):
 		# this is a bit awkward, mostly since we have to emulate modal behaviour through state machines...
 		if textbox.getText() is not '' and textbox.canceled is False:
-			savename = textbox.getText()
-			if savename in savelist() and savename is not self.oldSaveName:
-				if savename is not self.lastEnteredSavegameName:
+			savename = str(textbox.getText().replace('##', '#').replace('#_', '_'))
+			#savename_esc = str(textbox.getText())
+			#saveitem = GUI.GUISimpleListPicker.listitem(savename_esc, savename)
+			#if saveitem in savelist() and ... # not working
+			if savename == "New_Game":
+				self.txt_screen.setText("\n"*7
+						+ "Please use another name for your samegame.\n"
+						+ "\n"*3
+						+ "Then press ENTER")
+				return
+			matchs = [ save for save in savelist() if save.data == savename ]
+			if matchs != [] and savename != str(self.oldSaveName):
+				if savename != str(self.lastEnteredSavegameName):
 					self.txt_screen.setText( 
 						"\n"*7
-						+ "Are you sure you want to overwrite the savegame?" + 
+						+ "Are you sure you want to overwrite the savegame?"
 						+ "\n"*3
 						+ "Press ENTER again to do it")
+					self.lastEnteredSavegameName = savename
 					return
 				else:
 					self.lastEnteredSavegameName = savename
@@ -592,7 +614,8 @@ def get_ship_text(unit = None):
 
 def get_missions_text():
 	missionlist = mission_lib.GetMissionList()
-	
+	debug.debug('MISSION_LIST: ' + repr(missionlist),debug.DEBUG)
+
 	parth = lambda s:(s and "("+s+")") or s
 	
 	full_layout = "\n\nMissions:\n\n%(ENTRIES)s\n\nTotal active missions: %(NUM_MISSIONS)s\n";
@@ -732,3 +755,10 @@ def get_relations_text(player):
 			str_relations = str_relations + "%s%s  %s\t(%s: %s)\n" %(str_pad, kills, faction.capitalize(), str_relation, relation)
 
 	return str_relations
+
+try:
+	global _quine_font
+	_quine_font = VS.getVariable("graphics/privateer", "quine_font", "")
+except:
+	_quine_font = ''
+

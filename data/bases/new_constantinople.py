@@ -2,6 +2,7 @@ import Base
 import dynamic_mission
 import VS
 import PlayerShip
+import debug
 
 # this uses the original coordinate system of Privateer
 import GUI
@@ -83,7 +84,7 @@ Base.Link (room1, 'merchant', -0.895, -0.423333, 0.5275, 0.483333, 'Merchant_Gui
 import mission_computer
 miscomp = mission_computer.MakeMissionComputer (room1,time_of_day)
 Base.Link (room1, 'my_comp_id', -0.28, -0.306667, 0.14, 0.28, 'Mission_Computer', miscomp)
-# print "Linked mission computer"
+debug.debug("Linked mission computer")
 
 # add ship dealer
 import weapons_lib

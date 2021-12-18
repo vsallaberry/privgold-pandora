@@ -66,6 +66,11 @@ class vs_options
 		double precull_dist;
 		bool draw_near_stars_in_front_of_planets;
 		bool starblend;
+        bool show_fps;
+        bool show_help;
+        bool force_msgcenter_log;
+        bool show_msgcenter;
+        bool show_msgcenter_base;
 
 		/* Terrain Options */
 		double xscale;

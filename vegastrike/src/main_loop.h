@@ -42,6 +42,9 @@ namespace CockpitKeys {
    void  OutsideTarget(const KBData&,KBSTATE newState) ;
    void  Quit(const KBData&,KBSTATE newState) ;
    void  TextMessageKey(const KBData&,KBSTATE newState) ;
+   void  toggleFPS(const KBData&,KBSTATE a);
+   void  toggleHelp(const KBData&,KBSTATE a);
+   void  toggleMsgCenterLog(const KBData&,KBSTATE a);
    void  QuitNow();
 }
 

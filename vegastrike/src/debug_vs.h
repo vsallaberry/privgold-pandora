@@ -1,6 +1,10 @@
 #ifndef _DEBUG_VS_H_
 #define _DEBUG_VS_H_
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 //#define VS_DEBUG
 //#define VS_DEBUG1
 //#define VS_DEBUG2

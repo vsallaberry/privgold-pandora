@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "vegastrike.h"
 #include "gfx/mesh.h"
 //#include "unit.h"
@@ -54,7 +55,7 @@ bool GameUnit<UnitType>::querySphereClickList (int mouseX, int mouseY, float err
       return true;
   }
   Unit * su;
-  for(un_iter ui = this->getSubUnits();su = *ui;++ui){
+  for(un_iter ui = this->getSubUnits();(su = *ui)!=NULL;++ui){
     if ((su)->querySphereClickList (mouseX,mouseY,err,activeCam)) {
       return true;
     }

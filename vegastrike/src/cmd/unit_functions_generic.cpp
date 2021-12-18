@@ -1,3 +1,5 @@
+#include <stdint.h>
+#include <limits.h>
 #include "unit_generic.h"
 #include "gfx/vec.h"
 #include "gfx/cockpit_generic.h"
@@ -10,6 +12,7 @@
 #include "universe_util.h"
 #include "unit_const_cache.h"
 #include "pilot.h"
+#include "log.h"
 // Various functions that were used in .cpp files that are now included because of
 // the temple GameUnit class
 // If not separated from those files functions would be defined in multiple places
@@ -163,7 +166,7 @@ void ScoreKill (Cockpit * cp, Unit * un, Unit * killedUnit) {
 //From unit_physics.cpp
 signed char  ComputeAutoGuarantee ( Unit * un) {
   Cockpit * cp;
-  int cpnum=-1;
+  unsigned int cpnum=UINT_MAX;
   if ((cp =_Universe->isPlayerStarship (un))) {
     cpnum = cp-_Universe->AccessCockpit(0);
   }else {
@@ -252,7 +255,7 @@ enum weapon_info::MOUNT_SIZE lookupMountSize (const char * str) {
     return weapon_info::MEDIUM;
   if (strcmp ("HEAVY",tmp)==0)
     return weapon_info::HEAVY;
-    if (strcmp ("CAPSHIP-LIGHT",tmp)==0)
+  if (strcmp ("CAPSHIP-LIGHT",tmp)==0)
     return weapon_info::CAPSHIPLIGHT;
   if (strcmp ("CAPSHIP-HEAVY",tmp)==0)
     return weapon_info::CAPSHIPHEAVY;
@@ -284,14 +287,24 @@ int parseMountSizes (const char * str) {
   }
   return ans;
 }
-void DealPossibleJumpDamage (Unit *un) {
+void DealPossibleJumpDamage (Unit *un, bool is_active_player) {
   float speed = un->GetVelocity().Magnitude();
-  float damage = un->GetJumpStatus().damage+(rand()%100<1)?(rand()%20):0;
+  // I'm not sure about that one: clang is claiming in -Wall that '+'
+  // has precedence over the '?', then it means that the following line
+  // -> float damage = un->GetJumpStatus().damage+(rand()%100<1)?(rand()%20):0;
+  // ignores the amount of damage computed by UnitJump(GetJumpState().damage).
+  // It just checks whether there were damage, and if yes (plus a 1/100 chance),
+  // the damage will be a random (0..20), whatever the value computed by UnitJump.
+  // Then I assume, (not sure) that it is what vegastrike team wanted,
+  // and I add parenthesises in order to silence the warning.
+  float damage = (un->GetJumpStatus().damage+(rand()%100<1)) ? (rand()%20) : 0;
   static float muld=XMLSupport::parse_float(vs_config->getVariable("physics","jump_damage_multiplier",".1"));
   static float maxd =XMLSupport::parse_float(vs_config->getVariable("physics","max_jump_damage","100"));
   float dam =speed*(damage*muld);
   if (dam>maxd) dam=maxd;
   if (dam>1) {
+    if (is_active_player)
+      VS_LOG("unit", logvs::NOTICE, "damage taken during jump : %.02f/%.02f !", dam, maxd);
     un->ApplyDamage ((un->Position()+un->GetVelocity().Cast()).Cast(),
 		     un->GetVelocity(), 
 		     dam,
@@ -304,11 +317,10 @@ void DealPossibleJumpDamage (Unit *un) {
 }
 
 void Enslave (Unit* parent, bool enslave) {
-  bool free=!enslave;
-  int i;
+  //bool free=!enslave;
   vector<Cargo> ToBeChanged;
   unsigned int numcargo=parent->numCargo();
-  for (i=numcargo-1;i>=0;--i) {
+  for (int i=numcargo-1;i>=0;--i) {
     Cargo * carg= &parent->GetCargo(i);
     if (enslave) {
       if (carg->GetCategory().find("Passengers")!=string::npos&&carg->content!="Hitchhiker") {
@@ -326,7 +338,7 @@ void Enslave (Unit* parent, bool enslave) {
   Cargo *newCarg  = UniverseUtil::GetMasterPartList()->GetCargo(enslave?"Slaves":"Hitchhiker",dummy);
   if (newCarg) {
     Cargo slave=*newCarg;
-    for (i=0;i<ToBeChanged.size();++i) {
+    for (size_t i=0;i<ToBeChanged.size();++i) {
       slave.quantity=ToBeChanged[i].quantity;
       while (parent->CanAddCargo(slave)==false&&(--slave.quantity)>0){
         

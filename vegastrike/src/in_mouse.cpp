@@ -227,20 +227,28 @@ void InitMouse(){
 				
 void ProcessMouse () {
   warpallowage=2;
-  while(eventQueue.size()) {
-    MouseEvent e = eventQueue.front();
-    switch(e.type) {
-    case MouseEvent::CLICK:
-      mouseClick0(e.button, e.state, e.mod, e.x, e.y);
-      break;
-    case MouseEvent::DRAG:
-      mouseDrag(e.x, e.y);
-      break;
-    case MouseEvent::MOTION:
-      mouseMotion(e.x, e.y);
-      break;
-    }
-    eventQueue.pop_front();
+  if (eventQueue.size()) {
+	  do {
+		  MouseEvent e = eventQueue.front();
+		  switch(e.type) {
+		  case MouseEvent::CLICK:
+			  mouseClick0(e.button, e.state, e.mod, e.x, e.y);
+			  break;
+		  case MouseEvent::DRAG:
+			  mouseDrag(e.x, e.y);
+			  break;
+		  case MouseEvent::MOTION:
+			  mouseMotion(e.x, e.y);
+			  break;
+		  }
+		  eventQueue.pop_front();
+	  } while(eventQueue.size());
+
+	  if (joystick[MOUSE_JOYSTICK]->isAvailable()) {
+		  float x, y, z; int buttons;
+		  joystick[MOUSE_JOYSTICK]->GetJoyStick(x,y,z,buttons);
+		  JoystickQueuePush(MOUSE_JOYSTICK);
+	  }
   }
   /*
   for (int a=0;a<NUM_BUTTONS+1;a++) {

@@ -46,8 +46,12 @@ const char *mission_key="unit_to_dock_with";
 
 /* for speed test */
 int loop_count=0;
+int glswap_count=0;
 double avg_loop=0;
-int nb_checks=1;
+double avg_fps=0;
+double cur_loop=0;
+double cur_fps=0;
+unsigned long nb_checks=1;
 double last_check=1;
 double cur_check=1;
 
@@ -1119,7 +1123,7 @@ void InputKeyDown(unsigned char key, int x, int y) {
 		if (key==27&&input_cancel) {
 			is_input=false;
 		}
-		if (key==8&&(!input_string.empty())) {
+		if ((key==8||key==127)&&(!input_string.empty())) {
 			input_string=input_string.substr(0,input_string.size()-1);
 		}
 	}
@@ -1449,7 +1453,14 @@ bool LinkStage1(std::string input, unsigned int inputroomindex, void *dat1, void
 }
 
 void Base::Room::Click (Base* base,float x, float y, int button, int state) {
-	if (makingstate==2) {
+    if (button == GLUT_LEFT_BUTTON) {
+        int mod = glutGetModifiers();
+        switch ((mod & (GLUT_ACTIVE_CTRL|GLUT_ACTIVE_ALT))) {
+            case GLUT_ACTIVE_CTRL: button = GLUT_RIGHT_BUTTON; break ;
+            case GLUT_ACTIVE_ALT: button = GLUT_MIDDLE_BUTTON; break ;
+        }
+    }
+    if (makingstate==2) {
 		Input("Add a sprite (ESC=cancel, blank=Ship) (No extension. file must be png or jpg format.) ", &AddRoomSprite, true, this->index,&objs, NULL, "texture", x, y);
 		makingstate=0;
 		return;
@@ -1809,7 +1820,7 @@ void Base::Draw () {
 	curtext.Draw();
 	othtext.SetPos(-.99,1);
 //	GFXColor4f(0,.5,1,1);
-	othtext.SetText("To add a texture/ship, right click. To add a link, middle click. Save and exit by clicking a launch link.");
+	othtext.SetText("To add a texture/ship, right click (or ctrl-click). To add a link, middle click (or alt-click). Save and exit by clicking a launch link.");
 	othtext.Draw();
 	EndGUIFrame (false);
 	glFinish();
@@ -1840,13 +1851,19 @@ void Base::DrawWin() {
 			istimeofday=false;
 		}
 	} else {
+        fprintf(stderr, "no more base to draw, exiting\n");
 		exit(0);
 	}
 	glutPostRedisplay();
 }
 
 int main (int argc, char **argv) {
-	printf("Loading...\n");
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <base1> [<base2> [base3 [...]]]\n"
+                "  current directory considered as the DATADIR\n"
+                "  ./bases/..., ./sprites/bases/<basen> will be used\n", *argv);
+    }
+    printf("Loading...\n");
 	Base::CurrentBase=0;
 	glutInit(&argc,argv);
 	glutInitWindowSize(800,600);
@@ -1854,7 +1871,9 @@ int main (int argc, char **argv) {
 	g_game.y_resolution=600;
 	glutInitWindowPosition(0,0);
 	glutInitDisplayMode (GLUT_RGB | GLUT_DOUBLE );
-	glutCreateWindow("Vega Strike Base Maker");
+    if (!glutCreateWindow("Vega Strike Base Maker")) {
+        fprintf(stderr, "cannot create GLUT window\n");
+    }
 	glutMouseFunc(Base::ClickWin);
 	glutMotionFunc(Base::ActiveMouseOverWin);
 	glutPassiveMotionFunc(Base::PassiveMouseOverWin);

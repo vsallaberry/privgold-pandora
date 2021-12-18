@@ -29,8 +29,21 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
   if (UNIX)
     # use pkg-config to get the directories and then use these values
     # in the FIND_PATH() and FIND_LIBRARY() calls
-    include(FindPkgConfig)
-	pkg_check_modules(gtk2.0 REQUIRED gtk+-2.0)
+    #include(FindPkgConfig)
+    find_package(PkgConfig)
+    if (GTK2_FIND_REQUIRED)
+        set(GTK2_PKG_REQUIRED REQUIRED)
+        set(GTK2_PKG_ERROR SEND_ERROR)
+    else(GTK2_FIND_REQUIRED)
+        set(GTK2_PKG_REQUIRED "")
+        set(GTK2_PKG_ERROR "")
+    endif(GTK2_FIND_REQUIRED)
+    pkg_check_modules(gtk2.0 ${GTK2_PKG_REQUIRED} gtk+-2.0)
+    #else(GTK2_FIND_REQUIRED)
+    #    pkg_check_modules(gtk2.0 gtk+-2.0)
+    #endif(GTK2_FIND_REQUIRED
+    GTK2_DEBUG_MESSAGE("pkg: gtks_inc = ${gtk2.0_INCLUDE_DIRS}")
+    GTK2_DEBUG_MESSAGE("pkg: gtks_libs = ${gtk2.0_LIBRARY_DIRS}")
 	SET(_GTK2IncDir ${gtk2.0_INCLUDE_DIRS})
 	SET(_GTK2LinkDir ${gtk2.0_LIBRARY_DIRS})
 	SET(_GTK2LinkFlags ${gtk2.0_LDFLAGS})
@@ -42,15 +55,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GTK_INCLUDE_DIR
       NAMES
         gtk/gtk.h
+      HINTS
+        ${_GTK2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
         $ENV{GTK2_HOME}
-        ${_GTK2IncDir}
         /usr/include/gtk-2.0
         /usr/local/include/gtk-2.0
         /opt/include/gtk-2.0
         /opt/gnome/include/gtk-2.0
         /sw/include/gtk-2.0
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/gtk-2.0
     )
     gtk2_debug_message("GTK2_GTK_INCLUDE_DIR is ${GTK2_GTK_INCLUDE_DIR}")
 
@@ -58,13 +73,13 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     # and glib.h in different directories, so we need to look
     # for both.
     #  - Atanas Georgiev <atanas@cs.columbia.edu>
-    pkg_check_modules(glib2.0 REQUIRED glib-2.0)
+    pkg_check_modules(glib2.0 ${GTK2_PKG_REQUIRED} glib-2.0)
     SET(_GLIB2IncDir ${glib2.0_INCLUDE_DIRS})
-    SET(_GLIBLinkDir ${glib2.0_LIBRARY_DIRS})
+    SET(_GLIB2LinkDir ${glib2.0_LIBRARY_DIRS})
     SET(_GLIB2LinkFlags ${glib2.0_LDFLAGS})
     SET(_GLIB2Cflags ${glib2.0_CFLAGS})
 
-    pkg_check_modules(gmod2.0 REQUIRED gmodule-2.0)
+    pkg_check_modules(gmod2.0 ${GTK2_PKG_REQUIRED} gmodule-2.0)
     SET(_GMODULE2IncDir ${gmod2.0_INCLUDE_DIRS})
     SET(_GMODULE2LinkDir ${gmod2.0_LIBRARY_DIRS})
     SET(_GMODULE2LinkFlags ${gmod2.0_LDFLAGS})
@@ -75,16 +90,18 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GLIBCONFIG_INCLUDE_DIR
       NAMES
         glibconfig.h
-      PATHS
+      HINTS
         ${_GLIB2IncDir}
         ${_GMODULE2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/gnome/lib64/glib-2.0/include
         /opt/gnome/lib/glib-2.0/include
         /opt/lib/glib-2.0/include
         /usr/lib64/glib-2.0/include
         /usr/lib/glib-2.0/include
         /sw/lib/glib-2.0/include
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/glib-2.0
     )
     gtk2_debug_message("GTK2_GLIBCONFIG_INCLUDE_DIR is ${GTK2_GLIBCONFIG_INCLUDE_DIR}")
 
@@ -93,18 +110,20 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GLIB_INCLUDE_DIR
       NAMES
         glib.h
-      PATHS
+      HINTS
         ${_GLIB2IncDir}
         ${_GMODULE2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/include/glib-2.0
         /opt/gnome/include/glib-2.0
         /usr/include/glib-2.0
         /sw/include/glib-2.0
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/glib-2.0
     )
     gtk2_debug_message("GTK2_GLIB_INCLUDE_DIR is ${GTK2_GLIB_INCLUDE_DIR}")
 
-	pkg_check_modules(gdk2.0 REQUIRED gdk-2.0)
+	pkg_check_modules(gdk2.0 ${GTK2_PKG_REQUIRED} gdk-2.0)
 	SET(_GDK2IncDir ${gdk2.0_INCLUDE_DIRS})
 	SET(_GDK2LinkDir ${gdk2.0_LIBRARY_DIRS})
 	SET(_GDK2LinkFlags ${gdk2.0_LDFLAGS})
@@ -115,15 +134,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GDK_INCLUDE_DIR
       NAMES
         gdkconfig.h
-      PATHS
+      HINTS
         ${_GDK2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/gnome/lib/gtk-2.0/include
         /opt/gnome/lib64/gtk-2.0/include
         /opt/lib/gtk-2.0/include
         /usr/lib/gtk-2.0/include
         /usr/lib64/gtk-2.0/include
         /sw/lib/gtk-2.0/include
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/gtk-2.0
     )
     gtk2_debug_message("GTK2_GDK_INCLUDE_DIR is ${GTK2_GDK_INCLUDE_DIR}")
 
@@ -132,15 +153,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GDKPIXBUF_INCLUDE_DIR
       NAMES
         gdk-pixbuf/gdk-pixbuf.h
-      PATHS
+      HINTS
         ${_GDK2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/gnome/lib/gdk-pixbuf-2.0/include
         /opt/gnome/lib64/gdk-pixbuf-2.0/include
         /opt/lib/gdk-pixbuf-2.0/include
         /usr/lib/gdk-pixbuf-2.0/include
         /usr/lib64/gdk-pixbuf-2.0/include
         /sw/lib/gdk-pixbuf-2.0/include
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/gdk-pixbuf-2.0
     )
     gtk2_debug_message("GTK2_GDKPIXBUF_INCLUDE_DIR is ${GTK2_GDKPIXBUF_INCLUDE_DIR}")
 
@@ -150,19 +173,21 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_GTKGL_INCLUDE_DIR
       NAMES
         gtkgl/gtkglarea.h
-      PATHS
+      HINTS
         ${_GLIB2IncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/include
         /usr/local/include
         /usr/openwin/share/include
         /opt/gnome/include
         /opt/include
         /sw/include
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include
     )
     gtk2_debug_message("GTK2_GTKGL_INCLUDE_DIR is ${GTK2_GTKGL_INCLUDE_DIR}")
 
-    pkg_check_modules(Pango REQUIRED pango)
+    pkg_check_modules(Pango ${GTK2_PKG_REQUIRED} pango)
     SET(_PANGOIncDir ${Pango_INCLUDE_DIRS})
     SET(_PANGOLinkDir ${Pango_LIBRARY_DIRS})
     SET(_PANGOLinkFlags ${Pango_LDFLAGS})
@@ -173,17 +198,19 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_PANGO_INCLUDE_DIR
       NAMES
         pango/pango.h
-      PATHS
+      HINTS
         ${_PANGOIncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/include/pango-1.0
         /opt/gnome/include/pango-1.0
         /opt/include/pango-1.0
         /sw/include/pango-1.0
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/pango-1.0
     )
     gtk2_debug_message("GTK2_PANGO_INCLUDE_DIR is ${GTK2_PANGO_INCLUDE_DIR}")
 
-    pkg_check_modules(Cairo REQUIRED cairo)
+    pkg_check_modules(Cairo ${GTK2_PKG_REQUIRED} cairo)
     SET(_CAIROIncDir ${Cairo_INCLUDE_DIRS})
     SET(_CAIROLinkDir ${Cairo_LIBRARY_DIRS})
     SET(_CAIROLinkFlags ${Cairo_LDFLAGS})
@@ -194,8 +221,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_CAIRO_INCLUDE_DIR
       NAMES
         cairo.h
-      PATHS
+      HINTS
         ${_CAIROIncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/gnome/include/cairo
         /usr/include
         /usr/include/cairo
@@ -203,11 +232,11 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/include/cairo
         /sw/include
         /sw/include/cairo
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/cairo
     )
     gtk2_debug_message("GTK2_CAIRO_INCLUDE_DIR is ${GTK2_CAIRO_INCLUDE_DIR}")
 
-    pkg_check_modules(Atk REQUIRED atk)
+    pkg_check_modules(Atk ${GTK2_PKG_REQUIRED} atk)
     SET(_ATKIncDir ${Atk_INCLUDE_DIRS})
     SET(_ATKLinkDir ${Atk_LIBRARY_DIRS})
     SET(_ATKLinkFlags ${Atk_LDFLAGS})
@@ -218,13 +247,15 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_path(GTK2_ATK_INCLUDE_DIR
       NAMES
         atk/atk.h
-      PATHS
+      HINTS
         ${_ATKIncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /opt/gnome/include/atk-1.0
         /usr/include/atk-1.0
         /opt/include/atk-1.0
         /sw/include/atk-1.0
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/include/atk-1.0
     )
     gtk2_debug_message("GTK2_ATK_INCLUDE_DIR is ${GTK2_ATK_INCLUDE_DIR}")
 
@@ -234,8 +265,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gtk-x11-2.0
         gtk-quartz-2.0
-      PATHS
+      HINTS
         ${_GTK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -243,7 +276,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GTK_LIBRARY is ${GTK2_GTK_LIBRARY}")
 
@@ -251,8 +284,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gdk-x11-2.0
         gdk-quartz-2.0
-      PATHS
+      HINTS
         ${_GDK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -260,15 +295,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GDK_LIBRARY is ${GTK2_GDK_LIBRARY}")
 
     find_library(GTK2_GDK_PIXBUF_LIBRARY
       NAMES
         gdk_pixbuf-2.0
-      PATHS
+      HINTS
         ${_GDK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -276,15 +313,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GDK_PIXBUF_LIBRARY is ${GTK2_GDK_PIXBUF_LIBRARY}")
 
     find_library(GTK2_GMODULE_LIBRARY
       NAMES
         gmodule-2.0
-      PATHS
+      HINTS
         ${_GMODULE2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -292,15 +331,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GMODULE_LIBRARY is ${GTK2_GMODULE_LIBRARY}")
 
     find_library(GTK2_GTHREAD_LIBRARY
       NAMES
         gthread-2.0
-      PATHS
+      HINTS
         ${_GTK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -308,15 +349,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GTHREAD_LIBRARY is ${GTK2_GTHREAD_LIBRARY}")
 
     find_library(GTK2_GOBJECT_LIBRARY
       NAMES
         gobject-2.0
-      PATHS
+      HINTS
         ${_GTK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -324,15 +367,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GOBJECT_LIBRARY is ${GTK2_GOBJECT_LIBRARY}")
 
     find_library(GTK2_GLIB_LIBRARY
       NAMES
         glib-2.0
-      PATHS
+      HINTS
         ${_GLIB2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -340,15 +385,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GLIB_LIBRARY is ${GTK2_GLIB_LIBRARY}")
 
     find_library(GTK2_GTKGL_LIBRARY
       NAMES
         gtkgl
-      PATHS
+      HINTS
         ${_GTK2LinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -356,7 +403,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_GTKGL_LIBRARY is ${GTK2_GTKGL_LIBRARY}")
 
@@ -364,8 +411,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     find_library(GTK2_PANGO_LIBRARY
       NAMES
         pango-1.0
-      PATHS
+      HINTS
         ${_PANGOLinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -373,15 +422,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_PANGO_LIBRARY is ${GTK2_PANGO_LIBRARY}")
 
     find_library(GTK2_CAIRO_LIBRARY
       NAMES
         pangocairo-1.0
-      PATHS
+      HINTS
         ${_CAIROLinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -389,15 +440,17 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_PANGO_LIBRARY is ${GTK2_CAIRO_LIBRARY}")
 
     find_library(GTK2_ATK_LIBRARY
       NAMES
         atk-1.0
+      HINTS
+        ${_ATKLinkDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
-        ${_ATKinkDir}
         /usr/lib
         /usr/local/lib
         /usr/openwin/lib
@@ -405,20 +458,9 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/gnome/lib
         /opt/lib
         /sw/lib
-        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        /opt/local/lib
     )
     gtk2_debug_message("GTK2_ATK_LIBRARY is ${GTK2_ATK_LIBRARY}")
-
-    set(GTK2_INCLUDE_DIRS
-      ${GTK2_GTK_INCLUDE_DIR}
-      ${GTK2_GLIBCONFIG_INCLUDE_DIR}
-      ${GTK2_GLIB_INCLUDE_DIR}
-      ${GTK2_GDK_INCLUDE_DIR}
-      ${GTK2_GDKPIXBUF_INCLUDE_DIR}
-      ${GTK2_PANGO_INCLUDE_DIR}
-      ${GTK2_CAIRO_INCLUDE_DIR}
-      ${GTK2_ATK_INCLUDE_DIR}
-    )
 
     if (GTK2_GTK_LIBRARY AND GTK2_GTK_INCLUDE_DIR)
         if (GTK2_GDK_LIBRARY AND GTK2_GDK_PIXBUF_LIBRARY AND GTK2_GDK_INCLUDE_DIR) # AND GTK2_GDKPIXBUF_INCLUDE_DIR)
@@ -428,6 +470,18 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
                 if (GTK2_PANGO_LIBRARY AND GTK2_PANGO_INCLUDE_DIR)
                   if (GTK2_CAIRO_LIBRARY AND GTK2_CAIRO_INCLUDE_DIR)
                     if (GTK2_ATK_LIBRARY AND GTK2_ATK_INCLUDE_DIR)
+
+                      # set GTK2 includes
+                      set(GTK2_INCLUDE_DIRS
+                        ${GTK2_GTK_INCLUDE_DIR}
+                        ${GTK2_GLIBCONFIG_INCLUDE_DIR}
+                        ${GTK2_GLIB_INCLUDE_DIR}
+                        ${GTK2_GDK_INCLUDE_DIR}
+                        ${GTK2_GDKPIXBUF_INCLUDE_DIR}
+                        ${GTK2_PANGO_INCLUDE_DIR}
+                        ${GTK2_CAIRO_INCLUDE_DIR}
+                        ${GTK2_ATK_INCLUDE_DIR}
+                      )
 
                       # set GTK2 libraries
                       set (GTK2_LIBRARIES
@@ -458,28 +512,28 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
                       endif (GTK2_GTKGL_LIBRARY AND GTK2_GTKGL_INCLUDE_DIR)
 
                     else (GTK2_ATK_LIBRARY AND GTK2_ATK_INCLUDE_DIR)
-                      message(SEND_ERROR "Could not find ATK")
+                      message(${GTK2_PKG_ERROR} "Could not find ATK")
                     endif (GTK2_ATK_LIBRARY AND GTK2_ATK_INCLUDE_DIR)
                   else (GTK2_CAIRO_LIBRARY AND GTK2_CAIRO_INCLUDE_DIR)
-                    message(SEND_ERROR "Could not find CAIRO")
+                    message(${GTK2_PKG_ERROR} "Could not find CAIRO")
                   endif (GTK2_CAIRO_LIBRARY AND GTK2_CAIRO_INCLUDE_DIR)
                 else (GTK2_PANGO_LIBRARY AND GTK2_PANGO_INCLUDE_DIR)
-                  message(SEND_ERROR "Could not find PANGO")
+                  message(${GTK2_PKG_ERROR} "Could not find PANGO")
                 endif (GTK2_PANGO_LIBRARY AND GTK2_PANGO_INCLUDE_DIR)
             else (GTK2_GOBJECT_LIBRARY)
-              message(SEND_ERROR "Could not find GOBJECT")
+              message(${GTK2_PKG_ERROR} "Could not find GOBJECT")
             endif (GTK2_GOBJECT_LIBRARY)
           else (GTK2_GTHREAD_LIBRARY)
-            message(SEND_ERROR "Could not find GTHREAD")
+            message(${GTK2_PKG_ERROR} "Could not find GTHREAD")
           endif (GTK2_GTHREAD_LIBRARY)
         else (GTK2_GMODULE_LIBRARY)
-          message(SEND_ERROR "Could not find GMODULE")
+          message(${GTK2_PKG_ERROR} "Could not find GMODULE")
         endif (GTK2_GMODULE_LIBRARY)
       else (GTK2_GDK_LIBRARY AND GTK2_GDK_PIXBUF_LIBRARY AND GTK2_GDK_INCLUDE_DIR)
-        message(SEND_ERROR "Could not find GDK (GDK_PIXBUF)")
+        message(${GTK2_PKG_ERROR} "Could not find GDK (GDK_PIXBUF)")
       endif (GTK2_GDK_LIBRARY AND GTK2_GDK_PIXBUF_LIBRARY AND GTK2_GDK_INCLUDE_DIR)
     else (GTK2_GTK_LIBRARY AND GTK2_GTK_INCLUDE_DIR)
-      message(SEND_ERROR "Could not find GTK2-X11")
+      message(${GTK2_PKG_ERROR} "Could not find GTK2")
     endif (GTK2_GTK_LIBRARY AND GTK2_GTK_INCLUDE_DIR)
 
 

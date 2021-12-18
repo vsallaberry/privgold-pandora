@@ -11,6 +11,7 @@ import unit
 import VS
 import quest
 import quest_drone
+import debug
 class defend_drone (Director.Mission):
     def SetVar (self,val):
         if (self.var_to_set!=''):
@@ -54,11 +55,11 @@ class defend_drone (Director.Mission):
             self.adjsys.Print("From %s system","Procede to %s","Search for target at %s, your final destination","defend mission",1)
             VS.IOmessage (1,"defend mission",self.mplay,"Target is a %s unit." % (self.attackfaction))
         else:
-            print "aboritng defend_drone constructor..."
+            debug.debug("aboritng defend_drone constructor...")
             VS.terminateMission (0)
 
     def AdjLocation(self):
-        print "ADJUSTING LOC"
+        debug.debug("ADJUSTING LOC")
         quest_drone.drone.SetPosition(Vector.Add(quest_drone.drone.LocalPosition(),Vector.Scale(quest_drone.drone.GetVelocity(),-40)))     #eta 20 sec
     def Win (self,un,terminate):
         self.SetVar(1)
@@ -66,16 +67,16 @@ class defend_drone (Director.Mission):
         VS.IOmessage (0,"defend mission",self.mplay,"[Computer] #00ff00Defend Mission Accomplished!")
         un.addCredits(self.cred)
         if (terminate):
-            print "you win defend mission!"
+            debug.debug("you win defend mission!")
             VS.terminateMission(1)
-          
+
     def Lose (self,terminate):
         VS.IOmessage(0,"defend mission",self.mplay,"[Computer] #ff0000Defend Mission Failed.")
         self.SetVar(-1)
         if (terminate):
-            print "lose defend mission"
+            debug.debug("lose defend mission")
             VS.terminateMission(0)
-          
+
     def Execute (self):
         isSig=0
         if (self.you.isNull()):
@@ -142,14 +143,14 @@ class defend_drone (Director.Mission):
                         quest_drone.drone.JumpTo(VS.getSystemFile())
                     goodguysC.SetTarget(quest_drone.drone)
                     goodguysA.SetTarget(quest_drone.drone)
-                        
+
                     self.you.SetTarget(quest_drone.drone)
                     self.obj=VS.addObjective("Destroy the %s ship." % (quest_drone.drone.getName ()))
-                    self.you.commAnimation("com_reismann_male_01.ani")                    
+                    self.you.commAnimation("com_reismann_male_01.ani")
                     if (quest_drone.drone):
                         self.arrived=3
                     else:
-                        print "enemy null"
+                        debug.debug("enemy null")
                         VS.terminateMission(0)
                         return
                     #quest_drone.drone.SetHull(40.0)
@@ -180,7 +181,7 @@ class defend_drone (Director.Mission):
                 VS.playSound("campaign/Reismann.wav",(0.,0.,0.),(0.,0.,0.))
         else:
             if VS.getSystemFile()==self.helpsystem:
-                    print "Launching helper ship!"
+                    debug.debug("Launching helper ship!")
                     if (self.newshiphelp==""):
                         self.newshiphelp=faction_ships.getRandomFighter(self.helpfaction)
                     L = launch.Launch()
@@ -205,15 +206,15 @@ class defend_drone (Director.Mission):
                     whichmount=self.you.removeWeapon("Steltek",0,True)
                     if (whichmount!=-1):
                         self.you.upgrade('steltek_gun_boosted',whichmount,whichmount,True,True)
-                    self.jumpingtime=VS.GetGameTime()                
+                    self.jumpingtime=VS.GetGameTime()
                     self.arrived=1
     def initbriefing(self):
-        print "ending briefing"                
+        debug.debug("ending briefing")
 
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
 
     def endbriefing(self):
-        print "ending briefing"           
+        debug.debug("ending briefing")
 

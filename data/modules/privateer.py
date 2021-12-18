@@ -7,6 +7,7 @@ import VS
 import Director
 import Briefing
 import ShowProgress
+import debug
 class hideProgress:
     def Execute(self):
         ShowProgress.deactivateProgressScreen('loading')
@@ -29,12 +30,12 @@ class privateer (Director.Mission):
         for i in self.loops:
             i.Execute()
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
 
 #def initstarsystem():
 #  random_encounters.initstarsystem() #??? that isn't there

@@ -3,6 +3,11 @@
 #ifdef CONSOLE
 #include <dialog.h>
 
+#include <stdio.h>
+#ifndef _WIN32
+# include <unistd.h>
+#endif
+
 //#define COLS 80
 //#define ROWS 24
 
@@ -10,8 +15,44 @@
 #define HEIGHT (LINES-6)
 #define LIST_HEIGHT (HEIGHT-6)
 
+enum { // STR_B_* for button, STR_T_* for title, STR_V_* for value */
+    STR_B_EDIT_OPTION = 0,
+    STR_B_SAVE_README,
+    STR_B_SAVE_EXIT,
+    STR_T_TITLE,
+    STR_T_SETOPTION,
+    STR_V_OPTION_ON,
+    STR_V_OPTION_OFF,
+    STR_NB /* LAST */
+};
+static char * strings[STR_NB] = { NULL, };
+
 void InitGraphics (int* argc,char*** argv){
+#if 0 && __APPLE__
+  if (!isatty(STDOUT_FILENO)) {
+    const size_t more_args = 4;
+    char ** newargv = (char **) malloc((*argc + more_args + 1)*sizeof(char*));
+    newargv[*argc + more_args] = NULL;
+    memcpy(newargv + more_args, *argv, *argc * sizeof(char *));
+    newargv[0] = strdup("open");
+    newargv[1] = strdup("-a");
+    newargv[2] = strdup("-W");
+    newargv[3] = strdup("Terminal.app");
+    execvp(*newargv, newargv); //Will this work on MacOS?
+    exit(0);
+  }
+#endif
   init_dialog (stdin, stdout);
+  if (*strings == NULL) {
+      memset(strings, 0, sizeof(*strings) * STR_NB);
+      strings[STR_B_EDIT_OPTION]    = strdup( "Edit Option" );
+      strings[STR_B_SAVE_README]    = strdup( "Save and Readme" );
+      strings[STR_B_SAVE_EXIT]      = strdup( "Save and Exit" );
+      strings[STR_T_TITLE]          = strdup( "Vega Strike Configurator" );
+      strings[STR_T_SETOPTION]      = strdup( "Set Option -" );
+      strings[STR_V_OPTION_ON]      = strdup( " <-- " );
+      strings[STR_V_OPTION_OFF]     = strdup( "     " );
+  }
 }
 
 int getLength(char **list) {
@@ -34,17 +75,18 @@ int ShowMainMenu(char ** menuitem_list, char * def, char *retbuffer) {
   dialog_vars.input_result[0] = '\0';
   dialog_state.use_shadow=TRUE;
   dialog_vars.default_item=def;
-  dialog_vars.ok_label="Edit Option";
-  dialog_vars.cancel_label="Save and Exit";
+  dialog_vars.ok_label      = strings[STR_B_EDIT_OPTION];
+  dialog_vars.cancel_label  = strings[STR_B_SAVE_README];
+  dialog_vars.extra_button=1;
+  dialog_vars.extra_label   = strings[STR_B_SAVE_EXIT];
   dialog_vars.title=title;
-  dialog_vars.backtitle="Vega Strike Configurator";
+  dialog_vars.backtitle     = strings[STR_T_TITLE];
   dlg_put_backtitle();
   int retval=dialog_menu(title,static_text,HEIGHT,WIDTH,LIST_HEIGHT,getLength(menuitem_list)/2,menuitem_list);
   return retval;
 }
 
 int ShowSubMenu(char ** menuitem_list, char * def, char *retbuffer, const char *name) {
-  char * title="Set Option -";
   char static_text[]="";
   memset(&dialog_vars, 0, sizeof(dialog_vars));
   memset(&dialog_state,0, sizeof(dialog_state));
@@ -52,10 +94,10 @@ int ShowSubMenu(char ** menuitem_list, char * def, char *retbuffer, const char *
   dialog_vars.input_result[0] = '\0';
   dialog_state.use_shadow=TRUE;
   dialog_vars.default_item=def;
-  dialog_vars.title=title;
-  dialog_vars.backtitle="Vega Strike Configurator";
-  char *subtitle= new char[strlen(title)+2+strlen(name)];
-  sprintf(subtitle, "%s %s", title, name);
+  dialog_vars.title=strings[STR_T_SETOPTION];
+  dialog_vars.backtitle=strings[STR_T_TITLE];
+  char *subtitle= new char[strlen(strings[STR_T_SETOPTION])+2+strlen(name)];
+  sprintf(subtitle, "%s %s", strings[STR_T_SETOPTION], name);
   dlg_put_backtitle();
   int retval=dialog_menu(subtitle,static_text,HEIGHT,WIDTH,LIST_HEIGHT,getLength(menuitem_list)/2,menuitem_list);
   delete []subtitle;
@@ -88,8 +130,6 @@ void SetOption(struct group *CURRENT, char *selectedstr) {
 
 
 void ShowMain() {
-  static char *ON=" <-- ";
-  static char *OFF="     ";
   char selectedstr[1000];
   int selected=0;
   int subselected=0;
@@ -140,7 +180,7 @@ void ShowMain() {
   } while ((CURRENT = CURRENT->next));
   while (true) {
     ret=ShowMainMenu(menuitem_list, menuitem_list[selected*2], selectedstr);
-    if (ret==DLG_EXIT_CANCEL||ret==DLG_EXIT_ESC) {
+    if (ret==DLG_EXIT_CANCEL||ret==DLG_EXIT_ESC||ret==DLG_EXIT_EXTRA) {
       break;
     }
     if (ret==DLG_EXIT_ERROR||ret==DLG_EXIT_UNKNOWN) {
@@ -161,10 +201,10 @@ void ShowMain() {
       if (CUR->name == NULL) { continue; }
       if (strcmp(CURRENT->name, CUR->group) != 0) { continue; }
       if (strcmp(CUR->name, CURRENT->setting) == 0) {
-        group_options_list[selected][i*2+1]=strdup(ON);
+        group_options_list[selected][i*2+1]=strings[STR_V_OPTION_ON];
         subselected=i;
       } else {
-        group_options_list[selected][i*2+1]=strdup(OFF);
+        group_options_list[selected][i*2+1]=strings[STR_V_OPTION_OFF];
       }
       i++;
     } while ((CUR = CUR->next));
@@ -185,9 +225,16 @@ void ShowMain() {
   initscr();
   refresh();
   endwin();
+  for(unsigned int i = 0; i < STR_NB; ++i) {
+      if (strings[i] != NULL) free(strings[i]);
+  }
+  memset(strings, 0, sizeof(*strings) * STR_NB);
 #ifndef _WIN32
   if (fork()!=0)execlp("/usr/bin/reset","/usr/bin/reset",NULL);
 #endif
+  if (ret == DLG_EXIT_CANCEL) {
+    ShowReadme();
+  }
   dlg_exit(0);
 }
 #endif

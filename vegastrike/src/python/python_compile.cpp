@@ -8,8 +8,11 @@
 #include "init.h"
 #include "universe_util.h"
 #include "in_kb_data.h"
+#include "log.h"
 Hashtable <string,PyCodeObject,1023> compiled_python;
 
+#define PY_LOG(lvl, ...) VS_LOG("python", lvl, __VA_ARGS__)
+#define PY_DBG(lvl, ...) VS_DBG("python", lvl, __VA_ARGS__)
 
 char * LoadString (const char * filename) {
   FILE * fp = VSFileSystem::vs_open (filename,"r");
@@ -38,6 +41,7 @@ void InterpretPython (const std::string &name) {
     char * temp = strdup(getCompilingName (name).c_str());
     FILE * fp =VSFileSystem::vs_open (name.c_str(),"r");
     if (fp) {
+      PY_DBG(logvs::INFO, "Interpreting python module %s",name.c_str());
       PyRun_SimpleFile(fp,temp);
       Python::reseterrors();
       VSFileSystem::vs_close (fp);
@@ -53,7 +57,7 @@ PyCodeObject *CompilePython (const std::string &name) {
   }
   char * str  = LoadString (name.c_str());
   if (str) {
-    fprintf(stdout,"Compiling python module %s\n",name.c_str());
+    PY_LOG(logvs::NOTICE, "Compiling python module %s",name.c_str());
 
     std::string compiling_name = getCompilingName(name).c_str();
     char * temp = strdup(compiling_name.c_str());

@@ -9,6 +9,7 @@ import universe
 import unit
 import Director
 import quest
+import debug
 class escort_local (Director.Mission):
 	def __init__ (self,factionname,numsystemsaway, enemyquantity,  waves, distance_from_base, creds, incoming, protectivefactionname='',jumps=(),var_to_set='',dynamic_flightgroup='',dynamic_type='', dynamic_defend_fg='',dynamic_defend_type='',greetingText=['Escort: give up while you still can...','If you let us ravage our target then we grant you passage today.']):
 		Director.Mission.__init__(self)
@@ -26,7 +27,7 @@ class escort_local (Director.Mission):
 		self.gametime=VS.GetGameTime()
 		self.waves=waves
 		self.incoming=incoming
-		self.dynatkfg = dynamic_flightgroup	 
+		self.dynatkfg = dynamic_flightgroup
 		self.dynatktype = dynamic_type
 		self.dyndeffg = dynamic_defend_fg
 		self.dyndeftype = dynamic_defend_type
@@ -57,7 +58,7 @@ class escort_local (Director.Mission):
 		if (self.var_to_set!=''):
 			quest.removeQuest (self.you.isPlayerStarship(),self.var_to_set,value)
 	def SuccessMission (self):
-		self.defendee.setFgDirective('b') 
+		self.defendee.setFgDirective('b')
 		self.defendee.setFlightgroupLeader(self.defendee)
 		if (self.incoming):
 			import unit
@@ -76,11 +77,12 @@ class escort_local (Director.Mission):
 				self.todock=un
 				VS.setObjective (self.objectivezero,"Escort To %s" % unit.getUnitFullName(un))
 		else:
-			self.defendee.ActivateJumpDrive(0)			
+			self.defendee.ActivateJumpDrive(0)
 			self.defendee.SetTarget(self.adjsys.SignificantUnit())
 		self.successdelay=VS.GetGameTime()+1
 
 	def PayMission(self):
+		debug.debug("mission success")
 		VS.AdjustRelation(self.you.getFactionName(),self.protectivefaction,.03,1)
 		self.SetVarValue(1)
 		if (self.cred>0):
@@ -89,8 +91,9 @@ class escort_local (Director.Mission):
 			VS.IOmessage(0,"escort mission",self.mplay,"You have been rewarded for your effort as agreed.")
 		VS.terminateMission(1)
 	def FailMission (self):
+		debug.debug("mission failed, -"+str(self.cred))
 		self.you.addCredits (-self.cred)
-		VS.AdjustRelation(self.you.getFactionName(),self.protectivefaction,-.02,1)				
+		VS.AdjustRelation(self.you.getFactionName(),self.protectivefaction,-.02,1)
 		self.SetVarValue(-1)
 		VS.IOmessage (0,"escort mission",self.mplay,"You Allowed the base you were to protect to be destroyed.")
 		VS.IOmessage (0,"escort mission",self.mplay,"You are a failure to your race!")
@@ -110,13 +113,13 @@ class escort_local (Director.Mission):
 			VS.setObjective(self.objective,"Destroy the %s"%unit.getUnitFullName(un))
 			self.ship_check_count=0
 		return 0
-		
+
 	def GenerateEnemies (self,jp,you):
 		count=0
 		self.objectivezero=VS.addObjective ("Protect %s from %s" % (unit.getUnitFullName(jp),self.faction))
 		self.objective = VS.addObjective ("Destroy All %s Hostiles" % self.faction)
 		VS.setCompleteness(self.objective,0.0)
-		print "quantity "+str(self.quantity)
+		debug.debug("enemy quantity "+str(self.quantity))
 		while (count<self.quantity):
 			L = launch.Launch()
 			L.fg="Shadow";L.dynfg=self.dynatkfg;
@@ -133,7 +136,7 @@ class escort_local (Director.Mission):
 			L.faction=self.faction
 			launched=L.launch(you)
 			if (count==0):
-				self.you.SetTarget(launched)			
+				self.you.SetTarget(launched)
 
 			if (1):
 				launched.SetTarget (jp)
@@ -195,15 +198,15 @@ class escort_local (Director.Mission):
 		if (not self.arrived):
 			self.arrived=1
 			if (self.launchedfriend==0 and not self.incoming):
-				 self.defendee=self.GenerateDefendee()
-				 self.launchedfriend=1
+				self.defendee=self.GenerateDefendee()
+				self.launchedfriend=1
 			self.adjsys=go_somewhere_significant (self.you,0,self.distance_from_base,0)
 			self.adjsys.Print ("You must visit the %s","escort mission","docked around the %s", 0)
 			self.jp=self.adjsys.SignificantUnit()
 		else:
 			if (self.launchedfriend==0):
-				 self.defendee=self.GenerateDefendee()
-				 self.launchedfriend=1
+				self.defendee=self.GenerateDefendee()
+				self.launchedfriend=1
 			if (self.defendee.isNull ()):
 				self.FailMission(you)
 				return
@@ -229,10 +232,10 @@ class escort_local (Director.Mission):
 					else:
 						self.SuccessMission()
 	def initbriefing(self):
-		print "ending briefing"				
+		debug.debug("ending briefing")
 	def loopbriefing(self):
-		print "loop briefing"
+		debug.debug("loop briefing")
 		Briefing.terminate();
 	def endbriefing(self):
-		print "ending briefing"		
+		debug.debug("ending briefing")
 

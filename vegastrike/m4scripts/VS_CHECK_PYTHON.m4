@@ -15,16 +15,18 @@ AC_MSG_CHECKING([for python])
 FOUND_PYTHON=no
 PYTHON_CXXFLAGS=""
 PYTHON_LIBS=""
-AC_ARG_WITH(python,AC_HELP_STRING([[--with-python-version[=VERSION]]],[ Enter 2, 2.2, 2.3, 2.4, 2.5 (default 2.4)]))
-case "$with_python_version" in
-"") with_python_version=2.4 ;;
-"2" | "2.2" | "2.3" | "2.4" | "2.5") ;;
-*) AC_MSG_ERROR([${with_python_version} is not valid]) ;;
+AC_ARG_WITH(python,AC_HELP_STRING([[--with-python[=VERSION|path]]],[ Enter 2, 2.2,..2.5,2.7 or path (default 2)]))
+case "$with_python" in
+"") with_python_version=2 ;;
+"2" | "2.2" | "2.3" | "2.4" | "2.5" | "2.7") with_python=python${with_python};;
+*) if test -x "${with_python}"; then
+    true
+   else
+    AC_MSG_ERROR([${with_python_version} is not valid])
+   fi;;
 esac
 
-
-
-PYTHON_binchk="python${with_python_version} python2.4 python2.5 python2.3 python2.2 python2 python"
+PYTHON_binchk="${with_python} python2.4 python2.5 python2.3 python2.2 python2 python"
 for i in ${PYTHON_binchk};
 do
     PYTHON_check=`$i -V 2>/dev/null; echo $?`
@@ -45,7 +47,7 @@ do
         then
             FOUND_PYTHON=yes
             PYTHON_SHORT=`echo ${PYTHON_VERSION} | sed -e 's/\./ /g; s/[a-z|A-Z|+]/ /g' | awk '{print $<<1>>"."$<<2>>}'`
-            PYTHON_incchk="/usr/include/python /usr/include/python${PYTHON_SHORT} /System/Library/Frameworks/Python.framework/Versions/Current/include /System/Library/Frameworks/Python.framework/Versions/Current/include/python${PYTHON_SHORT} /usr/local/include/python /usr/local/include/python${PYTHON_SHORT} /sw/include/python /sw/include/python${PYTHON_SHORT}"
+            PYTHON_incchk="${with_python_inc} /usr/include/python /usr/include/python${PYTHON_SHORT} /System/Library/Frameworks/Python.framework/Versions/Current/include /System/Library/Frameworks/Python.framework/Versions/Current/include/python${PYTHON_SHORT} /usr/local/include/python /usr/local/include/python${PYTHON_SHORT} /sw/include/python /sw/include/python${PYTHON_SHORT}"
 
 	    PYTHON_incdir=""
 	    if test "x${FOUND_PYTHON}" = "xyes";
@@ -91,7 +93,7 @@ dnl Simple check for libpython2.2.so
 if test "x${FOUND_PYTHON}" = "xyes";
 then
     FOUND_LIBPYTHON_SO=no
-    PYTHON_libchk="${PYTHON_LIBPATH} /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64 /usr/lib64/python${PYTHON_SHORT}/config /usr/local/lib64/python${PYTHON_SHORT}/config /sw/lib/python${PYTHON_SHORT}/config /usr/lib/python${PYTHON_SHORT} /usr/lib/python${PYTHON_SHORT}/config /usr/local/lib/python${PYTHON_SHORT} /usr/local/lib/python${PYTHON_SHORT}/config /lib/python2.2/config"
+    PYTHON_libchk="${with_python_libs} ${PYTHON_LIBPATH} /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64 /usr/lib64/python${PYTHON_SHORT}/config /usr/local/lib64/python${PYTHON_SHORT}/config /sw/lib/python${PYTHON_SHORT}/config /usr/lib/python${PYTHON_SHORT} /usr/lib/python${PYTHON_SHORT}/config /usr/local/lib/python${PYTHON_SHORT} /usr/local/lib/python${PYTHON_SHORT}/config /lib/python2.2/config"
     for i in ${PYTHON_libchk};
     do
         if test "x$is_macosx" = "xyes" ; then

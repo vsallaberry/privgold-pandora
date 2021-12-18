@@ -56,7 +56,7 @@ def parse_dialog_box(args):
 				width=0.
 				height=text_height
 				sprite=None
-			
+
 			if type[:4]=='comp':
 				currentList.append(DialogBox.CompButton(id,arg,name,sprite,width,height))
 			elif type[:4]=='room':
@@ -173,7 +173,7 @@ class DialogBox:
 				textfontsize =font_size)
 			self.picker.items=[ GUI.GUISimpleListPicker.listitem(el,el) for el in self.items ]
 			self.gui_element.children.append(self.picker)
-			
+
 			if self.scroll:
 				screen_loc = makeRect(x+wid-0.05, y, 0.05, text_height)
 				scroll_up=GUI.GUIButton(room,'Scroll Up',self.idname+'u',{'*':None},screen_loc,
@@ -207,7 +207,7 @@ class DialogBox:
 				color=screen_color, fontsize=font_size,
 				bgcolor=GUI.GUIColor.clear())
 			return self.gui_element
-		
+
 	class Button(Item):
 		def __init__(self,id,text,sprite,width,height):
 			self.text=text
@@ -227,12 +227,12 @@ class DialogBox:
 			screen_loc=makeRect(x+text_height/4.,y-text_height/2.,wid-text_height/2.,self.hei)
 			text=self.text or ''
 			self.gui_element=GUI.GUIButton(room,''+self.text,self.idname,{'*':self.sprite},screen_loc,
-				clickHandler=self.handleButton, owner=owner, 
+				clickHandler=self.handleButton, owner=owner,
 				textfontsize=font_size,textbgcolor=GUI.GUIColor(0.3,0.,0.,.5))
 			if self.text:
 				self.gui_element.setCaption('  '+self.text)
 			return self.gui_element
-	
+
 	class RoomButton(Button):
 		def __init__(self,id,arg,text,sprite,width,height):
 			DialogBox.Button.__init__(self,id,text,sprite,width,height)
@@ -246,7 +246,7 @@ class DialogBox:
 				toroom = GUI.GUIRoom(self.arg)
 				GUI.GUIRootSingleton.registerRoom(toroom)
 			self.gui_element=self.cons(room,toroom,''+self.text,self.idname,{'*':self.sprite},screen_loc,
-				clickHandler=self.handleButton, owner=owner, 
+				clickHandler=self.handleButton, owner=owner,
 				textfontsize=font_size,textbgcolor=GUI.GUIColor(0.3,0.,0.,.5))
 			if self.text:
 				self.gui_element.setCaption('  '+self.text)
@@ -260,12 +260,12 @@ class DialogBox:
 			screen_loc=makeRect(x+text_height/4.,y-text_height/2.,wid-text_height/2.,self.hei)
 			text=self.text or ''
 			self.gui_element=self.cons(room,self.arg,''+self.text,self.idname,{'*':self.sprite},screen_loc,
-				clickHandler=self.handleButton, owner=owner, 
+				clickHandler=self.handleButton, owner=owner,
 				textfontsize=font_size,textbgcolor=GUI.GUIColor(0.3,0.,0.,.5))
 			if self.text:
 				self.gui_element.setCaption('  '+self.text)
 			return self.gui_element
-		
+
 	class TextInput(Item):
 		def __init__(self,id,text):
 			self.text=text
@@ -284,7 +284,7 @@ class DialogBox:
 			return self.gui_element
 		def reset(self):
 			self.gui_element.setText(self.text)
-		
+
 	class Row(Item):
 		def __init__(self,items):
 			self.items=items
@@ -337,7 +337,7 @@ class DialogBox:
 			for it in self.items:
 				it.reset()
 			return DialogBox.Item.reset(self)
-	
+
 	class Column(Row):
 		def __init__(self,items):
 			DialogBox.Row.__init__(self,items)
@@ -360,10 +360,10 @@ class DialogBox:
 						childs.append(it.gui_element)
 				self.gui_element.children = childs
 			return self.gui_element
-			
-			
-		
-		
+
+
+
+
 	def __init__(self,elements,callback,position=(0.,0.)):
 		self.xcent, self.ycent=position
 		self.elements=elements
@@ -381,7 +381,7 @@ class DialogBox:
 		for el in self.elements:
 			el.getValues(values)
 		self.callback(self,values)
-	
+
 	def calculateWidth(self):
 		totalheight=0.
 		totalwidth=0.
@@ -392,7 +392,7 @@ class DialogBox:
 				totalwidth=wid
 		self.totalheight=totalheight
 		self.totalwidth=totalwidth
-	
+
 	def create(self,roomid):
 		if VS.isserver():
 			return
@@ -417,7 +417,7 @@ class DialogBox:
 			#print "*** Creating "+repr(el)+" at y "+str(y)+", height "+str(hei)
 			el.create(self,room,x,y,self.totalwidth,hei)
 			y-=hei
-	
+
 	def close(self,success=False):
 		if success:
 			self.handleButton('OK')
@@ -426,34 +426,34 @@ class DialogBox:
 	def reset(self):
 		for it in self.elements:
 			it.reset()
-	def keyDown(self,key):
+	def keyDown(self,key,char='',shift=False,alt=False,ctrl=False,mods=0):
 		debug.debug("dialog box got key: %i" % key)
 		if key == 13 or key == 10: #should be some kind of return
 			self.close(True)
 		elif key == 27: #escape is always 27, isn't it?
 			self.close(False)
-	
+
 	def undraw(self):
 		if not VS.isserver():
-			GUI.GUIRootSingleton.keyTarget=self.lastKeyTarget
+			GUI.GUIRootSingleton.setKeyTarget(self.lastKeyTarget)
 			#debug.warn("Targetting keys to "+str(self.lastKeyTarget))
 			self.bg.hide()
 			self.bg.undraw()
 			self.bglink.hide()
 			self.bglink.undraw()
 			map(lambda x:x.undraw(), self.elements)
-	
+
 	def draw(self):
 		if not VS.isserver():
-			self.lastKeyTarget=GUI.GUIRootSingleton.keyTarget
-			GUI.GUIRootSingleton.keyTarget=self
+			self.lastKeyTarget=GUI.GUIRootSingleton.getKeyTarget()
+			GUI.GUIRootSingleton.setKeyTarget(self)
 			#debug.warn("Targetting keys to "+str(self))
 			self.bg.show()
 			self.bg.draw()
 			self.bglink.show()
 			self.bglink.draw()
 			map(lambda x:x.draw(), self.elements)
-	
+
 
 def fromValues(data):
 	action = data[0]
@@ -483,14 +483,14 @@ def dialog(args, callback, room=None):
 def custom_run_dialog(local, cmd, args, id):
 	if VS.isserver():
 		return
-	
+
 	def myCallback(db,data):
 		def serverCallback(data):
 			if data[0]=='close':
 				db.undraw()
 			if data[0]=='reset':
 				db.reset()
-		
+
 		custom.respond(data,serverCallback,id)
 	dialog(args, myCallback, Base.GetCurRoom())
 
@@ -533,7 +533,7 @@ def confirm(message, callback, width=1.0, buttons=('Cancel','OK')):
 			arg = data[0]
 		if callback:
 			return callback(arg)
-	
+
 	dialog(["width",width, "text",message] + button_row(width, *buttons), dbcallback)
 
 

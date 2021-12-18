@@ -1,6 +1,7 @@
 /// Various universe and star system helper functions
 ///
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <algorithm>
@@ -18,7 +19,10 @@
 #include "universe_util.h"
 #include "cmd/csv.h"
 #include "cmd/role_bitmask.h"
+#include "log.h"
 //#include "universe_util_generic.h" //Use universe_util.h instead
+
+#define UNIV_LOG(lvl, ...) VS_LOG("universe", lvl, __VA_ARGS__)
 
 using namespace GalaxyXML;
 
@@ -36,10 +40,10 @@ void Universe::clearAllSystems() {
         std::cout << "[Universe::clearAllSystems] leak " << ++n << std::endl;
 #else
         if (deleted) delete deleted;
-        std::cout << "[Universe::clearAllSystems] system cleared." << std::endl;
+        UNIV_LOG(logvs::NOTICE, "[Universe::clearAllSystems] system cleared.");
 #endif
     } catch (...){
-        std::cout << "[Universe::clearAllSystems] oups" << std::endl;
+        UNIV_LOG(logvs::NOTICE, "[Universe::clearAllSystems] oups");
     }
   }
   active_star_system.clear();
@@ -70,7 +74,7 @@ Unit * DockToSavedBases (int playernum, QVector &safevec) {
 	float dist=0;
 	Unit *un;
 	QVector dock_position( plr->curr_physical_state.position);
-	for(un_iter iter=plr->getStarSystem()->getUnitList().createIterator();un = *iter;++iter){
+	for(un_iter iter=plr->getStarSystem()->getUnitList().createIterator();(un = *iter)!=NULL;++iter){
 		if (un->name==str||un->getFullname()==str) {
 			dist=UnitUtil::getSignificantDistance(plr,un);
 			if (closestUnit==NULL||dist<lastdist) {
@@ -221,8 +225,8 @@ Universe::~Universe()
 }
 
 void Universe::LoadStarSystem(StarSystem * s) {
-  cerr<<"Loading a starsystem"<<endl;
   star_system.push_back (s);
+  UNIV_LOG(logvs::NOTICE, "Loading a starsystem (total %zu)", star_system.size());
   SortStarSystems(star_system,s);//dont' want instadie
 }
 bool Universe::StillExists (StarSystem * s) {
@@ -323,10 +327,10 @@ void Universe::Generate2( StarSystem * ss)
   StarSystem *old_script_system=script_system;
 
   script_system=ss;
-  VSFileSystem::vs_fprintf (stderr,"Loading Star System %s\n",ss->getFileName().c_str());
+  UNIV_LOG(logvs::NOTICE, "Loading Star System %s",ss->getFileName().c_str());
   const vector <std::string> &adjacent = getAdjacentStarSystems(ss->getFileName());
   for (unsigned int i=0;i<adjacent.size();i++) {
-    VSFileSystem::vs_fprintf (stderr," Next To: %s\n",adjacent[i].c_str());
+    UNIV_LOG(logvs::NOTICE, "  Next To: %s",adjacent[i].c_str());
     const vector <std::string> &adj = getAdjacentStarSystems(adjacent[i]);
   }
   static bool first=true;

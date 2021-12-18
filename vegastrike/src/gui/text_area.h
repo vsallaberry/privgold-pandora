@@ -86,7 +86,7 @@ public:
 	TextArea(void);
 	TextArea(float x, float y, float wid, float hei, int scrollbar);
 	~TextArea(void);
-	int GetSelectedItem() {return cur_selected;}
+	int GetSelectedItem() const {return cur_selected;}
 	void SetSelectedItem(int newh) {cur_selected=newh;}
 	void DoHighlight(int yes);	// DoHighlight(0) to disable mouse highlighting. Also disable clicking on entries
 	void DoMultiline(int yes){do_multiline=yes;}	// DoMultiline(1) to enable multi-line entries
@@ -98,8 +98,8 @@ public:
 	void SetText(const char *text);	// Sets the text. Enables Multiline and disables highlighting
 	void ClearList(void);
 	// Returns the char of the currently selected item. NULL if nothing is selected
-	char *GetSelectedItemName(void);
-	char *GetSelectedItemDesc(void);
+	const char *GetSelectedItemName(void) const;
+	const char *GetSelectedItemDesc(void) const;
 	void SortList(void);
 
 	// Returns 1 if the click is inside the text area. 0 if it's outside. Same thing for movement
@@ -195,7 +195,7 @@ private:
 	void HighlightCount(int count, int type);
 
 	void DisplayScrollbar(void);
-	char *GetSelectedItem(int type);
+	const char *GetSelectedItem(int type) const;
 
 	// Takes a line and puts them in as seperate items (line wrapping)
 	void ChompIntoItems(const char *text, const char *parent);

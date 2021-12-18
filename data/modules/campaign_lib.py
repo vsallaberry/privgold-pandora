@@ -5,10 +5,10 @@ import custom
 class Condition:
 	def __init__(self):
 		pass
-	
+
 	def __call__(self):
 		return True
-	
+
 
 def checkSaveValue (playernum,questname, value):
 	import quest
@@ -29,12 +29,12 @@ class SaveVariableCondition(Condition):
 		Condition.__init__(self)
 		self.name=str(varname)
 		self.value=int(varvalue)
-	
+
 	def __call__(self):
 		import VS
-		debug.debug("*** Checking \'%s : %d\'"%(self.name,self.value))
+		debug.debug("*** Checking \'%s : %d\'"%(self.name,self.value),debug.VERBOSE)
 		checked=checkSaveValue(VS.getCurrentPlayer(),self.name,self.value)
-		debug.debug("*** Returning: " + str(checked))
+		debug.debug("*** %s==%d ? Returning: %s" %(self.name,self.value,str(checked)),debug.INFO)
 		return checked
 class HaveCredits(Condition):
 	def __init__(self,numcreds):
@@ -43,7 +43,7 @@ class HaveCredits(Condition):
 	def __call__(self):
 		import VS
 		un=VS.getPlayer()
-		if not un.isNull():			
+		if not un.isNull():
 			cc=un.getCredits()
 			ret= (cc>=self.creds)
 			debug.debug("Have at least "+str(self.creds)+" credits? "+str(cc)+" >= it? "+str(ret))
@@ -60,37 +60,37 @@ class InSystemCondition(Condition):
 		self.dockedshipname=None
 		if shipname:
 			self.dockedshipname=shipname.replace(' ','_').lower()
-	
+
 	def __call__(self):
 		import VS
 		if self.system:
 			sys=VS.getSystemFile().split('/')
-			debug.debug('System: '+str(sys)+'==?=='+str(self.system))
+			debug.debug('System: '+str(sys)+'==?=='+str(self.system),debug.VERBOSE)
 			for i in range(-1,-min(len(self.system),len(sys))-1,-1):
 				if sys[i].lower()!=self.system[i]:
-					debug.debug(str(sys[i])+'!='+str(self.system[i]))
-					debug.debug('*** insystem return false: not in system!!')
+					debug.debug(str(sys[i])+'!='+str(self.system[i]),debug.VERBOSE)
+					debug.debug('*** insystem return false: not in system %s!!'%(str(self.system[i])),debug.INFO)
 					return False
 		if self.dockedshipname:
 			if type(self.dockedshipname)==str:
-				debug.debug('*** Test if docked to: '+ self.dockedshipname)
+				debug.debug('*** Test if docked to: '+ self.dockedshipname,debug.INFO)
 				iter = VS.getUnitList()
 				while iter.notDone():
 					if VS.getPlayer().isDocked(iter.current()) or iter.current().isDocked(VS.getPlayer()):
 						#Not sure why both have to be checked, it seems to second gives a more consistantly correct response
 						#find unit with name and check
-						debug.info('*** Compare '+iter.current().getName().replace(' ','_').lower()+" == "+self.dockedshipname)
-						debug.info('    Compare '+iter.current().getFullname().replace(' ','_').lower()+" == "+self.dockedshipname)
+						debug.debug('*** Compare '+iter.current().getName().replace(' ','_').lower()+" == "+self.dockedshipname,debug.VERBOSE)
+						debug.debug('    Compare '+iter.current().getFullname().replace(' ','_').lower()+" == "+self.dockedshipname,debug.VERBOSE)
 						if iter.current().getName().replace(' ','_').lower() == self.dockedshipname or iter.current().getFullname().replace(' ','_').lower() == self.dockedshipname:
-							debug.debug('*** inSystem return true')
+							debug.debug('*** inSystem return true: docked to %s' % (self.dockedshipname),debug.NOTICE)
 							return True
 					else:
-						debug.info(iter.current().getName()+' not docked to unit')
+						debug.debug(iter.current().getName()+' not docked to unit',debug.VERBOSE)
 					iter.advance()
 		else:
-			debug.debug('*** inSystem return true, no self.dockedshipname')
+			debug.debug('*** inSystem return true, no self.dockedshipname',debug.NOTICE)
 			return True
-		debug.debug('*** insystem return false!!')
+		debug.debug('*** insystem return false!!',debug.INFO)
 		return False
 fixerloaded=0
 
@@ -99,12 +99,12 @@ class HasUndocked(Condition):
 	def __init__(self):
 		Condition.__init__(self)
 		self.count=-1
-	
+
 	def __call__(self):
 		if VS.isserver():
 			import server
 			return server.getDocked(VS.getPlayer())==None
-		
+
 		global fixerloaded
 
 		import fixers
@@ -122,7 +122,7 @@ class CargoSpaceCondition(Condition):
 		Condition.__init__(self)
 		self.type=type
 		self.num=num
-	
+
 	def __call__(self):
 		import VS
 		you=VS.getPlayer()
@@ -137,35 +137,35 @@ class CargoSpaceCondition(Condition):
 			#return False
 		debug.debug('*** CargoSpace return true')
 		return True
-	
+
 
 class AtMostActiveMissionsCondition(Condition):
 	def __init__(self,num=0):
 		Condition.__init__(self)
 		self.num=num
-	
+
 	def __call__(self):
 		import VS
-		debug.debug('*** have active missions <= ?')
-		debug.debug('*** '+str(VS.numActiveMissions()-1)+' <= '+str(self.num))
+		debug.debug('*** have active missions <= ?',debug.VERBOSE)
+		debug.debug('*** '+str(VS.numActiveMissions()-1)+' <= '+str(self.num),debug.VERBOSE)
 		isactive=((VS.numActiveMissions()-1)<=self.num)
-		debug.debug('*** '+str(isactive))
+		debug.debug('*** at most '+str(self.num)+' active missions: '+str(isactive))
 		return isactive
-	
+
 
 class AtLeastActiveMissionsCondition(Condition):
 	def __init__(self,num=1):
 		Condition.__init__(self)
 		self.num=num
-	
+
 	def __call__(self):
 		import VS
-		debug.debug('*** U half active mishuns >= ?')
-		debug.debug('*** '+str(VS.numActiveMissions()-1)+' >= '+str(self.num))
+		debug.debug('*** U half active mishuns >= ?',debug.VERBOSE)
+		debug.debug('*** '+str(VS.numActiveMissions()-1)+' >= '+str(self.num),debug.VERBOSE)
 		isactive=((VS.numActiveMissions()-1)>=self.num)
-		debug.debug('*** '+str(isactive))
+		debug.debug('*** at least '+str(self.num)+' active missions: '+str(isactive))
 		return isactive
-	
+
 
 class OrCondition(Condition):
 	def __init__(self,conds,cond2=None):
@@ -174,13 +174,13 @@ class OrCondition(Condition):
 			self.conds=[conds,cond2]
 		else:
 			self.conds=conds
-	
+
 	def __call__(self):
 		for c in self.conds:
 			if c():
 				return True
 		return False
-	
+
 
 class AndCondition(Condition):
 	def __init__(self,conds,cond2=None):
@@ -189,24 +189,24 @@ class AndCondition(Condition):
 			self.conds=[conds,cond2]
 		else:
 			self.conds=conds
-	
+
 	def __call__(self):
 		for c in self.conds:
 			if not c():
 				return False
 		return True
-	
+
 
 class InvertCondition(Condition):
 	def __init__(self,cond):
 		Condition.__init__(self)
 		self.cond=cond
-	
+
 	def __call__(self):
 		if self.cond():
 			return False
 		return True
-	
+
 
 InverseCondition=InvertCondition
 NotCondition=InvertCondition
@@ -242,7 +242,7 @@ def getcolor(strs):
 	else:
 		return tohex(1-((h-.8333333)/.1666666),0,1)
 
-def textline(strs):
+def textline(strs,room=-1):
 	if type(strs) is list or type(strs) is tuple:
 		if len(strs)>1:
 			sound=None
@@ -253,10 +253,18 @@ def textline(strs):
 				sound=strs[1]
 				ret1=False
 			if sound and sound!='':
-				import VS
-				VS.StopAllSounds()
-				debug.debug("playing sound "+str(sound))
-				VS.playSound (sound, (0.,0.,0.), (0.,0.,0.))
+				if room < 0:
+					import VS
+					VS.StopAllSounds()
+					debug.debug("playing sound "+str(sound))
+					VS.playSound (sound, (0.,0.,0.), (0.,0.,0.))
+				else:
+					import Base
+					Base.RunScript(room, 'displaytext_playsound',
+						'#\nimport VS\nVS.StopAllSounds()\n'
+						+ 'VS.Log("python", '+str(debug.NOTICE)+', "playing sound '+str(sound)+'")\n'
+						+ 'VS.playSound("'+str(sound)+'",(0.,0.,0.),(0.,0.,0.))\n'
+						+ 'Base.EraseObj('+str(room)+', "displaytext_playsound")\n', 0.0)
 			if ret1:
 				return getcolor(str(strs[0]))+str(strs[0])+": #000000"+str(strs[1])
 		return strs[0]
@@ -267,37 +275,40 @@ def displayText(room,textlist,enqueue=False):
 	#debug.warn("Displaying campaign text "+str(textlist))
 	if VS.isserver():
 		return
-	if room==-1:
-		debug.error("Room is -1!!!")
 	import Base
-	room=Base.GetCurRoom()
+	requested_room=room
+	cur_room=Base.GetCurRoom()
+	num_room=Base.GetNumRoom()
+	if room<0 or num_room < 1 or room>=num_room:
+		debug.warn("displayText: Room is "+str(room)+" / "+str(num_room)+"!!! changing it to current:"+str(cur_room))
+		if num_room < 1:
+			return
+		room=cur_room
+
+	if room != cur_room:
+		debug.debug('Message for other room: '+str(room)+' - current is '+str(cur_room)+ ' ('+repr(textlist)[:45]+'...)')
+
 	func=Base.MessageToRoom
 	if enqueue:
 		func=Base.EnqueueMessageToRoom
 	if type(textlist) is str:
 		if textlist!='':
-			debug.debug('*** Base.message('+textlist+')')
-			func(room,textline(textlist))
+			debug.debug('*** Base.'+('Enqueue' if enqueue else'')+'Message(room'+str(room)+' '+textlist+')',debug.INFO)
+			func(room,textline(textlist,requested_room))
 	else:
 		if textlist and len(textlist):
-			debug.debug('*** Base.message('+str(textlist[0])+')')
-			#Base.MessageToRoom(room,str(textlist[0]))
-			stri=''
+			debug.debug('*** Base.'+('Enqueue' if enqueue else'')+'Message(room'+str(room)+' '+str(textlist[0])+')',debug.INFO)
 			if enqueue:
 				for x in textlist:
-					func(room,textline(x))
+					func(room,textline(x, requested_room))
 			else:
-				for x in textlist:
-					stri+=textline(x)+"\n"
-				func(room,stri);
-			#	debug.debug('*** Base.enqueuEmessage('+str(x)+')')
-			#	Base.EnqueueMessageToRoom(room,str(x))
+				func(room, '\n'.join(textline(x,requested_room) for x in textlist));
 
 class Script:
 	def __init__(self,nextscript=None):
 		self.nextscript=nextscript
 	def __call__(self,room,subnodes):
-		debug.debug('**************** CALL SCRIPT')
+		debug.debug('**************** CALL SCRIPT',debug.VERBOSE)
 		if self.nextscript:
 			debug.debug('***************** CALL NEXT SCRIPT'+str(self.nextscript))
 			self.nextscript(room,subnodes)
@@ -343,7 +354,7 @@ class RemoveCargo(Script):
 			debug.debug('        ...really failed :-(')
 			return False
 		return True
-	
+
 
 # Should use this with GoToSubnodeIfTrue.
 class AddCargo(Script):
@@ -400,18 +411,18 @@ class AddCargo(Script):
 					debug.debug("force add 1 cargo")
 					carg.SetQuantity(self.cargnum-num-numsofar)
 					you.forceAddCargo(carg)
-							
+
 			debug.debug('*********** Added cargo '+self.cargname+'('+str(self.cargnum)+')')
 			return True
 		return False
-	
+
 
 class SetSaveVariable(Script):
 	def __init__(self,varname,varvalue,nextscript=None):
 		Script.__init__(self,nextscript)
 		self.name=str(varname)
 		self.value=int(varvalue)
-	
+
 	def __call__(self,room,subnodes):
 		Script.__call__(self,room,subnodes)
 		import VS
@@ -426,7 +437,7 @@ class IncSaveVariable(Script):
 	def __init__(self,varname,nextscript=None):
 		Script.__init__(self,nextscript)
 		self.name=str(varname)
-	
+
 	def __call__(self,room,subnodes):
 		Script.__call__(self,room,subnodes)
 		import VS
@@ -435,7 +446,7 @@ class IncSaveVariable(Script):
 		debug.debug("*** Incrementing \'%s \'"%self.name)
 		incSaveValue(VS.getCurrentPlayer(),self.name)
 		return True
-	
+
 class AddTechnology(Script):
 	def __init__(self,technology,nextscript=None):
 		Script.__init__(self,nextscript)
@@ -471,7 +482,7 @@ class ClearFactionRecord(Script):
 		VS.AdjustRelation(self.faction,"privateer",self.newval-rel,1.0)
 		rel=VS.GetRelation("privateer",self.faction)
 		VS.AdjustRelation("privateer",self.faction,self.newval-rel,1.0)
-	
+
 class ClearRecord(Script):
 	def __init__(self,nextscript=None):
 		Script.__init__(self,nextscript)
@@ -621,7 +632,7 @@ class RemoveCredits(Script):
 		if not un.isNull():
 			un.addCredits(-self.creds)
 		return True
-    
+
 class SetCredits(Script):
 	def __init__(self,numcreds,nextscript=None):
 		Script.__init__(self,nextscript)
@@ -635,7 +646,7 @@ class SetCredits(Script):
 		if not un.isNull():
 			un.addCredits(self.creds-un.getCredits())
 		return True
-    
+
 class PushCredits(Script):
 	def __init__(self,nextscript=None):
 		Script.__init__(self,nextscript)
@@ -649,10 +660,10 @@ class PushCredits(Script):
 		un=VS.getPlayerX(cp)
 		if not un.isNull():
 			creds=un.getCredits()
-    		key="credits_stack"
-    		Director.pushSaveData(cp,key,creds)
+			key="credits_stack"
+			Director.pushSaveData(cp,key,creds)
 		return True
-		
+
 class PopCredits(Script):
 	def __init__(self,nextscript=None):
 		Script.__init__(self,nextscript)
@@ -683,7 +694,7 @@ class PushNews(Script):
 			return True
 		cp=VS.getCurrentPlayer()
 		Director.pushSaveString(cp,"dynamic_news",'#'+self.story)
-    
+
 #LoadMission(varname,missionname,missionargs,SetSaveVariable(varname,2,script)) # jay
 class LoadMission(Script):
 	def __init__(self,name,missionname,missionargs,nextscript=None,briefing='',briefing_done='',vars=None,vars_done=None):
@@ -720,7 +731,7 @@ class AddSprite(Script):
 		self.pos=pos
 #		debug.debug('************ Init add sprite '+ repr(self.name)+', '+repr(self.sprite)+', '+repr(self.pos))
 	def __call__(self,room,subnodes):
-		debug.debug('***************** ADD THE SPRITE')
+		debug.debug('***************** ADD THE SPRITE',debug.VERBOSE)
 		Script.__call__(self,room,subnodes)
 		if VS.isserver():
 			return True
@@ -728,7 +739,7 @@ class AddSprite(Script):
 		debug.debug('*** AddSprite: Base.Texture'+str((room,self.name,self.sprite,self.pos[0],self.pos[1])))
 		Base.Texture(room,self.name,self.sprite,self.pos[0],self.pos[1])
 		return True
-	
+
 class AddPythonSprite(AddSprite):
 	def __init__(self,name,sprite,center_position,widthheight,text,python,nextscript=None):
 		AddSprite.__init__(self,name,sprite,center_position,nextscript)
@@ -754,7 +765,7 @@ def AddConversationStoppingSprite(name,sprite,center_position,widthheight,text,n
 		widthheight,text,"#\nimport Base\nBase.EraseLink(Base.GetCurRoom(), "+repr(name)+")\nBase.EraseObj(Base.GetCurRoom(), "+repr(name)+")\nimport VS\nVS.StopAllSounds()\nBase.Message('')\n",nextscript)
 config_talking_heads=VS.vsConfig("graphics","talking_heads","true")
 def doTalkingHeads():
-	talk= (config_talking_heads=="true" or config_talking_heads=="1")			
+	talk= (config_talking_heads=="true" or config_talking_heads=="1")
 	return talk
 
 class Cutscene(AddPythonSprite):
@@ -771,7 +782,7 @@ class Cutscene(AddPythonSprite):
 	def MakeEnqueue(self):
 		self.enqueue=True
 		return self
-	def __call__(self,room,subnodes):	
+	def __call__(self,room,subnodes):
 		import Base
 		import VS
 		if not VS.isserver():
@@ -786,7 +797,7 @@ class Cutscene(AddPythonSprite):
 		else:
 			VS.musicPlaySong(self.music)
 		return True
-	
+
 class GoToSubnodeIfTrue(Script):
 	def __init__(self,script,iftrue=0,iffalse=-1):
 		Script.__init__(self,script)
@@ -805,7 +816,7 @@ class GoToSubnodeIfTrue(Script):
 		else:
 			debug.debug('*** False! '+str(self.iffalse))
 			return self.iffalse
-	
+
 
 class TrueSubnode(Script):
 	def __init__(self,nextscript=None):
@@ -863,17 +874,17 @@ class Campaign:
 		self.name=savegamename
 		self.root=rootnode
 		self.players=[]
-	
+
 	def Init(self,rootnode):
 		self.root=rootnode
 		self.players=[]
-	
+
 	def checkPlayer(self,num):
 		if len(self.players)>num:
 			if self.players[num]:
 				return True
 		return False
-	
+
 	def InitPlayer(self, num):
 		while len(self.players)<=num:
 			self.players.append(None)
@@ -892,15 +903,15 @@ class Campaign:
 			else:
 				self.clickNextNode(current_room, int(args[0]), True)
 				self.getCurrentNode(current_room) # calculates next node.
-				
+
 		if cmd=='setsavegame':
 			if VS.networked():
 				self.readPositionFromSavegame(args)
 				self.getCurrentNode(current_room)
-	
+
 	#depends on Base... should remove dependencies?
 	def setCurrentNode(self,room,newnodenum):
-		debug.warn('*** Going to branch number '+str(newnodenum))
+		debug.debug('*** Going to room'+str(room)+' branch number '+str(newnodenum),debug.NOTICE)
 		import VS
 		import Director
 		plr = VS.getCurrentPlayer()
@@ -932,7 +943,7 @@ class Campaign:
 			if newnodenum != -1:
 				player.current.evaluate(room)
 		return ["success"]
-	
+
 	def sendGotoMessage(self, newnodenum):
 		plr = VS.getCurrentPlayer()
 		#if VS.isserver():
@@ -940,7 +951,7 @@ class Campaign:
 		#		debug.debug("Not notifying client of setCurrentNode(%d) because not fully docked yet"%(newnodenum))
 		#		return
 		custom.run("campaign", [self.name, "goto", newnodenum], None)
-	
+
 	def clickNextNode(self,room,choicenum,force=False):
 		plr = VS.getCurrentPlayer()
 		if not self.checkPlayer(plr):
@@ -969,12 +980,12 @@ class Campaign:
 				return ["failure", "don't have a choice here..."]
 			else:
 				return curr.gotoChoice(room,choicenum)
-	
-	
+
+
 	def readPositionFromSavegame(self, savegamelist=None):
 		import VS
 		import Director
-		
+
 		plr=VS.getCurrentPlayer()
 		self.InitPlayer(plr)
 		player = self.players[plr]
@@ -1005,15 +1016,15 @@ class Campaign:
 		if VS.isserver():
 			custom.run("campaign", [self.name, "setsavegame"] + player.savegame, None)
 		debug.debug('*** read position from save game: for '+self.name+': '+str(player.savegame))
-		debug.debug(player.current)
-	
+		debug.debug(repr(player.current),debug.INFO)
+
 	def checkCurrentNode(self):
 		plr = VS.getCurrentPlayer()
 		if not self.checkPlayer(plr):
 			return None
 		player = self.players[plr]
 		return player.current
-	
+
 	def setDocked(self,isdocked):
 		plr=VS.getCurrentPlayer()
 		if not self.checkPlayer(plr):
@@ -1028,17 +1039,17 @@ class Campaign:
 			return False
 		player = self.players[plr]
 		return player.docked
-	
+
 	#depends on Base... should remove dependencies?
 	def getCurrentNode(self,room):
-		debug.debug('*** getting current node')
+		debug.debug('*** room %s: getting current node' % (str(room)),debug.VERBOSE)
 		import VS
 		import Director
 		plr=VS.getCurrentPlayer()
 		if not self.checkPlayer(plr):
 			self.InitPlayer(plr)
 		player = self.players[plr]
-		
+
 		if not VS.isserver():
 			self.setDocked(True)
 		if VS.networked():
@@ -1051,25 +1062,25 @@ class Campaign:
 					self.readPositionFromSavegame()
 					break
 		player = self.players[plr] #readPositionFromSavegame recreates the player sometimes.
-		debug.debug(player.current)
+		debug.debug(player.current,debug.VERBOSE)
 		while True:
 			if player.current.checkPreconditions():
-				if True or room>=0: # True condition added to fix server.
+				if True: #VS.networked() or room>=0: # True condition added to fix server.
 					player.current.evaluate(room)
-					debug.debug('*** cur evalutaed')
+					debug.debug('*** cur room evaluated',debug.INFO)
 				return player.current
 			if not player.current.contingency:
-				debug.debug('*** no contingency!')
+				debug.debug('*** room %d: no contingency!' % (room),debug.INFO)
 				#print player.current
-				debug.debug(player.current.text)
+				debug.debug('player current text: '+repr(player.current.text),debug.VERBOSE)
 				return None
-			debug.debug('*** cur contingency!!')
+			debug.debug('*** room %d cur contingency!!' % (room),debug.INFO)
 			if VS.networked():
 				break
 			else:
 				self.setCurrentNode(room,-2)
 		return None
-	
+
 
 class CampaignNode:
 	def __init__(self):
@@ -1095,6 +1106,8 @@ class CampaignNode:
 			self.subnodes.append(i)
 		self.contingency=contingency
 		return self
+	def __repr__(self):
+		return repr({ 'campaign':self.campaign, 'preconditions':self.preconditions, 'text':(str(self.text))[:20]+'...' })
 	def checkPreconditions(self):
 		if self.preconditions:
 			for cond in self.preconditions:
@@ -1124,21 +1137,23 @@ class CampaignNode:
 		return self.campaign.setCurrentNode(room,num)
 	#depends on Base
 	def clickFixer(self,room,force=False):
+		debug.debug('CampaignNode.clickfixer('+str(room)+',force='+str(force)+')')
 		return CampaignNode.evaluate(self,room,force)
 	#depends on Base... should remove dependencies?
 	def evaluate(self,room,force=False):
 		if force or self.checkPreconditions():
+			debug.debug('Campaign Node evaluate, room'+str(room),debug.NOTICE)
+			debug.debug('Campaign Node evaluate, subnodes: '+repr(self.subnodes),debug.INFO)
 			displayText(room,self.text)
-			debug.debug('subnodes: '+str(self.subnodes))
 			num=self.script(room,self.subnodes)
 			if not VS.networked(): #Don't actually go anywhere yet.
 				if num>=0 and num<len(self.subnodes) or num==-1:
 					return self.gotoChoice(room,num)
 				else:
-					debug.warn("*** evaluate is going to an invalid node %d" % num)
+					debug.warn("*** campaign node evaluate for room"+str(room)+" nodes:'"+str(self.subnodes)+"' is going to an invalid node %d" % num)
 		else:
 			return
-	
+
 
 class CampaignClickNode(CampaignNode):
 	def __init__(self):
@@ -1151,11 +1166,12 @@ class CampaignClickNode(CampaignNode):
 	#depends on Base... should remove dependencies?
 	def evaluate(self,room,force=False):
 		pass
-	
 
 class CampaignChoiceNode(CampaignNode):
 	def __init__(self):
 		CampaignNode.__init__(self)
+	def __repr__(self):
+		return CampaignNode.__repr__(self) + repr({ 'choices':self.choices })
 	def acceptClientInput(self):
 		return True
 	def IsCampaignChoiceNode(self):
@@ -1178,18 +1194,18 @@ class CampaignChoiceNode(CampaignNode):
 	def evaluate(self,room,force=False):
 		if VS.isserver():
 			return
-		debug.debug('***')
-		debug.debug(self.text)
+		debug.debug('*** Campaign Choice evaluate for room'+str(room),debug.NOTICE)
+		debug.debug('*** Campaign Choice, text:'+str(self.text),debug.VERBOSE)
 		displayText(room,self.text)
 		import fixers
 		arr=[]
-		debug.debug('*** create buttons +'+str(self.choices))
+		debug.debug('*** create buttons +'+str(self.choices),debug.INFO)
 		for x in range(len(self.choices)):
 			arr.append(fixers.Choice(self.choices[x][0],"#\nimport campaign_lib\ncampaign_lib.clickChoice("+str(room)+","+str(x)+")\n",self.choices[x][1]))
 		fixers.DestroyActiveButtons()
 		fixers.CreateChoiceButtons(room,arr)
-		debug.debug('***')
-	
+		debug.debug('*** Campaign choice end evaluate',debug.VERBOSE)
+
 def CampaignEndNode(campaign):
 	return CampaignNode().Init(campaign,[],[],None,GoToSubnode(0),None,[CampaignNode().Init(campaign,[InSystemCondition("NeverNeverLand/neverhere")],[],None,GoToSubnode(-1),None,[])])
 
@@ -1212,7 +1228,7 @@ def CampaignEndNode(campaign):
 #		debug.debug('end node click')
 #	def evaluate(self,room):
 #		debug.debug('end node eval')
-	
+
 
 def IfThenElse (A,B,C):
 	if (A):
@@ -1269,7 +1285,7 @@ def AskToAcceptMission(campaign,sprite,conditiontoappear,conditiontobegin,script
 					((YES_SPRITE,"Accept_Mission"),FlyMission)])])])),
 			 ((YES_SPRITE,"Accept_Mission"),FlyMission)])])
 	return ret
-	
+
 
 def MakeVariableMission(campaign,sprite,conditiontobegin,conditiontoend,scriptonclick,scriptbegin,varname,speech,RejectNode,FailureNode,SuccessNode,SeedClickNode=None):
 	if (not SeedClickNode):
@@ -1390,7 +1406,7 @@ def MakeNoFailureCargoMission(campaign,sprite,conditiontobegin,conditiontoend,sc
 					TrueSubnode(),
 					FlyMissionContingency,#stuck in a click node, not in ND
 					[])#got advice, go back to click node
-				])])	
+				])])
 	return ret
 
 def MakeCargoMission(campaign,sprite,conditiontobegin,conditiontoend,scriptonclick,script,cargoNameQuantity,varname,speech,RejectNode,FailureNode,SuccessNode,SeedClickNode=None):
@@ -1493,20 +1509,20 @@ def resetCampaigns(plr):
 def getActiveCampaignNodes(room):
 	campaigns=getCampaignList()
 	clist=[]
-	debug.debug("there are "+str(len(campaigns))+" campagins")
+	debug.debug("there are "+str(len(campaigns))+" campaigns")
 	for campaign in campaigns:
 		curnode=campaign.getCurrentNode(room)
 		if curnode:
-			debug.debug('*** found active node in campaign '+campaign.name)
+			debug.debug('*** found active node in campaign '+campaign.name,debug.VERBOSE)
 			clist.append(curnode)
-			debug.debug('checking contingency: '+str(curnode.checkPreconditions()))
+			debug.debug('checking contingency: '+str(curnode.checkPreconditions()),debug.VERBOSE)
 			#return clist # The bar shouldn't have more than one campaign at a time.
 		else:
-			debug.debug('*** no active node for '+campaign.name)
+			debug.debug('*** no active node for '+campaign.name,debug.VERBOSE)
 	if (len(clist)):
-		debug.debug('Nodes '+str(len(clist)))
+		debug.debug('%d Campaign Nodes: %s' % (len(clist),repr(clist)),debug.INFO)
 	else:
-		debug.debug('*** No node')
+		debug.debug('*** No node',debug.INFO)
 
 	for index in range(len(clist)):
 		if (clist[index].spritelink):
@@ -1519,7 +1535,7 @@ def getActiveCampaignNodes(room):
 			tmp = clist[index]
 			del clist[index]
 			clist = [tmp]+clist;# doesn't change list length
-	debug.debug(str(clist))
+	debug.debug('active campaigns: '+repr(clist),debug.NOTICE)
 	return clist
 #depends on Base
 
@@ -1537,15 +1553,15 @@ def handle_queued_cmds(room):
 	return ret
 
 def getFixersToDisplay(room):
-	debug.debug('*** Get the fixers to display!!!')
+	debug.debug('*** Get the fixers to display!!!',debug.INFO)
 	handle_queued_cmds(room)
-	
+
 	global fixerloaded
 	fixerloaded+=1
 	cnodelist=getActiveCampaignNodes(room)
 	fixerlist=[]
 	for cnode in cnodelist:
-		debug.debug('*** display it. ')
+		debug.debug('*** fixer: display it. ',debug.INFO)
 		newfixer=cnode.getFixer(room)
 		if newfixer:
 			fixerlist.append(newfixer)

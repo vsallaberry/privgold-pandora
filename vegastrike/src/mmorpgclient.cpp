@@ -1,7 +1,7 @@
 #include "command.h"
 #include "mmorpgclient.h"
-#include "SDL/SDL.h"
-#include "SDL_thread.h"
+#include <SDL.h>
+#include <SDL_thread.h>
 #include "vegastrike.h"
 #include "vs_globals.h"
 
@@ -219,7 +219,11 @@ bool mmoc::listenThread() { // {{{
 	return stat;
 } // }}}
 void mmoc::createThread() { // {{{
+#if SDL_VERSION_ATLEAST(2,0,0)
+    SDL_CreateThread(startThread, "moc", reinterpret_cast<void *>(this));
+#else
 	::SDL_CreateThread(startThread, reinterpret_cast<void *>(this));
+#endif
 } // }}}
 void mmoc::send(char *buffer, int size) { // {{{
 	::INET_Write(socket, size, buffer); //or write(socket, buffer, size) for windwos?

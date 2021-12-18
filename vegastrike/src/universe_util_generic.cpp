@@ -1,5 +1,6 @@
 #include <math.h>
 #include <sys/stat.h>
+#include <stdlib.h>
 #include "lin_time.h"
 #include "cmd/script/mission.h"
 #include "universe_util.h"
@@ -32,6 +33,7 @@
 #include "python/init.h"
 #include <Python.h>
 #include "options.h"
+#include "log.h"
 
 extern vs_options game_options;
 
@@ -53,7 +55,7 @@ namespace UniverseUtil
 	Unit* PythonUnitIter::current() 
 	{
 		Unit *ret = NULL;
-		while(ret = **this){
+		while((ret = **this) != NULL){
 			if(ret->hull > 0)
 				return (ret);
 			advance();
@@ -143,12 +145,12 @@ namespace UniverseUtil
 		if (serial==0)
 			return NULL;
 		// Find the unit
-		for(un_iter it = UniverseUtil::getUnitList();un = *it;++it) {
+		for(un_iter it = UniverseUtil::getUnitList();(un = *it) != NULL;++it) {
 			if((*it)->GetSerial() == serial)
 				break;
 		}
 		if( un==NULL)
-			cout<<"ERROR --> no unit for serial "<<serial<<endl;
+			VS_LOG("universe", logvs::WARN, "ERROR --> no unit for serial %u", serial);
 		return un;
 	}
 	std::string vsConfig(std::string category,std::string option,std::string def) {
@@ -771,9 +773,12 @@ namespace UniverseUtil
 		securepythonstr(id);
 		string pythonCode = game_options.custompython + "(" + (trusted?"True":"False") +
 			", r\'" + cmd + "\', r\'" + args + "\', r\'" + id + "\')\n";
-		COUT << "Executing python command: " << endl;
-		cout << "    " << pythonCode;
 		const char * cpycode = pythonCode.c_str();
+        if (VS_LOG("universe", logvs::VERBOSE, "Executing python command: ") > 0) {
+            logvs::vs_printf("    %s\n", cpycode);
+        } else {
+            VS_LOG("universe", logvs::NOTICE, "Executing python command...");
+        }
 		::Python::reseterrors();
 		PyRun_SimpleString(const_cast<char*>(cpycode));
 		::Python::reseterrors();
@@ -935,6 +940,29 @@ namespace UniverseUtil
 		return ship;
 	}
 
+    std::string getGuiLabelWithoutEscapes(const std::string & label) {
+        std::string str(label);
+        std::string::iterator it = str.begin();
+        while ((it = std::find(it, str.end(), '#')) != str.end()) {
+            if ((it + 1) != str.end() && *(it+1) == '#') {
+                size_t pos = it - str.begin();
+                str = str.replace(it, it+2, "#");
+                it = str.begin() + pos;
+            }
+            ++it;
+        }
+        return str;
+    }
+
+    std::string getEscapedGuiLabel(const std::string & str) {
+        std::string label(str);
+        std::string::iterator it = label.begin();
+        while ((it = std::find(it, label.end(), '#')) != label.end()) {
+            it = label.insert(it, '#') + 2;
+        }
+        return label;
+    }
+
 	string getSaveInfo(const std::string &filename, bool formatForTextbox) {
 		static SaveGame savegame("");
 		static set<string> campaign_score_vars;
@@ -964,7 +992,7 @@ namespace UniverseUtil
 		savegame.ParseSaveGame(filename,system,"",pos,updatepos,creds,Ships,_Universe->CurrentCockpit(),"",true,false,game_options.quick_savegame_summaries,true,true,campaign_score_vars);
 		UniverseUtil::setCurrentSaveGame(sillytemp);
 		string text;
-		text += filename;
+		text += formatForTextbox ? getEscapedGuiLabel(filename) : filename;
 		text="Savegame: "+text+lf+"_________________"+lf;
 		{
 			struct stat attrib;
@@ -1015,6 +1043,21 @@ namespace UniverseUtil
 		static string ngsn("New_Game");
 		return ngsn;
 	}
+
+    int Log(const std::string & module, unsigned int level, const std::string & message) {
+        return logvs::vs_log(module, level, logvs::F_NONE, "<python>", "<python-api>", 0, "%s", message.c_str());
+    }
+
+    unsigned int LogLevel(const std::string & module, bool store) {
+        return logvs::vs_log_level(module, store);
+    }
+
+    std::string LogFile(const std::string & module) {
+        (void)module;
+        static const std::string
+            logfile = vs_config->getVariable("log","file","stderr");
+        return logfile.empty() ? logfile : "stderr"; // currently only stderr and none supported
+    }
 }
 
 

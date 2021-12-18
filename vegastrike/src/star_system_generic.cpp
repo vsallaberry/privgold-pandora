@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <assert.h>
 #include "star_system_generic.h"
 #include "gfx/vec.h"
@@ -40,6 +41,7 @@
 #include "networking/netclient.h"
 #include "in_kb_data.h"
 #include "universe_util.h"		 //get galaxy faction, dude
+#include "log.h"
 #include <boost/version.hpp>
 #if BOOST_VERSION != 102800
 
@@ -211,7 +213,7 @@ StarSystem::~StarSystem()
 
 	Unit *unit;
 	//  VSFileSystem::vs_fprintf (stderr,"|t%f i%lf|",GetElapsedTime(),interpolation_blend_factor);
-	for(un_iter iter = drawList.createIterator();unit = *iter;++iter)
+	for(un_iter iter = drawList.createIterator();(unit = *iter)!=NULL;++iter)
 		unit->Kill(false);
 	//if the next line goes ANYWHERE else Vega Strike will CRASH!!!!!
 								 //DO NOT MOVE THIS LINE! IT MUST STAY
@@ -224,7 +226,7 @@ StarSystem::~StarSystem()
 			activ.push_back(_Universe->activeStarSystem());
 		}
 		else {
-			fprintf(stderr,"Avoided fatal error in deleting star system %s\n",getFileName().c_str());
+			VS_LOG("universe", logvs::NOTICE, "Avoided fatal error in deleting star system %s",getFileName().c_str());
 		}
 		_Universe->popActiveStarSystem();
 	}
@@ -376,7 +378,7 @@ bool StarSystem::RemoveUnit(Unit *un)
 	}
 	bool removed2=false;
 	Unit *unit;
-	for(un_iter iter = gravitationalUnits().createIterator();unit = *iter;++iter) {
+	for(un_iter iter = gravitationalUnits().createIterator();(unit = *iter)!=NULL;++iter) {
 		if (unit==un) {
 			iter.remove();
 			removed2 =true;
@@ -386,7 +388,7 @@ bool StarSystem::RemoveUnit(Unit *un)
 	// NOTE: not sure why if(1) was here, but safemode removed it
 	bool removed =false;
 	if(1) {
-	for(un_iter iter = drawList.createIterator();unit = *iter;++iter) {
+	for(un_iter iter = drawList.createIterator();(unit = *iter)!=NULL;++iter) {
 		if (unit==un) {
 			iter.remove();
 			removed =true;
@@ -397,7 +399,7 @@ bool StarSystem::RemoveUnit(Unit *un)
 	if (removed) {
 		for (int i=0;i<=SIM_QUEUE_SIZE;++i) {
 			Unit *unit;
-			for(un_iter iter = physics_buffer[i].createIterator();unit = *iter;++iter) {
+			for(un_iter iter = physics_buffer[i].createIterator();(unit = *iter)!=NULL;++iter) {
 				if (unit==un) {
 					iter.remove();
 					removed =true;
@@ -419,7 +421,7 @@ void StarSystem::ExecuteUnitAI ()
 	try
 	{
 		Unit * unit=NULL;
-		for(un_iter iter = getUnitList().createIterator();unit = *iter;++iter) {
+		for(un_iter iter = getUnitList().createIterator();(unit = *iter)!=NULL;++iter) {
 			unit->ExecuteAI();
 			unit->ResetThreatLevel();
 		}
@@ -675,7 +677,7 @@ void StarSystem::UpdateUnitPhysics (bool firstframe)
 			try
 			{
 				Unit * unit=NULL;
-				for(un_iter iter = physics_buffer[current_sim_location].createIterator();unit = *iter;++iter) {
+				for(un_iter iter = physics_buffer[current_sim_location].createIterator();(unit = *iter)!=NULL;++iter) {
 					int priority=UnitUtil::getPhysicsPriority(unit);
 					// Doing spreading here and only on priority changes, so as to make AI easier
 					int predprior=unit->predicted_priority;
@@ -728,7 +730,7 @@ void StarSystem::UpdateUnitPhysics (bool firstframe)
 			}
 			flattentime=queryTime()-fl0;
 			Unit * unit;
-			for(un_iter iter = physics_buffer[current_sim_location].createIterator();unit = *iter;) {
+			for(un_iter iter = physics_buffer[current_sim_location].createIterator();(unit = *iter)!=NULL;) {
 				int priority=unit->sim_atom_multiplier;
 				float backup=SIMULATION_ATOM;
 				SIMULATION_ATOM*=priority;
@@ -751,7 +753,7 @@ void StarSystem::UpdateUnitPhysics (bool firstframe)
 				int movingavgindex=physicsframecounter%128;
 				movingtotal=movingtotal-movingavgarray[movingavgindex]+theunitcounter;
 				movingavgarray[movingavgindex]=theunitcounter;
-				printf("PhysFrame:%u - %u, %u, %u t:%f ai:%f:%f:ctc_%d,tp_%f p:%f c:%f b:%f fl:%f\n",physicsframecounter,theunitcounter,movingtotal/128,totalprocessed/physicsframecounter,queryTime()-updatebegin,aitime,aggfire,numprocessed,targetpick,phytime,collidetime,bolttime,flattentime);
+				VS_LOG("universe", logvs::NOTICE, "PhysFrame:%u - %u, %u, %u t:%f ai:%f:%f:ctc_%d,tp_%f p:%f c:%f b:%f fl:%f", physicsframecounter,theunitcounter,movingtotal/128,totalprocessed/physicsframecounter,queryTime()-updatebegin,aitime,aggfire,numprocessed,targetpick,phytime,collidetime,bolttime,flattentime);
 			}
 			//end debug bookkeeping
 			current_sim_location=(current_sim_location+1)%SIM_QUEUE_SIZE;
@@ -762,7 +764,7 @@ void StarSystem::UpdateUnitPhysics (bool firstframe)
 	}
 	else {
 		Unit * unit=NULL;
-		for(un_iter iter = getUnitList().createIterator();unit = *iter;++iter) {
+		for(un_iter iter = getUnitList().createIterator();(unit = *iter)!=NULL;++iter) {
 			unit->ExecuteAI();
 			last_collisions.clear();
 			unit->UpdatePhysics(identity_transformation,identity_matrix,Vector (0,0,0),firstframe,&this->gravitationalUnits(),unit);
@@ -786,6 +788,7 @@ void ExecuteDirector ()
 {
 	unsigned int curcockpit= _Universe->CurrentCockpit();
 	{
+		Mission::DirectorUpdateGameTime();
 		for (unsigned int i=0;i<active_missions.size();++i) {
 			if (active_missions[i]) {
 				_Universe->SetActiveCockpit(active_missions[i]->player_num);
@@ -810,7 +813,7 @@ void ExecuteDirector ()
 					int w=active_missions.size();
 					active_missions[i]->terminateMission();
 					if (w==active_missions.size()) {
-						printf ("MISSION NOT ERASED\n");
+						VS_LOG("universe", logvs::NOTICE, "MISSION NOT ERASED");
 						break;
 					}
 				}
@@ -845,7 +848,7 @@ void StarSystem::Update( float priority)
 			Unit::ProcessDeleteQueue();
 			current_stage=MISSION_SIMULATION;
 			collidetable->Update();
-			for(un_iter iter = drawList.createIterator();unit = *iter;++iter)
+			for(un_iter iter = drawList.createIterator();(unit = *iter)!=NULL;++iter)
 				unit->SetNebula(NULL);
 
 			UpdateMissiles();	 //do explosions
@@ -866,7 +869,7 @@ void StarSystem::Update( float priority)
 void StarSystem::Update(float priority , bool executeDirector)
 {
 
-	Unit *unit;
+	//Unit *unit;
 	bool firstframe = true;
 	double beginss=queryTime();
 	double pythontime=0;
@@ -966,7 +969,7 @@ void StarSystem::Update(float priority , bool executeDirector)
 	_Universe->popActiveStarSystem();
 	//  VSFileSystem::vs_fprintf (stderr,"bf:%lf",interpolation_blend_factor);
 	if (debugPerformance()) {
-		printf ("SS Update: pyth: %f tot: %f\n",pythontime, queryTime()-beginss);
+        VS_LOG("universe", logvs::NOTICE, "SS Update: pyth: %f tot: %f",pythontime, queryTime()-beginss);
 	}
 }
 
@@ -1048,7 +1051,7 @@ void StarSystem::ProcessPendingJumps()
 		}
 		int playernum = _Universe->whichPlayerStarship( un);
 		// In non-networking mode or in networking mode or a netplayer wants to jump and is ready or a non-player jump
-		if( Network==NULL || playernum<0 || Network!=NULL && playernum>=0 &&  Network[playernum].readyToJump()) {
+		if( Network==NULL || playernum<0 || (Network!=NULL && playernum>=0 &&  Network[playernum].readyToJump())) {
 			Unit * un=pendingjump[kk]->un.GetUnit();
 
 			StarSystem * savedStarSystem = _Universe->activeStarSystem();
@@ -1056,10 +1059,17 @@ void StarSystem::ProcessPendingJumps()
 			if( Network!=NULL)
 				Network[playernum].downloadZoneInfo();
 
+            bool is_active_player = (Network == NULL && un==_Universe->AccessCockpit()->GetParent());
+            if (is_active_player)
+                VS_LOG("universe", logvs::NOTICE, "Jump: evaluating damages...");
+            
 			if (un==NULL||!_Universe->StillExists (pendingjump[kk]->dest)||!_Universe->StillExists(pendingjump[kk]->orig)) {
 #ifdef JUMP_DEBUG
 				VSFileSystem::vs_fprintf (stderr,"Adez Mon! Unit destroyed during jump!\n");
 #endif
+                if (is_active_player) {
+                    VS_LOG("universe", logvs::NOTICE, "Unit destroyed during jump!");
+                }
 				delete pendingjump[kk];
 				pendingjump.erase (pendingjump.begin()+kk);
 				--kk;
@@ -1070,6 +1080,9 @@ void StarSystem::ProcessPendingJumps()
 
 			if (un->TransferUnitToSystem (kk, savedStarSystem,dosightandsound))
 				un->DecreaseWarpEnergy(false,1.0f);
+            if (is_active_player) {
+                VS_LOG("universe", logvs::NOTICE, "Jump: Unit transferred");
+            }
 			if (dosightandsound) {
 				_Universe->activeStarSystem()->DoJumpingComeSightAndSound(un);
 			}
@@ -1156,7 +1169,6 @@ QVector ComputeJumpPointArrival(QVector pos,std::string origin ,std::string dest
 	return QVector(0,0,0);
 
 }
-
 
 bool StarSystem::JumpTo (Unit * un, Unit * jumppoint, const std::string &system, bool force, bool save_coordinates)
 {

@@ -40,6 +40,7 @@
 #include "navparse.h"
 #include "navcomputer.h"
 #include "navpath.h"
+#include "log.h"
 
 //	This sets up the items in the navscreen
 //	**********************************
@@ -203,7 +204,7 @@ void NavigationSystem::Setup()
 		screenskipby4[1] = .7;
 		screenskipby4[2] = .3;
 		screenskipby4[3] = .7;
-
+        screens_aspect = 0;
 
 		buttonskipby4_1[0] = .75;
 		buttonskipby4_1[1] = .95;
@@ -256,7 +257,7 @@ void NavigationSystem::Setup()
 		screenskipby4[1] = .7;
 		screenskipby4[2] = .3;
 		screenskipby4[3] = .7;
-
+        screens_aspect = 0;
 
 		buttonskipby4_1[0] = .75;
 		buttonskipby4_1[1] = .95;
@@ -308,16 +309,22 @@ void NavigationSystem::Setup()
 		vs_fprintf(stderr,"ERROR: Map mesh file not found!!! Using default: blank mesh.\n");
 		//	end DUMMY VARS
 	}
-
-
-
-
-
+    
+    //float game_aspect = g_game.aspect;
+    float game_aspect = ((float)g_game.x_resolution / g_game.y_resolution);
+    if (screens_aspect != 0) {
+        screenskipby4[0] *= (game_aspect / screens_aspect);
+        screenskipby4[1] *= (game_aspect / screens_aspect);
+    }
+    
 	ScreenToCoord(screenskipby4[0]);
 	ScreenToCoord(screenskipby4[1]);
 	ScreenToCoord(screenskipby4[2]);
 	ScreenToCoord(screenskipby4[3]);
-
+    
+    VS_LOG("nav", logvs::VERBOSE, "map screencoords [%f,%f,%f,%f] res %dx%d aspect orig:%f cur:%f",
+           screenskipby4[0],screenskipby4[1],screenskipby4[2],screenskipby4[3],
+           g_game.x_resolution, g_game.y_resolution, screens_aspect, game_aspect);
 
 	ScreenToCoord(buttonskipby4_1[0]);
 	ScreenToCoord(buttonskipby4_1[1]);

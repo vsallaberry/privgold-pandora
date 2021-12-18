@@ -7,6 +7,7 @@ import save_util
 import faction_ships
 import universe
 import launch
+import debug
 class quest_isowing (quest.quest):
     def recoverShipTypes (self):
         return save_util.loadStringList (self.playernum,"%s_wingships"%self.faction);
@@ -24,8 +25,8 @@ class quest_isowing (quest.quest):
         self.names = self.recoverShipTypes ()
         self.SpawnShips ()
     def SpawnShips (self):
-        print "spawning"
-        print self.names
+        debug.debug("spawning")
+        debug.debug(repr(self.names))
         playa = VS.getPlayer()
         if (playa):
             for n in self.names:

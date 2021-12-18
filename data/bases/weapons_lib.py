@@ -5,13 +5,14 @@ import GUI
 import methodtype
 import string
 import quest
+import debug
 
 import custom
 
 #
 # This first section contains the two functions used by individual bases
 #	CanRepair
-#		returns True or False whether a given base contains a ship dealer and upgrade bay 
+#		returns True or False whether a given base contains a ship dealer and upgrade bay
 #	MakeWeapon
 #		creates the base rooms that make up the ship dealer, upgrade bay, and software booth
 #
@@ -93,7 +94,7 @@ def MakeWeapon(concourse,timeofdayignored='_day', dealername="bases/repair_upgra
 	return room_ship_dealer
 
 #
-# These two functions are called by MakeWeapon; they move code that's 
+# These two functions are called by MakeWeapon; they move code that's
 # unrelated to ship purchasing elsewhere, to make MakeWeapon somewhat simpler
 #		MakeRepairBay
 #		MakeSoftwareBooth
@@ -102,6 +103,10 @@ def MakeRepairBay(room_ship_dealer, upgradename, use_ship_320_240_upgrade):
 	# create the repair bay screen
 	room_repair_bay = Base.Room ('Repair/Upgrade')
 
+	# Custom Font
+	global _shipdealer_font
+	Base.SetTextBoxFont(-1, "", _shipdealer_font)
+	
 	# create the software booth screen
 	room_software_booth = MakeSoftwareBooth(room_repair_bay)
 
@@ -126,7 +131,7 @@ GUI.GUIRootSingleton.rooms[%s].owner.reset()
 		y=-0.2716
 	Base.Texture (room_repair_bay, 'background', upgradename+'.spr', x, y)
 
- 	# add ship sprites
+	# add ship sprites
 	PlayerShip.AddPlayerShips('shipupgrade',room_repair_bay,'repairship')
 
 	# add clickable areas to the repair bay
@@ -139,6 +144,9 @@ GUI.GUIRootSingleton.rooms[%s].owner.reset()
 	Base.Link (room_repair_bay, 'my_comp_id', x, y, w, h, 'Software_Booth', room_software_booth)
 
 	comp = RepairBayComputer(room_repair_bay)
+
+	# Reset Base default Font
+	Base.SetTextBoxFont(-1, '', '')
 
 	return room_repair_bay
 
@@ -158,7 +166,7 @@ def MakeSoftwareBooth(room_repair_bay):
 
 
 #
-# These functions are used to direct the actions of button clicks in the Software Booth and 
+# These functions are used to direct the actions of button clicks in the Software Booth and
 # 	Repair Bay computers
 #
 def display_click(self,params):
@@ -193,25 +201,25 @@ def mount_select_click(self,params):
 	if self.isEnabled():
 		self.room.owner.mount_select(self.index)
 
-# 
-# A few functions to translate software booth items from their internal representation 
+#
+# A few functions to translate software booth items from their internal representation
 # to a useful format for the user (display name, sprites, radar to button mapping, etc)
 #
 def lookup_software_name(item_name):
 	names = {
-		'B_and_S_Tripwire': 'B&S Tripwire', 
-		'B_and_S_EYE': 'B&S E.Y.E.', 
+		'B_and_S_Tripwire': 'B&S Tripwire',
+		'B_and_S_EYE': 'B&S E.Y.E.',
 		'B_and_S_Omni': 'B&S Omni',
 		'hunter_aw_6': 'Hunter AW6',
 		'hunter_aw_6i': 'Hunter AW6i',
 		'hunter_aw_infinity': 'Hunter AW Infinity',
-		'iris_mk1': 'Iris Mk I', 
-		'iris_mk2': 'Iris Mk II', 
+		'iris_mk1': 'Iris Mk I',
+		'iris_mk2': 'Iris Mk II',
 		'iris_mk3': 'Iris Mk III',
-		'humboldt_map': 'Humboldt Quadrant Map', 
+		'humboldt_map': 'Humboldt Quadrant Map',
 		'farris_map': 'Fariss Quadrant Map',
-		'potter_map': 'Potter Quadrant Map', 
-		'clarke_map': 'Clarke Quadrant Map', 
+		'potter_map': 'Potter Quadrant Map',
+		'clarke_map': 'Clarke Quadrant Map',
 		'gemini_map': 'All Quadrants'
 		}
 	try:
@@ -222,19 +230,19 @@ def lookup_software_name(item_name):
 
 def lookup_software_sprite(item_name):
 	sprites = {
-		'B_and_S_Tripwire': 'bases/repair_upgrade/items/bandstripwire.spr', 
-		'B_and_S_EYE': 'bases/repair_upgrade/items/bandseye.spr', 
-		'B_and_S_Omni': 'bases/repair_upgrade/items/bandsomni.spr', 
-		'hunter_aw_6': 'bases/repair_upgrade/items/hunteraw6.spr', 
-		'hunter_aw_6i': 'bases/repair_upgrade/items/hunteraw6i.spr', 
-		'hunter_aw_infinity': 'bases/repair_upgrade/items/hunterawinfinity.spr', 
-		'iris_mk1': 'bases/repair_upgrade/items/irismk1.spr', 
-		'iris_mk2': 'bases/repair_upgrade/items/irismk2.spr', 
+		'B_and_S_Tripwire': 'bases/repair_upgrade/items/bandstripwire.spr',
+		'B_and_S_EYE': 'bases/repair_upgrade/items/bandseye.spr',
+		'B_and_S_Omni': 'bases/repair_upgrade/items/bandsomni.spr',
+		'hunter_aw_6': 'bases/repair_upgrade/items/hunteraw6.spr',
+		'hunter_aw_6i': 'bases/repair_upgrade/items/hunteraw6i.spr',
+		'hunter_aw_infinity': 'bases/repair_upgrade/items/hunterawinfinity.spr',
+		'iris_mk1': 'bases/repair_upgrade/items/irismk1.spr',
+		'iris_mk2': 'bases/repair_upgrade/items/irismk2.spr',
 		'iris_mk3': 'bases/repair_upgrade/items/irismk3.spr',
-		'humboldt_map': 'bases/repair_upgrade/items/map_humboldt.spr', 
-		'farris_map': 'bases/repair_upgrade/items/map_fariss.spr', 
-		'potter_map': 'bases/repair_upgrade/items/map_potter.spr', 
-		'clarke_map': 'bases/repair_upgrade/items/map_clarke.spr', 
+		'humboldt_map': 'bases/repair_upgrade/items/map_humboldt.spr',
+		'farris_map': 'bases/repair_upgrade/items/map_fariss.spr',
+		'potter_map': 'bases/repair_upgrade/items/map_potter.spr',
+		'clarke_map': 'bases/repair_upgrade/items/map_clarke.spr',
 		'gemini_map': 'bases/repair_upgrade/items/map_gemini.spr'
 		}
 	try:
@@ -246,14 +254,14 @@ def lookup_software_sprite(item_name):
 
 def lookup_software_damaged_sprite(item_name):
 	sprites = {
-		'B_and_S_Tripwire':		'bases/repair_upgrade/items/damaged/dmg-bandstripwire.spr', 
-		'B_and_S_EYE':			'bases/repair_upgrade/items/damaged/dmg-bandseye.spr', 
-		'B_and_S_Omni':			'bases/repair_upgrade/items/damaged/dmg-bandsomni.spr', 
-		'hunter_aw_6':			'bases/repair_upgrade/items/damaged/dmg-hunteraw6.spr', 
-		'hunter_aw_6i':			'bases/repair_upgrade/items/damaged/dmg-hunteraw6i.spr', 
-		'hunter_aw_infinity':	'bases/repair_upgrade/items/damaged/dmg-hunterawinfinity.spr', 
-		'iris_mk1':				'bases/repair_upgrade/items/damaged/dmg-irismk1.spr', 
-		'iris_mk2':				'bases/repair_upgrade/items/damaged/dmg-irismk2.spr', 
+		'B_and_S_Tripwire':		'bases/repair_upgrade/items/damaged/dmg-bandstripwire.spr',
+		'B_and_S_EYE':			'bases/repair_upgrade/items/damaged/dmg-bandseye.spr',
+		'B_and_S_Omni':			'bases/repair_upgrade/items/damaged/dmg-bandsomni.spr',
+		'hunter_aw_6':			'bases/repair_upgrade/items/damaged/dmg-hunteraw6.spr',
+		'hunter_aw_6i':			'bases/repair_upgrade/items/damaged/dmg-hunteraw6i.spr',
+		'hunter_aw_infinity':	'bases/repair_upgrade/items/damaged/dmg-hunterawinfinity.spr',
+		'iris_mk1':				'bases/repair_upgrade/items/damaged/dmg-irismk1.spr',
+		'iris_mk2':				'bases/repair_upgrade/items/damaged/dmg-irismk2.spr',
 		'iris_mk3':				'bases/repair_upgrade/items/damaged/dmg-irismk3.spr'
 		}
 	try:
@@ -265,19 +273,19 @@ def lookup_software_damaged_sprite(item_name):
 
 def lookup_radio_button(item_name):
 	radio_buttons = {
-		'B_and_S_Tripwire': 'btn_a1', 
-		'B_and_S_EYE': 'btn_a2', 
-		'B_and_S_Omni': 'btn_a3', 
-		'hunter_aw_6': 'btn_b1', 
-		'hunter_aw_6i': 'btn_b2', 
-		'hunter_aw_infinity': 'btn_b3', 
-		'iris_mk1': 'btn_c1', 
-		'iris_mk2': 'btn_c2', 
+		'B_and_S_Tripwire': 'btn_a1',
+		'B_and_S_EYE': 'btn_a2',
+		'B_and_S_Omni': 'btn_a3',
+		'hunter_aw_6': 'btn_b1',
+		'hunter_aw_6i': 'btn_b2',
+		'hunter_aw_infinity': 'btn_b3',
+		'iris_mk1': 'btn_c1',
+		'iris_mk2': 'btn_c2',
 		'iris_mk3': 'btn_c3',
-		'humboldt_map': 'btn_map1', 
-		'farris_map': 'btn_map2', 
-		'potter_map': 'btn_map3', 
-		'clarke_map': 'btn_map4', 
+		'humboldt_map': 'btn_map1',
+		'farris_map': 'btn_map2',
+		'potter_map': 'btn_map3',
+		'clarke_map': 'btn_map4',
 		'gemini_map': 'btn_map5'
 		}
 	try:
@@ -287,7 +295,7 @@ def lookup_radio_button(item_name):
 		button = ''
 	return button
 
-# 
+#
 # get the player's currently installed radar
 #
 def get_current_radar():
@@ -314,14 +322,13 @@ def get_current_radar():
 def get_repair_list(radar):
 	repair = []
 	for i in range(len(radar)):
-	# temporarily make the radar damaged
-#		radar[i][1] = 0.75
+		# temporarily make the radar damaged
+		#radar[i][1] = 0.75
 		if (radar[i][1] < 1.0):
 			repair.append( i )
 
-	print "::: get_repair_list [for radar]"
-	import pprint
-	pprint.pprint( repair )
+	if debug.debug("::: get_repair_list [for radar]",debug.INFO) > 0:
+		debug.pprint( repair )
 
 	return repair
 
@@ -338,9 +345,8 @@ def get_sell_list():
 	if quest.checkSaveValue(cp,'clarke_map',1):
 		sell.append( ['clarke_map', 1.0] )
 
-	print "::: get_sell_list [for radar]"
-	import pprint
-	pprint.pprint( sell )
+	if debug.debug( "::: get_sell_list [for radar]",debug.INFO) > 0:
+		debug.pprint( sell )
 
 	return sell
 
@@ -356,20 +362,20 @@ def make_light_spriteset(lit_sprite):
 class SoftwareBoothComputerGeneric:
 	def __init__(self):
 		# farris_map should be fariss_map, but left as is for backwards compatiblity
-		self.items = [ 
-			'B_and_S_Tripwire', 
-			'B_and_S_EYE', 
-			'B_and_S_Omni',  
-			'hunter_aw_6', 
-			'hunter_aw_6i', 
-			'hunter_aw_infinity',  
-			'iris_mk1', 
-			'iris_mk2', 
-			'iris_mk3',  
-			'humboldt_map', 
-			'farris_map', 
-			'potter_map', 
-			'clarke_map', 
+		self.items = [
+			'B_and_S_Tripwire',
+			'B_and_S_EYE',
+			'B_and_S_Omni',
+			'hunter_aw_6',
+			'hunter_aw_6i',
+			'hunter_aw_infinity',
+			'iris_mk1',
+			'iris_mk2',
+			'iris_mk3',
+			'humboldt_map',
+			'farris_map',
+			'potter_map',
+			'clarke_map',
 			'gemini_map'	 ]
 
 		# set up buy, sell and repair prices
@@ -392,9 +398,9 @@ class SoftwareBoothComputerGeneric:
 				self.repair_prices[name] = repair_price
 			except:
 				pass
-		
+
 		self.reset()
-	
+
 	def reset(self):
 		# also, rebuild the sell/repair lists, in case user sold radar somehow
 		self.sell   = get_sell_list()
@@ -547,10 +553,10 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 
 		# when a button is clicked, this will allow us to get the SoftwareBoothComputer instance from the x_click functions
 		guiroom.owner = self
-		
+
 		# main sprite - this doesn't change, so we don't need to keep a variable for it
 		GUI.GUIStaticImage(guiroom, 'background', ( 'bases/repair_upgrade/software.spr', GUI.GUIRect(0, 0, 320, 200) ))
-	
+
 		self.buttons = {}
 
 		# main buttons
@@ -607,7 +613,7 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 		self.add_button( GUI.GUIRadioButton(guiroom,'Display Iris Mk. III',       'btn_c3', make_light_spriteset(sprite_c3), GUI.GUIRect(254, 157, 51, 40), 'software_booth_display'), display_click )
 
 		# add the text labels
-		# select box: GUI.GUIRect(19,  91, 94, 69))  
+		# select box: GUI.GUIRect(19,  91, 94, 69))
 		# add 5px margin on X value
 		txt_color = GUI.GUIColor(0.7,0.7,0.7)
 		txt_warning_color = GUI.GUIColor(0.7,0,0)
@@ -642,7 +648,7 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 
 		if VS.networked():
 			custom.run("RepairBayComputer", ["reload"], None)
-		
+
 		# also, rebuild the sell/repair lists, in case user sold radar somehow
 		SoftwareBoothComputerGeneric.reset(self)
 
@@ -656,7 +662,7 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 				self.current_item = (self.current_item + 1) % max
 			else:
 				self.current_item = 0
-			
+
 		elif self.state=="sell":
 			max = len(self.sell)
 			if max > 0:
@@ -693,19 +699,19 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 	def select(self):
 		"""
 			error messages (from SOFTTXT.iff) are:
-			Price: 
+			Price:
 			Mode:
 			Thank You
 			INSUFFICIENT CREDIT
-			BUY 
-			SELL 
-			REPR 
+			BUY
+			SELL
+			REPR
 			NO ROOM FOR ITEM
 			NOT VALID
 			NOTHING TO SELL
 			NOTHING TO REPAIR
 			ITEM REPAIRED
-			Credits: 
+			Credits:
 		"""
 		if self.state == "repair":
 			if len(self.repair) > 0:
@@ -821,31 +827,34 @@ class SoftwareBoothComputer (SoftwareBoothComputerGeneric):
 		elif self.state == "sell":
 			# disable all
 			GUI.GUIRootSingleton.broadcastRoomMessage(self.guiroom.index,'disable',{ 'group':'software_booth_display' })
-			
+
 			# activate one by one those available
 			for item in self.sell:
 				item_name = item[0]
 				radio_button_name = lookup_radio_button(item_name)
 				if radio_button_name != '':
-					self.buttons[radio_button_name].enable()			
+					self.buttons[radio_button_name].enable()
 
 		elif self.state == "repair":
 			# disable all
 			GUI.GUIRootSingleton.broadcastRoomMessage(self.guiroom.index,'disable',{ 'group':'software_booth_display' })
-			
+
 			# activate one by one those available
 			for item in self.repair:
 				item_name = self.sell[item]
 				radio_button_name = lookup_radio_button(item_name)
 				if radio_button_name != '':
-					self.buttons[radio_button_name].enable()			
+					self.buttons[radio_button_name].enable()
 
 
 	def draw(self,message=None):
 		if self.state == "buy":
 			item_name = self.items[self.current_item]
 			self.setActiveSelectors();
-			self.drawItem(item_name, self.buy_prices[item_name], message)
+			if not item_name in self.buy_prices:
+				debug.warn("KeyError: '%s' not found in self.buy_prices!"%(item_name))
+			else:
+				self.drawItem(item_name, self.buy_prices[item_name], message)
 
 		elif self.state == "sell":
 			self.setActiveSelectors()
@@ -910,13 +919,13 @@ def handle_SoftwareBoothComputer_message(local, cmd, args, id):
 	elif SoftwareBoothComputer.singleton:
 		return SoftwareBoothComputer.singleton.handle_server_cmd(args)
 	else:
-		print "SoftwareBoothComputer has no singleton!"
+		debug.debug("SoftwareBoothComputer has no singleton!")
 	return ["failure", 'SoftwareBoothComputer has no singleton!']
 
 custom.add("SoftwareBoothComputer", handle_SoftwareBoothComputer_message)
 
-# 
-# A few functions to translate repair bay items from their internal representation 
+#
+# A few functions to translate repair bay items from their internal representation
 # to a useful format for the user (display name, sprites, etc)
 #
 def lookup_upgrade_name(item_name):
@@ -1157,7 +1166,7 @@ def lookup_upgrade_type(item_name):
 		'medium_turret_meson':			'subunit',
 		'medium_turret_rear_meson':		'subunit',
 		'medium_turret_bottom_meson':	'subunit',
-		# tractor beam 
+		# tractor beam
 		'tractor_beam':				'tractor',
 		}
 	try:
@@ -1429,7 +1438,7 @@ def sort_missiles(a,b):
 	else:
 		return 0
 
-# 
+#
 # create lists showing what can be bought, sold, or repaired
 #
 def get_upgrade_repair_list(upgrades): #, basic_repair_cost):
@@ -1445,9 +1454,8 @@ def get_upgrade_repair_list(upgrades): #, basic_repair_cost):
 #		repair.append( -1 )
 
 	# temporary
-	print "::: get_upgrade_repair_list"
-	import pprint
-	pprint.pprint( repair )
+	if debug.debug("::: get_upgrade_repair_list",debug.INFO) > 0:
+		debug.pprint( repair )
 
 	return repair
 
@@ -1497,7 +1505,7 @@ def get_upgrade_sell_list():
 			quantity = int(mount['ammo'])
 			if damage > 0.0:
 				if (quantity > 0):
-					# since percent operational for missiles also applies to launchers, 
+					# since percent operational for missiles also applies to launchers,
 					# apply damage here, but not where we append *_launcher below
 					sell.append( [display_name, damage, 'missile', i, quantity] )
 				elif (quantity == -1):
@@ -1525,7 +1533,7 @@ def get_upgrade_sell_list():
 		if i > 0 and item_name == "medium_turret_meson":
 			item_name = "medium_turret_bottom_meson"
 		# don't include blank turrets
-		blank_turrets = [ 
+		blank_turrets = [
 			"medium_blank", "mediumrear_blank", 				# old units.csv entries (for old savegames)
 			"turret_medium_blank", "turret_mediumrear_blank"	# new units.csv entries
 			]
@@ -1541,9 +1549,8 @@ def get_upgrade_sell_list():
 	sell.sort(sort_upgrades_sell)
 
 	# temporary
-	print "::: get_upgrade_sell_list"
-	import pprint
-	pprint.pprint( sell )
+	if debug.debug("::: get_upgrade_sell_list",debug.INFO) > 0:
+		debug.pprint( sell )
 
 	return sell
 
@@ -1556,7 +1563,7 @@ def get_upgrade_buy_list(prices, disallowed):
 		# if it's not in prohibited upgrade list for this ship, add to buy list
 		try:
 			if (disallowed[i]):
-				pass 
+				pass
 		except:
 			buy.append( i )
 
@@ -1590,8 +1597,8 @@ class RepairBayComputerAnimation:
 
 		# sometimes python errors cause the Base.RunScript call to fail; in that case, add a way out of the animation
 		Base.Link (room_start, 'out_of_animation', 0.75, 0.75, 0.25, 0.25, 'Next', room_next)
- 
-	 	# add ship sprite
+
+		# add ship sprite
 		PlayerShip.AddPlayerShips('shipupgrade',room_start,'repairship')
 		# add computer animation
 		self.computer   = GUI.GUIStaticImage(guiroom, 'animation', ( 'bases/repair_upgrade/ani.spr', GUI.GUIRect(0, 99, 160, 100) )) #GUI.GUIRect(0, 0, 320, 200) ))
@@ -1647,7 +1654,7 @@ class RepairBayComputerGeneric:
 				self.repair_prices[name] = repair_price
 			except:
 				pass
-		
+
 #		if VS.isserver():
 #			self.basic_repair_cost = VS.getPlayer().RepairCost()
 #		else:
@@ -1662,7 +1669,7 @@ class RepairBayComputerGeneric:
 		self.buy    = get_upgrade_buy_list(self.buy_prices, self.disallowed)
 		self.sell   = get_upgrade_sell_list()
 		self.repair = get_upgrade_repair_list(self.sell) #, self.basic_repair_cost)
-		
+
 		self.upgrade_classes = {}
 		for i in range(len(self.sell)):
 			item_name, undamaged, type, mount_num, quantity = self.sell[i]
@@ -1687,7 +1694,7 @@ class RepairBayComputerGeneric:
 			mount = player.GetMountInfo(i)
 			# check whether mount is used or not
 			self.mounts['empty'][i] = mount['empty']
-			
+
 			# check what type of mount this is
 			if (mount['size'] & 1) or (mount['size'] & 2) or (mount['size'] & 4):
 				self.mounts['gun'].append(i)
@@ -1703,8 +1710,8 @@ class RepairBayComputerGeneric:
 				# torpedo mounts aren't empty
 				self.mounts['empty'][i] = False
 			if mount['empty']==False:
-				print mount['weapon_info']
-		
+				debug.debug(str(mount['weapon_info']),debug.INFO)
+
 	def setstatus(self,success,message):
 		self.status = [success and "success" or "failure", message]
 	#def draw(self,message=None):
@@ -1750,7 +1757,7 @@ class RepairBayComputerGeneric:
 	def mount_select_buy_server(self, item_name, mount_num):
 		self.resetstatus()
 		if item_name not in self.buy:
-			print "ERROR: "+item_name+" mount not in self.buy which is: "+repr(self.buy)
+			debug.error("ERROR: "+item_name+" mount not in self.buy which is: "+repr(self.buy))
 			#return
 		try:
 			mount_num = int(mount_num)
@@ -1789,11 +1796,11 @@ class RepairBayComputerGeneric:
 			self.missile_bought(item_name,type,mount_num)
 			self.setstatus(True, "Thank You")
 		return self.status
-	
+
 	def buy_server(self, item_name):
 		self.resetstatus()
 		if item_name not in self.buy:
-			print "ERROR: "+item_name+" mount not in self.buy which is: "+repr(self.buy)
+			debug.error("ERROR: "+item_name+" mount not in self.buy which is: "+repr(self.buy))
 			#return
 		type      = lookup_upgrade_type(item_name)
 		try:
@@ -1931,7 +1938,7 @@ class RepairBayComputerGeneric:
 		else:
 			self.setstatus(False, "ERROR: Can't find upgrade "+item_name_sent)
 		return self.status
-	
+
 	def repair_server(self, repair_index):
 		self.resetstatus()
 		try:
@@ -2033,7 +2040,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 
 		# when a button is clicked, this will allow us to get the RepairBayComputer instance from the x_click functions
 		guiroom.owner = self
-		
+
 		# background and ship image sprites are drawn elsewhere
 		# computer sprite:
 		GUI.GUIStaticImage(guiroom, 'computer', ( 'bases/repair_upgrade/shipupgrade_computer.spr', GUI.GUIRect(0, 99, 160, 100) )) # , GUI.GUIRect(0, 0, 320, 200) )).draw()
@@ -2061,7 +2068,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 			GUI.GUIRootSingleton.broadcastRoomMessage(guiroom.index,'check',{'index':'btn_sell'})
 		elif (self.state == "repair"):
 			GUI.GUIRootSingleton.broadcastRoomMessage(guiroom.index,'check',{'index':'btn_repair'})
-	
+
 		# add the text labels
 		txt_color = GUI.GUIColor(0.7,0.7,0.7)
 		txt_warning_color = GUI.GUIColor(0.7,0,0)
@@ -2136,10 +2143,10 @@ class RepairBayComputer(RepairBayComputerGeneric):
 
 	def reset(self):
 		# reset computer to initial state
-		
+
 		if VS.networked():
 			custom.run("RepairBayComputer", ["reload"], None)
-		
+
 		self.state = "buy"
 		self.current_item = 0
 		GUI.GUIRootSingleton.broadcastRoomMessage(self.guiroom.index,'check',{'index':'btn_buy'})
@@ -2185,8 +2192,8 @@ class RepairBayComputer(RepairBayComputerGeneric):
 		self.hide_mount_selectors()
 
 		RepairBayComputerGeneric.reset(self)
-		print "MOUNT UP"
-		print self.mounts
+		if debug.debug("MOUNT UP",debug.INFO) > 0:
+			debug.dprint(repr(self.mounts))
 
 		# call computer.draw() to place the right text and graphics on the screen
 		self.draw()
@@ -2201,7 +2208,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 				self.current_item = (self.current_item + 1) % max
 			else:
 				self.current_item = 0
-			
+
 		elif self.state=="sell":
 			max = len(self.sell)
 			if max > 0:
@@ -2237,7 +2244,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 				self.current_item = max
 		self.draw()
 
-	def mount_select(self, button_index): 
+	def mount_select(self, button_index):
 		self.hide_mount_selectors()
 		selector = self.mount_selectors[button_index]
 		mount_num = selector["mount_num"]
@@ -2267,7 +2274,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 			# it might either be synchronous or asynchronous (sort-of a bug)
 			custom.run("RepairBayComputer", ["mount_select_buy",item_name,mount_num], handleBuyResponse)
 
-	def select(self,select_all=False): 
+	def select(self,select_all=False):
 		# disable button if mount_selectors are shown
 		if not self.enabled: return
 		if self.state == "repair":
@@ -2284,7 +2291,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 #					global basic_repair_price
 #					global basic_repair_cost
 #					price = basic_repair_price * basic_repair_cost
-				
+
 				def handleRepairResponse(args):
 					if args[0]!='success':
 						self.draw(args[1])
@@ -2312,7 +2319,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 					self.draw("INSUFFICIENT CREDIT")
 				else:
 					custom.run("RepairBayComputer", ["repair",repair_index], handleRepairResponse)
-		
+
 		elif self.state == "sell":
 			if (len(self.repair) > 0) and (len(self.sell) > 0):
 				# this first if statement is needed due to the way the sell code works
@@ -2374,7 +2381,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 					#has_item = self.upgrade_classes.get(upgrade_class, '')
 					custom.run("RepairBayComputer", ["buy",item_name], handleBuyResponse)
 				elif type == "weapon":
-					# buying a gun 
+					# buying a gun
 					slots = available_mounts(self.mounts, 'gun')
 					if len(slots) == 0:
 						self.draw("NO ROOM ON SHIP")
@@ -2426,7 +2433,7 @@ class RepairBayComputer(RepairBayComputerGeneric):
 				self.draw()
 		elif button_index == "btn_sell":
 			if self.state != "sell":
-				
+
 				# sort the list first, if we added any new entries
 				self.sell.sort(sort_upgrades_sell)
 				self.state = "sell"
@@ -2438,8 +2445,8 @@ class RepairBayComputer(RepairBayComputerGeneric):
 #				global basic_repair_cost
 				player = VS.getPlayer()
 				rc = player.RepairUpgrade()
-				print "::: calling player.RepairUpgrade()"
-				print rc
+				debug.debug("::: calling player.RepairUpgrade()")
+				debug.debug(repr(rc))
 				# update the repair list, if user sold any damaged items since reset()
 				self.repair = get_upgrade_repair_list(self.sell) #, basic_repair_cost)
 				self.state = "repair"
@@ -2550,7 +2557,7 @@ def handle_RepairBayComputer_message(local, cmd, args, id):
 	elif RepairBayComputer.singleton:
 		return RepairBayComputer.singleton.handle_server_cmd(args)
 	else:
-		print "RepairBayComputer has no singleton!"
+		debug.debug("RepairBayComputer has no singleton!")
 	return ["failure", 'RepairBayComputer has no singleton!']
 
 custom.add("RepairBayComputer", handle_RepairBayComputer_message)
@@ -2583,7 +2590,7 @@ def repair_item(player, item_name, count=1):
 		if rc:
 			return add_item(player, item_name, price, count)
 		else:
-			print "removeCargo in repair_item failed: %s = player.removeCargo(%s, %s, %s)" (rc,item_name,count,True)
+			debug.warning("removeCargo in repair_item failed: %s = player.removeCargo(%s, %s, %s)" (rc,item_name,count,True))
 			return False
 
 def add_item_cargo(player, item_name, price, count=1):
@@ -2625,7 +2632,7 @@ def remove_item_cargo(player, item_name, count=1):
 def remove_item(player, item_name, count=1, recompute=True):
 	rc = remove_item_cargo(player, item_name, count)
 	# note: this takes the place of a player.downgrade(item_name) function
-	# rather than remove only the item, it starts from the ship blank, and 
+	# rather than remove only the item, it starts from the ship blank, and
 	# re-adds all the upgrades
 	# because of the way this works, player should do the basic upgrade first
 	if recompute:
@@ -2684,8 +2691,8 @@ def repair_turret(player, item_name):
 	return add_turret(player, item_name, 1)
 
 def available_mounts(mounts, which, couldBeTractor=True):
-	print "availabe?"
-	print mounts
+	debug.debug("availabe?",debug.INFO)
+	debug.debug(repr(mounts),debug.INFO)
 	new_list = []
 	try:
 		slots = mounts[which]
@@ -2698,8 +2705,8 @@ def available_mounts(mounts, which, couldBeTractor=True):
 				new_list.append(mount_num)
 		except:
 			pass
-	print "new listed "+which
-	print new_list
+	debug.debug("new listed "+which)
+	debug.debug(repr(new_list))
 	if len(new_list)==0 and which=='special' and couldBeTractor:#go through again looking for empty missile launchers
 		new_list=available_missile_mounts(mounts,'missile','blargh')+available_missile_mounts(mounts,'torpedo','blargh')
 #		for i in range(len(slots)):
@@ -2709,8 +2716,8 @@ def available_mounts(mounts, which, couldBeTractor=True):
 #					new_list.append(mount_num)
 #			except:
 #				pass
-		print "new new list"
-		print new_list
+		debug.debug("new new list")
+		debug.debug(repr(new_list))
 	return new_list
 
 def available_missile_mounts(mounts, which, item_name):
@@ -2858,7 +2865,7 @@ class MasterPartList:
 			category = cargo.GetCategory()
 			if category[:14] != 'upgrades/Radar': continue
 			radar.append(cargo)
-		return radar	
+		return radar
 
 	def getUpgradeList(self):
 		upgrades = []
@@ -2868,7 +2875,7 @@ class MasterPartList:
 			if category[:8]  != 'upgrades': continue
 			if category[:14] == 'upgrades/Radar': continue
 			upgrades.append(cargo)
-		return upgrades	
+		return upgrades
 
 	def getEntry(self, name):
 		try:
@@ -2879,7 +2886,7 @@ class MasterPartList:
 #
 # ShipPurchase, BuyShip, et al
 #	code called by Base.Python in MakeWeapon
-#	this shows the ship dealer, checks if you can afford the ship model chosen, makes an offer, 
+#	this shows the ship dealer, checks if you can afford the ship model chosen, makes an offer,
 #	and completes the transaction if accepted
 #
 def ShipPurchase(shipname):
@@ -2891,14 +2898,20 @@ def ShipPurchase(shipname):
 	VS.StopAllSounds()
 	if (VS.getPlayer().getName()==shipname or VS.getPlayer().getName()+".begin"==shipname or VS.getPlayer().getName()==shipname+".begin"):
 		VS.playSound("sales/pitch"+shipname+"duplicate.wav",(0,0,0),(0,0,0))
+		if shipname == "centurion":
+			Base.Message("Hell of a ship, the Centurion! You're obviously a privateer who likes fire power, but I'm afraid my boss wanted me trade ship for ship. Can I tell you about Orion or Galaxy ?")
 	elif CanBuyShip(shipname+".begin"):
 		fixers.CreateChoiceButtons(Base.GetCurRoom(),[
 			fixers.Choice("bases/fixers/yes.spr","#\nimport fixers\nfixers.DestroyActiveButtons ()\nimport weapons_lib\nimport VS\nVS.StopAllSounds()\nweapons_lib.BuyShip('"+shipname+".begin')\n","Purchase "+shipname.capitalize()),
 			fixers.Choice("bases/fixers/no.spr","#\nimport fixers\nfixers.DestroyActiveButtons ()\nimport VS\nVS.StopAllSounds()\nVS.playSound('sales/pitch"+shipname+"reject.wav',(0,0,0),(0,0,0))\n","Decline Purchasing")])
 		VS.playSound("sales/pitch"+shipname+".wav",(0,0,0),(0,0,0))
+		if shipname == "centurion":
+			Base.Message("I see you're looking at the Centurion... Hell of a ship ! Hey you can see, the Centurion is a heavy fighter. Look towards the four guns, two weapons and of course, a rear turret. Beautiful hey? Look at these engines with aerodynamic shape. Did you know the mercenary's guild has endorsed the model 2069 as the best available fighter? The Centurion is a real bargain, priced to 200 000 credits, minus the value of your old ship for trading, including any extras. Any credits left, will be credited to your account. How about it? Interested?")
+		elif shipname == "galaxy":
+			Base.Message("Checking out the Galaxy class merchant ship ? Good choice! She's not as fast as some ships, but she sure is practical: you've got a roomy cockpit, lot of cargo space, and you can have top and bottom turrets if you feel you need more fire power. Did I mention this is the base ship of merchants vessels now? No? Listen: if you can't afford a Drayman, -- and who the hell can these days --, you'll find the Galaxy meet your shipping needs. And it is still at 150 000. We can give you credits for your old ship, along with your old armuture. What's left is in your account. So, how about fly the Galaxy home today ?")
 	else:
 		VS.playSound("sales/pitchnotenoughmoney.wav",(0,0,0),(0,0,0))
-		Base.Message("I hate to break it to you, but we've checked your account, and you don't have enough credits to buy this ship. She sure is a fine ship though, isn't she? Listen, I want to make a sale, you want to make a purchase, lets look at the facts. You know the retail of this ship--we can use your ship for tradeins, plus extras--including your cash on hand, that still leaves you short.  Go get some more cash, and come back when you have more cash, and don't feel embarrassed: these things happen!")
+		Base.Message("I hate to break it to you, but we've checked your account, and you don't have enough credits to buy this ship. She sure is a fine ship though, isn't she? Listen, I want to make a sale, you want to make a purchase, lets look at the facts. You know the retail of this ship--we can use your ship for trading, plus extras--including your cash on hand, that still leaves you short.  Go get some more cash, and come back when you have more cash, and don't feel embarrassed: these things happen!")
 def ShipValue(shipname, used):
 	import VS
 	carg=VS.GetMasterPartList().GetCargo(shipname)
@@ -2965,7 +2978,7 @@ def BuyShip(shipname):
 		if (where!=-1):
 			shipname=shipname[0:where]
 		VS.StopAllSounds()
-		VS.playSound("sales/pitch"+shipname+"duplicate.wav",(0,0,0),(0,0,0))		
+		VS.playSound("sales/pitch"+shipname+"duplicate.wav",(0,0,0),(0,0,0))
 		return False
 
 
@@ -2974,3 +2987,10 @@ master_part_list   = MasterPartList()
 #basic_repair_price = 100
 #basic_repair_cost  = 0
 basename="perry"
+
+try:
+	global _shipdealer_font
+	_shipdealer_font = VS.getVariable("graphics/privateer", "shipdealer_font", "")
+except:
+	_shipdealer_font = ''
+

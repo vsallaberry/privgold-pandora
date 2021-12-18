@@ -26,28 +26,34 @@
 #include "xml_support.h"
 #include "config_xml.h"
 #include "winsys.h"
+#include "unicode.h"
 #include <assert.h>
-#include "gfxlib.h"
+#include <string.h>
 
+#include "gfxlib.h"
+#include "log.h"
 
 #if !defined(_WIN32) && !defined(__CYGWIN__)
+//# if !(defined(__APPLE__) || defined(MACOSX))
+//#  define GL_GLEXT_PROTOTYPES 1
+//#  define GLX_GLXEXT_PROTOTYPES 1
+//#  define GLX_GLXEXT_LEGACY 1
 
-//#if !(defined(__APPLE__) || defined(MACOSX))
-//#define GL_GLEXT_PROTOTYPES 1
-//#define GLX_GLXEXT_PROTOTYPES 1
-//#define GLX_GLXEXT_LEGACY 1
-
-//    #   include <GL/glxext.h>
-  //  #   include <GL/glx.h>
-    //#   include <GL/glxext.h>
-//#endif
-
-#include <stdlib.h>
-
+//#  include <GL/glxext.h>
+//#  include <GL/glx.h>
+//#  include <GL/glxext.h>
+//# endif
+# include <stdlib.h>
 #else
-#include <windows.h>
+# include <windows.h>
 #endif
-#define GL_GLEXT_PROTOTYPES 1
+
+#ifdef GL_GLEXT_PROTOTYPES
+# undef GL_GLEXT_PROTOTYPES
+//# define GL_GLEXT_PROTOTYPES 1
+#endif
+# define GL_GLEXT_PROTOTYPES 1
+
 #if defined(__APPLE__) || defined(MACOSX)
     #include <OpenGL/gl.h>
     #include <OpenGL/glext.h>
@@ -194,7 +200,7 @@ void init_opengl_extensions()
 {
 	const unsigned char * extensions = glGetString(GL_EXTENSIONS);
 
-(void) VSFileSystem::vs_fprintf(stderr, "OpenGL Extensions supported: %s\n", extensions);
+(void) VS_LOG("gl", logvs::NOTICE, "OpenGL Extensions supported: %s", extensions);
 
 #ifndef NO_COMPILEDVERTEXARRAY_SUPPORT
     if (vsExtensionSupported( "GL_EXT_compiled_vertex_array")&&XMLSupport::parse_bool (vs_config->getVariable ("graphics","LockVertexArrays","true"))) {
@@ -214,7 +220,7 @@ void init_opengl_extensions()
 	glUnlockArraysEXT_p = (PFNGLUNLOCKARRAYSEXTPROC)
 	    GET_GL_PROC( (GET_GL_PTR_TYP) "glUnlockArraysEXT" );
 #endif
-	(void) VSFileSystem::vs_fprintf(stderr, "OpenGL::GL_EXT_compiled_vertex_array supported\n");
+	(void) VS_LOG("gl", logvs::NOTICE, "OpenGL::GL_EXT_compiled_vertex_array supported");
     } else {
 #ifdef __APPLE__
 #ifndef __APPLE_PANTHER_GCC33_CLI__
@@ -222,7 +228,7 @@ void init_opengl_extensions()
 		glUnlockArraysEXT_p = 0;
 #endif /*__APPLE_PANTHER_GCC33_CLI__*/
 #endif
-		(void) VSFileSystem::vs_fprintf(stderr, "OpenGL::GL_EXT_compiled_vertex_array unsupported\n");
+		VS_LOG("gl", logvs::NOTICE, "OpenGL::GL_EXT_compiled_vertex_array unsupported");
     }
 #endif
 #ifndef __APPLE__
@@ -231,11 +237,11 @@ void init_opengl_extensions()
             GET_GL_PROC( (GET_GL_PTR_TYP) "glMultiDrawArraysEXT" );
         glMultiDrawElements_p = (PFNGLMULTIDRAWELEMENTSEXTPROC)
             GET_GL_PROC( (GET_GL_PTR_TYP) "glMultiDrawElementsEXT" );
-        VSFileSystem::vs_fprintf(stderr, "OpenGL::GL_EXT_multi_draw_arrays supported\n");
+        VS_LOG("gl", logvs::NOTICE, "OpenGL::GL_EXT_multi_draw_arrays supported");
     } else {
         glMultiDrawArrays_p = 0;
         glMultiDrawElements_p = 0;
-        VSFileSystem::vs_fprintf(stderr, "OpenGL::GL_EXT_multi_draw_arrays unsupported\n");
+        VS_LOG("gl", logvs::NOTICE, "OpenGL::GL_EXT_multi_draw_arrays unsupported");
     }
 #endif
 
@@ -345,7 +351,7 @@ void init_opengl_extensions()
 
 #ifdef GL_FOG_DISTANCE_MODE_NV
     if (vsExtensionSupported ("GL_NV_fog_distance")) {
-      VSFileSystem::vs_fprintf (stderr,"OpenGL::Accurate Fog Distance supported\n");
+      VS_LOG("gl", logvs::NOTICE, "OpenGL::Accurate Fog Distance supported");
       int foglev=XMLSupport::parse_int (vs_config->getVariable ("graphics","fogdetail","0"));
       switch (foglev) {
       case 0:
@@ -360,23 +366,23 @@ void init_opengl_extensions()
       }
     }else {
 #endif
-      VSFileSystem::vs_fprintf (stderr,"OpenGL::Accurate Fog Distance unsupported\n");
+      VS_LOG("gl", logvs::NOTICE, "OpenGL::Accurate Fog Distance unsupported");
 #ifdef GL_FOG_DISTANCE_MODE_NV
     }
 #endif
 
     if (vsExtensionSupported ("GL_ARB_texture_compression")) {
-      VSFileSystem::vs_fprintf (stderr,"OpenGL::Generic Texture Compression supported\n");
+      VS_LOG("gl", logvs::NOTICE, "OpenGL::Generic Texture Compression supported");
     }else {
-      VSFileSystem::vs_fprintf (stderr,"OpenGL::Generic Texture Compression unsupported\n");
+      VS_LOG("gl", logvs::NOTICE, "OpenGL::Generic Texture Compression unsupported");
       gl_options.compression=0;
     }
     if (vsExtensionSupported ("GL_EXT_texture_compression_s3tc")) {
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Compression supported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Compression supported");
       //should be true;
     } else {
       gl_options.s3tc=false;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Compression unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Compression unsupported");
     }
     if (  (glMultiTexCoord2fARB_p&&glMultiTexCoord4fARB_p&&glClientActiveTextureARB_p&&glActiveTextureARB_p)
         &&(vsExtensionSupported ("GL_ARB_multitexture")||vsExtensionSupported ("GL_EXT_multitexture"))  ) {
@@ -387,31 +393,31 @@ void init_opengl_extensions()
           gl_options.Multitexture = 0;
       //gl_options.Multitexture = 1*gl_options.Multitexture;//might be zero by input
       if (gl_options.Multitexture)
-          (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::Multitexture supported (%d units)\n", gl_options.Multitexture);
+          VS_LOG("gl", logvs::NOTICE, "OpenGL::Multitexture supported (%d units)", gl_options.Multitexture);
     } else {
       gl_options.Multitexture = 0;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::Multitexture unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::Multitexture unsupported");
     }
     if ( vsExtensionSupported( "GL_ARB_texture_cube_map" ) || vsExtensionSupported( "GL_EXT_texture_cube_map" ) ) {
       gl_options.cubemap = 1;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::TextureCubeMapExt supported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::TextureCubeMapExt supported");
     } else {
       gl_options.cubemap = 0;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::TextureCubeMapExt unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::TextureCubeMapExt unsupported");
     }
     if (vsExtensionSupported ("GL_EXT_texture_edge_clamp")||vsExtensionSupported ("GL_SGIS_texture_edge_clamp")) {
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Clamp-to-Edge supported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Clamp-to-Edge supported");
       //should be true;
     } else {
       gl_options.ext_clamp_to_edge=false;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Clamp-to-Edge unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Clamp-to-Edge unsupported");
     }
     if (vsExtensionSupported ("GL_ARB_texture_border_clamp")||vsExtensionSupported ("GL_SGIS_texture_border_clamp")) {
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Clamp-to-Border supported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Clamp-to-Border supported");
       //should be true;
     } else {
       gl_options.ext_clamp_to_border=false;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::S3TC Texture Clamp-to-Border unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::S3TC Texture Clamp-to-Border unsupported");
     }
     if (GFXDefaultShaderSupported()) {
       if (gl_options.Multitexture<16)
@@ -448,18 +454,36 @@ void init_opengl_extensions()
       VSFileSystem::Close (fp);
     }
     */
- }
+}
+
 static void Reshape (int x, int y) {
   g_game.x_resolution = x;
   g_game.y_resolution = y;
-  VSFileSystem::vs_fprintf (stderr,"Reshaping %d %d", x,y);
+  VS_LOG("gl", logvs::NOTICE, "Reshaping %d %d", x,y);
 
 }
+
 extern void GFXInitTextureManager();
+
 void GFXInit (int argc, char ** argv){
-  winsys_init (&argc,argv,"Vega Strike","vega.ico");
-    /* Ingore key-repeat messages */
-  winsys_enable_key_repeat(false);
+    std::string icon_file = vs_config->getVariable ("graphics/general","icon","vega.ico");
+    if (VSFileSystem::FileExistsData(icon_file))
+        icon_file = VSFileSystem::datadir + "/" + icon_file;
+    
+    bool handle_unicode_kb_cockpit = XMLSupport::parse_bool(vs_config->getVariable("keyboard","enable_unicode_cockpit","false"));
+    bool handle_unicode_kb = XMLSupport::parse_bool(vs_config->getVariable("keyboard","enable_unicode","true"));
+    bool handle_unicode_display
+            = XMLSupport::parse_bool(vs_config->getVariable("display","enable_unicode","true"));
+    if (handle_unicode_kb || handle_unicode_display || handle_unicode_kb_cockpit) {
+        unicodeInitLocale();
+    }
+    
+    winsys_init (&argc,argv,"Vega Strike",(char*)icon_file.c_str());
+    winsys_show_cursor(0);
+    
+    /* Ingore key-repeat messages, disable unicode */
+    winsys_set_kb_mode(handle_unicode_kb_cockpit ? WS_UNICODE_ENABLED : WS_UNICODE_DISABLED,
+                       WS_KB_REPEAT_DISABLED, 0, 0, 0, 0);
 
     glViewport (0, 0, g_game.x_resolution,g_game.y_resolution);
     float clearcol[4];
@@ -513,10 +537,10 @@ void GFXInit (int argc, char ** argv){
 #endif
     if (vsExtensionSupported("GL_EXT_color_table")||vsExtensionSupported ("GL_EXT_shared_texture_palette")) {
       gl_options.PaletteExt = 1;
-      //(void) VSFileSystem::vs_fprintf(stderr, "OpenGL::EXTColorTable supported\n");
+      //(void) VS_LOG("gl", logvs::NOTICE, "OpenGL::EXTColorTable supported");
     } else {
       gl_options.PaletteExt = 0;
-      (void) VSFileSystem::vs_fprintf(stderr, "OpenGL::EXTColorTable unsupported\n");
+      (void) VS_LOG("gl", logvs::NOTICE, "OpenGL::EXTColorTable unsupported");
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -581,7 +605,7 @@ void GFXInit (int argc, char ** argv){
       winsys_swap_buffers();
     }
 
-    winsys_show_cursor(false);
+    winsys_show_cursor(0);
 }
 
 #if defined(IRIX)

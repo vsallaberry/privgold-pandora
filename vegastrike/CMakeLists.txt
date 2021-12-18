@@ -8,15 +8,23 @@
 
 cmake_minimum_required(VERSION 2.4)
 
-#SET(CMAKE_CXX_STANDARD_REQUIRED 1) ## ERROR instead of DECAYING value is not supported
-if(NOT CMAKE_CXX_STANDARD)
-    SET(CMAKE_CXX_STANDARD 11)
-endif()
-#set (CMAKE_CXX_EXTENSIONS FALSE)
-
 project (vsUTCS)
 set(VERSION "0.4.4.1")
 
+#SET(CMAKE_CXX_STANDARD_REQUIRED 1) ## ERROR instead of DECAYING value if not supported
+if(NOT CMAKE_CXX_STANDARD)
+    SET(CMAKE_CXX_STANDARD 11)
+elseif(NOT CMAKE_CXX_STANDARD MATCHES "(98|11|14|17|20|23)")
+    set(requested_cxx_standard ${CMAKE_CXX_STANDARD})
+    if(CMAKE_CXX_STANDARD EQUAL "03")
+        SET(CMAKE_CXX_STANDARD 98)
+    else()
+        SET(CMAKE_CXX_STANDARD 11)
+    endif()
+    message(WARNING "CMAKE_CXX_STANDARD has unknown value (${requested_cxx_standard}),using ${CMAKE_CXX_STANDARD}")
+    unset(requested_cxx_standard)
+endif(NOT CMAKE_CXX_STANDARD)
+#set (CMAKE_CXX_EXTENSIONS FALSE)
 
 include_directories(${vsUTCS_SOURCE_DIR}/src
 					${vsUTCS_SOURCE_DIR}/src/cmd
@@ -330,7 +338,11 @@ SET(LIBROOTGENERIC_SOURCES src/configxml.cpp
 						   src/xml_serializer.cpp
 						   src/xml_support.cpp
 						   src/XMLDocument.cpp
-						   src/options.cpp )
+						   src/options.cpp
+                           src/log.cpp
+                           src/unicode.cpp
+                           src/multimap.cpp
+                           src/vs_log_modules.cpp)
 
 SET(LIBROOTCLIENT_SOURCES src/cg_global.cpp
 						  src/command.cpp
@@ -352,7 +364,7 @@ SET(LIBROOTCLIENT_SOURCES src/cg_global.cpp
 						  src/star_system_jump.cpp
 						  src/star_system.cpp
 						  src/universe_util.cpp
-						  src/universe.cpp )
+						  src/universe.cpp)
 
 SET(LIBROOTSERVER_SOURCES  src/faction_util_server.cpp
 						   src/force_feedback_server.cpp
@@ -468,7 +480,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 
 ###
-message ("-- CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}")
+message (STATUS "Building on system ${CMAKE_SYSTEM_NAME}")
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     SET(HOSTOS "APPLE")
@@ -516,44 +528,52 @@ foreach(CACHE_VAR ${CACHE_VARS})
 endforeach()
 string(REPLACE "\"" "\\\"" CMAKE_COMMAND_ARGS "${CMAKE_COMMAND_ARGS}")
 
-###
-SET(CMAKE_CXX_FLAGS_DEBUG " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -g2 -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden" CACHE STRING
+##############################################################################
+# CMAKE_BUILD_TYPE
+#
+if(NOT VS_OPTIMIZE)
+    set(VS_OPTIMIZE "-O2")
+endif(NOT VS_OPTIMIZE)
+if(NOT VS_DEBUG_LEVEL)
+    set(VS_DEBUG_LEVEL "-g2")
+endif(NOT VS_DEBUG_LEVEL)
+# Debug
+SET(CMAKE_CXX_FLAGS_DEBUG " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during debug builds."
     FORCE )
-SET( CMAKE_C_FLAGS_DEBUG " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -g2 -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden" CACHE STRING
+SET( CMAKE_C_FLAGS_DEBUG " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during debug builds."
     FORCE )
 
-
-SET(CMAKE_CXX_FLAGS_RELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+# Release
+SET(CMAKE_CXX_FLAGS_RELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -DNDEBUG -include config.h -pipe ${VS_OPTIMIZE} -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during release builds."
     FORCE )
-SET( CMAKE_C_FLAGS_RELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+SET( CMAKE_C_FLAGS_RELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -DNDEBUG -include config.h -pipe ${VS_OPTIMIZE} -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during release builds."
     FORCE )
 
-SET(CMAKE_CXX_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+# NativeRelease
+SET(CMAKE_CXX_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -DNDEBUG -include config.h -pipe ${VS_OPTIMIZE} -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during release builds."
     FORCE )
-SET( CMAKE_C_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O3 -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+SET( CMAKE_C_FLAGS_NATIVERELEASE " -DBOOST_PYTHON_NO_PY_SIGNATURES -DNDEBUG -include config.h -pipe ${VS_OPTIMIZE} -march=native -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during release builds."
     FORCE )
 
-
-SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O2 -g3 -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+# RelWithDebInfo
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_OPTIMIZE} ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during release builds - optimized with debug info."
     FORCE )
-SET( CMAKE_C_FLAGS_RELWITHDEBINFO " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -O2 -g3 -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden" CACHE STRING
+SET( CMAKE_C_FLAGS_RELWITHDEBINFO " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_OPTIMIZE} ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during release builds - optimized with debug info."
     FORCE )
 
-
-
 # Setup maintainer mode flags
-SET(CMAKE_CXX_FLAGS_MAINTAINER " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -g2 -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden" CACHE STRING
+SET(CMAKE_CXX_FLAGS_MAINTAINER " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during maintainer builds."
     FORCE )
-SET( CMAKE_C_FLAGS_MAINTAINER " -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -g2 -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden" CACHE STRING
+SET( CMAKE_C_FLAGS_MAINTAINER " -DBOOST_PYTHON_NO_PY_SIGNATURES -DVS_DEBUG_LOG -include config.h -pipe ${VS_DEBUG_LEVEL} -Wall -Wno-unused-function -Wno-unused-variable -O0 -fvisibility=hidden ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during maintainer builds."
     FORCE )
 SET( CMAKE_EXE_LINKER_FLAGS_MAINTAINER
@@ -570,12 +590,11 @@ MARK_AS_ADVANCED(
     CMAKE_EXE_LINKER_FLAGS_MAINTAINER
     CMAKE_SHARED_LINKER_FLAGS_MAINTAINER )
 
-
 # Setup profiler mode flags
-SET(CMAKE_CXX_FLAGS_PROFILER "-pg -g2 -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -Wall -Wno-unused-function -Wno-unused-variable -O3" CACHE STRING
+SET(CMAKE_CXX_FLAGS_PROFILER "-pg ${VS_DEBUG_LEVEL} -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -Wall -Wno-unused-function -Wno-unused-variable ${VS_OPTIMIZE} ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C++ compiler during profiler builds."
     FORCE )
-SET( CMAKE_C_FLAGS_PROFILER "-pg -g2 -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -Wall -Wno-unused-function -Wno-unused-variable -O3" CACHE STRING
+SET( CMAKE_C_FLAGS_PROFILER "-pg ${VS_DEBUG_LEVEL} -DBOOST_PYTHON_NO_PY_SIGNATURES -include config.h -pipe -Wall -Wno-unused-function -Wno-unused-variable ${VS_OPTIMIZE} ${CMAKE_CXX_FLAGS}" CACHE STRING
     "Flags used by the C compiler during profiler builds."
     FORCE )
 SET( CMAKE_EXE_LINKER_FLAGS_PROFILER
@@ -592,7 +611,6 @@ MARK_AS_ADVANCED(
     CMAKE_EXE_LINKER_FLAGS_PROFILER
     CMAKE_SHARED_LINKER_FLAGS_PROFILER )
 
-
 # Set the default build type to maintainer
 IF(CMAKE_BUILD_TYPE)
     string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE)
@@ -604,36 +622,25 @@ IF(NOT CMAKE_BUILD_TYPE
       FORCE)
 ENDIF()
 
-
 IF(CMAKE_BUILD_TYPE MATCHES "[Mm][Aa][Ii][Nn][Tt][Aa][Ii][Nn][Ee][Rr]")
   ADD_DEFINITIONS(-DGCC_HASVISIBILITY)
 ENDIF(CMAKE_BUILD_TYPE MATCHES "[Mm][Aa][Ii][Nn][Tt][Aa][Ii][Nn][Ee][Rr]")
+##############################################################################
 
+# Report CXX standard
+message(STATUS "Using CXX Standard: ${CMAKE_CXX_STANDARD}")
+
+##############################################################################
+# Main executables
 IF(NOT DISABLE_CLIENT)
 	add_executable(vegastrike ${VEGASTRIKE_SOURCES})
 ENDIF(NOT DISABLE_CLIENT)
 
 add_executable(vegaserver ${VEGASERVER_SOURCES})
 
+##############################################################################
 ## VSA PAckage info
-#CMAKE_CXX_COMPILER_VERSION
-#CMAKE_C_COMPILER_VERSION
-
-### test source sample
-include(CheckCXXSourceCompiles)
-
-#set (CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
-#set (CMAKE_CXX_STANDARD_REQUIRED TRUE)
-#set (CMAKE_CXX_STANDARD 11)
-#set (CMAKE_CXX_EXTENSIONS FALSE)
-set(CMAKE_REQUIRED_FLAGS)
-check_cxx_source_compiles("
-#include <atomic>
-int main() {
-  std::atomic<int> u{5};
-  return u;
-}" HAVE_STDLIB_ATOMIC)
-## ! VSA
+find_package(PkgConfig)
 
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
@@ -701,7 +708,7 @@ IF(MACOSX)
     IF(AGL_LIBRARY)
         #find_path(AGL_INCLUDE_DIR AGL/agl.h DOC "Include for AGL on OS X")
         #SET(TST_INCLUDES ${TST_INCLUDES} ${AGL_INCLUDE_DIR})
-        SET(TST_LIBS ${TST_LIBS} ${AGL_LIBRARY})
+        #SET(TST_LIBS ${TST_LIBS} ${AGL_LIBRARY})
         message("-- AGL found : ${AGL_LIBRARY}")
     ELSE(AGL_FOUND)
         message("// AGL not found")
@@ -750,7 +757,7 @@ ENDIF()
 IF(SDL_FOUND)
 	SET(TST_INCLUDES ${TST_INCLUDES} ${SDL_INCLUDE_DIR})
 	SET(TST_LIBS ${TST_LIBS} ${SDL_LIBRARY})
-	message("-- SDL Found")
+    message("-- SDL Found (includes:${SDL_INCLUDE_DIR} libs:${SDL_LIBRARIES}")
 	SET(HAVE_SDL 1)
     IF(NOT SDL_WINDOWING_DISABLE)
         SET(SDL_WINDOWING 1)
@@ -775,6 +782,7 @@ IF(JPEG_FOUND)
     SET(HAVE_JPEG 1)
 	SET(TST_INCLUDES ${JPEG_INCLUDE_DIR} ${TST_INCLUDES})
 	SET(TST_LIBS ${TST_LIBS} ${JPEG_LIBRARIES})
+    message("-- JPEG INCLUDES: ${JPEG_INCLUDE_DIR}")
 ELSE(JPEG_FOUND)
 	message("How are we gonna open jpegs?")
 ENDIF(JPEG_FOUND)
@@ -785,7 +793,7 @@ IF(PNG_FOUND)
     SET(HAVE_PNG 1)
 	SET(TST_INCLUDES ${PNG_INCLUDE_DIRS} ${TST_INCLUDES})
 	SET(TST_LIBS ${TST_LIBS} ${PNG_LIBRARIES})
-    message("-- PNG: INCDIRS=${PNG_INCLUDE_DIRS}")
+    message("-- PNG INCLUDES: ${PNG_INCLUDE_DIRS}")
 ELSE(PNG_FOUND)
 	message("Can't find PNG lib")
 ENDIF(PNG_FOUND)
@@ -851,14 +859,43 @@ endif(NOT USE_NET_THREAD_POSIX)
 INCLUDE(CheckFunctionExists)
 INCLUDE (CheckSymbolExists)
 CHECK_INCLUDE_FILE(wchar.h HAVE_WCHAR_H)
+CHECK_INCLUDE_FILE(locale.h HAVE_LOCALE_H)
 CHECK_INCLUDE_FILE(float.h HAVE_FLOAT_H)
 CHECK_INCLUDE_FILE(wctype.h HAVE_WCTYPE_H)
 CHECK_INCLUDE_FILE(inttypes.h HAVE_INTTYPES_H)
+CHECK_INCLUDE_FILE(stdint.h HAVE_STDINT_H)
+CHECK_INCLUDE_FILE(stddef.h HAVE_STDDEF_H)
+CHECK_INCLUDE_FILE(limits.h HAVE_LIMITS_H)
 CHECK_INCLUDE_FILE(zlib.h HAVE_ZLIB_H)
 CHECK_INCLUDE_FILE(math.h HAVE_MATH_H)
+CHECK_INCLUDE_FILE(fnmatch.h HAVE_FNMATCH_H)
 
+if(DEFINED CMAKE_REQUIRED_FLAGS)
+    set(saved_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+endif()
+set(CMAKE_REQUIRED_FLAGS "-std=gnu++${CMAKE_CXX_STANDARD}")
+CHECK_INCLUDE_FILE_CXX(climits HAVE_CLIMITS)
+CHECK_INCLUDE_FILE_CXX(cwctype HAVE_CWCTYPE)
+CHECK_INCLUDE_FILE_CXX(cwchar HAVE_CWCHAR)
+CHECK_INCLUDE_FILE_CXX(clocale HAVE_CLOCALE)
+CHECK_INCLUDE_FILE_CXX(locale HAVE_LOCALE)
+CHECK_INCLUDE_FILE_CXX(codecvt HAVE_CODECVT)
 CHECK_INCLUDE_FILE_CXX(unordered_map HAVE_UNORDERED_MAP)
 CHECK_INCLUDE_FILE_CXX(tr1/unordered_map HAVE_TR1_UNORDERED_MAP)
+### test source sample
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles("
+#include <atomic>
+int main() {
+  std::atomic<int> u{5};
+  return u;
+}" HAVE_STDLIB_ATOMIC)
+if(DEFINED saved_CMAKE_REQUIRED_FLAGS)
+    set(CMAKE_REQUIRED_FLAGS ${saved_CMAKE_REQUIRED_FLAGS})
+    unset(saved_CMAKE_REQUIRED_FLAGS)
+else()
+    unset(CMAKE_REQUIRED_FLAGS)
+endif()
 
 CHECK_FUNCTION_EXISTS(gettimeofday HAVE_GETTIMEOFDAY)
 if(HAVE_MATH_H)
@@ -877,6 +914,11 @@ if(HAVE_STAT_H)
 endif(HAVE_STAT_H)
 
 CHECK_SYMBOL_EXISTS(GLX_ARB_get_proc_address GL/glx.h HAVE_GLXGETPROCADDRESSARB)
+
+CHECK_SYMBOL_EXISTS(strcasecmp "string.h;stdlib.h;stdio.h" HAVE_STRCASECMP)
+CHECK_SYMBOL_EXISTS(strncasecmp "string.h;stdlib.h;stdio.h" HAVE_STRNCASECMP)
+CHECK_SYMBOL_EXISTS(stricmp "string.h;stdlib.h;stdio.h;windows.h" HAVE_STRICMP)
+CHECK_SYMBOL_EXISTS(strnicmp "string.h;stdlib.h;stdio.h;windows.h" HAVE_STRNICMP)
 
 ## VSA / need update in
 ##            * cmake-config.h (add HAVE_INTMAX_T, then config.h is filled according to variable HAVE_INTMAX_T)
@@ -908,14 +950,19 @@ add_subdirectory(setup)
 
 # Add other utilies here
 add_subdirectory(objconv)
-
+add_subdirectory(tools)
+add_subdirectory(tests)
 #ADD_CUSTOM_TARGET(mesher DEPENDS objconv/mesher COMMAND ln -fs ${vsUTCS_BINARY_DIR}/objconv/mesher mesher || true)
 
 
 target_link_libraries(vegaserver ${TST_SERVER_LIBS})
 set_target_properties(vegaserver PROPERTIES LINK_FLAGS "-L/usr/lib -L${vsUTCS_BINARY_DIR}")
 add_dependencies(vegaserver mesh_tool)
-add_dependencies(vegaserver vssetup)
+if (GTK2_FOUND)
+    add_dependencies(vegaserver vssetup)
+else(GTK2_FOUND)
+    add_dependencies(vegaserver vssetup_dlg)
+endif(GTK2_FOUND)
 
 # Debug crap
 #message("Linking with : ${TST_LIBS}")
@@ -923,19 +970,32 @@ add_dependencies(vegaserver vssetup)
 #message("including : ${TEMP_DIRECTORY}")
 get_directory_property(TEMP_DIRECTORIES INCLUDE_DIRECTORIES)
 IF(NOT DISABLE_CLIENT)
-    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS}")
+    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+    #get_target_property(TEMP_CFLAGS0 vegastrike INCLUDE_DIRECTORIES)
+    #get_target_property(TEMP_CFLAGS1 vegastrike COMPILE_OPTIONS)
+    #get_target_property(TEMP_CFLAGS2 vegastrike COMPILE_FLAGS)
+    #get_target_property(TEMP_CFLAGS3 vegastrike COMPILE_DEFINITIONS)
+    #get_target_property(TEMP_CFLAGS4 vegastrike COMPILE_FEATURES)
+    #set(TEMP_CFLAGS "${TEMP_CFLAGS0} ${TEMP_CFLAGS1} ${TEMP_CFLAGS2} ${TEMP_CFLAGS3} ${TEMP_CFLAGS4}")
     get_target_property(TEMP_LDFLAGS     vegastrike LINK_FLAGS)
     get_target_property(TEMP_LIBRARIES   vegastrike LINK_LIBRARIES)
 ELSE()
-    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${CMAKE_CXX_FLAGS} ${TST_INCLUDES}")
+    set(TEMP_CFLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${TST_INCLUDES}")
+    #get_directory_property(TEMP_CFLAGS1    COMPILE_OPTIONS)
+    #get_directory_property(TEMP_CFLAGS2    COMPILE_FLAGS)
+    #get_directory_property(TEMP_CFLAGS3    COMPILE_DEFINITIONS)
+    #get_directory_property(TEMP_CFLAGS4    COMPILE_FEATURES)
+    #set(TEMP_CFLAGS "${TEMP_CFLAGS} ${TEMP_CFLAGS1} ${TEMP_CFLAGS2} ${TEMP_CFLAGS3} ${TEMP_CFLAGS4}")
     set(TEMP_LDFLAGS ${TST_LIBS})
     set(TEMP_LIBRARIES "")
 ENDIF()
-message("--------------")
-message("Building with:")
-message("  CXXFLAGS (${CMAKE_BUILD_TYPE}) : ${TEMP_CFLAGS}")
-message("  INCLUDES : ${TEMP_DIRECTORIES}")
-message("  LIBS     : ${TEMP_LDFLAGS} ${TEMP_LIBRARIES}")
+message("")
+message("----------------------------------------")
+message(STATUS "Building with:")
+message(STATUS "  CXXFLAGS (${CMAKE_BUILD_TYPE}) : ${TEMP_CFLAGS}")
+message(STATUS "  INCLUDES : ${TEMP_DIRECTORIES}")
+message(STATUS "  LIBS     : ${TEMP_LDFLAGS} ${TEMP_LIBRARIES}")
+message("----------------------------------------")
 message("")
 # End Debug Crap
 

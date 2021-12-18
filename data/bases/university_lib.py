@@ -4,6 +4,7 @@ import VS
 import quest
 import campaign_lib
 import PlayerShip
+import debug
 
 def MakeUniversity (time_of_day='_day'):
 
@@ -18,7 +19,7 @@ def MakeUniversity (time_of_day='_day'):
 	dynamic_mission.CreateMissions()
 
 	plist=VS.musicAddList('oxford.m3u')
-	VS.musicPlayList(plist)	
+	VS.musicPlayList(plist)
 
 	# add main landing pad
 	room0 = Base.Room ('Landing_Pad')
@@ -35,7 +36,7 @@ def MakeUniversity (time_of_day='_day'):
 	Base.Texture (room0train, 'background', 'bases/university/Landing_Pad.spr', 0, 0)
 
 	PlayerShip.AddPlayerShips('university',room0train,'landship')
-	
+
 	# add main concourse
 	room1 = Base.Room ('Campus_Quad')
 	Base.Texture (room1, 'background', 'bases/university/Main_Quad.spr', 0.582, -0.2716)
@@ -49,6 +50,9 @@ def MakeUniversity (time_of_day='_day'):
 
 	# add library
 	room2 = Base.Room ('Library_Stacks')
+
+	debug.debug('pad_room=%d(train:%d), square_room=%d, library_room=%d, current=%d' % (room0,room0train,room1,room2,Base.GetCurRoom()))
+
 	denied=False
 	if quest.checkSaveValue(VS.getPlayer().isPlayerStarship(),"access_to_library",2):
 		denied=True
@@ -62,7 +66,7 @@ def MakeUniversity (time_of_day='_day'):
 		# Computer
 		room3 = Base.Room ('Library_Terminal')
 		Base.Texture (room3, 'background', 'bases/university/ComputerMain.spr', 0, 0)
-		
+
 		# Computer analyzing artifact
 		room4 = Base.Room ('Library_Terminal')
 		Base.Texture (room4, 'background', 'bases/university/ComputerMain.spr', 0, 0)
@@ -81,6 +85,7 @@ def MakeUniversity (time_of_day='_day'):
 		Base.Link (room4, 'my_link_id', -1.0, -1.0, 2.0, 0.25, 'Exit', room2)
 		Base.Link (room5, 'my_link_id', -1, -1, 2, 2, 'Turn_Off_Computer', room3)
 		if denied:
+			debug.debug('library closed (rf).',debug.INFO)
 			Base.Texture(room2,'masterson_access', 'bases/university/masterson.spr', 0, 0)
 			##campaign_lib.clickFixer(room2)
 			Base.Python(room2,'masterson_access', -1, -1, 2, 2, 'Enter_Library',
@@ -90,8 +95,11 @@ def MakeUniversity (time_of_day='_day'):
 		Base.Texture (room2, 'background', 'bases/university/masterson.spr', 0, 0)
 		##campaign_lib.clickFixer(room2)
 		if len(the_campaigns) and denied: # mission in progress.
+			debug.debug('library access denied, mission in progress...',debug.INFO)
 			Base.LinkPython(room2, 'masterson_return', '#\nimport campaign_lib\n##campaign_lib.clickFixer('+str(room2)+')\n', -1, -1, 2, 2, 'Exit_Library', room1)
+			#campaign_lib.masterson_extraspeech="barspeech/campaign/masterson1intro.wav"
 		else: # Access denied. Come back after Lynch missions
+			debug.debug('library access denied.',debug.INFO)
 			campaign_lib.displayText(room2, [("Masterson","Excuse me, where do you think you're going?"),
 				("Burrows","I have some personal research I need to conduct."),
 				("Masterson","I'm sorry, sir, but access to the Oxford library files is restricted to students."),
@@ -111,14 +119,14 @@ Base.EraseObj('''+str(room0train)+''',"tnl")
 Base.EraseObj('''+str(room0train)+''',"trainleave")
 """, 3.2)
 ''', 0.4225, -0.103333, 0.5425, 0.466667, 'Train_To_Oxford_University', room0train)
-	# add link 
+	# add link
 	Base.Link (room1, 'my_link_id', -0.9675, -0.97, 0.595, 0.923333, 'Train_To_Landing_Pad', room0)
 
 	# add mission computer
 	import mission_computer
 	miscomp = mission_computer.MakeMissionComputer (room1,time_of_day)
 	Base.Link (room1, 'my_comp_id', -0.5925, 0.293333, 0.09, 0.213333, 'Mission_Computer', miscomp)
-	print "Linked mission computer"
+	debug.debug("Linked mission computer")
 
 	# add ship dealer
 	import weapons_lib

@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "lin_time.h"
 #include "unit_const_cache.h"
+#include "log.h"
 #define VS_PI 3.1415926535897931
 CSVRow LookupUnitRow(const string &unitname, const string &faction) {
   string hashname=unitname+"__"+faction;
@@ -781,7 +782,7 @@ void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
       static bool optimizer_keys_init=false;
       if (!optimizer_keys_init) {
           optimizer_keys_init=true;
-          printf("Initializing optimizer\n");
+          VS_LOG("unit", logvs::NOTICE, "Initializing optimizer");
           INIT_OPTIMIZER(keys,Name);
           INIT_OPTIMIZER(keys,Hud_image);
           INIT_OPTIMIZER(keys,FaceCamera);

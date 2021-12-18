@@ -3,9 +3,9 @@
 #define SDL_MIX_MAXVOLUME 128
 #endif
 #ifdef HAVE_SDL
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_thread.h>
+#include <SDL_mixer.h>
 #else
 typedef int Mix_Music;
 #endif
@@ -90,7 +90,7 @@ FILE *mystdout=stdout;
 #include <fstream>
 #define SONG_MUTEX 0
 #if SONG_MUTEX
-#include <SDL/SDL_mutex.h>
+#include <SDL_mutex.h>
 /******************************************************************************/
 /* some simple exit and error routines                                        */
 char * songNames[5]={0,0,0,0,0};

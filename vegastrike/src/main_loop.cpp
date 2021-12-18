@@ -57,8 +57,10 @@
 #include "networking/netclient.h"
 #include "save_util.h"
 #include "in_kb_data.h"
+#include "in_joystick.h"
 #include "vs_random.h"
-
+#include "log.h"
+#include "vs_log_modules.h"
 #include "options.h"
 
 extern vs_options game_options;
@@ -291,8 +293,8 @@ namespace CockpitKeys {
  
    void SkipMusicTrack(const KBData&,KBSTATE newState) {
    if(newState==PRESS){
-     printf("skipping\n");
-    muzak->Skip();
+     GAME_LOG(logvs::NOTICE, "skipping");
+     muzak->Skip();
    }
  }
 
@@ -430,7 +432,7 @@ bool cockpitfront=true;
      }
      */
      //feenableexcept(allexcept);
-     printf ("Enabling exceptions %d\n",allexcept);
+     GAME_LOG(logvs::NOTICE, "Enabling exceptions %d",allexcept);
      _Universe->AccessCockpit()->ScrollAllVDU (-1);
 
    }    
@@ -462,7 +464,7 @@ bool cockpitfront=true;
      }
      */
      //feenableexcept(0);
-     printf("Disabling exceptions\n");
+     GAME_LOG(logvs::NOTICE, "Disabling exceptions");
      _Universe->AccessCockpit()->ScrollAllVDU (1);
 
 
@@ -689,7 +691,41 @@ bool cockpitfront=true;
 	  _Universe->AccessCockpit()->SetView (CP_PAN);
 	}
 }
-
+  void toggleFPS(const KBData&,KBSTATE a) {
+      if (a==PRESS) {
+          game_options.show_fps = !game_options.show_fps;
+      }
+  }
+  void toggleHelp(const KBData&,KBSTATE a) {
+    if (a==PRESS) {
+        game_options.show_help = !game_options.show_help;
+    }
+  }
+  static void run_python(const char * str) {
+	  ::Python::reseterrors();
+	  PyRun_SimpleString(const_cast<char*>(str));
+	  ::Python::reseterrors();
+  }
+  void toggleMsgCenterLog(const KBData&,KBSTATE a) {
+      if (a==PRESS) {
+          if (!game_options.show_msgcenter) {
+              game_options.show_msgcenter = true;
+          }
+          unsigned int flags = logvs::vs_log_setflag(0, true) & logvs::F_MSGCENTER;
+          if (flags) {
+              GAME_LOG(logvs::NOTICE, "disabling msgcenter logs");
+          }
+          logvs::vs_log_setflag(logvs::F_MSGCENTER, !flags);
+          game_options.force_msgcenter_log = !flags;
+          game_options.show_msgcenter_base = !flags;
+          if (!flags) {
+              GAME_LOG(logvs::NOTICE, "enabling msgcenter logs");
+              run_python("#\nimport debug\ndebug.init(True)");
+          } else {
+        	  run_python("#\nimport debug\ndebug.init()");
+          }
+      }
+    }
 }
 
 using namespace CockpitKeys;
@@ -828,9 +864,9 @@ void createObjects(std::vector <std::string> &fighter0name, std::vector <StarSys
 	{
       if (a >= mission->number_of_ships) {
         a-=22;
-        printf("Error: in createObjects: more ships in flightgroups than in total for mission!\n"
-            "Variables a=%d, fg-number-of-ships=%d, total nr=%d, fact=%s, fgname=%s\n",
-            a, fg->nr_ships, mission->number_of_ships, fg->faction.c_str(), fg->name.c_str());
+          GAME_LOG(logvs::WARN, "Error: in createObjects: more ships in flightgroups than in total for mission!");
+          GAME_LOG(logvs::WARN, "Variables a=%d, fg-number-of-ships=%d, total nr=%d, fact=%s, fgname=%s",
+                   a, fg->nr_ships, mission->number_of_ships, fg->faction.c_str(), fg->name.c_str());
         break;
       }
       numf++;
@@ -904,7 +940,7 @@ void createObjects(std::vector <std::string> &fighter0name, std::vector <StarSys
                                   fighter0mods.back()=global_username;
                                   modifications=global_username;
                                 }
-				fprintf( stderr, "FOUND MODIFICATION = %s FOR PLAYER #%d\n", modifications.c_str(), squadnum);
+				GAME_LOG(logvs::NOTICE, "FOUND MODIFICATION = %s FOR PLAYER #%d", modifications.c_str(), squadnum);
 			  }
 			  else
 			  {
@@ -924,27 +960,29 @@ void createObjects(std::vector <std::string> &fighter0name, std::vector <StarSys
 //				if (backupcp==NULL) {
 					//modifications = modifications+".xml";
 					if (Network[squadnum].getCallsign() != modifications) {
-						cout<<"Not CREATING A NETWORK PLAYER "<<fightername<<" FOR "<<modifications<<endl;
+						GAME_LOG(logvs::NOTICE, "Not CREATING A NETWORK PLAYER %s FOR %s",
+                                 fightername, modifications.c_str());
 						break;
 					}
-					cout<<"CREATING A NETWORK PLAYER : "<<fightername<<endl;
+					GAME_LOG(logvs::NOTICE, "CREATING A NETWORK PLAYER : %s", fightername);
 					fighters[a] = UnitFactory::createUnit(fightername, false,tmptarget[a],"",fg,s, &savefiles[squadnum][1]);
 					// Set the faction we have in the save file instead of the mission file (that is to be ignored in networking mode)
 					fighters[a]->faction = FactionUtil::GetFactionIndex( cp->savegame->GetPlayerFaction());
 					fighters[a]->SetNetworkMode();
 					fighters[a]->SetSerial(Network[squadnum].serial);
 					Network[squadnum].setUnit( fighters[a]);
-					cout<<"Creating fighter["<<squadnum<<"] from "<<modifications<<" on Network["<<squadnum<<"] named "<<Network[squadnum].getCallsign()<<endl;
+                    GAME_LOG(logvs::NOTICE, "Creating fighter[%d] from %s on Network[%d] named %s",
+                             squadnum, modifications.c_str(), squadnum, Network[squadnum].getCallsign().c_str());
 //				}
 			}
 		  else if (Network!=NULL)
 			{
-				cout<<"Not CREATING A LOCAL SHIP : "<<fightername<<endl;
+				GAME_LOG(logvs::NOTICE, "Not CREATING A LOCAL SHIP : %s", fightername);
 				break;
 			}
 		  else
 			{
-				cout<<"CREATING A LOCAL SHIP : "<<fightername<<endl;
+				GAME_LOG(logvs::NOTICE, "CREATING A LOCAL SHIP : %s", fightername);
   				fighters[a] = UnitFactory::createUnit(fightername, false,tmptarget[a],modifications,fg,s);
 			}
 		  _Universe->activeStarSystem()->AddUnit(fighters[a]);
@@ -985,7 +1023,7 @@ void createObjects(std::vector <std::string> &fighter0name, std::vector <StarSys
 		}
 		_Universe->activeStarSystem()->AddUnit(fighters[a]);
 	  }
-	  printf ("pox %lf %lf %lf\n",pox.i,pox.j,pox.k);
+	  GAME_LOG(logvs::NOTICE, "pox %lf %lf %lf",pox.i,pox.j,pox.k);
 	  fighters[a]->SetPosAndCumPos (pox);
       fg_radius=fighters[a]->rSize();
       //    fighters[a]->SetAI(new Order());
@@ -1067,13 +1105,15 @@ void restore_main_loop() {
   RestoreKB();
   //  winsys_show_cursor(false);
   RestoreMouse();
+  RestoreJoystick();
+  last_check = cur_check = 1;
+  loop_count = 0x7fffffff;
   GFXLoop (main_loop);
-
 }
 
 void main_loop() {
   // Evaluate number of loops per second each XX loops
-  if( loop_count==500)
+  if( loop_count>=500 || (game_options.show_fps && loop_count >= 50))
   {
 	last_check = cur_check;
 	cur_check = getNewTime();
@@ -1081,14 +1121,19 @@ void main_loop() {
 	if( last_check!=1)
 	{
 		// Time to update test
-		avg_loop = ( (nb_checks-1)*avg_loop + (loop_count/(cur_check-last_check)) )/(nb_checks);
-		//cout<<"Nb checks : "<<nb_checks<<" -- loop_count : "<<loop_count<<endl;
+        cur_loop = (loop_count/(cur_check-last_check));
+        cur_fps = (glswap_count/(cur_check-last_check));
+        avg_loop = ( (nb_checks-1UL)*avg_loop + cur_loop)/(nb_checks);
+        avg_fps = ( (nb_checks-1UL)*avg_fps + cur_fps)/(nb_checks);
+        
+        //cout<<"Nb checks : "<<nb_checks<<" -- loop_count : "<<loop_count<<endl;
 		//cout<<"Time elasped : "<<(cur_check - last_check)<<" -- Loop average : "<<avg_loop<<" -- Ratio : "<<(loop_count/(cur_check-last_check))<<endl;
-		nb_checks=nb_checks+1;
+		++nb_checks;
 	}
- 	loop_count=-1;
+      loop_count=0;//-1;
+      glswap_count = 0;
  }
-  loop_count++;
+  ++loop_count;
   //  SuicideKey (std::string(),PRESS);
 
   //  Cockpit::Respawn (std::string(),PRESS);

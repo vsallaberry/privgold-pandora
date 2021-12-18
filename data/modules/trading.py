@@ -54,29 +54,29 @@ def getImports(name,faction):
         debug.error("GetImportFailure\n"+str(sys.exc_info()[0])+str(sys.exc_info()[1]))
     return []
 def getExports(name,faction, twice=1000000):
-	prodlist=getImports(name,faction)
-	for i in range(len(prodlist)-1,-1,-1):
-		if prodlist[i][3]==0 and prodlist[i][4]<=3:
-			del prodlist[i]
-		elif prodlist[i][3]>twice:
-			prodlist.append(prodlist[i])
-	trace(_trace_level, "trading.getExports(%s,%s,%s)" %(name,faction,twice))
-	trace(_trace_level, "prodlist =")
-	trace(_trace_level, prodlist)
+    prodlist=getImports(name,faction)
+    for i in range(len(prodlist)-1,-1,-1):
+        if prodlist[i][3]==0 and prodlist[i][4]<=3:
+            del prodlist[i]
+        elif prodlist[i][3]>twice:
+            prodlist.append(prodlist[i])
+    trace(_trace_level, "trading.getExports(%s,%s,%s)" %(name,faction,twice))
+    trace(_trace_level, "prodlist =")
+    trace(_trace_level, prodlist)
 
-	return prodlist
+    return prodlist
 def getNoStarshipExports(name,faction,twice=10000):
-	prodlist=getExports(name,faction,twice)
-	for i in range(len(prodlist)-1,-1,-1):
-		if prodlist[i][0].find('upgrades')==0:
-			del prodlist[i]
-		elif prodlist[i][0].find('starships')==0:
-			del prodlist[i]
-	trace(_trace_level, "trading.getNoStarshipExports(%s,%s,%s)" %(name,faction,twice))
-	trace(_trace_level, "prodlist =")
-	trace(_trace_level, prodlist)
+    prodlist=getExports(name,faction,twice)
+    for i in range(len(prodlist)-1,-1,-1):
+        if prodlist[i][0].find('upgrades')==0:
+            del prodlist[i]
+        elif prodlist[i][0].find('starships')==0:
+            del prodlist[i]
+    trace(_trace_level, "trading.getNoStarshipExports(%s,%s,%s)" %(name,faction,twice))
+    trace(_trace_level, "prodlist =")
+    trace(_trace_level, prodlist)
 
-	return prodlist
+    return prodlist
 class trading:
     def __init__(self):
         self.last_ship=0

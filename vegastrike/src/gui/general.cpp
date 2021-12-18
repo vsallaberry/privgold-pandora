@@ -35,7 +35,7 @@ using std::string;
 int RANDOMIZED = 0;
 #endif    // _G_RANDOM
 
-static char * empty_string = "";
+static char empty_string[2] = { 0, 0 };
 
 // Gets the next parameter from the string, sorted by a space
 // Sticks a \0 at the space and returns a pointer to the right side.
@@ -192,7 +192,7 @@ char *StripExtension(char *filename) {
 	int length, cur;
 	char *last = filename;
 	length = strlen(filename) - 1;
-	if (length <= 0) { return "\0"; }
+	if (length <= 0) { return empty_string; }
 	for (cur = 0; cur <= length; cur++) {
 		if (filename[cur] == '.') { last = &filename[cur]; }
 	}
@@ -324,7 +324,7 @@ void btoa(char *dest, char *string) {
 
 // Some handy wrappers for glib that help error handling which prevent segfaults
 char *GetString(GString *line) {
-	if (line == 0) { return '\0'; }
+	if (line == 0) { return empty_string; }
 	return line->str;
 }
 
@@ -371,7 +371,7 @@ char *NewString(char *line) {
 
 // if _G_ERROR is defined, it will print the error message
 // if EXIT_ON_FATAL is defined, and is_fatal is greater than 0, the program will exit
-void ShowError(char *error_msg, char *error_code, int is_fatal) {
+void ShowError(const char *error_msg, const char *error_code, int is_fatal) {
 #ifdef _G_ERROR
         if (is_fatal > 0) { fprintf(stderr, "Fatal "); }
         fprintf(stderr, "Error [%s]: %s\n", error_code, error_msg);

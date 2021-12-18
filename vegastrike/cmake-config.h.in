@@ -1,24 +1,41 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 #define VERSION "${VERSION}"
+#define VEGASTRIKE_VERSION VERSION
 #define CONFIGURE_CMD "${CMAKE_COMMAND} ${CMAKE_COMMAND_ARGS}"
 #define COMPILER "${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_VERSION}"
 #define COMPILER_FLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}"
 #cmakedefine HAVE_BOOLEAN 1
+#cmakedefine HAVE_CWCHAR 1
 #cmakedefine HAVE_WCHAR_H 1
 #cmakedefine HAVE_FLOAT_H  1
 #cmakedefine HAVE_WCTYPE_H 1
+#cmakedefine HAVE_CWCTYPE 1
+#cmakedefine HAVE_FNMATCH_H 1
+#cmakedefine HAVE_LOCALE_H 1
+#cmakedefine HAVE_CLOCALE 1
+#cmakedefine HAVE_LOCALE 1
+#cmakedefine HAVE_CODECVT 1
 #cmakedefine HAVE_INTTYPES_H 1
+#cmakedefine HAVE_LIMITS_H 1
+#cmakedefine HAVE_CLIMITS 1
+#cmakedefine HAVE_STDDEF_H 1
+#cmakedefine HAVE_STDINT_H 1
 #cmakedefine HAVE_FFMPEG_SWSCALE_H 1
 #cmakedefine HAVE_ZLIB_H 1
 #cmakedefine HAVE_MATH_H 1
 #cmakedefine HAVE_GLXGETPROCADDRESSARB 1
+#cmakedefine HAVE_STRCASECMP 1
+#cmakedefine HAVE_STRNCASECMP 1
+#cmakedefine HAVE_STRICMP 1
+#cmakedefine HAVE_STRNICMP 1
 #cmakedefine HAVE_ISNAN 1
 #cmakedefine HAVE__ISNAN 1
 #cmakedefine HAVE_FINITE 1
 #cmakedefine HAVE__FINITE 1
 #cmakedefine HAVE_GETTIMEOFDAY 1
 #cmakedefine HAVE_INTMAX_T 1
+#cmakedefine HAVE_STAT_H 1
 #cmakedefine HAVE_LSTAT 1
 #cmakedefine HAVE_PYTHON 1
 #cmakedefine _GNU_SOURCE 1
@@ -34,7 +51,7 @@
 #cmakedefine HAVE_LIBAVCODEC_AVCODEC_H 1
 #cmakedefine HAVE_LIBAVFORMAT_AVFORMAT_H 1
 #cmakedefine HAVE_LIBAVFORMAT_AVIO_H 1
-#cmakedefine HAVE_TR1_UNORDERED_MAP 1
+#cmakedefine HAVE_TR1_UNORDERED_MAP 0
 #cmakedefine HAVE_UNORDERED_MAP 1
 #define HAVE_CONFIG_H 1
 #define ${HOSTOS} 1

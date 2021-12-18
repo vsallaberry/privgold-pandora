@@ -14,7 +14,7 @@ activeobjs=[]
 def checkSaveValue (playernum,questname, value):
     return quest.checkSaveValue(playernum,questname,value)
 def setSaveValue (playernum,name,value):
-	quest.removeQuest(playernum,name,value);
+    quest.removeQuest(playernum,name,value);
 
 def payCheck(playernum,savevalue,value,money):
     if checkSaveValue(playernum,savevalue,value):
@@ -22,51 +22,51 @@ def payCheck(playernum,savevalue,value,money):
         setSaveValue(playernum,savevalue,value+1)
 
 class Choice:
-	_number=0
-	def __init__(self,pics,actions,name):
-		self.pics=pics
-		self.name=name
-		self.index=name.replace('/','_')+'/'+str(Choice._number)
-		Choice._number+=1
-		self.actions=actions
-	def drawobjs(self,room,x,y,wid,hei):
-		Base.Texture(room,self.index,self.pics,x+(wid/2.),y+(wid/2.))
-		Base.Python(room,self.index,x,y,wid,hei,self.name,self.actions,1)
-		global activelinks
-		global activeobjs
-		activelinks.append((room,self.index))
-		debug.debug('*** add link: '+str((room,self.index)))
-		debug.debug(activelinks)
-		activeobjs.append((room,self.index))
-		debug.debug('*** add obj: '+str((room,self.index)))
-		debug.debug(activeobjs)
+    _number=0
+    def __init__(self,pics,actions,name):
+        self.pics=pics
+        self.name=name
+        self.index=name.replace('/','_')+'/'+str(Choice._number)
+        Choice._number+=1
+        self.actions=actions
+    def drawobjs(self,room,x,y,wid,hei):
+        Base.Texture(room,self.index,self.pics,x+(wid/2.),y+(wid/2.))
+        Base.Python(room,self.index,x,y,wid,hei,self.name,self.actions,1)
+        global activelinks
+        global activeobjs
+        activelinks.append((room,self.index))
+        debug.debug('*** add link: '+str((room,self.index)),debug.INFO)
+        debug.debug('active links: '+repr(activelinks),debug.VERBOSE)
+        activeobjs.append((room,self.index))
+        debug.debug('*** add obj: '+str((room,self.index)),debug.INFO)
+        debug.debug('active objs: '+repr(activeobjs),debug.VERBOSE)
 class Fixer:
-	"""A class that draws nobody."""
-	def __init__(self,name,text,precondition,image,choices):
-		self.name = name
-		self.text = text
-		self.precondition = precondition
-		self.choices = choices
-		pos=image.rfind(".")
-		if pos>=0:
-			image=image[:pos]
-		self.image = image
-	def abletodraw(self):
-		for cond in self.precondition:
-			var= cond[0]
-			value = cond[1]
-			if not checkSaveValue(VS.getCurrentPlayer(),var,value):
-				return 0
-			
-		return 1
-	def drawobjs(self,room,x,y,wid,hei,imageappend=''):
-		Base.Texture(room,self.name,self.image+imageappend+".spr",x+(wid/2.),y+(hei/2.))
-		Base.Python(room,self.name,x,y,wid,hei,self.text,self.choices,False)
+    """A class that draws nobody."""
+    def __init__(self,name,text,precondition,image,choices):
+        self.name = name
+        self.text = text
+        self.precondition = precondition
+        self.choices = choices
+        pos=image.rfind(".")
+        if pos>=0:
+            image=image[:pos]
+        self.image = image
+    def abletodraw(self):
+        for cond in self.precondition:
+            var= cond[0]
+            value = cond[1]
+            if not checkSaveValue(VS.getCurrentPlayer(),var,value):
+                return 0
+
+        return 1
+    def drawobjs(self,room,x,y,wid,hei,imageappend=''):
+        Base.Texture(room,self.name,self.image+imageappend+".spr",x+(wid/2.),y+(hei/2.))
+        Base.Python(room,self.name,x,y,wid,hei,self.text,self.choices,False)
 class CFixer(Fixer):
     """A class class for \'Campaign\' Fixers."""
-    
+
     STANDARDIMPORT = "\nimport VS\n"
-    
+
     def __init__(self, conversation):
         self.conversation = conversation
         self.name, self.text, self.image, self.choices = conversation.getFixerStrings()
@@ -74,27 +74,27 @@ class CFixer(Fixer):
         return self.conversation.canDraw()
 
 class NoFixer (Fixer):
-	"""Class that displays nobody.  Should maybe draw a bartender guy to talk to."""
-	def __init__(self):
-		Fixer.__init__(self,'nobody','Bar',[],'','')
+    """Class that displays nobody.  Should maybe draw a bartender guy to talk to."""
+    def __init__(self):
+        Fixer.__init__(self,'nobody','Bar',[],'','')
 
-	def abletodraw(self):
-		"""A NoFixer can't draw."""
-		return 0
+    def abletodraw(self):
+        """A NoFixer can't draw."""
+        return 0
 
-	def drawobjs(self,room,x,y,wid,hei,imageappend=''):
-		"""Don't create the python script OR the texture, so trhe user won't notice :-)"""
-		pass
+    def drawobjs(self,room,x,y,wid,hei,imageappend=''):
+        """Don't create the python script OR the texture, so trhe user won't notice :-)"""
+        pass
 
 def RandFixer (room,which):
-	fixer=mission_lib.CreateRandomMission(which)
-	if fixer==():
-		return NoFixer()
-	return Fixer(fixer[1].split(' ')[-1].lower(),fixer[1],[],fixer[0],"bases/fixers/generic%d.py"%which)
+    fixer=mission_lib.CreateRandomMission(which)
+    if fixer==():
+        return NoFixer()
+    return Fixer(fixer[1].split(' ')[-1].lower(),fixer[1],[],fixer[0],"bases/fixers/generic%d.py"%which)
 
 def getCampaignFixers (room):
-	import campaign_lib
-	return campaign_lib.getFixersToDisplay(room)
+    import campaign_lib
+    return campaign_lib.getFixersToDisplay(room)
 
 fixers={"enigma_sector/niven":[
 	Fixer("explore","Talk to the Explorer",[("enigma_sector/enigma_nav",0)],"bases/fixers/militia.spr","bases/fixers/explore_enigma.py"),
@@ -183,92 +183,92 @@ def queueFixer(playernum, name, scripttext, overwrite=0):
     Director.pushSaveString(int(playernum),str("CFixers"),name + '|' + scripttext)
 
 def AppendFixer(name,fixer):
-	fixers[name]=fixer
+    fixers[name]=fixer
 
 def DestroyActiveButtons ():
-	global activelinks
-	global activeobjs
-	for button in activelinks:
-		Base.EraseLink(button[0],button[1])
-		debug.debug('*** erase link: '+str(button))
-		debug.debug(activelinks)
-	for button in activeobjs:
-		Base.EraseObj(button[0],button[1])
-		debug.debug('*** erase obj: '+str(button))
-		debug.debug(activeobjs)
-	activeobjs=[]
-	activelinks=[]
+    global activelinks
+    global activeobjs
+    for button in activelinks:
+        Base.EraseLink(button[0],button[1])
+        debug.debug('*** erase link: '+str(button),debug.INFO)
+        debug.debug('active links: '+repr(activelinks),debug.VERBOSE)
+    for button in activeobjs:
+        Base.EraseObj(button[0],button[1])
+        debug.debug('*** erase obj: '+str(button),debug.INFO)
+        debug.debug('active objs: '+repr(activeobjs),debug.VERBOSE)
+    activeobjs=[]
+    activelinks=[]
 def CreateChoiceButtons (room,buttonlist,vert=0,spacing=.025,wid=.2,hei=.2):
-	x=0
-	if (vert):
-		x=-(wid/2.)
-		y=-((hei*len(buttonlist)*spacing)+spacing)/2.
-	else:
-		y=-.75-(hei/2.)
-		x=-(wid*len(buttonlist)+(len(buttonlist)-1)*spacing)/2.
-	debug.debug("button x: "+str(x)+", y: "+str(y))
-	for button in buttonlist:
-		debug.debug('*** draw: '+str(button.index))
-		button.drawobjs(room,x,y,wid,hei)
-		if (vert):
-			y-=(spacing+hei)
-		else:
-			x+=spacing+wid
-		
+    x=0
+    if (vert):
+        x=-(wid/2.)
+        y=-((hei*len(buttonlist)*spacing)+spacing)/2.
+    else:
+        y=-.75-(hei/2.)
+        x=-(wid*len(buttonlist)+(len(buttonlist)-1)*spacing)/2.
+    debug.debug("button x: "+str(x)+", y: "+str(y),debug.INFO)
+    for button in buttonlist:
+        debug.debug('*** draw: '+str(button.index),debug.INFO)
+        button.drawobjs(room,x,y,wid,hei)
+        if (vert):
+            y-=(spacing+hei)
+        else:
+            x+=spacing+wid
+
 def CreateCampaignFixers_real (room,locations,j=0):
-	fixerlist = getCampaignFixers(room)
-	locfixers = fixers.get (VS.getSystemFile())
-	if locfixers:
-		fixerlist+=locfixers
-	if (fixerlist):
-		for i in range (len(fixerlist)):
-			if (j<len(locations) and fixerlist[i] and fixerlist[i].abletodraw()):
-				append=''
-				if len(locations[j])>4:
-					append=locations[j][4]
-				fixerlist[i].drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
-				j+=1
-	return j
+    fixerlist = getCampaignFixers(room)
+    locfixers = fixers.get (VS.getSystemFile())
+    if locfixers:
+        fixerlist+=locfixers
+    if (fixerlist):
+        for i in range (len(fixerlist)):
+            if (j<len(locations) and fixerlist[i] and fixerlist[i].abletodraw()):
+                append=''
+                if len(locations[j])>4:
+                    append=locations[j][4]
+                fixerlist[i].drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
+                j+=1
+    return j
 
 def CreateCampaignFixers(room,locations,j=0):
-	if VS.networked():
-		import campaign_lib
-		def cont(args):
-			CreateCampaignFixers_real(room,locations,j)
-		campaign_lib.default_room = room # Don't want stuff appearing in the launch pad.
-		custom.run("campaign_readsave",[],cont)
-	else:
-		CreateCampaignFixers_real(room,locations,j)
+    if VS.networked():
+        import campaign_lib
+        def cont(args):
+            CreateCampaignFixers_real(room,locations,j)
+        campaign_lib.default_room = room # Don't want stuff appearing in the launch pad.
+        custom.run("campaign_readsave",[],cont)
+    else:
+        CreateCampaignFixers_real(room,locations,j)
 
 def CreateMissionFixers (room,locations,j=0):
-	return j
-	if rndnum<.7 and j<len(locations):
-		f=RandFixer(room,0)
-		append=''
-		if len(locations[j])>4:
-			append=locations[j][4]
-		f.drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
-		j+=1
-		img=f.image
-		rndnum=vsrandom.random()
-		if rndnum<.6 and j<len(locations):
-			i=0
-			while f.image==img and i<10:
-				f=RandFixer(room,1)
-				i+=1
-			if i<10:
-				append=''
-				if len(locations[j])>4:
-					append=locations[j][4]
-				f.drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
-				j+=1
-	return j
+    return j
+    if rndnum<.7 and j<len(locations):
+        f=RandFixer(room,0)
+        append=''
+        if len(locations[j])>4:
+            append=locations[j][4]
+        f.drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
+        j+=1
+        img=f.image
+        rndnum=vsrandom.random()
+        if rndnum<.6 and j<len(locations):
+            i=0
+            while f.image==img and i<10:
+                f=RandFixer(room,1)
+                i+=1
+            if i<10:
+                append=''
+                if len(locations[j])>4:
+                    append=locations[j][4]
+                f.drawobjs (room,locations[j][0],locations[j][1],locations[j][2],locations[j][3],append)
+                j+=1
+    return j
 
 def CreateFixers (room,locations):
-	j=0
-	j=CreateCampaignFixers(room,locations,j)
-	j=CreateMissionFixers(room,locations,j)
-	return j
+    j=0
+    j=CreateCampaignFixers(room,locations,j)
+    j=CreateMissionFixers(room,locations,j)
+    return j
 
 class Conversation:
 
@@ -342,7 +342,7 @@ class Conversation:
             Base.Message(text)
 
 class SubNode:
-    
+
     def __init__(self, text=str(), conditions=list(), choices=list(), sprite=str(), motext=str()):
         self.conditions = list(conditions)
         self.text = str(text)

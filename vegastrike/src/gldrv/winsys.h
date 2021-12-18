@@ -28,7 +28,7 @@
 #endif
 
 #if defined( SDL_WINDOWING ) && defined (HAVE_SDL)
-#   include <SDL/SDL.h>
+#   include <SDL.h>
 #elif defined( HAVE_GLUT )
 #if defined(__APPLE__) || defined(MACOSX)
     #include <GLUT/glut.h>
@@ -45,6 +45,10 @@ extern "C"
 #endif
 
 /* Keysyms */
+#define WSK_UTF32_TO_CODE(ch32) ((((unsigned int)(ch32)) >= 128) \
+                                 ? (WSK_LAST + (unsigned int)(ch32) - 128) : (ch32))
+#define WSK_CODE_IS_UTF32(code) (((unsigned int)(code)) >= WSK_LAST)
+#define WSK_CODE_TO_UTF32(code) (WSK_CODE_IS_UTF32(code) ? ((unsigned int)(code) - WSK_LAST + 128): (code))
 
 #if defined( SDL_WINDOWING ) && defined (HAVE_SDL) 
 /*---------------------------------------------------------------------------*/
@@ -52,7 +56,106 @@ extern "C"
 /* SDL version */
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+#if SDL_VERSION_ATLEAST(2,0,0)
+//-------------------
+// SDL2
+//-------------------
+// the in_kb.cpp/BindKey and XmlConfig::checkBind considers any keystr from config
+// with length greater that 1 as a special key (up/down/...) then not unicode.
+// Then it is safe here to assume key sym won't be > 127, and reserve 128 syms plus
+// SDL_NUM_SCANCODES scancodes for the bindings. Then it is still possible to
+// handle unicode characters (without binding) as they will have a value > WSK_LAST.
+#define WSK_KEY_OFFSET (128)
+#define WSK_KEY(x) ((x) + WSK_KEY_OFFSET)
+typedef enum {
+    WSK_NOT_AVAIL = SDLK_UNKNOWN,
 
+    /* Numeric keypad */
+    WSK_KP0 = WSK_KEY(SDL_SCANCODE_KP_0),
+    WSK_KP1 = WSK_KEY(SDL_SCANCODE_KP_1),
+    WSK_KP2 = WSK_KEY(SDL_SCANCODE_KP_2),
+    WSK_KP3 = WSK_KEY(SDL_SCANCODE_KP_3),
+    WSK_KP4 = WSK_KEY(SDL_SCANCODE_KP_4),
+    WSK_KP5 = WSK_KEY(SDL_SCANCODE_KP_5),
+    WSK_KP6 = WSK_KEY(SDL_SCANCODE_KP_6),
+    WSK_KP7 = WSK_KEY(SDL_SCANCODE_KP_7),
+    WSK_KP8 = WSK_KEY(SDL_SCANCODE_KP_8),
+    WSK_KP9 = WSK_KEY(SDL_SCANCODE_KP_9),
+
+    WSK_KP_PERIOD = WSK_KEY(SDL_SCANCODE_KP_PERIOD),
+    WSK_KP_DIVIDE = WSK_KEY(SDL_SCANCODE_KP_DIVIDE),
+    WSK_KP_MULTIPLY = WSK_KEY(SDL_SCANCODE_KP_MULTIPLY),
+    WSK_KP_MINUS = WSK_KEY(SDL_SCANCODE_KP_MINUS),
+    WSK_KP_PLUS = WSK_KEY(SDL_SCANCODE_KP_PLUS),
+    WSK_KP_ENTER = WSK_KEY(SDL_SCANCODE_KP_ENTER),
+    WSK_KP_EQUALS = WSK_KEY(SDL_SCANCODE_KP_EQUALS),
+	
+	WSK_RETURN = 13,
+	WSK_TAB = '\t',
+	WSK_ESCAPE = 27,
+	WSK_BACKSPACE =
+#ifdef __APPLE__
+    127,
+#else
+    8,
+#endif
+	WSK_DELETE = 
+#ifdef __APPLE__
+    8,
+#else
+    127,
+#endif
+    /* Arrows + Home/End pad */
+    WSK_UP = WSK_KEY(SDL_SCANCODE_UP),
+    WSK_DOWN = WSK_KEY(SDL_SCANCODE_DOWN),
+    WSK_RIGHT = WSK_KEY(SDL_SCANCODE_RIGHT),
+    WSK_LEFT = WSK_KEY(SDL_SCANCODE_LEFT),
+    WSK_INSERT = WSK_KEY(SDL_SCANCODE_INSERT),
+    WSK_HOME = WSK_KEY(SDL_SCANCODE_HOME),
+    WSK_END = WSK_KEY(SDL_SCANCODE_END),
+    WSK_PAGEUP = WSK_KEY(SDL_SCANCODE_PAGEUP),
+    WSK_PAGEDOWN = WSK_KEY(SDL_SCANCODE_PAGEDOWN),
+
+    /* Function keys */
+    WSK_F1 = WSK_KEY(SDL_SCANCODE_F1),
+    WSK_F2 = WSK_KEY(SDL_SCANCODE_F2),
+    WSK_F3 = WSK_KEY(SDL_SCANCODE_F3),
+    WSK_F4 = WSK_KEY(SDL_SCANCODE_F4),
+    WSK_F5 = WSK_KEY(SDL_SCANCODE_F5),
+    WSK_F6 = WSK_KEY(SDL_SCANCODE_F6),
+    WSK_F7 = WSK_KEY(SDL_SCANCODE_F7),
+    WSK_F8 = WSK_KEY(SDL_SCANCODE_F8),
+    WSK_F9 = WSK_KEY(SDL_SCANCODE_F9),
+    WSK_F10 = WSK_KEY(SDL_SCANCODE_F10),
+    WSK_F11 = WSK_KEY(SDL_SCANCODE_F11),
+    WSK_F12 = WSK_KEY(SDL_SCANCODE_F12),
+    WSK_F13 = WSK_KEY(SDL_SCANCODE_F13),
+    WSK_F14 = WSK_KEY(SDL_SCANCODE_F14),
+    WSK_F15 = WSK_KEY(SDL_SCANCODE_F15),
+
+    /* Key state modifier keys */
+    WSK_NUMLOCK = WSK_NOT_AVAIL, //FIXME
+    WSK_CAPSLOCK = WSK_KEY(SDL_SCANCODE_CAPSLOCK),
+    WSK_SCROLLOCK = WSK_KEY(SDL_SCANCODE_SCROLLLOCK),
+
+    WSK_RSHIFT = WSK_KEY(SDL_SCANCODE_RSHIFT),
+    WSK_LSHIFT = WSK_KEY(SDL_SCANCODE_LSHIFT),
+    WSK_RCTRL = WSK_KEY(SDL_SCANCODE_RCTRL),
+    WSK_LCTRL = WSK_KEY(SDL_SCANCODE_LCTRL),
+    WSK_RALT = WSK_KEY(SDL_SCANCODE_RALT),
+    WSK_LALT = WSK_KEY(SDL_SCANCODE_LALT),
+    WSK_RMETA = WSK_KEY(SDL_SCANCODE_RGUI),
+    WSK_LMETA = WSK_KEY(SDL_SCANCODE_LGUI),
+    WSK_BREAK = WSK_NOT_AVAIL, //FIXME
+    
+    WSK_PAUSE = WSK_KEY(SDL_SCANCODE_PAUSE),
+
+    WSK_LAST=SDL_NUM_SCANCODES + WSK_KEY_OFFSET,
+} winsys_keysym_t;
+#else
+//-------------------
+// SDL1
+//-------------------
 typedef enum {
     WSK_NOT_AVAIL = SDLK_UNKNOWN,
 
@@ -67,6 +170,7 @@ typedef enum {
     WSK_KP7 = SDLK_KP7,
     WSK_KP8 = SDLK_KP8,
     WSK_KP9 = SDLK_KP9,
+
     WSK_KP_PERIOD = SDLK_KP_PERIOD,
     WSK_KP_DIVIDE = SDLK_KP_DIVIDE,
     WSK_KP_MULTIPLY = SDLK_KP_MULTIPLY,
@@ -74,17 +178,17 @@ typedef enum {
     WSK_KP_PLUS = SDLK_KP_PLUS,
     WSK_KP_ENTER = SDLK_KP_ENTER,
     WSK_KP_EQUALS = SDLK_KP_EQUALS,
-	
-	WSK_RETURN = 13,
-	WSK_TAB = '\t',
-	WSK_ESCAPE = 27,
-	WSK_BACKSPACE =
+    
+    WSK_RETURN = 13,
+    WSK_TAB = '\t',
+    WSK_ESCAPE = 27,
+    WSK_BACKSPACE =
 #ifdef __APPLE__
     127,
 #else
     8,
 #endif
-	WSK_DELETE = 
+    WSK_DELETE =
 #ifdef __APPLE__
     8,
 #else
@@ -120,6 +224,7 @@ typedef enum {
 
     /* Key state modifier keys */
     WSK_NUMLOCK = SDLK_NUMLOCK,
+
     WSK_CAPSLOCK = SDLK_CAPSLOCK,
     WSK_SCROLLOCK = SDLK_SCROLLOCK,
     WSK_RSHIFT = SDLK_RSHIFT,
@@ -131,20 +236,28 @@ typedef enum {
     WSK_RMETA = SDLK_RMETA,
     WSK_LMETA = SDLK_LMETA,
     WSK_BREAK = SDLK_BREAK,
-	WSK_PAUSE = SDLK_PAUSE,
-    WSK_LAST=SDLK_LAST
+    
+    WSK_PAUSE = SDLK_PAUSE,
 
+    WSK_LAST=SDLK_LAST
 } winsys_keysym_t;
+#endif //SDL1/2
+
 typedef enum {
-        WSK_MOD_NONE=KMOD_NONE,
+    WSK_MOD_NONE=KMOD_NONE,
 	WSK_MOD_LSHIFT=KMOD_LSHIFT,
 	WSK_MOD_RSHIFT=KMOD_RSHIFT,
 	WSK_MOD_LCTRL=KMOD_LCTRL ,
 	WSK_MOD_RCTRL=KMOD_RCTRL ,
 	WSK_MOD_LALT=KMOD_LALT  ,
 	WSK_MOD_RALT=KMOD_RALT  ,
-	WSK_MOD_LMETA=KMOD_LMETA ,
+#if !SDL_VERSION_ATLEAST(2,0,0)
+    WSK_MOD_LMETA=KMOD_LMETA ,
 	WSK_MOD_RMETA=KMOD_RMETA ,
+#else
+    WSK_MOD_LMETA = KMOD_LGUI,
+    WSK_MOD_RMETA = KMOD_RGUI,
+#endif
 	WSK_MOD_NUM=KMOD_NUM   ,
 	WSK_MOD_CAPS=KMOD_CAPS  ,
 	WSK_MOD_MODE=KMOD_MODE  
@@ -304,6 +417,8 @@ typedef void (*winsys_motion_func_t)( int x, int y );
 
 typedef void (*winsys_atexit_func_t)( void );
 
+typedef void (*winsys_joystick_func_t)(unsigned int n, float x, float y, float z, unsigned int button, unsigned int state);
+
 void winsys_post_redisplay();
 void winsys_set_display_func( winsys_display_func_t func );
 void winsys_set_idle_func( winsys_idle_func_t func );
@@ -312,9 +427,20 @@ void winsys_set_keyboard_func( winsys_keyboard_func_t func );
 void winsys_set_mouse_func( winsys_mouse_func_t func );
 void winsys_set_motion_func( winsys_motion_func_t func );
 void winsys_set_passive_motion_func( winsys_motion_func_t func );
+void winsys_set_joystick_func( winsys_joystick_func_t func );
 
 void winsys_swap_buffers();
-void winsys_enable_key_repeat( bool enabled );
+#define WS_KB_REPEAT_DISABLED           0   /* repeated keys are ignored */
+#define WS_KB_REPEAT_ENABLED_DEFAULT    -1  /* default delay/interval values for repeated keys */
+#define WS_KB_REPEAT_DELAY              500 /* ms delay before a non-repeated key can be repeated */
+#define WS_KB_REPEAT_INTERVAL           50  /* ms delay before a repeated key can repeat again */
+enum {
+    WS_UNICODE_DISABLED     = 0,
+    WS_UNICODE_ENABLED      = 1 << 0, // enabled but bindings have priority over unicode
+    WS_UNICODE_FULL         = 1 << 1  // full unicode
+};
+void winsys_set_kb_mode(unsigned int unicode, int delay_ms, int interval_ms,
+                        unsigned int * unicode_bak, int * delay_ms_bak, int * interval_ms_bak);
 void winsys_warp_pointer( int x, int y );
 void winsys_show_cursor( bool visible );
 

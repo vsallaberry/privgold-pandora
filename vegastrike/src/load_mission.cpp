@@ -17,6 +17,7 @@
 #include "savegame.h"
 #include "save_util.h"
 #include "load_mission.h"
+#include "log.h"
 
 #include "options.h"
 
@@ -165,7 +166,7 @@ int ReadIntSpace (char * &buf) {
   bool toggle=false;
   while (*buf!=0) {
     char c[2]={0,0};
-    if (c[0]=*buf) {
+    if ((c[0]=*buf) != 0) {
       if (c[0]!=' ') {
 		toggle=true;
 		myint+=c;
@@ -238,7 +239,11 @@ void LoadMission (const char * nission_name, const std::string &script, bool loa
 	if (mission_name.empty()) {
 		mission_name=game_options.empty_mission;;
 	}
-  printf("%s",script.c_str());
+    if (VS_LOG("mission", logvs::VERBOSE, "loading python mission %s from %s...",
+               friendly_mission_name, script.c_str()) <= 0) {
+        VS_LOG("mission", logvs::NOTICE, "loading python mission %s %s...",
+               friendly_mission_name, *script.c_str() == '#' ? "(string)" : script.c_str());
+    }
   VSFile f;
   VSError err = f.OpenReadOnly( mission_name, MissionFile);
   if (err>Ok) {

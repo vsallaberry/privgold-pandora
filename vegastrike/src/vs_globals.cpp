@@ -23,7 +23,11 @@ const char *mission_key="unit_to_dock_with";
 
 /* for speed test */
 int loop_count=0;
+int glswap_count=0;
 double avg_loop=0;
-int nb_checks=1;
+double avg_fps=0;
+double cur_loop=0;
+double cur_fps=0;
+unsigned long nb_checks=1;
 double last_check=1;
 double cur_check=1;

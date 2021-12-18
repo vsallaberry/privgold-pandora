@@ -4,6 +4,10 @@
 #include "cmd/unit_util.h"
 #include <assert.h>
 
+#include "log.h"
+
+#define FACTION_LOG(_lvl, ...) VS_LOG("gfx", _lvl, __VA_ARGS__)
+
 using namespace FactionUtil;
 
 Faction::~Faction() {
@@ -76,7 +80,7 @@ std::vector <Animation *>* FactionUtil::GetRandCommAnimation(int faction, Unit *
       }
 
     }
-    fprintf (stderr,"Error picking comm animation for %d faction with bas:%d dock:%d\n",faction,(int)base,(int)dockable);
+    FACTION_LOG(logvs::WARN, "Error picking comm animation for %d faction with bas:%d dock:%d",faction,(int)base,(int)dockable);
     return GetAnimation(faction,rand()%siz,sex);
   }else {
     sex=0;

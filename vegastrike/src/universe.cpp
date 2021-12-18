@@ -50,6 +50,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "options.h"
 
@@ -291,7 +292,6 @@ static void UpdateTimeCompressionSounds()
 	}
 }
 
-
 extern bool screenshotkey;
 
 extern int getmicrosleep ();
@@ -309,6 +309,7 @@ void GameUniverse::StartDraw()
 		CalculateCoords (i,cockpit.size(),x,y,w,h);
 		AccessCamera()->SetSubwindow (x,y,w,h);
 		if (cockpit.size()>1&&AccessCockpit(i)->activeStarSystem!=lastStarSystem) {
+            VS_LOG("universe", logvs::NOTICE, "cockpit %u active starsystem changed", i);
 			active_star_system[0]->SwapOut();
 			lastStarSystem=AccessCockpit()->activeStarSystem;
 			active_star_system[0]=lastStarSystem;
@@ -322,6 +323,7 @@ void GameUniverse::StartDraw()
 		}
 		AccessCamera()->SetSubwindow (0,0,1,1);
 	}
+    
 	UpdateTime();
 	UpdateTimeCompressionSounds();
 	_Universe->SetActiveCockpit (((int)(rand01()*cockpit.size()))%cockpit.size());
@@ -329,6 +331,7 @@ void GameUniverse::StartDraw()
 	for (i=0;i<star_system.size()&&i<game_options.NumRunningSystems;++i) {
 		star_system[i]->Update((i==0)?1:game_options.InactiveSystemTime/i,true);
 	}
+    bool pending_jumps = ! PendingJumpsEmpty();
 	StarSystem::ProcessPendingJumps();
 	for (i=0;i<cockpit.size();++i) {
 		SetActiveCockpit(i);
@@ -336,12 +339,13 @@ void GameUniverse::StartDraw()
 		ProcessInput(i);		 //input neesd to be taken care of;
 		popActiveStarSystem();
 	}
-
-	if (screenshotkey) {
-		KBData b;
-		Screenshot(b,PRESS);
-		screenshotkey=false;
-	}
+    
+    if (screenshotkey) {
+        KBData b;
+        Screenshot(b,PRESS);
+        screenshotkey=false;
+    }
+    
 	GFXEndScene();
 								 //so we don't starve the audio thread
 	micro_sleep (getmicrosleep());
@@ -350,16 +354,18 @@ void GameUniverse::StartDraw()
 	static int sorttime=0;
 	if (game_options.garbagecollectfrequency!=0) {
 								 //don't want to delete something when there is something pending to jump therexo
-		if (PendingJumpsEmpty()) {
-			if ((++sorttime)%game_options.garbagecollectfrequency==1) {
+		if ( ! pending_jumps ) {
+			if ((++sorttime)%game_options.garbagecollectfrequency==0) {
 				SortStarSystems(star_system,active_star_system.back());
 				if (star_system.size() > game_options.numoldsystems && game_options.deleteoldsystems) {
 					if (std::find (active_star_system.begin(),active_star_system.end(),star_system.back())==active_star_system.end()) {
-						delete star_system.back();
+						VS_LOG("universe", logvs::NOTICE, "StarSystem GC: removing %s",
+                               star_system.back()->getName().c_str());
+                        delete star_system.back();
 						star_system.pop_back();
 					}
-					else {
-						VSFileSystem::vs_fprintf (stderr,"error with active star system list\n");
+					else if (game_options.numoldsystems > 0) {
+						VS_LOG("universe", logvs::WARN, "error with active star system list");
 					}
 				}
 			}

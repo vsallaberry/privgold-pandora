@@ -25,7 +25,7 @@ class mmoc : public commandI {
 		void send(std::string &string);
 		void ParseBinaryData(std::vector<char *> &in);
 		void ParseMovement(POSpack &in);
-		void mmoc::ParseRemoteInput(char *buf);
+		void ParseRemoteInput(char *buf);
 		virtual void conoutf(std::string &, int x = 0, int y = 0, int z = 0);
 		void close();
 		Functor<mmoc> *cmd;

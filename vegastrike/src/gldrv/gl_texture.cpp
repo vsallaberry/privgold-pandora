@@ -25,6 +25,7 @@
 #include "vegastrike.h"
 #include "config_xml.h"
 #include "gfxlib.h"
+#include "log.h"
 
 #ifndef GL_TEXTURE_CUBE_MAP_EXT
 #define GL_TEXTURE_CUBE_MAP_EXT           0x8513
@@ -729,7 +730,7 @@ GFXBOOL /*GFXDRVAPI*/ GFXTransferTexture (unsigned char *buffer, int handle, int
 		maxdimension = gl_options.max_texture_dimension;
 	}
 
-    VSFileSystem::vs_fprintf(stderr, "Transferring %dx%d texture, page %d (eff: %dx%d - limited at %d)\n",
+    VS_LOG("gltex", logvs::INFO, "Transferring %dx%d texture, page %d (eff: %dx%d - limited at %d)",
         textures[handle].iwidth,
         textures[handle].iheight,
         pageIndex,

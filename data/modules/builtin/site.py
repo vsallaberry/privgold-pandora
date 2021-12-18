@@ -287,6 +287,9 @@ __builtin__.help = _Helper()
 
 encoding = "ascii" # Default value set by _PyUnicode_Init()
 
+import encodings # even if utf8 is not default it must be registered
+encoding='utf-8'
+
 if 0:
     # Enable to support locale aware default string encodings.
     import locale
@@ -301,7 +304,11 @@ if 0:
 
 if encoding != "ascii":
     # On Non-Unicode builds this will raise an AttributeError...
-    sys.setdefaultencoding(encoding) # Needs Python Unicode build !
+    try:
+        sys.setdefaultencoding(encoding) # Needs Python Unicode build !
+    except:
+        print 'site.py: encoding '+encoding+' not available'
+        encoding='ascii'
 
 #
 # Run custom site specific code, if available.

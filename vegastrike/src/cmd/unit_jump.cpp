@@ -2,6 +2,10 @@
 #include "audiolib.h"
 #include "star_system_generic.h"
 #include "cmd/images.h"
+#include "log.h"
+#include "vs_log_modules.h"
+#include <stdlib.h>
+
 // From star_system_jump.cpp
 extern Hashtable<std::string, StarSystem, 127> star_system_table;
 extern std::vector <unorigdest *> pendingjump;
@@ -34,7 +38,7 @@ inline std::vector <Unit *> ComparePrimaries (Unit * primary, StarSystem *origin
   */
   return myvec;
 }
-extern void DealPossibleJumpDamage (Unit *un);
+extern void DealPossibleJumpDamage (Unit *un, bool is_active_player = false);
 extern void ActivateAnimation(Unit *);
 void WarpPursuit(Unit* un, StarSystem * sourcess, std::string destination);
 
@@ -49,7 +53,7 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
 
       Unit * unit;
 
-	  for(un_iter iter = pendingjump[kk]->orig->getUnitList().createIterator();unit = *iter;++iter){
+	  for(un_iter iter = pendingjump[kk]->orig->getUnitList().createIterator();(unit = *iter)!=NULL;++iter){
 	if (unit->Threat()==this) {
 	  unit->Threaten (NULL,0);
 	}
@@ -74,25 +78,25 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
 	  }
 	}
       }
-      if (this==_Universe->AccessCockpit()->GetParent()) {
-	VSFileSystem::vs_fprintf (stderr,"Unit is the active player character...changing scene graph\n");
-	savedStarSystem->SwapOut();
-	AUDStopAllSounds();
-	savedStarSystem = pendingjump[kk]->dest;
-	pendingjump[kk]->dest->SwapIn();
-
-
+      bool is_active_player = (this==_Universe->AccessCockpit()->GetParent());
+      if (is_active_player) {
+	    UNIT_LOG(logvs::NOTICE, "Jump: Unit is the active player character... changing scene graph");
+	    savedStarSystem->SwapOut();
+	    AUDStopAllSounds();
+	    savedStarSystem = pendingjump[kk]->dest;
+	    UNIT_LOG(logvs::NOTICE, "Swapping in new starsystem...");
+        pendingjump[kk]->dest->SwapIn();
+        UNIT_LOG(logvs::NOTICE, "Setting new starsystem as active...");
       }
-
+      
       _Universe->setActiveStarSystem(pendingjump[kk]->dest);
       vector <Unit *> possibilities;
-      Unit * primary;
       if (pendingjump[kk]->final_location.i==0&&
           pendingjump[kk]->final_location.j==0&&
           pendingjump[kk]->final_location.k==0){
 
-
-		for(un_iter iter = pendingjump[kk]->dest->getUnitList().createIterator();primary = *iter;++iter){
+        Unit * primary;
+		for(un_iter iter = pendingjump[kk]->dest->getUnitList().createIterator();(primary = *iter)!=NULL;++iter){
           vector <Unit *> tmp;
           tmp = ComparePrimaries (primary,pendingjump[kk]->orig);
           if (!tmp.empty()) {
@@ -134,13 +138,13 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
           }
         }
       }
-      DealPossibleJumpDamage (this);
+      DealPossibleJumpDamage (this, is_active_player);
       static int jumparrive=AUDCreateSound(vs_config->getVariable ("unitaudio","jumparrive", "sfx43.wav"),false);
       if (dosightandsound)
 	AUDPlay (jumparrive,this->LocalPosition(),this->GetVelocity(),1);
     } else {
 #ifdef JUMP_DEBUG
-      VSFileSystem::vs_fprintf (stderr,"Unit FAILED remove from star system\n");
+      UNIT_LOG(logvs::VERBOSE, "Unit FAILED remove from star system");
 #endif
     }
 	  if (this->docked&UnitType::DOCKING_UNITS) {
@@ -169,7 +173,7 @@ bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &sa
       }
     }
   }else {
-    VSFileSystem::vs_fprintf (stderr,"Already jumped\n");
+    UNIT_LOG(logvs::NOTICE, "Already jumped");
   }
   return ret;
 }

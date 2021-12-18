@@ -42,6 +42,7 @@
 #include "cmd/unit_generic.h"
 #include "mission.h"
 #include "easydom.h"
+#include "log.h"
 
 //#include "vs_globals.h"
 //#include "vegastrike.h"
@@ -86,8 +87,10 @@ void Mission::doIf(missionNode *node,int mode){
   
     int nr_subnodes=node->subnodes.size();
     if(nr_subnodes!=3){
-      fatalError(node,mode,"an if-statement needs exact three subnodes, not "+nr_subnodes);
-      printf("nr_of_subnodes: %d\n",nr_subnodes);
+      std::string message("an if-statement needs exact three subnodes, not ");
+      message += +nr_subnodes;
+      fatalError(node,mode,message);
+      VS_LOG("mission", logvs::ERROR, "nr_of_subnodes: %d",nr_subnodes);
      
       assert(0);
     }

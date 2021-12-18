@@ -136,9 +136,9 @@ struct Music {
 #else
 #define HAVE_SDL
 #ifdef HAVE_SDL
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_thread.h>
+#include <SDL_mixer.h>
 #else
 typedef int Mix_Music;
 #endif

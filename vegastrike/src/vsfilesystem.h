@@ -2,8 +2,10 @@
 #define __VSFILESYS_H
 #include "config.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string>
 #include <vector>
+#include <list>
 #include <iostream>
 using std::string;
 using std::vector;
@@ -213,12 +215,13 @@ namespace VSFileSystem
 	/************************************************************************************************/
 	/**** VSFileSystem functions                                                                 ****/
 	/************************************************************************************************/
+    typedef std::list<std::pair<std::pair<std::string,std::string>,std::string> > ConfigOverrides_type;
 
 	// Initialize paths
-	void	InitPaths( string conf, string subdir="");
+	void	InitPaths( string conf, string subdir="", ConfigOverrides_type * overrides = NULL );
 	void	InitDataDirectory();
 	void	InitHomeDirectory();
-	void	LoadConfig( string subdir="");
+	void	LoadConfig( string subdir="", ConfigOverrides_type * overrides = NULL );
 	void	InitMods();
 	void	ChangeToProgramDirectory(char *argv0);
 
@@ -543,7 +546,7 @@ namespace VSFileSystem
         private:
             void    private_init( );
 	};
-};
+}
 
 std::ostream& operator<<( std::ostream& ostr, VSFileSystem::VSError err );
 std::ostream& operator<<( std::ostream& ostr, VSFileSystem::VSFileType type );

@@ -26,9 +26,9 @@
 #include <assert.h>
 #include <stdio.h>
 
-#define GAMESERVER_VERSION 0.2
-#define ACCOUNTSERVER_VERSION 0.2
-#define NETCLIENT_VERSION 0.2
+#define GAMESERVER_VERSION 0.201
+#define ACCOUNTSERVER_VERSION 0.201
+#define NETCLIENT_VERSION 0.201
 
 #define SERVER_PORT 6777
 #define CLIENT_PORT	6778
@@ -50,7 +50,7 @@ typedef unsigned int InstSerial;
 extern double NETWORK_ATOM;
 extern double DAMAGE_ATOM;
 
-#if defined(_WIN32) && !defined(__CYGWIN__) || defined(MAC_OS_X_VERSION_10_3) || defined(MAC_OS_X_VERSION_10_2) || defined(MAC_OS_X_VERSION_10_1)
+#if defined(_WIN32) && !defined(__CYGWIN__) || (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_4)
 	//#warning "Win32 platform"
 	#define in_addr_t unsigned long
 	#define socklen_t int

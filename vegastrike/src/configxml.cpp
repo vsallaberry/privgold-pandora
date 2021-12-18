@@ -32,6 +32,7 @@
 
 #include "configxml.h"
 #include "easydom.h"
+#include "log.h"
 
 //#include "vs_globals.h"
 //#include "vegastrike.h"
@@ -39,16 +40,22 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+#define CONFIG_LOG(_lvl, ...) VS_LOG("config", _lvl, __VA_ARGS__)
+
 /* *********************************************************** */
 
 VegaConfig::VegaConfig(const char *configfile){
 
-  configNodeFactory *domf = new configNodeFactory();
-
-  configNode *top=(configNode *)domf->LoadXML(configfile);
+  //configNodeFactory *domf = new configNodeFactory();
+  configNodeFactory domf;
+  configNode *top=domf.LoadXML(configfile);
 
   if(top==NULL){
-    cout << "Panic exit - no configuration" << endl;
+    CONFIG_LOG(logvs::ERROR, "Panic exit - no configuration");
+    exit(0);
+  }
+  if (!top->isValid()) {
+    CONFIG_LOG(logvs::ERROR, "Panic exit - invalid xml");
     exit(0);
   }
   //top->walk(0);
@@ -73,7 +80,7 @@ VegaConfig::~VegaConfig()
 
 bool VegaConfig::checkConfig(configNode *node){
   if(node->Name()!="vegaconfig"){
-    cout << "this is no Vegastrike config file" << endl;
+    CONFIG_LOG(logvs::ERROR, "this is no Vegastrike config file");
     return false;
   }
 
@@ -93,7 +100,7 @@ bool VegaConfig::checkConfig(configNode *node){
       //doBindings(cnode);
     }
     else{
-      cout << "Unknown tag: " << cnode->Name() << endl;
+      CONFIG_LOG(logvs::WARN, "Unknown tag: %s", cnode->Name().c_str());
     }
   }
   return true;
@@ -103,7 +110,7 @@ bool VegaConfig::checkConfig(configNode *node){
 
 void VegaConfig::doVariables(configNode *node){
   if(variables!=NULL){
-    cout << "only one variable section allowed" << endl;
+    CONFIG_LOG(logvs::WARN, "only one variable section allowed");
     return;
   }
   variables=node;

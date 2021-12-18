@@ -12,12 +12,13 @@
 #include "collection.h"
 #include "unit_generic.h"
 #include "vsfilesystem.h"
+#include <errno.h>
+#include <string.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
 #include <fcntl.h>
 #include <process.h>
-#include <string.h>
 #include <stdio.h>
 #include <direct.h>
 #include <stdlib.h>
@@ -27,6 +28,7 @@
 #include "networking/inet_file.h"
 #include "networking/inet.h"
 #include "python/python_compile.h"
+#include "vs_log_modules.h"
 
 // To allow for loading in another thread, we must handle some AL vars ourselves...
 #include "aldrv/al_globals.h"
@@ -55,8 +57,8 @@ static void print_check_err(int errorcode, const char *str) {
 #else
 	if (errorcode) {
 		char *err = strerror(errorcode);
-		if (!err) err="Unknown error";
-		fprintf(stderr, "ERROR IN PTHREAD FUNCTION %s: %s (%d)\n", str, err, errorcode);
+		VS_LOG("music", logvs::ERROR, "ERROR IN PTHREAD FUNCTION %s: %s (%d)",
+				str, err == NULL ? "Unknown error" : err, errorcode);
 	}
 #endif
 }

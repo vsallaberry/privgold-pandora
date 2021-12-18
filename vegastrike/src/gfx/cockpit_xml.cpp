@@ -215,7 +215,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
   VSSprite * adjsprite=NULL;
   std::string gaugename ("shieldstat.spr");
   std::string myfont ("9x12.font");
-  Names elem = (Names)element_map.lookup(name);
+  int elem = element_map.lookup(name);
   Names attr;
   unsigned int mymodes=0;
   float xsize=-1,ysize=-1,xcent=FLT_MAX,ycent=FLT_MAX;

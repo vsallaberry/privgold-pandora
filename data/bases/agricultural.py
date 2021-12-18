@@ -2,6 +2,7 @@ import Base
 import dynamic_mission
 import VS
 import PlayerShip
+import debug
 
 # this uses the original coordinate system of Privateer
 import GUI
@@ -79,7 +80,7 @@ else:
 import mission_computer
 miscomp = mission_computer.MakeMissionComputer (room_concourse,time_of_day)
 Base.Link (room_concourse, 'my_comp_id', 0.3725, -0.843333, 0.2825, 0.423333, 'Mission_Computer', miscomp)
-print "Linked mission computer"
+debug.debug("Linked mission computer")
 
 plist=VS.musicAddList('agricultural.m3u')
 VS.musicPlayList(plist)

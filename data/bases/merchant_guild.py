@@ -5,6 +5,10 @@ def Can():
 	return guilds.CanMerchantGuild()
 
 def MakeMerchantGuild(concourse,timeofdayignored="_day"):
+	# Custom Font
+	global _missioncomputer_font
+	Base.SetTextBoxFont(-1, '', _missioncomputer_font)
+	
 	# create the initial merchant guild screen
 	room0 = Base.Room ('Merchant_Guild')
 	Base.Texture (room0, 'background', 'bases/merchant_guild/merchantguild.spr', 0, 0)
@@ -59,4 +63,12 @@ def MakeMerchantGuild(concourse,timeofdayignored="_day"):
 	Base.Texture(room1,  'compbkg', 'bases/merchant_guild/merchantguildcompon.spr',0.4061875,0.1358)
 	guildroom.AddTextBox('merchantbox');
 	guilds.CreateGuild(guildroom)
+	Base.SetTextBoxFont(-1, '', '')
+	
 	return room0
+
+try:
+	global _missioncomputer_font
+	_missioncomputer_font = VS.getVariable("graphics/privateer", "missioncomputer_font", "")
+except:
+	_missioncomputer_font = ''

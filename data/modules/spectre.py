@@ -2,6 +2,8 @@ import VS
 import Director
 import Vector
 import vsrandom
+import debug
+
 def isCar(c):
     nam = c.getName()
     return nam=='car' or nam == 'spectre' or nam=='porsche' or nam=='skart'
@@ -103,7 +105,7 @@ class Environment(Director.Mission):
         self.flags=[]
         self.obstacles=[]
         self.subs=[]
-        print 'initing'
+        debug.debug('initing')
         self.iter=0
         self.num_un=0
         for i in range(numobst):
@@ -125,7 +127,7 @@ class Environment(Director.Mission):
             self.iter+=1
         else:
             self.iter=0
-    def EventualExecture (self):
+    def EventualExecute (self):
         self.Execute()
     def AlwaysExecute(self):
         self.EventualExecute()

@@ -1,4 +1,5 @@
 import VS
+import site
 import Director
 import fg_util
 import vsrandom
@@ -86,49 +87,49 @@ def getSystemsNAway (start,k,preferredfaction):
 syscreds=750
 
 def LoadList(filename):
-	bnl = []
-	print 'Importing list from: ' + filename
-	try:
-		f = open (filename,'r')
-		bnl = f.readlines()
-		f.close()
-	except:
-                print filename + ': cannot import.'
-		return []
-	# strip newlines
-	for i in range(len(bnl)):
-		bnl[i]=bnl[i].rstrip()
-        print filename + ': ' + str(len(bnl)) + ' elements.'
-	return bnl
+    bnl = []
+    debug.debug('Importing list from: ' + filename, debug.VERBOSE)
+    try:
+        f = open (filename,'r')
+        bnl = f.readlines()
+        f.close()
+    except:
+        debug.warn(filename + ': cannot import.')
+        return []
+    # strip newlines
+    for i in range(len(bnl)):
+        bnl[i]=bnl[i].rstrip()
+    debug.debug(filename + ': ' + str(len(bnl)) + ' elements.', debug.INFO)
+    return bnl
 
 def GetRandomFromList(list):
-	import vsrandom
-	idx = vsrandom.randint(0,len(list)-1)
-	return list[idx]
+    import vsrandom
+    idx = vsrandom.randint(0,len(list)-1)
+    return list[idx]
 
 def GetRandomCompanyName():
-	#print 'reading company names '
-	global company_names
-	if (len(company_names) == 0):
-		filename = 'universe/companies.txt'
-		company_names = LoadList(filename)
-	return GetRandomFromList(company_names)
+    #print 'reading company names '
+    global company_names
+    if (len(company_names) == 0):
+        filename = 'universe/companies.txt'
+        company_names = LoadList(filename)
+    return GetRandomFromList(company_names)
 
 def GetRandomCargoBrief():
-	#print 'generating cargo briefing'
-	global cargo_briefs
-	if (len(cargo_briefs) == 0):
-		filename = 'universe/cargo_brief.txt'
-		cargo_briefs = LoadList(filename)
-	return GetRandomFromList(cargo_briefs)
+    #print 'generating cargo briefing'
+    global cargo_briefs
+    if (len(cargo_briefs) == 0):
+        filename = 'universe/cargo_brief.txt'
+        cargo_briefs = LoadList(filename)
+    return GetRandomFromList(cargo_briefs)
 
 def GetRandomAttackBrief():
-	#print 'generating attack briefing'
-	global attack_briefs
-	if (len(attack_briefs) == 0):
-		filename = 'universe/attack_brief.txt'
-		attack_briefs = LoadList(filename)
-	return GetRandomFromList(attack_briefs)
+    #print 'generating attack briefing'
+    global attack_briefs
+    if (len(attack_briefs) == 0):
+        filename = 'universe/attack_brief.txt'
+        attack_briefs = LoadList(filename)
+    return GetRandomFromList(attack_briefs)
 
 def numPatrolPoints(sysname):
     try:
@@ -140,44 +141,44 @@ def numPatrolPoints(sysname):
         return vsrandom.randrange(4,10)
 
 def GetRandomPatrolBrief():
-	#print 'generating patrol briefing'
-	global patrol_briefs
-	if (len(patrol_briefs) == 0):
-		filename = 'universe/patrol_brief.txt'
-		patrol_briefs = LoadList(filename)
-	return GetRandomFromList(patrol_briefs)
+    #print 'generating patrol briefing'
+    global patrol_briefs
+    if (len(patrol_briefs) == 0):
+        filename = 'universe/patrol_brief.txt'
+        patrol_briefs = LoadList(filename)
+    return GetRandomFromList(patrol_briefs)
 
 def GetRandomDefendBrief():
-	#print 'generating defend briefing'
-	global defend_briefs
-	if (len(defend_briefs) == 0):
-		filename = 'universe/defend_brief.txt'
-		defend_briefs = LoadList(filename)
-	return GetRandomFromList(defend_briefs)
+    #print 'generating defend briefing'
+    global defend_briefs
+    if (len(defend_briefs) == 0):
+        filename = 'universe/defend_brief.txt'
+        defend_briefs = LoadList(filename)
+    return GetRandomFromList(defend_briefs)
 
 def GetRandomEscortBrief():
-	#print 'generating escort briefing'
-	global escort_briefs
-	if (len(escort_briefs) == 0):
-		filename = 'universe/escort_brief.txt'
-		escort_briefs = LoadList(filename)
-	return GetRandomFromList(escort_briefs)
+    #print 'generating escort briefing'
+    global escort_briefs
+    if (len(escort_briefs) == 0):
+        filename = 'universe/escort_brief.txt'
+        escort_briefs = LoadList(filename)
+    return GetRandomFromList(escort_briefs)
 
 def GetRandomRescueBrief():
-	#print 'generating rescue briefing'
-	global rescue_briefs
-	if (len(rescue_briefs) == 0):
-		filename = 'universe/rescue_brief.txt'
-		rescue_briefs = LoadList(filename)
-	return GetRandomFromList(rescue_briefs)
+    #print 'generating rescue briefing'
+    global rescue_briefs
+    if (len(rescue_briefs) == 0):
+        filename = 'universe/rescue_brief.txt'
+        rescue_briefs = LoadList(filename)
+    return GetRandomFromList(rescue_briefs)
 
 def GetRandomBountyBrief():
-	#print 'generating bounty briefing'
-	global bounty_briefs
-	if (len(bounty_briefs) == 0):
-		filename = 'universe/bounty_brief.txt'
-		bounty_briefs = LoadList(filename)
-	return GetRandomFromList(bounty_briefs)
+    #print 'generating bounty briefing'
+    global bounty_briefs
+    if (len(bounty_briefs) == 0):
+        filename = 'universe/bounty_brief.txt'
+        bounty_briefs = LoadList(filename)
+    return GetRandomFromList(bounty_briefs)
 
 def getCargoName(category):
     l=category.split('/')
@@ -267,10 +268,10 @@ def writemissionsavegame (name):
 def writemissionvars (vars):
     Director.pushSaveString(plr, "mission_vars", PickleTools.encodeMap(vars))
 def eraseExtras():
-	Director.clearSaveString(plr, "mission_scripts")
-	Director.clearSaveString(plr, "mission_names")
-	Director.clearSaveString(plr, "mission_descriptions")
-	Director.clearSaveString(plr, "mission_vars")
+    Director.clearSaveString(plr, "mission_scripts")
+    Director.clearSaveString(plr, "mission_names")
+    Director.clearSaveString(plr, "mission_descriptions")
+    Director.clearSaveString(plr, "mission_vars")
 
 def eraseExtrasOld():
     import sys
@@ -278,7 +279,7 @@ def eraseExtrasOld():
     if (   len!=Director.getSaveStringLength(plr, "mission_names") \
         or len!=Director.getSaveStringLength(plr, "mission_descriptions") \
         or len!=Director.getSaveStringLength(plr, "mission_vars")   ):
-        sys.stdout.write("Warning: Number of mission descs., names, scripts and vars are unequal.\n")
+        debug.debug("Warning: Number of mission descs., names, scripts and vars are unequal.")
     if len>0:
         for i in range(len-1,-1,-1):
             Director.eraseSaveString(plr, "mission_scripts", i)
@@ -371,7 +372,7 @@ def generateCleansweepMission(path,numplanets,enemy):
     writemissionvars( { 'MISSION_TYPE' : mistype } )
 
 def generatePatrolMission (path,numplanets,enemy):
-    print "PITTER PATTER"
+    debug.debug("generating PITTER PATTER patrol mission", debug.INFO)
     dist=400
     minships=0
     fighterprob=vsrandom.random()*.75;
@@ -572,7 +573,7 @@ def generateCargoMission (path, numcargos,category, fac):
     if (randCompany==''):
         strStart = "We need to deliver some "
     else:
-    	  strStart = randCompany+" seeks delivery of "
+        strStart = randCompany+" seeks delivery of "
     if len(path)==1:
         mistype = 'IN-SYSTEM CARGO'
     else:
@@ -787,6 +788,7 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
     num_iescort=1
     mincount=2
     usedcats={}
+    debug.debug('contracting missions for '+str(fac)+'/'+str(baseship)+'...')
     for i in range (minsysaway,maxsysaway+1):
         for j in getSystemsNAway(cursystem,i,preferredfaction):
             import dynamic_battle
@@ -803,7 +805,8 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                 if (VS.GetRelation(fac,k[1][1])>=0):
                     if ((j[-1]==VS.getSystemFile() and num_idefend<=0) or (j[-1]!=VS.getSystemFile() and num_defend<=0)):
                         mungeFixerPct()
-                        print "Munged"
+                        #debug.debug(str(fac)+'/'+str(k)+" Munged",debug.NOTICE)
+                        debug.debug("Munged :"+str(j)+' '+str(fac)+'/'+str(k[1])+'/'+str(k[0]),debug.INFO)
                     else:
                         nodefend=0
                     generateDefendMission(j,k[1][0],k[1][1],k[0][0],k[0][1])
@@ -812,7 +815,7 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                         num_idefend-=1
                     if checkMissionNum():
                         num_defend-=1
-                    print "Generated defendX with insys at: "+str(num_idefend)+" and outsys at "+str (num_defend)
+                    debug.debug(str(j)+' '+str(fac)+'/'+str(k[1])+'/'+str(k[0])+" Generated defendX with insys at: "+str(num_idefend)+" and outsys at "+str (num_defend),debug.INFO)
             (m,nummerchant,numthisfac)=GetFactionToDefend(thisfaction, fac, j[-1])
 
             if preferredfaction:
@@ -840,7 +843,7 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                                         num_idefend-=1
                                     if checkMissionNum():
                                         num_defend-=1
-                                    print "Generated defendY with insys at: "+str(num_idefend)+" and outsys at "+str (num_defend)
+                                    debug.debug(str(j)+' '+str(k)+'/'+str(mm)+" Generated defendY with insys at: "+str(num_idefend)+" and outsys at "+str (num_defend),debug.INFO)
                                 nodefend=0
                             elif ((i==0 or vsrandom.random()<.5)):
                                 if ((j[-1]==VS.getSystemFile() and num_ibounty<=0) or (j[-1]!=VS.getSystemFile() and num_bounty<=0)):
@@ -848,10 +851,10 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                                 generateBountyMission(j,mm,k)
                                 restoreFixerPct()
                                 if checkInsysNum():
-                                    print " decrementing INSYS bounty to "+str(num_ibounty)
+                                    debug.debug(str(j)+' '+str(k)+'/'+str(mm)+" decrementing INSYS bounty to "+str(num_ibounty),debug.NOTICE)
                                     num_ibounty-=1
                                 if checkMissionNum():
-                                    print " decrementing bounty to "+str(num_bounty)
+                                    debug.debug(str(j)+' '+str(k)+'/'+str(mm)+" decrementing bounty to "+str(num_bounty),debug.NOTICE)
                                     num_bounty-=1
 
 
@@ -908,12 +911,14 @@ def contractMissionsFor(fac,baseship,minsysaway,maxsysaway):
                             if baseship.isPlanet():
                                 faction="planets"
                                 name=baseship.getFullname()
-                            print "TRADING"
+                            logging = debug.debug("TRADING", debug.NOTICE)
                             import trading
-                            print name
-                            print faction
+                            if logging > 0:
+                                debug.dprint(str(name))
+                                debug.dprint(str(faction))
                             exports=trading.getNoStarshipExports(name,faction,20)
-                            print exports
+                            if logging > 0:
+                                debug.dprint(str(exports))
                             if (category.find("assengers")==-1 and len(exports)):
                                 category=exports[vsrandom.randrange(0,len(exports))][0]
 
@@ -980,4 +985,4 @@ def CreateMissions(minsys=0,maxsys=4):
     contractMissionsFor(basefac,baseship,minsys,maxsys)
     import news
     news.processNews(plr)
-    print "GOOG OGOO"
+    debug.debug("missions created -> GOOG OGOO")

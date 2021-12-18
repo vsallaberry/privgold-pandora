@@ -3,6 +3,7 @@ import vsrandom
 import universe
 import Director
 import dynamic_news
+import debug
 global dnewsman_
 dnewsman_ = dynamic_news.NewsManager()
 def saveVal(str):
@@ -12,25 +13,25 @@ class NotZero:
     def __init__ (self,str):
         self.str = str
     def __nonzero__ (self):
-        print 'nonzeroing'
+        debug.debug('nonzeroing')
         return saveVal(self.str)!=0
 class IsZero:
     def __init__ (self,str):
         self.str = str
     def __nonzero__ (self):
-        print 'nonzeroing'
+        debug.debug('nonzeroing')
         return saveVal(self.str)==0
 class GreaterZero:
     def __init__ (self,str):
         self.str = str
     def __nonzero__ (self):
-        print 'nonzeroing'
+        debug.debug('nonzeroing')
         return saveVal(self.str)>0
 class LessZero:
     def __init__ (self,str):
         self.str = str
     def __nonzero__ (self):
-        print 'nonzeroing'
+        debug.debug('nonzeroing')
         return saveVal(self.str)<0
 
 
@@ -43,7 +44,7 @@ def newNews():
     newsitem = news[newsitem]
     player = VS.getMissionOwner()
     for conditional in newsitem[1]:
-        print 'conditioning'
+        debug.debug('conditioning')
         if (not conditional):
             return
     universe.setFirstSaveData(player,newsitem[0],1)
@@ -63,7 +64,7 @@ def processNews(plr):
     import Director
     howmuchnews=Director.getSaveStringLength(plr,"dynamic_news")
     minnews=0
-    print "Processing News"
+    debug.debug("Processing News")
     global dnewsman_
     dnewsman_.updateDockedAtFaction()
     if (howmuchnews>4000):

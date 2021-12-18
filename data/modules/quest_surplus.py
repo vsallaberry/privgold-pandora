@@ -4,10 +4,12 @@ import VS
 import unit
 import vsrandom
 import universe
+import debug
+
 class quest_surplus (quest.quest):
     def __init__ (self,categories,pr,qr,ships,planets):
-        print "surplus %f %f" % (pr, qr)
-        print categories
+        debug.debug("surplus %f %f" % (pr, qr))
+        debug.debug(repr(categories))
         universe.systemCargoDemand(categories,pr,qr,ships,planets)
     def Execute (self):
         self.removeQuest()
@@ -15,7 +17,7 @@ class quest_surplus (quest.quest):
 
 class quest_surplus_factory (quest.quest_factory):
     def __init__ (self,categories,priceratio,quantratio,ships,planets,precondition=()):
-        print "initin"
+        debug.debug("initin")
         self.ships=ships
         self.planets=planets
         self.priceratio=priceratio
@@ -25,10 +27,10 @@ class quest_surplus_factory (quest.quest_factory):
         quest.quest_factory.__init__ (self,"quest_surplus")
     def precondition(self,playernum):
         for blah in self.precond:
-            print blah
+            debug.debug(repr(blah))
             if (not quest.findQuest (playernum,blah)):
                 return 0
-        print "suc"
+        debug.debug("suc")
         return 1
     def create (self):
         return quest_surplus(self.categories,self.priceratio,self.quantratio,self.ships,self.planets)

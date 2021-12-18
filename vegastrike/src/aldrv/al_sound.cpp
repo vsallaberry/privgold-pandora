@@ -8,9 +8,9 @@
 #include <stdlib.h>
 #include "cmd/unit_generic.h"
 #include "gfx/cockpit_generic.h"
+#include "log.h"
+
 #ifdef HAVE_AL
-
-
 
  typedef struct                                  /* WAV File-header */
  {
@@ -759,6 +759,7 @@ int AUDHighestSoundPlaying() {
 }
 void AUDStopAllSounds (int except_this_one) {
 #ifdef HAVE_AL
+    VS_LOG("audio", logvs::INFO, "Stopping all sounds...");
 	unsigned int s = ::sounds.size();
 	for (unsigned int i=0;i < s;++i) {
           if ((int)i!=except_this_one&&false==::sounds[i].music && AUDIsPlaying(i))
@@ -788,7 +789,10 @@ void AUDStopPlaying (const int sound){
   if (sound>=0&&sound<(int)sounds.size()) {
 #ifdef SOUND_DEBUG
       printf("AUDStopPlaying sound %d source(releasing): %d buffer:%d\n",sound,sounds[sound].source,sounds[sound].buffer);
-#endif	  
+#endif
+    VS_DBG("audio", logvs::DBG, "AUDStopPlaying sound %d source(releasing): %d buffer:%d",
+                 sound,sounds[sound].source,sounds[sound].buffer);
+      
 	if (sounds[sound].source!=0) {
 	  alSourceStop(sounds[sound].source);
           unusedsrcs.push_back (sounds[sound].source);
@@ -846,9 +850,10 @@ static bool AUDReclaimSource (const int sound, bool high_priority=false) {
 }
 void AUDStartPlaying (const int sound){
 #ifdef SOUND_DEBUG
-	printf ("AUDStartPlaying(%d)",sound);
+	printf ("AUDStartPlaying(%d)\n",sound);
 #endif
-	
+    VS_DBG("audio", logvs::DBG, "AUDStartPlaying(%d)",sound);
+    
 #ifdef HAVE_AL
   if (sound>=0&&sound<(int)sounds.size()) {
 	  if (sounds[sound].music||starSystemOK())
@@ -856,6 +861,9 @@ void AUDStartPlaying (const int sound){
 #ifdef SOUND_DEBUG
       printf("AUDStartPlaying sound %d source:%d buffer:%d\n",sound,sounds[sound].source,sounds[sound].buffer);
 #endif
+      VS_DBG("audio", logvs::DBG, "AUDStartPlaying sound %d source:%d buffer:%d",
+                   sound,sounds[sound].source,sounds[sound].buffer);
+        
       AUDAdjustSound (sound, sounds[sound].pos, sounds[sound].vel);
 	  AUDSoundGain(sound, sounds[sound].gain, sounds[sound].music);
       alSourcePlay( sounds[sound].source );

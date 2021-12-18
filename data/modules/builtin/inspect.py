@@ -1,3 +1,4 @@
+# -*- coding: iso-8859-1 -*-
 """Get useful information from live Python objects.
 
 This module encapsulates the interface provided by the internal special
@@ -726,7 +727,7 @@ def getframeinfo(frame, context=1):
 
 def getlineno(frame):
     """Get the line number from a frame object, allowing for optimization."""
-    # Written by Marc-André Lemburg; revised by Jim Hugunin and Fredrik Lundh.
+    # Written by Marc-Andrï¿½ Lemburg; revised by Jim Hugunin and Fredrik Lundh.
     lineno = frame.f_lineno
     code = frame.f_code
     if hasattr(code, 'co_lnotab'):

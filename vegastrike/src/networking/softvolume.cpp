@@ -2,9 +2,9 @@
 #define SDL_MIX_MAXVOLUME 128
 #endif
 #ifdef HAVE_SDL
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
-#include <SDL/SDL_mixer.h>
+#include <SDL.h>
+#include <SDL_thread.h>
+#include <SDL_mixer.h>
 #else
 typedef int Mix_Music;
 #endif

@@ -3,6 +3,7 @@ import Vector
 import VS
 import unit
 import vsrandom
+import debug
 
 drone=VS.Unit()
 derelict=VS.Unit()
@@ -17,11 +18,11 @@ class quest_drone (quest.quest):
         self.lastdist=10000
         self.jumping=0
         self.savedplaya=VS.getPlayer()
-        print "initing"
+        debug.debug("initing")
     def __init__ (self):
         self.setup()
     def launchNewDrone (self):
-	global drone        
+        global drone
         playa=VS.getPlayer()
         if (not playa.isNull()):
             self.makeQuestPersistent()
@@ -34,9 +35,9 @@ class quest_drone (quest.quest):
             self.stage=1
         else:
             drone=VS.Unit()
-        
+
     def setDroneNear (self,playa):
-	global drone
+        global drone
         vec = playa.Position()
         vec = Vector.Add (vec,(vsrandom.uniform(-1000,1000),
                                vsrandom.uniform(-1000,1000),
@@ -44,7 +45,7 @@ class quest_drone (quest.quest):
         drone.SetCurPosition(vec)
         drone.SetTarget(playa)
     def Execute (self):
-	global drone
+        global drone
         playa=VS.getPlayer()
         if (playa.isNull()):
             return 1
@@ -59,14 +60,14 @@ class quest_drone (quest.quest):
         if (not self.stage):
             if (derelict and (VS.getSystemFile()==self.sysfile)):
                 if (derelict.getSignificantDistance(playa)<1000):
-                    print "launch dron"
+                    debug.debug("launch dron")
                     self.launchNewDrone()
             else:
-                print "launch drone"
+                debug.debug("launch drone")
                 self.launchNewDrone()
         else:
             if (drone.isNull()):
-                print "no drone"
+                debug.debug("no drone")
                 self.removeQuest();
                 return 0
             sf = VS.getSystemFile();
@@ -76,7 +77,7 @@ class quest_drone (quest.quest):
 #                self.setDroneNear(playa)
                 self.lastdist=10000
                 self.jumping=1
-                print "jumping"
+                debug.debug("jumping")
             else:
                 if (self.jumping):
                     if (playa.getUnitSystemFile()==drone.getUnitSystemFile()):

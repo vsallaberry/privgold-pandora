@@ -68,10 +68,12 @@ void InitBriefing() {
 	Python::reseterrors();
 }
 
-void Mission::DirectorLoop(){
-   double oldgametime=gametime;
-   gametime+=SIMULATION_ATOM;//elapsed;
+void Mission::DirectorUpdateGameTime() {
+	double oldgametime=gametime;
+	gametime+=SIMULATION_ATOM;//elapsed;
+}
 
+void Mission::DirectorLoop(){
    try {
       if (runtime.pymissions)
          runtime.pymissions->Execute();
@@ -85,6 +87,7 @@ void Mission::DirectorLoop(){
       throw;
    }
 }
+void Mission::RenderMessages(TextPlane * tp) {}
 void Mission::BriefingUpdate(){}
 void Mission::DirectorBenchmark(){
 }

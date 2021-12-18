@@ -56,14 +56,23 @@
 
 //#include "vs_globals.h"
 //#include "vegastrike.h"
+#include "log.h"
+
+#define MISSION_LOG(_lvl, ...) VS_LOG("mission", _lvl, __VA_ARGS__)
 
 /* *********************************************************** */
 using std::cout;
 using std::cerr;
 using std::endl;
 Mission::~Mission() {
-  VSFileSystem::vs_fprintf (stderr,"Mission Cleanup Not Yet Implemented");
+  MISSION_LOG(logvs::INFO, "Mission Cleanup is experimental");
   //do not delete msgcenter...could be vital
+  if (importf)
+      delete importf;
+  if (top)
+      delete top;
+  //if (briefing)
+  //    delete briefing;
 }
 double   Mission::gametime=0.0;
 int Mission::number_of_ships=0;
@@ -90,12 +99,15 @@ void Mission::ConstructMission(const char *configfile, const std::string &script
       nextpythonmission[script.length()]=0;
       strcpy (nextpythonmission,script.c_str());
   }
-  easyDomFactory<missionNode> *domf= new easyDomFactory<missionNode>();//such a bloody leak!
-
-  top=domf->LoadXML(configfile);
+  importf = NULL;
+  VS_LOG("mission", logvs::NOTICE, "creating a mission from %s", configfile);
+  //easyDomFactory<missionNode> *domf= new easyDomFactory<missionNode>();//such a bloody leak!
+  easyDomFactory<missionNode> domf;
+    
+  top=domf.LoadXML(configfile);
  static bool dontpanic=false;
   if(top==NULL&&!dontpanic){
-    cout << "Panic exit - mission file " << configfile << " not found" << endl;
+    MISSION_LOG(logvs::ERROR, "Panic exit - mission file %s", configfile);
     exit(0);
   } else {
     dontpanic=true;
@@ -157,7 +169,7 @@ void Mission::initMission(bool loadscripts){
 
 bool Mission::checkMission(easyDomNode *node, bool loadscripts){
   if(node->Name()!="mission"){
-    cout << "this is no Vegastrike mission file" << endl;
+    MISSION_LOG(logvs::WARN, "this is no Vegastrike mission file (%s)", node->Name().c_str());
     return false;
   }
 
@@ -197,7 +209,7 @@ bool Mission::checkMission(easyDomNode *node, bool loadscripts){
       }
 	  this->nextpythonmission=dumbstr;
     } else{
-      cout << "warning: Unknown tag: " << (*siter)->Name() << endl;
+        MISSION_LOG(logvs::WARN, "warning: Unknown tag: %s", (*siter)->Name().c_str());
     }
   }
   return true;
@@ -205,11 +217,13 @@ bool Mission::checkMission(easyDomNode *node, bool loadscripts){
 
 static std::vector <Mission *> Mission_delqueue;
 void Mission::wipeDeletedMissions() {
-  while (!Mission_delqueue.empty()) {
-    delete Mission_delqueue.back();
-    Mission_delqueue.pop_back();
-    
-  }
+    if (!Mission_delqueue.empty()) {
+        VS_LOG("mission", logvs::NOTICE, "wiping deleted missions count = %zu", Mission_delqueue.size());
+        do {
+            delete Mission_delqueue.back();
+            Mission_delqueue.pop_back();
+        } while (!Mission_delqueue.empty());
+    }
 }
 
 int Mission::getPlayerMissionNumber() {

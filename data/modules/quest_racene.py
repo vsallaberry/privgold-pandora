@@ -5,6 +5,8 @@ import unit
 import vsrandom
 import launch
 import faction_ships
+import debug
+
 class quest_racene (quest.quest):
     def __init__ (self):
         self.sysfile = VS.getSystemFile()
@@ -58,7 +60,7 @@ class quest_racene_factory (quest.quest_factory):
     def __init__ (self):
         quest.quest_factory.__init__ (self,"quest_racene")
     def precondition(self,playernum):
-        print 'precondition'
+        debug.debug('precondition')
         return 1
         return quest.findQuest(playernum,'racene_star_intro') and quest.notLoadedQuest(playernum,'racene_star_loss')
     def create (self):

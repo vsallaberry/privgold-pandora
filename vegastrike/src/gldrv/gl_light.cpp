@@ -26,6 +26,7 @@ using std::stack;
 #include <assert.h>
 #include "vs_globals.h"
 #include "config_xml.h"
+#include "log.h"
 
 GLint GFX_MAX_LIGHTS=8;
 GLint GFX_OPTIMAL_LIGHTS=4;
@@ -285,6 +286,9 @@ void /*GFXDRVAPI*/ GFXDeleteLightContext(int con_number) {
 }
 
 void /*GFXDRVAPI*/ GFXSetLightContext (const int con_number) {
+#ifdef VS_GL_LIGHTS_FROM_FUTURE // imported update from privgold svn 2012 rev 297
+  unpicklights();
+#endif
   int GLLindex=0;
   unsigned int i;
   lighttable.Clear();

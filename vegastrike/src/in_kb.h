@@ -22,7 +22,7 @@
 #ifndef INKB_H
 #define INKB_H
 //#ifdef HAVE_SDL
-//#include <SDL/SDL_keysym.h>
+//#include <SDL_keysym.h>
 //const int KEYMAP_SIZE =SDLK_LAST;
 //const int KEY_SPECIAL_OFFSET=0;
 //#else
@@ -51,8 +51,11 @@ void setActiveModifiers(unsigned int mask);
 
 unsigned int getModifier(const char* mod_name);
 void ProcessKB(unsigned int player);
-void BindKey(int key, unsigned int modifiers, unsigned int player, KBHandler handler, const KBData& data);
-void UnbindKey(int key,unsigned int modifiers);
+void BindKey(unsigned int key, unsigned int modifiers, unsigned int player, KBHandler handler, const KBData& data);
+void UnbindKey(unsigned int key,unsigned int modifiers);
 void InitKB ();
 void RestoreKB ();
+// modifiers: enum KB_MODIFIER_ENUM
+bool HasKeyBinding(unsigned int key, unsigned int modifiers);
+
 #endif

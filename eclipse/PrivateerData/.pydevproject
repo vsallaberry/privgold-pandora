@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?eclipse-pydev version="1.0"?><pydev_project>
+            
+    
+    <pydev_property name="org.python.pydev.PYTHON_PROJECT_VERSION">python interpreter</pydev_property>
+            
+    
+    <pydev_property name="org.python.pydev.PYTHON_PROJECT_INTERPRETER">python2.7 local</pydev_property>
+            
+    
+    
+    
+    <pydev_pathproperty name="org.python.pydev.PROJECT_EXTERNAL_SOURCE_PATH">
+        <path>${PROJECT_LOC}/../../data/modules/builtin</path>
+        <path>${PROJECT_LOC}/../../data/modules</path>
+        <path>${PROJECT_LOC}/../../data/bases</path>
+        <path>${PROJECT_LOC}/../../data/bases/fixers</path>
+        <path>${PROJECT_LOC}/../../vegastrike/build/Python_CppApi_Mock</path>
+    </pydev_pathproperty>
+    
+</pydev_project>

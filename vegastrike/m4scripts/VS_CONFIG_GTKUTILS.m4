@@ -71,29 +71,31 @@ AC_DEFUN([VS_CHECK_DIALOG],
       AC_CHECK_HEADER([dialog.h], have_dialog_h=yes, have_dialog_h=no )
       CPPFLAGS="$saved_CPPFLAGS"
       if test "x$have_dialog_h" = "xyes"; then
-        GTK_CFLAGS="-DCONSOLE $DIALOG_CPPFLAGS"
-        GTK_LIBS="$DIALOG_LIBS"
-        AC_SUBST(GTK_CFLAGS)
-        AC_SUBST(GTK_LIBS)
-        HAVE_GTK=yes
+        DIALOG_CFLAGS="-DCONSOLE $DIALOG_CPPFLAGS"
+        DIALOG_LIBS="$DIALOG_LIBS"
+        AC_SUBST(DIALOG_CFLAGS)
+        AC_SUBST(DIALOG_LIBS)
+        #HAVE_GTK=yes
+        HAVE_DIALOG=yes
       fi
     fi
 ])
 
-if test x$HAVE_GTK = xno; then
-  if test x$ncurses = xyes; then
-    VS_CHECK_DIALOG
-  fi
-  if test x$HAVE_GTK = xyes; then
-    AC_MSG_NOTICE([Using console interface for the setup utility.])
-  else
-    if test x$CHECK_GTK = x1; then
-      AC_MSG_WARN([[No version of GTK was found.  VSSETUP will not be built.]])
-    elif test "x$ALLOW_GTK1" = "xno"; then
-      AC_MSG_WARN([[GTK 2 was not found, 1.2 disabled.  VSSETUP will not build.]])
-    fi
-  fi
+
+if test x$ncurses = xyes; then
+  VS_CHECK_DIALOG
+fi
+if test x$HAVE_DIALOG = xyes; then
+  AC_MSG_NOTICE([Using console interface for the setup utility.])
 else
+  if test x$CHECK_GTK = x1; then
+    AC_MSG_WARN([[No version of GTK was found.  VSSETUP will not be built.]])
+  elif test "x$ALLOW_GTK1" = "xno"; then
+    AC_MSG_WARN([[GTK 2 was not found, 1.2 disabled.  VSSETUP will not build.]])
+  fi
+fi
+
+if test x$HAVE_GTK != xno; then
   if test "x$HAVE_GTK1" = "xyes"; then
     _gtk_version='1.2'
   elif test "x$HAVE_GTK2" = "xyes"; then
@@ -103,5 +105,5 @@ else
 fi
 
 AM_CONDITIONAL([VS_MAKE_GTKUTILS], [test x$HAVE_GTK = xyes])
-
+AM_CONDITIONAL([VS_MAKE_DIALOGUTILS], [test x$HAVE_DIALOG = xyes])
 ])

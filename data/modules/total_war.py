@@ -6,9 +6,10 @@ import Briefing
 import universe
 import unit
 import Director
+import debug
 class total_war (Director.Mission):
     def __init__(self):
-        print "init1INITNITNITNTINTINTINTINTITNINTINTINTINTINT\nININTINTINTITNITNITNTINTINTINTINTITNITNITNITNITNITNITNITNITNIT"
+        debug.debug("init1INITNITNITNTINTINTINTINTITNINTINTINTINTINT\nININTINTINTITNITNITNTINTINTINTINTITNITNITNITNITNITNITNITNITNIT")
         VS.SetDifficulty(.9)
         Director.Mission.__init__(self)
         self.lasttime=-1000
@@ -23,10 +24,10 @@ class total_war (Director.Mission):
                     cursys=VS.GetAdjacentSystem(currentsystem,vsrandom.randrange(0,numadj))
                 else:
                     cursys = 'enigma_sector/heavens_gate'
-                print "TJ: jumping to "+cursys
+                debug.debug("TJ: jumping to "+cursys)
                 un.JumpTo(cursys)
             else:
-                print "TJ: jumping to [ERROR: you are null]"
+                debug.debug("TJ: jumping to [ERROR: you are null]")
 
         side = vsrandom.randrange(0,2)
         faction="confed"
@@ -54,9 +55,9 @@ class total_war (Director.Mission):
             self.waittime=vsrandom.randrange(4.0,20.0)
             self.lasttime=time
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")

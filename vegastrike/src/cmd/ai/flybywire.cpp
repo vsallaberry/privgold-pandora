@@ -11,6 +11,8 @@
 //#include "force_feedback.h"
 #include "vs_globals.h"
 #include "config_xml.h"
+#include "log.h"
+
 #define VELTHRESHOLD .1
 
 using Orders::MatchLinearVelocity;
@@ -40,7 +42,7 @@ void MatchLinearVelocity::Execute () {
 	if (!suborders.empty()) {
 		static int i=0;
 		if (i++%1000==0) {
-			VSFileSystem::vs_fprintf (stderr,"cannot execute suborders as Linear Velocity Matcher");//error printout just in case
+			VS_LOG("universe", logvs::NOTICE, "cannot execute suborders as Linear Velocity Matcher");//error printout just in case
 		}
 	}
   MATCHLINVELSETUP()

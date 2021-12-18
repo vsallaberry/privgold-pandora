@@ -16,11 +16,23 @@
  **************************************************************************/
 
 #include "central.h"
+
+#ifdef _WIN32
+//#include <process.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <shellapi.h>
+#else
+#include <unistd.h>
+#endif
+
+#include <stdio.h>
+
 struct catagory CATS;
 struct group GROUPS;
 struct global_settings CONFIG;
 
-static char * empty_string = "";
+static char empty_string[1] = { 0 };
 
 // Primary initialization function. Sets everything up and takes care of the program
 void Start(int * argc, char ***argv) {
@@ -90,3 +102,42 @@ struct group *GetGroupStruct(char *name) {
         return 0;
 }
 
+void ShowReadme() {
+    static const char * searchs[] = {
+#if defined(_WIN32) || defined(__APPLE__)
+        "Manual.pdf",
+        "documentation\\readme.txt",
+#endif
+        "documentation/readme.txt",
+        "readme.txt",
+        NULL
+    };
+    const char * curpath = ".";
+    for (unsigned int i=0; i < 2; ++i) {
+        for (const char ** search = searchs; *search; ++search) {
+            FILE * fp;
+            int err;
+            printf("readme: trying %s/%s\n", curpath, *search);
+            if ((fp = fopen(*search, "r")) != NULL) {
+                fclose(fp);
+#if defined (_WIN32)
+                err = (int)ShellExecute(NULL,"open",*search,"","",1);
+#elif defined (__APPLE__)
+                err = execlp("open", "open",*search, NULL); //Will this work on MacOS?
+#else
+                err = execlp("less", "less",*search, NULL); //Will this work in Linux?
+#endif
+                if (err == 0) {
+                    i = (unsigned int)-1;
+                    break ;
+                }
+            }
+        }
+        if (i == 0) {
+            if (chdir(origpath) != 0) {
+                break ;
+            }
+            curpath = origpath;
+        }
+    }
+}

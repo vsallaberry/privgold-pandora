@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <math.h>
 #include "vegastrike.h"
 #include "unit_factory.h"
@@ -390,21 +391,20 @@ void GamePlanet::Draw(const Transformation & quat, const Matrix &m) {
   //  }
     QVector t (_Universe->AccessCamera()->GetPosition()-Position());
     static int counter=0;
-    if (counter ++>100)
+    if (counter ++>100) {
       if (t.Magnitude()<corner_max.i) {
-	inside=true;
+	    inside=true;
       } else {
-	//if ((terrain&&t.Dot (TerrainH)>corner_max.i)||(!terrain&t.Dot(t)>corner_max.i*corner_max.i)) {
-	inside=false;
-	///somehow warp unit to reasonable place outisde of planet
-	if (terrain) {
+	    //if ((terrain&&t.Dot (TerrainH)>corner_max.i)||(!terrain&t.Dot(t)>corner_max.i*corner_max.i)) {
+	    inside=false;
+	    ///somehow warp unit to reasonable place outisde of planet
+	    if (terrain) {
 #ifdef PLANETARYTRANSFORM
-	  terrain->DisableUpdate();
+	      terrain->DisableUpdate();
 #endif
-	  
-	}
+	    }
       }
-
+    }
  GFXLoadIdentity (MODEL);
  for (unsigned int i=0;i<lights.size();i++) {
    GFXSetLight (lights[i], POSITION,GFXColor (cumulative_transformation.position.Cast()));
@@ -591,7 +591,7 @@ void GamePlanet::setAtmosphere (Atmosphere *t) {
 
 void GamePlanet::Kill(bool erasefromsave) {
 	Unit *tmp;
-	for (un_iter iter = satellites.createIterator();tmp = *iter;++iter) {
+	for (un_iter iter = satellites.createIterator();(tmp = *iter)!=NULL;++iter) {
 	  tmp->SetAI (new Order);
 	}
 	/* probably not FIXME...right now doesn't work on paged out systems... not a big deal */

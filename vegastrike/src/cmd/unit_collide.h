@@ -7,9 +7,11 @@
 #include <vector>
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h>
 #include "linecollide.h"
 #include "collection.h"
 #include "cmd/unit_generic.h"
+#include "log.h"
 #include <set>
 #define COLLIDETABLESIZE sizeof(CTSIZ)
 #define COLLIDETABLEACCURACY sizeof (CTACCURACY)
@@ -85,7 +87,7 @@ public:
     Unit * un;
     while ((un=*ui)=NULL) {
       if (un==debugUnit||!un->InCorrectStarSystem(activeStarSystem)) {
-	fprintf (stderr,"Collide Queue Error. Not anywhere near fatal. Report with mission name to hellcatv@hotmail.com");
+	VS_LOG("unit", logvs::WARN, "Collide Queue Error. Not anywhere near fatal. Report with mission name to hellcatv@hotmail.com");
 	ui.remove();
       }else {
 	++ui;
@@ -204,7 +206,7 @@ public:
     bool ret=false;
     un_iter removal = myvector.createIterator();
     Unit * un;
-    while (un=*removal) {
+    while ((un=*removal)!=NULL) {
       if (un==objectToKill) {
 	ret = true;
 	removal.remove();

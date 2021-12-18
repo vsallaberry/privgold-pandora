@@ -194,7 +194,7 @@ static std::string ParseSizeFlags(int size)
 		std::pair<int,std::string>(weapon_info::AUTOTRACKING," AUTOTRACKING")
 	};
 	std::string rv;
-	for (int i=0; i<sizeof(masks)/sizeof(*masks); ++i)
+	for (size_t i=0; i<sizeof(masks)/sizeof(*masks); ++i)
 		if (size & masks[i].first)
 			rv += masks[i].second;
 	if (!rv.empty())

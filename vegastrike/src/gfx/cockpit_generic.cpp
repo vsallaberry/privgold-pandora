@@ -18,6 +18,7 @@
 //#include "cmd/ai/firekeyboard.h"
 #include "cmd/ai/aggressive.h"
 //#include "main_loop.h"
+#include <stdlib.h>
 #include <assert.h>	// needed for assert() calls
 #include "savegame.h"
 //#include "animation.h"
@@ -352,7 +353,7 @@ static void SwitchUnitsTurret (Unit *ol, Unit *nw) {
 Unit * GetFinalTurret(Unit * baseTurret) {
   Unit * un = baseTurret;
   Unit * tur;
-  for(un_iter uj= un->getSubUnits();tur = *uj;++uj){
+  for(un_iter uj= un->getSubUnits();(tur = *uj)!=NULL;++uj){
     SwitchUnits (NULL,tur);
     un = GetFinalTurret (tur);
   }
@@ -555,7 +556,7 @@ bool Cockpit::Update () {
 		  
 	tmpgot=true;
 	Unit * un;
-	for(un_iter ui = par->getSubUnits();un = *ui;){
+	for(un_iter ui = par->getSubUnits();(un = *ui)!=NULL;){
 		if (_Universe->isPlayerStarship(un)){
 			++ui;
 			continue;
@@ -599,8 +600,11 @@ bool Cockpit::Update () {
 		if (targ->isUnit()!=PLANETPTR||targ->GetDestinations().empty()) {
 			RequestClearence(par,targ,0);//sex is always 0... don't know how to	 get it.
 		}
-    } else if (((par->IsCleared(targ)||targ->IsCleared(par)&&(!(par->isDocked(targ)||targ->isDocked(par)))))&&
-			   ((targ->isUnit()==PLANETPTR&&UnitUtil::getSignificantDistance(par,targ)>0)||(targ->isUnit()!=PLANETPTR&&UnitUtil::getSignificantDistance(par,targ)>(targ->rSize()+par->rSize()))&&(doubled>=autopilot_term_distance))) {
+    } else if (((par->IsCleared(targ)
+                 || (targ->IsCleared(par) && (!(par->isDocked(targ) || targ->isDocked(par))))))
+               && ((targ->isUnit() == PLANETPTR && UnitUtil::getSignificantDistance(par,targ) > 0)
+                   || ((targ->isUnit() != PLANETPTR && UnitUtil::getSignificantDistance(par,targ) > (targ->rSize() + par->rSize()))
+                       && (doubled >= autopilot_term_distance)))) {
 		if (targ->isUnit()!=PLANETPTR||targ->GetDestinations().empty()) {
 			par->EndRequestClearance(targ);
 			targ->EndRequestClearance(par);
@@ -625,7 +629,7 @@ bool Cockpit::Update () {
     bool found=false;
     int i=0;
 
-	for(un_iter ui= _Universe->activeStarSystem()->getUnitList().createIterator();un = *ui;++ui){
+	for(un_iter ui= _Universe->activeStarSystem()->getUnitList().createIterator();(un = *ui)!=NULL;++ui){
       if (un->faction==this->unitfaction) {
 
 	
@@ -803,7 +807,7 @@ bool Cockpit::Update () {
                   QVector vec;
                   DockToSavedBases(whichcp, vec);
                 }
-		UniverseUtil::hideSplashScreen();
+		//UniverseUtil::hideSplashScreen();
 		_Universe->popActiveStarSystem();
                 if (!persistent_on_load) {
                   _Universe->pushActiveStarSystem(ss);

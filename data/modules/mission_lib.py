@@ -10,6 +10,7 @@ import universe
 import faction_ships
 import VS
 import PickleTools
+import debug
 
 players=[]
 
@@ -19,7 +20,7 @@ class PlayerMissionInfo:
 		self.active_missions_nextid = 0
 		self.hookargs = None
 		self.resetLastMission()
-	
+
 	def resetLastMission(self):
 		self.last_constructor={}
 		self.last_args ={}
@@ -39,17 +40,17 @@ addPlayer(VS.getNumPlayers()-1)
 global_plr = -1
 
 def getMissionPlayer():
-    # Will allow to hardcode a player number in certain cases.
-    if global_plr >= 0:
-        return global_plr
-    else:
-        return VS.getCurrentPlayer()
+	# Will allow to hardcode a player number in certain cases.
+	if global_plr >= 0:
+		return global_plr
+	else:
+		return VS.getCurrentPlayer()
 
 def setMissionPlayer(plr=-1):
-    global global_plr
-    global_plr = plr
+	global global_plr
+	global_plr = plr
 def unsetMissionPlayer():
-    setMissionPlayer(-1)
+	setMissionPlayer(-1)
 
 def mission_lib_custom(local, cmd, args, id):
 	if args[0] == 'AddNewMission':
@@ -73,39 +74,39 @@ custom.add('mission_lib', mission_lib_custom)
 class missionhook:
 	def __init__(self,amentry):
 		self.amentry_id = AddActiveMissionEntry(amentry)
-		print "New Mission entry: %s (%s)" % (self.amentry_id,amentry.get('MISSION_SHORTDESC',''))
+		debug.debug("(hook) New Mission entry: %s (%s)" % (str(self.amentry_id),amentry.get('MISSION_SHORTDESC','')),debug.INFO)
 	def __del__(self):
 		RemoveActiveMissionEntry(self.amentry_id)
-		print "Mission entry %s destroyed." % self.amentry_id
+		debug.debug("(hook) Mission entry %s destroyed." % (str(self.amentry_id)),debug.INFO)
 
 
 def SetMissionHookArgs(args):
-    players[getMissionPlayer()].hookargs = args
+	players[getMissionPlayer()].hookargs = args
 
 def AddMissionHooks(director):
-    hookargs = players[getMissionPlayer()].hookargs
-    doMissionHooks=True
-    try:
-        if hasattr(director,'aborted'):
-            if getattr(director,'aborted'):
-                doMissionHooks=False
-    except:
-        import sys
-        print sys.exc_info()[0]
-        print sys.exc_info()[1]
-        print "CARGO MISSION ABORTING done"
-    if doMissionHooks:
-        director.mission_hooks___ = missionhook(hookargs)
-    
+	hookargs = players[getMissionPlayer()].hookargs
+	doMissionHooks=True
+	try:
+		if hasattr(director,'aborted'):
+			if getattr(director,'aborted'):
+				doMissionHooks=False
+	except:
+		import sys
+		debug.dprint(str(sys.exc_info()[0]))
+		debug.dprint(str(sys.exc_info()[1]))
+		debug.warn("CARGO MISSION ABORTING done")
+	if doMissionHooks:
+		director.mission_hooks___ = missionhook(hookargs)
+
 def SetLastMission(which):
 	players[getMissionPlayer()].lastMission=str(which)
-	print 'set last mission to "'+str(which)+'"'
+	debug.debug('set last mission to "'+str(which)+'"')
 def NotEnoughCargoRoom(plr):
 	player=VS.getPlayerX(plr)
 
 	cargo_obj = VS.Cargo("SpaceSalvage","SpaceSalvage", 185.5, 10 , 0.01, 1.0)
 	ret=player.addCargo(cargo_obj)
-	print "XYXenough cargo room for "+str(ret)+" cargo"
+	debug.debug("XYXenough cargo room for "+str(ret)+" cargo")
 	if ret:
 		player.removeCargo("SpaceSalvage",ret,True);
 	return ret!=10
@@ -117,7 +118,7 @@ def LoadLastMission(which=None):
 	if VS.networked():
 		custom.run('mission_lib', ['LoadLastMission',which], None)
 		return
-	
+
 	last_constructor = players[plr].last_constructor
 	last_args = players[plr].last_args
 	last_briefing_vars = players[plr].last_briefing_vars
@@ -160,21 +161,22 @@ mission_lib.SetMissionHookArgs(%(amentry)r)
 				amentry.update([
 					('MISSION_NAME',which),
 					('DESCRIPTION',last_briefing[0].get(which,'')),
-					('ACCEPT_MESSAGE',last_briefing[1].get(which,'')) 
+					('ACCEPT_MESSAGE',last_briefing[1].get(which,''))
 					])
 			except:
-				print "TRACING BACK"
+				debug.error("TRACING BACK")
 				import sys
-				print sys.exc_info()[0]
-				print sys.exc_info()[1]
-				print "BACKTRACE done"
+				debug.dprint(str(sys.exc_info()[0]))
+				debug.dprint(str(sys.exc_info()[1]))
+				debug.debug("BACKTRACE done")
 				ret = False
 			vars = dict(amentry=amentry,postscript=script)
 			script = prescript % vars
-		print "Loading mission:\n%s" % script
+		if debug.debug("Loading mission:\n%s" % script, debug.VERBOSE) <= 0:
+			debug.debug("Loading mission: '%s...'" % script[:35].replace('\n',';'), debug.NOTICE)
 		VS.LoadMissionScript(script)
 	else:
-		print 'No last mission with name "'+str(which)+'"'
+		debug.debug('No last mission with name "'+str(which)+'"')
 		ret = False
 	RemoveLastMission(which)
 	return ret
@@ -183,7 +185,7 @@ def RemoveLastMission(which=None):
 	plr = getMissionPlayer()
 	if which is None:
 		which=players[plr].lastMission
-	
+
 	last_constructor = players[plr].last_constructor
 	last_args = players[plr].last_args
 	last_briefing_vars = players[plr].last_briefing_vars
@@ -199,21 +201,35 @@ def AddActiveMissionEntry(entry):
 	plr = getMissionPlayer()
 	active_missions = players[plr].active_missions
 	active_missions_nextid = players[plr].active_missions_nextid
-	
+
+	debug.debug('adding new active mission with id '+str(active_missions_nextid)+'('+str(entry.get('MISSION_SHORTDESC',''))+')',debug.NOTICE)
 	active_missions.append(entry)
 	active_missions[-1].update([('ENTRY_ID',active_missions_nextid)])
-	active_missions_nextid += 1
-	return active_missions_nextid-1
+	#NEW
+	players[plr].active_missions_nextid += 1
+	return active_missions_nextid
+	#OLD
+	#active_missions_nextid += 1
+	#return active_missions_nextid-1
 
 def RemoveActiveMissionEntry(entry_id):
 	plr = getMissionPlayer()
+	debug.debug('removing '+str(entry_id)+' from active missions(count:'+str(len(players[plr].active_missions))+')',debug.VERBOSE)
+	debug.debug('active missions : '+str(players[plr].active_missions),debug.DEBUG)
+
 	players[plr].active_missions = filter(lambda x:x.get('ENTRY_ID',None)!=entry_id,
-					players[plr].active_missions)
+			players[plr].active_missions)
+	#NEW
+	if entry_id >= players[plr].active_missions_nextid - 1:
+		players[plr].active_missions_nextid = entry_id
+
+	debug.debug('removing mission '+str(entry_id)+', remaining active missions: '
+				+str(len(players[plr].active_missions))+', nextid: '+str(players[plr].active_missions_nextid) ,debug.NOTICE)
 
 def CountMissions(first,prefix):
 	plr = getMissionPlayer()
 	last_briefing = players[plr].last_briefing
-	
+
 	nummissions = 0
 	for which in last_briefing[first]:
 		if str(which).startswith(prefix):
@@ -224,7 +240,7 @@ def BriefLastMission(which,first,textbox=None,template='#DESCRIPTION#'):
 	plr = getMissionPlayer()
 	last_briefing = players[plr].last_briefing
 	last_briefing_vars = players[plr].last_briefing_vars
-	
+
 	which=str(which)
 	if first<0 or first>=len(last_briefing):
 		return
@@ -248,9 +264,9 @@ def BriefLastMission(which,first,textbox=None,template='#DESCRIPTION#'):
 		template = template.replace('#NUM_MISSIONS#',str(nummissions))
 		template = template.replace('#DESCRIPTION#',str(last_briefing[first][which]))
 		template = template.replace('#SHORT_DESCRIPTION#',str(last_briefing_vars[first][which]['MISSION_SHORTDESC']))
-		try:    
+		try:
 			template = template.replace('#MISSION_TYPE#',last_briefing_vars[first][which]['MISSION_TYPE'])
-		except: 
+		except:
 			template = template.replace('#MISSION_TYPE#','')
 
 		# set text
@@ -267,11 +283,11 @@ def AddNewMission(which,args,constructor=None,briefing0='',briefing1='',vars0=No
 			sendargs.append(key)
 			sendargs.append(vars0[key])
 		custom.run("mission_lib", sendargs, None)
-	
+
 	plr = getMissionPlayer()
 	addPlayer(plr, False)
 	playerInfo = players[plr]
-	
+
 	which=str(which)
 	playerInfo.last_constructor[which]=constructor
 	playerInfo.last_args[which]=args
@@ -285,15 +301,15 @@ def GetMissionList(activelist=True):
 	active_missions = players[plr].active_missions
 	last_briefing_vars = players[plr].last_briefing_vars
 	last_briefing = players[plr].last_briefing
-	
+
 	if activelist:
 		return active_missions
 	else:
 		return list( dict( list(last_briefing_vars[0][index].iteritems())+
 						[('DESCRIPTION',last_briefing[0][index]),
-						 ('ACCEPT_MESSAGE',last_briefing[1][index]),
-						 ('MISSION_NAME',index)] )
-					 for index in last_briefing[0] )
+						('ACCEPT_MESSAGE',last_briefing[1][index]),
+						('MISSION_NAME',index)] )
+					for index in last_briefing[0] )
 
 def Jumplist (jumps):
 	if not len(jumps):
@@ -310,7 +326,7 @@ def MakePlunder(which):
 	briefing0 = 'Arr Matey. We have a target in this system that needs a lil roughin up. We need you to bag a merchant and deliver her cargo into our hands.  It\'s worth '+str(creds)+ ' to us. Up to you, ya space pirate.'
 	briefing1 = 'Ahoy! We\'ll be lookin for that cargo mighty soon!'
 	vars = { 'MISSION_TYPE' : 'PIRACY',
-			 'MISSION_SHORTDESC' : 'Plunder merchant target for %s' % creds }
+			'MISSION_SHORTDESC' : 'Plunder merchant target for %s' % creds }
 	AddNewMission(which,args,constructor,briefing0,briefing1,vars,vars)
 	return ("bases/fixers/pirate.spr","Talk with the Pirate")
 
@@ -324,7 +340,7 @@ def MakeContraband(which):
 	briefing0 = 'We need some...*cough*... cargo delivered to some of our pirates in a nearby system: '+ Jumplist(jumps)+ ' It\'d be preferable if ye kept the ole po\' off yo back durin the run. Will ya do it for '+str(creds)+' creds?'
 	briefing1 = 'Thanks pal; keep it on the d&l if you know my meanin.'
 	vars = { 'MISSION_TYPE' : 'CONTRABAND',
-			 'MISSION_SHORTDESC' : 'Deliver contraband to %s for %s' % (Jumplist(jumps),creds) }
+			'MISSION_SHORTDESC' : 'Deliver contraband to %s for %s' % (Jumplist(jumps),creds) }
 	AddNewMission(which,args,constructor,briefing0,briefing1,vars,vars)
 	return ("bases/fixers/pirate.spr","Talk with the Pirate")
 
@@ -408,10 +424,13 @@ def PickRandomMission(goodlist):
 def CreateGuildMissions(guildname,nummissions,accepttypes,prefix="#G#",acceptmsg=''):
 	plr=getMissionPlayer()
 	addPlayer(plr, False)
-	
+	debug.debug('CreateGuildMission(%s): %d initial missions'%(guildname, CountMissions(0,guildname)),debug.INFO)
+
 	goodlist=[]
 	for indx in range(Director.getSaveStringLength(plr, "mission_scripts")):
 		script=Director.getSaveString(plr,"mission_scripts",indx)
+		debug.debug('CreateGuildMission(%s, %s) SaveStr#%d: %s'
+					%(guildname,str(accepttypes),indx, script[:50].replace('\n',';')),debug.DEBUG)
 		if (script.find(prefix)!=-1):
 			missiontype=script[3:script.find('#',3)]
 			freq = 0
@@ -446,7 +465,9 @@ def CreateGuildMissions(guildname,nummissions,accepttypes,prefix="#G#",acceptmsg
 		Director.eraseSaveString(plr,"mission_descriptions",i)
 		Director.eraseSaveString(plr,"mission_names",i)
 		Director.eraseSaveString(plr,"mission_vars",i)
-	#more reliable... sometimes we run out of good missions, 
+	#more reliable... sometimes we run out of good missions,
 	#sometimes we have preexistent missions (!)
-	return CountMissions(0,guildname)
+	num = CountMissions(0,guildname)
+	debug.debug('CreateGuildMission(%s): %d missions'%(guildname, num),debug.INFO)
+	return num
 

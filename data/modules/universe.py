@@ -1,10 +1,12 @@
+#coding=utf-8
+#'#coding=utf8' needed on first or second line if you plan to encode this file with utf8
 ##import ai_flyto_jumppoint
 ##current_system=""
 ##last_system=""
 ##old_system=""
 ##system_map={}
 ##outstr=""
-
+import site
 import VS
 import vsrandom
 import faction_ships
@@ -131,10 +133,10 @@ def significantUnits():
     iter= VS.getUnitList()
     iter.advanceNSignificant(0)
     while (iter.notDone()):
-	un = iter.current()
-	debug.debug('Found sig unit: '+un.getName()+' ('+un.getFullname()+')')
-	if not un.isSignificant():
-		debug.error('Unit '+un.getName()+' ('+un.getFullname()+') is not significant!')
+        un = iter.current()
+        debug.debug('Found sig unit: '+un.getName()+' ('+un.getFullname()+')')
+        if not un.isSignificant():
+            debug.error('Unit '+un.getName()+' ('+un.getFullname()+') is not significant!')
         ret.append(iter.current())
         iter.advanceSignificant()
     return ret
@@ -164,7 +166,9 @@ def GetNumSignificantsForSystem (cursys):
 ##    return jumped
 
 def greet(greetingText,enemy=None,you=None):
+    debug.debug('universe geetingText from '+str(enemy)+' to '+str(you)+('('+str(you.getName()+')') if you else '')+' : '+str(greetingText),debug.VERBOSE)
     for i in range(len(greetingText)):
+        fromname=None
         color="#ff0000"
         text=greetingText[i]
         if type(greetingText[i])==tuple:
@@ -172,6 +176,7 @@ def greet(greetingText,enemy=None,you=None):
                 continue
             if len(greetingText[i])>1 and greetingText[i][1]:
                 color="#0000ff"
+                fromname="Burrows"
             if len(greetingText[i])>2 and greetingText[i][2] and you:
                 VS.playSound(greetingText[i][2],(0.,0.,0.),(0.,0.,0.))
                 if enemy:
@@ -179,10 +184,11 @@ def greet(greetingText,enemy=None,you=None):
                 #else: doesn't actually do anything
                 #    you.communicateTo(VS.Unit(),-1)
             text=greetingText[i][0]
-        if (enemy):
-            fromname=enemy.getFlightgroupName()+", "+enemy.getName()+"#000000"
-        else:
-            fromname="[Unidentified]"
+        if not fromname:
+            if (enemy):
+                fromname=enemy.getFlightgroupName()+", "+enemy.getName()+"#000000"
+            else:
+                fromname="[Unidentified]"
         if (you):
             toname = getMessagePlayer(you)
         else:
@@ -207,14 +213,14 @@ def ReachableSystems(startingsys):
     closed={}
     opened=[startingsys]
     while len(opened):
-	openmore=[]
-	for sys in opened:
-	    if not sys in closed:
-		closed[sys]=1
-		rv_list.append(sys)
-		openmore += getAdjacentSystemList(sys)
-	opened=openmore
-    return rv_list    
+        openmore=[]
+        for sys in opened:
+            if not sys in closed:
+                closed[sys]=1
+                rv_list.append(sys)
+                openmore += getAdjacentSystemList(sys)
+        opened=openmore
+    return rv_list
 
 def AllSystems():
     sys=VS.getSystemFile()
@@ -223,50 +229,50 @@ def AllSystems():
     return ReachableSystems(sys)
 
 def addTechLevel(level, addToBase=True):
-	# this function allows the addition of new ships and ship upgrades to the list of master part list
-	# since Privateer Gemini Gold has a fixed list of what can be bought (and when), 
-	# this can be circumvented
-	# the lists themselves are defined in faction_ships.py, earnable_upgrades dictionary
-	return
-	# nothing after this gets called
-	try:
-		import faction_ships
-		upgrades=faction_ships.earnable_upgrades[level]
-	except:
-		debug.warn("No tech level named "+str(level))
-		return
-	bas=getDockedBase()
-	if (not bas):
-		import unit
-		import vsrandom
-		debug.debug("getting significant for upgrade addage")
-		bas = unit.getSignificant(vsrandom.randrange(1,20),1,0);
-	for upgrade in upgrades:
-		if (len(upgrade)<5):
-			debug.debug("Upgrade list not big enough to add to tech")
-			print upgrade
-			continue
-		import Director
-		import VS
-		cp = VS.getCurrentPlayer()
-		siz = Director.getSaveStringLength(cp,"master_part_list_content")
-		doIt=True
-		for index in range (siz):
-			if (Director.getSaveString(cp,"master_part_list_content",index)==upgrade[0]):
-				doIt=False
-		if (doIt):
-			debug.debug("added UPGRADE AS FOLLOWS to tech level ")
-			print upgrade
-			Director.pushSaveString(cp,"master_part_list_content",str(upgrade[0]))
-			Director.pushSaveString(cp,"master_part_list_category",str(upgrade[1]))
-			Director.pushSaveString(cp,"master_part_list_price",str(upgrade[2]))
-			Director.pushSaveString(cp,"master_part_list_mass",str(upgrade[3]))
-			Director.pushSaveString(cp,"master_part_list_volume",str(upgrade[4]))
-			if (len(upgrade)>5):
-				Director.pushSaveString(cp,"master_part_list_description",str(upgrade[5]))				
-			else:
-				Director.pushSaveString(cp,"master_part_list_description","No description")				
-			if (bas and addToBase):
-				debug.debug(" adding "+str(upgrade[0]) +" to base "+bas.getName())
-				cargo=VS.Cargo(str(upgrade[0]),str(upgrade[1]),float(upgrade[2]),1,float(upgrade[3]),float(upgrade[4]))
-				bas.forceAddCargo(cargo)
+    # this function allows the addition of new ships and ship upgrades to the list of master part list
+    # since Privateer Gemini Gold has a fixed list of what can be bought (and when),
+    # this can be circumvented
+    # the lists themselves are defined in faction_ships.py, earnable_upgrades dictionary
+    return
+    # nothing after this gets called
+    try:
+        import faction_ships
+        upgrades=faction_ships.earnable_upgrades[level]
+    except:
+        debug.warn("No tech level named "+str(level))
+        return
+    bas=getDockedBase()
+    if (not bas):
+        import unit
+        import vsrandom
+        debug.debug("getting significant for upgrade addage")
+        bas = unit.getSignificant(vsrandom.randrange(1,20),1,0);
+    for upgrade in upgrades:
+        if (len(upgrade)<5):
+            debug.debug("Upgrade list not big enough to add to tech")
+            debug.debug(repr(upgrade))
+            continue
+        import Director
+        import VS
+        cp = VS.getCurrentPlayer()
+        siz = Director.getSaveStringLength(cp,"master_part_list_content")
+        doIt=True
+        for index in range (siz):
+            if (Director.getSaveString(cp,"master_part_list_content",index)==upgrade[0]):
+                doIt=False
+        if (doIt):
+            debug.debug("added UPGRADE AS FOLLOWS to tech level ")
+            debug.debug(repr(upgrade))
+            Director.pushSaveString(cp,"master_part_list_content",str(upgrade[0]))
+            Director.pushSaveString(cp,"master_part_list_category",str(upgrade[1]))
+            Director.pushSaveString(cp,"master_part_list_price",str(upgrade[2]))
+            Director.pushSaveString(cp,"master_part_list_mass",str(upgrade[3]))
+            Director.pushSaveString(cp,"master_part_list_volume",str(upgrade[4]))
+            if (len(upgrade)>5):
+                Director.pushSaveString(cp,"master_part_list_description",str(upgrade[5]))
+            else:
+                Director.pushSaveString(cp,"master_part_list_description","No description")
+            if (bas and addToBase):
+                debug.debug(" adding "+str(upgrade[0]) +" to base "+bas.getName())
+                cargo=VS.Cargo(str(upgrade[0]),str(upgrade[1]),float(upgrade[2]),1,float(upgrade[3]),float(upgrade[4]))
+                bas.forceAddCargo(cargo)

@@ -64,7 +64,7 @@ public:
 		};
 
 	private:
-                friend class SystemInfo;//inner class needs to be friend in gcc-295
+                friend struct SystemInfo;//inner class needs to be friend in gcc-295
  		vector<SystemInfo> systems;
 		unsigned currentPosition;
 		CachedSystemIterator(const CachedSystemIterator &other); // May be really slow. Don't try this at home.
@@ -219,6 +219,7 @@ int whattodraw;
 							//	coordinates done 'over left->right' by 'up bottom->top'
 							//	values are 1/100 of the screen width and height
 float screenskipby4[4];		//	0 = x-small	1 = x-large	2 = y-small	3 = y-large
+float screens_aspect;       // original mesh aspect, to fix TestIfInRange() acoording resolution
 float buttonskipby4_1[4];
 float buttonskipby4_2[4];
 float buttonskipby4_3[4];

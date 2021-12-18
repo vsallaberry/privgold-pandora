@@ -40,6 +40,21 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
+/* Define to 1 if you have the <climits> header file. */
+#undef HAVE_CLIMITS
+
+/* Define to 1 if you have the <clocale> header file. */
+#undef HAVE_CLOCALE
+
+/* Define to 1 if you have the <codecvt> header file. */
+#undef HAVE_CODECVT
+
+/* Define to 1 if you have the <cwchar> header file. */
+#undef HAVE_CWCHAR
+
+/* Define to 1 if you have the <cwctype> header file. */
+#undef HAVE_CWCTYPE
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
@@ -79,6 +94,9 @@
 
 /* Define to 1 if you have the `floor' function. */
 #undef HAVE_FLOOR
+
+/* Define to 1 if you have the <fnmatch.h> header file. */
+#undef HAVE_FNMATCH_H
 
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
@@ -139,6 +157,12 @@
 
 /* Define to 1 if you have the <linux/slab.h> header file. */
 #undef HAVE_LINUX_SLAB_H
+
+/* Define to 1 if you have the <locale> header file. */
+#undef HAVE_LOCALE
+
+/* Define to 1 if you have the <locale.h> header file. */
+#undef HAVE_LOCALE_H
 
 /* Define to 1 if you have the `localtime_r' function. */
 #undef HAVE_LOCALTIME_R
@@ -268,11 +292,20 @@
 /* Define to 1 if you have the `strerror' function. */
 #undef HAVE_STRERROR
 
+/* Define to 1 if you have the `stricmp' function. */
+#undef HAVE_STRICMP
+
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strncasecmp' function. */
+#undef HAVE_STRNCASECMP
+
+/* Define to 1 if you have the `strnicmp' function. */
+#undef HAVE_STRNICMP
 
 /* Define to 1 if you have the `strstr' function. */
 #undef HAVE_STRSTR
@@ -447,6 +480,9 @@
 
 /* Use POSIX threads */
 #undef USE_NET_THREAD_POSIX
+
+/* VEGASTRIKE_VERSION */
+#undef VEGASTRIKE_VERSION
 
 /* Version number of package */
 #undef VERSION

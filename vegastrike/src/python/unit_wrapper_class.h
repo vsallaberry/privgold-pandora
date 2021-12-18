@@ -1,7 +1,8 @@
+#include "log.h"
 using std::string;
 //WARNING: Macro City ahead.  Please skip this section if you don't like macros.
-static const char* error="\nERROR: NULL Unit used in Python script; returning default value...";
-#define CHECKME }Unit * me=GetUnit();if (!me){fprintf(stderr,error); return 
+static const char* error="ERROR: NULL Unit used in Python script; returning default value...";
+#define CHECKME }Unit * me=GetUnit();if (!me){VS_LOG("python", logvs::NOTICE, "%s", error); return
 #define WRAPPED0(type,name,def) type name (){{CHECKME def;} return me -> name ();}  
 #define WRAPPED1(type,name,atype,a,def) type name ( atype a ){{CHECKME def;} return me -> name ( a );}  
 #define WRAPPED2(type,name,atype,a,btype,b,def) type name ( atype a, btype b ){{CHECKME def;} return me -> name ( a , b );}  

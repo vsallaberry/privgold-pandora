@@ -19,11 +19,13 @@
 #include "universe_util.h"
 #include "cmd/atmosphere.h"
 
+#include "log.h"
 #include "options.h"
 extern vs_options game_options;
 
 #include <stdlib.h>
 
+#define STARSYS_LOG(_lvl, ...) VS_LOG("universe", _lvl, __VA_ARGS__)
 /*
 #include "cmd/cont_terrain.h"
 #include "gfx/aux_texture.h"
@@ -393,7 +395,7 @@ extern BLENDFUNC parse_alpha (const char *);
 static void SetSubunitRotation(Unit*un, float difficulty)
 {
 	Unit *unit;
-	for(un_iter iter = un->getSubUnits();unit = *iter;++iter) {
+	for(un_iter iter = un->getSubUnits();(unit = *iter)!=NULL;++iter) {
 		float x=2*difficulty*((float)rand())/RAND_MAX -difficulty;
 		float y=2*difficulty*((float)rand())/RAND_MAX-difficulty;
 		float z=2*difficulty*((float)rand())/RAND_MAX-difficulty;
@@ -1515,7 +1517,7 @@ void StarSystem::LoadXML(const char *filename, const Vector & centroid, const fl
 	//if (file.length()) {
 	err = f.OpenReadOnly( file, SystemFile);
 	if(err>Ok) {
-		printf("StarSystem: file not found %s\n",file.c_str());
+		STARSYS_LOG(logvs::ERROR, "StarSystem: file not found %s",file.c_str());
 
 		return;
 	}
@@ -1549,16 +1551,19 @@ void StarSystem::LoadXML(const char *filename, const Vector & centroid, const fl
 	XML_SetElementHandler(parser, &StarSystem::beginElement, &StarSystem::endElement);
 	{
 		string fcontents = f.ReadFull();
-		printf("Contents of star system:\n%s\n",fcontents.c_str());
-		XML_Parse(parser, (fcontents).c_str(), f.Size(), 1);
-	}
+        if (STARSYS_LOG(logvs::VERBOSE, "Contents of star system:") > 0) {
+            logvs::vs_printf("%s\n", fcontents.c_str());
+        }
+		enum XML_Status status = XML_Parse(parser, (fcontents).c_str(), f.Size(), 1);
+        STARSYS_LOG(logvs::NOTICE, "starsystem %s loaded - status:%d", filename, status);
+    }
 	f.Close();
 	XML_ParserFree (parser);
 	unsigned int i;
 	for (i =0;i<xml->moons.size();++i) {
 		if (xml->moons[i]->isUnit()==PLANETPTR) {
 			Unit * un = NULL;
-			for(Planet::PlanetIterator iter((Planet*)xml->moons[i]);un = *iter;iter.advance())
+			for(Planet::PlanetIterator iter((Planet*)xml->moons[i]);(un = *iter)!=NULL;iter.advance())
 				AddUnit(un);
 		}
 		else {

@@ -51,6 +51,8 @@ class VDU: public VSSprite {
   ///Draws the message from the messagecenter
   void DrawMessages(GameCockpit* parentcp, Unit *target);
   void DrawScanningMessage();
+  ///Draws a help screen
+  void DrawHelp(GameCockpit * parentcp, Unit * target);
   ///Draws the nav point this unit is heading to
   void DrawNav(GameCockpit* parentcp, Unit * parent, Unit *target, const Vector &navPoint);
   ///Draws the comm screen this unit can use to communicate

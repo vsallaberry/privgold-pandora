@@ -2,8 +2,8 @@
 #define _GNUHASH_H_
 #include "config.h"
 
-#ifdef HAVE_UNORDERED_MAP
-# undef HAVE_UNORDERED_MAP // Not supported
+#ifdef HAVE_TR1_UNORDERED_MAP
+# undef HAVE_TR1_UNORDERED_MAP // Not supported - crashing (gcc6..gcc11)
 #endif
 
 // The following block is to only use tr1 from at least 4.3 since 4.2 apparently bugs out.
@@ -88,7 +88,9 @@ namespace stdext{
       return k;
     }
   };
+
 #  endif
+
   template<> class hash<void *> {
     hash<size_t> a;
   public:
@@ -120,6 +122,7 @@ namespace stdext{
     }
   };
 
+//#ifdef __GNUC__
 	// Minimum declaration needed by SharedPool.h
     template<class Key, class Traits = std::less<Key> > class hash_compare
 	{
@@ -127,6 +130,7 @@ namespace stdext{
 		static const size_t bucket_size = 4;
 		static const size_t min_buckets = 8;
 	};
+//#endif
 
 #  ifdef HAVE_TR1_UNORDERED_MAP
 } /* namespace tr1 */

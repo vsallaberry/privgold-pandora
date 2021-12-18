@@ -533,7 +533,7 @@ void GameCockpit::DrawTargetBoxes(){
   GFXBlendMode (SRCALPHA,INVSRCALPHA);
   GFXDisable (LIGHTING);
   Unit *target;
-  for(un_iter uiter=unitlist->createIterator();target = *uiter;++uiter){
+  for(un_iter uiter=unitlist->createIterator(); (target = *uiter) != NULL;++uiter){
     if(target!=un){
         QVector Loc(target->Position());
 
@@ -685,7 +685,7 @@ void GameCockpit::DrawTurretTargetBoxes () {
 
   //This avoids rendering the same target box more than once
   std::set<void*> drawn_targets;
-  for(un_iter iter = parun->getSubUnits();un = *iter;++iter){
+  for(un_iter iter = parun->getSubUnits(); (un = *iter) != NULL; ++iter){
 	if (!un)
       return;
 	if (un->GetNebula()!=NULL)
@@ -1002,7 +1002,7 @@ public:
 			}
 			if (target->isPlanet()==PLANETPTR && target->radial_size > 0) {
 				Unit * sub=NULL;
-				for (un_iter i=target->getSubUnits();(sub=*i)!=NULL;++i) {
+				for (un_iter i=target->getSubUnits(); (sub = *i) !=NULL; ++i) {
 					if (target->radial_size > minblipsize) {
 						for (rad=0;rad<numradar;++rad) {
 							parent->drawUnToTarget(un,sub,xcent[rad],ycent[rad], xsize[rad],ysize[rad],reardar[rad]);
@@ -1052,7 +1052,7 @@ void GameCockpit::DrawBlips (Unit * un) {
     Unit *u;
     bool foundtarget=false;
     Unit * targ=un->Target();
-    for (un_iter i=_Universe->activeStarSystem()->gravitationalUnits().createIterator();(u=*i)!=NULL;++i){
+    for (un_iter i=_Universe->activeStarSystem()->gravitationalUnits().createIterator(); (u = *i) !=NULL; ++i){
       unitLocator.action.acquire(u,UnitUtil::getDistance(un,u));      
       if (u==targ)foundtarget=true;
     }
@@ -1087,7 +1087,7 @@ void GameCockpit::DrawEliteBlips (Unit * un) {
     DrawRadarCircles (xcent,ycent,xsize,ysize,textcol);
   }
   static bool draw_significant_blips = XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","draw_significant_blips","true"));
-  for(un_iter iter = drawlist->createIterator();target = *iter;++iter){
+  for(un_iter iter = drawlist->createIterator(); (target = *iter) != NULL; ++iter){
     if (target!=un) {
       static bool autolanding_enable=XMLSupport::parse_bool(vs_config->getVariable("physics","AutoLandingEnable","false"));
       if (autolanding_enable)
@@ -2789,7 +2789,7 @@ void GameCockpit::Draw() {
          static float deadband=game_options.mouse_deadband;
          static int revspr = XMLSupport::parse_bool (vs_config->getVariable ("joystick","reverse_mouse_spr","true"))?1:-1;
          static string blah = vs_config->getVariable("joystick","mouse_crosshair","crosshairs.spr");
-         static int num=printf ("CROSS %f\n",crossceny);
+         static int num=VS_LOG("game", logvs::NOTICE, "CROSS %f",crossceny);
          static VSSprite MouseVSSprite (blah.c_str(),BILINEAR,GFXTRUE);
 		 float xcoord=(-1+float(mousex)/(.5*g_game.x_resolution));
 		 float ycoord=(-revspr+float(revspr*mousey)/(.5*g_game.y_resolution));

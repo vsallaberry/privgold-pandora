@@ -9,6 +9,7 @@ import total_jump
 import Director
 #print "directing"
 import Briefing
+import debug
 #print "briefd"
 class jump_privateer (Director.Mission):
     loops=()
@@ -29,12 +30,12 @@ class jump_privateer (Director.Mission):
         for i in self.loops:
             i.Execute()
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
 
 #def initstarsystem():
 #  random_encounters.initstarsystem() #??? that isn't there

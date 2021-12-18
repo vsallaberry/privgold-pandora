@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string>
 #include "cmd/unit_generic.h"
 #include "cmd/unit_util.h"
@@ -229,8 +230,10 @@ namespace UnitUtil {
                 return ASTEROID_PARENT_PRIORITY;
             case Unit::scheduleRoid:
                 if (dist<tooclose)
-                    return ASTEROID_HIGH_PRIORITY; else
-                    return ASTEROID_LOW_PRIORITY;
+                     return ASTEROID_HIGH_PRIORITY;
+                else return ASTEROID_LOW_PRIORITY;
+            case Unit::scheduleDefault:
+                break ;
             }
         }
         if (UnitUtil::isAsteroid(un)){//some mods don't do the scheduling--still want correctness
@@ -718,7 +721,7 @@ namespace UnitUtil {
   }
 	static bool ishere (const Unit *par,const Unit *look) {
 		const Unit *un;
-		for (un_kiter uniter=par->viewSubUnits();un = *uniter;++uniter) {
+		for (un_kiter uniter=par->viewSubUnits();(un = *uniter)!=NULL;++uniter) {
 			if (un==look) {
 				return true;
 			}
@@ -731,7 +734,7 @@ namespace UnitUtil {
 	Unit *owner (const Unit *un) {
 		Unit *found=NULL;
 		Unit *tmp;
-		for (UniverseUtil::PythonUnitIter uniter=UniverseUtil::getUnitList();tmp = *uniter;++uniter) {
+		for (UniverseUtil::PythonUnitIter uniter=UniverseUtil::getUnitList();(tmp = *uniter)!=NULL;++uniter) {
 			if (tmp==un||ishere(tmp,un)) {
 				found=tmp;
 				break;

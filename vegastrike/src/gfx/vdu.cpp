@@ -17,6 +17,9 @@
 #include "gfx/animation.h"
 #include "gfx/vsimage.h"
 #include "galaxy_gen.h"
+#include "options.h"
+
+extern vs_options game_options;
 
 template<typename T> inline T mymin(T a, T b) { return (a<b)?a:b; };
 template<typename T> inline T mymax(T a, T b) { return (a>b)?a:b; };
@@ -94,8 +97,11 @@ string getUnitNameAndFgNoBase (Unit * target) {
 }
 
 int vdu_lookup (char * &s) {
-#ifdef _WIN32
-#define strcasecmp stricmp
+#if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
 #endif
   int retval=0;
   char * t = strdup (s);
@@ -857,11 +863,116 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
   }
 }
 
+static std::list<TextPlane> DrawHelpBuild() {
+    std::list<TextPlane> textplanes;
+    char text[8192] = { 0, };
+    text[sizeof(text)-1] = 0;
+    size_t pos = 0;
+    
+    unsigned int    cur_line = 0;
+    size_t          max_len = 0;
+    const easyDomNode * bindings = vs_config->Bindings();
+
+    TextPlane help_tp(GFXColor(0.0,1.0,0.2,1.0),GFXColor(0.0,0.0,0.0,0.0));
+    help_tp.SetPos(-0.95,0.92);
+    help_tp.Draw(); // needed to compute font metrics
+    
+    float charW, charH, W, H, X, Y;
+    help_tp.GetSize(W, H); if (H<0) H=-H; if (W<0) W=-W;
+    help_tp.GetPos(Y, X);
+    help_tp.GetCharSize(charW, charH);
+    VS_DBG("universe", logvs::DBG, "HELP : pos %f,%f sz %f,%f Csz %f,%f",X,Y,W,H,charW,charH);
+    
+    for (std::vector<easyDomNode*>::const_iterator it = bindings->subnodes.begin();
+         it != bindings->subnodes.end(); ++it) {
+        long n_chars;
+        if (!(*it)->isValid()) {
+            continue ;
+        }
+        if (Y - (cur_line * charH) < -Y) {
+            help_tp.SetText(text);
+            textplanes.push_back(help_tp);
+            cur_line = 0;
+            X += (charW * (max_len*0.7));
+            help_tp.SetPos(X, Y);
+            pos = 0;
+            max_len = 0;
+            *text = 0;
+        }
+        std::string key_name = (*it)->attr_value("key");
+        if (key_name.empty()) {
+            continue ;
+        }
+        std::string cmd_name = (*it)->attr_value("command");
+        if (cmd_name.size() > 3 && cmd_name.substr(cmd_name.size()-3, 3) == "Key") {
+            cmd_name = cmd_name.substr(0, cmd_name.size()-3);
+        }
+        const char * shortcmd = strstr(cmd_name.c_str(), "::");
+        if (shortcmd != NULL) cmd_name = (shortcmd += 2);
+        std::string mod_name = (*it)->attr_value("modifier");
+        if (mod_name == "none") mod_name = "";
+        n_chars = snprintf(text+pos, sizeof(text)-pos, "#8080FF%s%s%s#000000: %s\n",
+                           mod_name.c_str(), !mod_name.empty() ? "#000000+#8080FF" : "",
+                           key_name.c_str(), cmd_name.c_str());
+        if (n_chars > sizeof(text) - pos) n_chars = sizeof(text) - pos;
+        if (n_chars < 0) n_chars = 0;
+        pos += n_chars;
+        if (n_chars > max_len) max_len = n_chars;
+        ++cur_line;
+    }
+    help_tp.SetText(text);
+    textplanes.push_back(help_tp);
+    
+    return textplanes;
+}
+
+void VDU::DrawHelp(GameCockpit * parentcp, Unit * target) {
+    static std::list<TextPlane> textplanes = DrawHelpBuild();
+    for (std::list<TextPlane>::iterator it = textplanes.begin(); it != textplanes.end(); ++it) {
+        static float background_alpha = 0.3;//XMLSupport::parse_float(vs_config->getVariable(
+        //"graphics","hud","text_background_alpha","0.0625"));
+        GFXColor tpbg = it->bgcol;
+        bool automatte = (0 == tpbg.a);
+        if(automatte) { it->bgcol = GFXColor(0,0,0,background_alpha); }
+        it->Draw(it->GetText(), 0, true, false, automatte);
+        it->bgcol=tpbg;
+    }
+}
+
+static void DrawFPS(TextPlane * tp) {
+    static float background_alpha = 0.2;
+    static float charW = -1;
+    if (charW == -1) {
+        float charH;
+        tp->GetCharSize(charW, charH);
+    }
+    char text[50];
+    unsigned int n = snprintf(text, sizeof(text)/sizeof(*text),
+                              "fps:%.2f | loop:%.2lf | time:%.1lfs",
+                              cur_fps, cur_loop, UniverseUtil::GetGameTime());
+    tp->SetPos(1.0 - (charW * n), 0.97);
+    GFXColor tpbg = tp->bgcol, tpfg = tp->col;
+    tp->col = GFXColor(0.0, 1.0, 0.0, 1.0);
+    bool automatte = (0 == tpbg.a);
+    if(automatte) { tp->bgcol = GFXColor(0,0,0,background_alpha); }
+    tp->Draw(text, 0, true, false, automatte);
+    tp->bgcol=tpbg;
+    tp->col=tpfg;
+}
+
 void VDU::DrawMessages(GameCockpit* parentcp,Unit *target){
   static bool network_draw_messages=XMLSupport::parse_bool(vs_config->getVariable("graphics","network_chat_text","true"));
   static bool draw_messages=XMLSupport::parse_bool(vs_config->getVariable("graphics","chat_text","true"));
+     
   if (Network!=NULL&&network_draw_messages==false)
 	  return;
+  if (Network == NULL && game_options.show_msgcenter)
+      Mission::RenderMessages(tp);
+  if (Network==NULL && game_options.show_help)
+      DrawHelp(parentcp, target);
+  if (game_options.show_fps) {
+      DrawFPS(tp);
+  }
   if (Network==NULL&&draw_messages==false)
 	  return;
 
@@ -956,12 +1067,15 @@ void VDU::DrawMessages(GameCockpit* parentcp,Unit *target){
     fullstr+=newline;
   }
   static string message_prefix = XMLSupport::escaped_string(vs_config->getVariable("graphics","hud","message_prefix",""));
+  static bool allways_prefix = XMLSupport::parse_bool(vs_config->getVariable("graphics","hud","empty_message_prefix","true"));
   fullstr=targetstr+fullstr;
   static float background_alpha=XMLSupport::parse_float(vs_config->getVariable("graphics","hud","text_background_alpha","0.0625"));
   GFXColor tpbg=tp->bgcol;
   bool automatte=(0==tpbg.a);
   if(automatte){tp->bgcol=GFXColor(0,0,0,background_alpha);}
-  tp->Draw(message_prefix + MangleString (fullstr,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0),0,true,false,automatte);
+  std::string message = MangleString (fullstr,_Universe->AccessCamera()->GetNebula()!=NULL?.4:0);
+  if (allways_prefix || !message.empty()) message = message_prefix + message;
+  tp->Draw(message, 0,true,false,automatte);
   tp->bgcol=tpbg;
 }
 
@@ -1554,11 +1668,14 @@ char printHex (unsigned int hex) {
 
 static char suc_col_str [8]="#000000";
 
+static char suc_col_str_g [8]="#00FF00";
+static char suc_col_str_r [8]="#FF0000";
+
 inline char *GetColorFromSuccess (float suc) {
   if (suc>=1)
-    return "#00FF00";
+    return suc_col_str_g;
   if (suc<=-1)
-    return "#FF0000";
+    return suc_col_str_r;
   suc +=1.;
   suc*=128;
   unsigned int tmp2 = (unsigned int)suc;
@@ -1704,7 +1821,7 @@ void VDU::Draw (GameCockpit*parentcp, Unit * parent, const GFXColor & color) {
   static float auto_switch_lim=XMLSupport::parse_float (vs_config->getVariable("graphics","auto_message_nav_switch_time_lim",".15"));
 
   if (delautotime<auto_switch_lim&&parentcp->autoMessage.length()!=0) {
-    if (thismode.back()!=COMM&&(posmodes&NAV!=0)) {
+    if (thismode.back()!=COMM&&((posmodes&NAV)!=0)) {
       thismode.back()=NAV;
       parentcp->autoMessageTime-=auto_switch_lim*1.125;
     }

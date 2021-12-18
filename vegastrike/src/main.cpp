@@ -21,7 +21,7 @@
 #include <Python.h>
 
 #if defined(HAVE_SDL)
-# include <SDL/SDL.h>
+# include <SDL.h>
 # if ! defined(SDL_WINDOWING) && defined(__APPLE__)
 #  undef main
 # endif
@@ -60,8 +60,12 @@
 #include "cmd/music.h"
 #include "ship_commands.h"
 #include "gamemenu.h"
+#include "log.h"
+#include "vs_log_modules.h"
 
 #include <time.h>
+#include <stdio.h>
+
 #ifndef _WIN32
 #include <sys/signal.h>
 #endif
@@ -105,8 +109,10 @@ static bool ignore_network = true;
 enum {
     VPB_NONE        = 0,
     VPB_VERSION     = 1 << 0,
-    VPB_BUILD       = 1 << 1,
-    VPB_LIBS        = 1 << 2,
+    VPB_ARCH        = 1 << 1,
+    VPB_CONFIGURE   = 1 << 2,
+    VPB_BUILD       = 1 << 3,
+    VPB_LIBS        = 1 << 4,
     VPB_ALL         = 0xffffffff
 };
 static void vs_print_buildinfo(std::ostream & out, int flags);
@@ -141,6 +147,7 @@ void setup_game_data ( ){ //pass in config file l8r??
   g_game.MouseSensitivityY=4;
 
 }
+
 VegaConfig * createVegaConfig( char * file)
 {
 	return new GameVegaConfig( file);
@@ -148,8 +155,32 @@ VegaConfig * createVegaConfig( char * file)
 
 extern bool soundServerPipes();
 std::string ParseCommandLine(int argc, char ** CmdLine);
+int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_type & overrides);
+    
 void VSExit( int code)
 {
+    fflush(NULL);
+    GAME_LOG(logvs::NOTICE, "About to quit...");
+    if (BaseInterface::CurrentBase) {
+    	BaseInterface::CurrentBase->Terminate();
+    }
+    GAME_LOG(logvs::NOTICE, "Loop average : %g", avg_loop);
+    GAME_LOG(logvs::NOTICE, "FPS average : %g", avg_fps);
+    GAME_LOG(logvs::NOTICE, "Number of Mission instances : %u", active_missions.size());
+    unsigned int game_loglvl = logvs::vs_log_level("game");
+    if (game_loglvl >= logvs::INFO) {
+    	for (size_t i = 0; i < active_missions.size(); ++i) {
+    		GAME_LOG(logvs::INFO, "  mission: %s", active_missions[i]->mission_name.c_str());
+    	}
+    }
+    GAME_LOG(logvs::NOTICE, "Message Center messages : %zu",
+             mission && mission->msgcenter ? mission->msgcenter->messages.size() : 0);
+    if (game_loglvl >= logvs::INFO) {
+        for (MessageCenter::last_iterator it = mission->msgcenter->last_begin(); ! it.end(); ++it) {
+        	GAME_LOG(logvs::INFO, "  message: (%s>%s) %s",
+        			 (*it).from.get().c_str(), (*it).to.get().c_str(), (*it).message.get().c_str());
+        }
+    }
     Music::CleanupMuzak();
 	winsys_exit(code);
 }
@@ -218,6 +249,7 @@ void nothinghappens (unsigned int, unsigned int, bool,int,int) {
 //int allexcept=FE_DIVBYZERO|FE_INVALID;//|FE_OVERFLOW|FE_UNDERFLOW;
 extern void InitUnitTables();
 bool isVista=false;
+
 int main( int argc, char *argv[] )
 {
 	VSFileSystem::ChangeToProgramDirectory(argv[0]);
@@ -243,7 +275,6 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 		   "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
     /* Seed the random number generator */
 
-
     if(benchmark<0.0){
       srand( time(NULL) );
     }
@@ -257,7 +288,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     {
       string subdir=ParseCommandLine(argc,argv);
 
-      vs_print_buildinfo(std::cerr, VPB_ALL & (~VPB_VERSION));
+      vs_print_buildinfo(std::cerr, VPB_ALL & (~(VPB_VERSION | VPB_CONFIGURE)));
       std::cerr << std::endl;
         
       cerr<<"GOT SUBDIR ARG = "<<subdir<<endl;
@@ -266,10 +297,39 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
         sprintf(CONFIGFILE,"vegastrike.config");
       }
 
+      // Config overrides via command line
+      VSFileSystem::ConfigOverrides_type overrides;
+      if (ParseConfigOverrides(argc,argv,overrides) != 0) {
+          exit(1);
+      }
       // Specify the config file and the possible mod subdir to play
-      VSFileSystem::InitPaths( CONFIGFILE, subdir);
+      // After this, vs_config is available.
+      VSFileSystem::InitPaths( CONFIGFILE, subdir, &overrides);
     }
-
+    
+    
+    
+    // setup log file
+    std::string logfile = UniverseUtil::LogFile("");
+    if (logfile == "") {
+        logvs::vs_log_setfile(NULL);
+    } else if (logfile == "stdout") {
+        logvs::vs_log_setfile(stdout);
+    } else{
+        logvs::vs_log_setfile(stderr); // currently only stdout,stderr and none supported
+    }
+    std::string loglocation = vs_config->getVariable("log", "location", "false");
+    logvs::vs_log_setflag(logvs::F_LOCATION_MASK, false);
+    if (loglocation == "header") {
+        logvs::vs_log_setflag(logvs::F_LOCATION_HEADER, true);
+    } else if (loglocation == "footer") {
+        logvs::vs_log_setflag(logvs::F_LOCATION_FOOTER, true);
+    }
+    logvs::vs_log_setflag(logvs::F_LOCATION_ALLWAYS,
+                XMLSupport::parse_bool(vs_config->getVariable("log", "location_allways", "false")));
+    logvs::vs_log_setflag(logvs::F_MSGCENTER,
+                           XMLSupport::parse_bool(vs_config->getVariable("log", "msgcenter", "false")));
+    
 	// This should be put into some common function...
 	// Keep in mind that initialization must also go into networking/netserver.cpp
     game_options.init();
@@ -278,31 +338,24 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     if (XMLSupport::parse_bool(vs_config->getVariable ("network","force_client_connect","false"))) {
       ignore_network=false;
     }
-  g_game.music_enabled = XMLSupport::parse_bool (vs_config->getVariable ("audio","Music","true"));
-  if (mission_name[0]=='\0')
-  {
-    std::string defmis=vs_config->getVariable ("general","default_mission","test/test1.mission");
-    strcpy(mission_name,defmis.c_str());
-    cerr<<"MISSION_NAME is empty using : "<<mission_name<<endl;
-  }
-  //might overwrite the default mission with the command line
-  InitUnitTables();
+    g_game.music_enabled = XMLSupport::parse_bool (vs_config->getVariable ("audio","Music","true"));
+    if (mission_name[0]=='\0')
+    {
+      std::string defmis=vs_config->getVariable ("general","default_mission","test/test1.mission");
+      strcpy(mission_name,defmis.c_str());
+      GAME_LOG(logvs::NOTICE, "MISSION_NAME is empty, using : %s", mission_name);
+    }
+    //might overwrite the default mission with the command line
+    InitUnitTables();
 #ifdef HAVE_PYTHON
+    std::cerr << std::endl;
     Python::init();
 
     Python::test();
+    std::cerr << std::endl;
 #endif
     std::vector<std::vector <char > > temp = ROLES::getAllRolePriorities();
-#if defined(HAVE_SDL)
-#ifndef NO_SDL_JOYSTICK
-    // && defined(HAVE_SDL_MIXER)
-  if (  SDL_InitSubSystem( SDL_INIT_JOYSTICK )) {
-        VSFileSystem::vs_fprintf(stderr, "Couldn't initialize SDL: %s\n", SDL_GetError());
-        winsys_exit(1);
-    }
     // signal( SIGSEGV, SIG_DFL );
-#endif
-#endif
 #if 0
     InitTime();
     UpdateTime();
@@ -535,7 +588,7 @@ void bootstrap_main_loop () {
 		  // In network mode, test if all player sections are present
 		  if( pname=="")
 		  {
-			  cout<<"Missing or incomlpete section for player "<<p<<endl;
+			  GAME_LOG(logvs::ERROR, "Missing or incomlpete section for player %d", p);
 			  cleanexit=true;
 			  winsys_exit(1);
 		  }
@@ -691,7 +744,7 @@ void bootstrap_main_loop () {
 			DockToSavedBases(i, vec);
 		}
 	}
-	cout<<"Loading completed, now network init"<<endl;
+    GAME_LOG(logvs::NOTICE, "Loading completed, now network init");
 	// Send a network msg saying we are ready and also send position info
 	if( Network!=NULL) {
 		int l;
@@ -718,13 +771,35 @@ void bootstrap_main_loop () {
         for (unsigned int i=0;i<_Universe->numPlayers();++i) {
           _Universe->AccessCockpit(i)->savegame->LoadSavedMissions();
         }
-        _Universe->Loop(main_loop);
+    GAME_LOG(logvs::NOTICE, "Running Main Loop");
+             _Universe->Loop(main_loop);
     ///return to idle func which now should call main_loop mohahahah
     if (XMLSupport::parse_bool(vs_config->getVariable("splash","auto_hide","true")))
         UniverseUtil::hideSplashScreen();
+    //winsys_warp_pointer(g_game.x_resolution / 2 ,g_game.y_resolution / 2);
+    //winsys_post_redisplay();
   }
   ///Draw Texture
 
+}
+
+int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_type & overrides) {
+    for (int i = 1; i < argc; ++i) {
+        if (!strncmp(argv[i],"-C",2)) {
+            // ParseCommandLine ensures good format
+            const char * equal = strchr(argv[i]+2, '=');
+            const char * slash = argv[i]+2 - 1;
+            for ( const char * tmpslash; (tmpslash = strchr(slash+1, '/')) != NULL
+                 && tmpslash < equal; slash = tmpslash) {
+            }
+            std::string section(argv[i]+2, 0, slash - (argv[i]+2));
+            std::string key(slash + 1, 0, equal - (slash + 1));
+            std::string value(equal + 1);
+            std::cout << "config override: " << section << " / " << key << " = " << value << std::endl;
+            overrides.push_back(std::make_pair(std::make_pair(section,key), value));
+        }
+    }
+    return 0;
 }
 
 const char helpmessage[] =
@@ -738,6 +813,7 @@ const char helpmessage[] =
 " -A -a     Normal resolution (800x600)\n"
 " -H -h     High resolution (1024x768)\n"
 " -V -v     Super high resolution (1280x1024)\n"
+" -C        Config override -C<section(s)/name>=<value>\n"
 " --net     Networking Enabled (Experimental)\n"
 " --version Version information\n"
 "\n";
@@ -751,7 +827,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
 		cerr<<"ARG #"<<i<<" = "<<lpCmdLine[i]<<endl;
       switch(lpCmdLine[i][1]){
     case 'd':
-    case 'D': {
+    case 'D':
       // Specifying data directory
         if(lpCmdLine[i][2] == 0) {
             cout << "Option -D requires an argument" << endl;
@@ -766,7 +842,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
 			exit(1);
 		}
         cout << "Using data dir specified on command line : " << datatmp << endl;
-	  }
+	    break ;
 	  case 'r':
       case 'R':
 	break;
@@ -823,6 +899,14 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
       case 'g':
 	//viddrv = "GLDRV.DLL";
 	break;
+    case 'C': {
+        const char * equal = strchr(lpCmdLine[i]+2, '='), * slash;
+        // it is a config override, it will be handled later once vs_config is loaded
+        if (equal == NULL || (slash = strchr(lpCmdLine[i]+2, '/'))==NULL || slash > equal) {
+            cout << "Option -C requires an argument of format <section(s)/key>=<value>" << endl;
+            exit(1);
+        }
+        } break ;
       case '-':
         // long options
         if(strcmp(lpCmdLine[i],"--benchmark")==0){
@@ -884,20 +968,25 @@ static void vs_print_buildinfo(std::ostream & out, int flags) {
         out << "Vegastrike v" << VERSION
         << std::endl;
     }
-    if (!(flags & (~VPB_VERSION)))
+    if ((flags & VPB_ARCH)) {
+        out << POSH_GetArchString() << std::endl;
+    }
+    if (!(flags & (~(VPB_VERSION|VPB_ARCH))))
         return ;
     out << "configured with:";
-    if ((flags & VPB_BUILD)) {
+    if ((flags & VPB_CONFIGURE)) {
         out << std::endl << "  " << CONFIGURE_CMD
-        << std::endl
-        << std::endl << "  COMPILER: " << COMPILER
-        << std::endl << "  COMPILER_FLAGS: " << COMPILER_FLAGS
-        << std::endl;
+            << std::endl;
+    }
+    if ((flags & VPB_BUILD)) {
+        out << std::endl << "  COMPILER: " << COMPILER
+            << std::endl << "  COMPILER_FLAGS: " << COMPILER_FLAGS
+            << std::endl;
     }
     if ((flags & VPB_LIBS)) {
         out
       #if defined(HAVE_SDL)
-        << std::endl << "  " << "SDL: " << sdlstr
+        << std::endl << "  " << "SDL: " << sdlstr << " (h)"
       #endif
       #if defined(GLUT_API_VERSION)
         << std::endl << "  " << "GLUT api: " << GLUT_API_VERSION
@@ -905,51 +994,51 @@ static void vs_print_buildinfo(std::ostream & out, int flags) {
       #if defined(HAVE_FFMPEG)
         << std::endl << "  " << "FFMPEG:"
       # if defined(FFMPEG_VERSION)
-        << " " << FFMPEG_VERSION
+        << " " << FFMPEG_VERSION << " (h)"
       # endif
       # if defined(LIBAVCODEC_IDENT)
-        << " " << LIBAVCODEC_IDENT
+        << " " << LIBAVCODEC_IDENT << " (h)"
       # endif
       # if defined(LIBAVFORMAT_IDENT)
-        << " " << LIBAVFORMAT_IDENT
+        << " " << LIBAVFORMAT_IDENT << " (h)"
       # endif
       # if defined(LIBAVUTIL_IDENT)
-        << " " << LIBAVUTIL_IDENT
+        << " " << LIBAVUTIL_IDENT << " (h)"
       # endif
       # if defined(LIBSWSCALE_IDENT)
-        << " " << LIBSWSCALE_IDENT
+        << " " << LIBSWSCALE_IDENT << " (h)"
       # endif
       #endif
       #if defined(HAVE_PYTHON)
         << std::endl << "  " << "PYTHON:"
       # if defined(PY_VERSION)
-        << " " << PY_VERSION
+        << " " << PY_VERSION << " (h)"
       # endif
       #endif
       #if defined(BOOST_LIB_VERSION)
         << std::endl << "  " << "BOOST: " << BOOST_LIB_VERSION
       #elif defined(BOOST_VERSION)
-        << std::endl << "  " << "BOOST: " << BOOST_VERSION
+        << std::endl << "  " << "BOOST: " << BOOST_VERSION << " (h)"
       #endif
       #ifdef HAVE_AL
-        << std::endl << "  " << "OpenAL: " << AL_VERSION
+        << std::endl << "  " << "OpenAL: " << AL_VERSION << " (h)"
       #endif
       #if defined(HAVE_OGG)
         << std::endl << "  " << "VORBIS: " << vorbis_version_string()
       #endif
       #ifdef PNG_LIBPNG_VER_STRING
-        << std::endl << "  " << "PNG: " << PNG_LIBPNG_VER_STRING
+        << std::endl << "  " << "PNG: " << PNG_LIBPNG_VER_STRING << " (h)"
       #endif
       #ifdef JPEG_LIB_VERSION
-        << std::endl << "  " << "JPEG: " << JPEG_LIB_VERSION
+        << std::endl << "  " << "JPEG: " << JPEG_LIB_VERSION << " (h)"
       #endif
       #ifdef HAVE_EXPAT
         << std::endl << "  " << "EXPAT: " << XML_ExpatVersion()
       #endif
-      #if defined(zlib_version)
+      #if 0 && defined(zlib_version)
         << std::endl << "  " << "ZLIB: " << zlib_version
       #elif defined(ZLIB_VERSION)
-        << std::endl << "  " << "ZLIB_h: " << ZLIB_VERSION
+        << std::endl << "  " << "ZLIB: " << ZLIB_VERSION << " (h)"
       #endif
         << std::endl;
     }

@@ -1,5 +1,6 @@
 import Base
 import VS
+import debug
 
 config_map = {}
 active_list = []
@@ -37,7 +38,7 @@ def RefreshPlayerShip(which):
 		active_list[which] = (set,room,index,1,0)
 	elif (active_list[which][3]==0):
 		# Bummer...
-		print "* PlayerShip: No match found for ship " + ship + "\n"
+		debug.debug("* PlayerShip: No match found for ship " + ship)
 		active_list[which] = (set,room,index,0,0)
 
 def AddPlayerShips(set,room,index):

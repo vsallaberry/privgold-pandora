@@ -57,10 +57,10 @@ public:
     void setStrokeWeight(float w) { m_strokeWeight = w; m_needMetrics = true; };
 
     // Draw a character.  Assumes scaling is done, current color set, etc.
-    float drawChar(char c) const;
+    float drawChar(int c) const;
 
     // The width of a character in reference units.
-    double charWidth(char c) const;
+    double charWidth(int c) const;
 
     // The width of a string in reference units.
     double stringWidth(const std::string& str) const;

@@ -54,6 +54,8 @@ namespace BaseUtil {
 	void RunScript (int room, std::string ind, std::string pythonfile, float time);
 	void TextBox (int room, std::string ind, std::string text, float x, float y, Vector widheimult, Vector backcol, float backalp, Vector forecol);
 	void SetTextBoxText(int room, std::string ind, std::string text);
+    void SetTextBoxFont(int room, std::string ind, std::string fontname);
+    std::string GetTextBoxFont(int room, std::string index);
 	void SetLinkArea(int room, std::string index, float x, float y, float wid, float hei);
 	void SetLinkText(int room, std::string index, std::string text);
 	void SetLinkPython(int room, std::string index, std::string python);

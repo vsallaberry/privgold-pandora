@@ -74,7 +74,7 @@ class Notify_f;
  *  all by itself after telling you that the download is complete. No hassle at all
  *  with NotifyPtrs.
  */
-class Notify_fp;
+struct Notify_fp;
 
 /** A child class of Item that downloads a file to a given location.
  *  You must pass a Notify object as fourth constructor parameter if you want

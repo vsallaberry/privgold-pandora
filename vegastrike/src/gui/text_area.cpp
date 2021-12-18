@@ -20,7 +20,7 @@
 #include <cstdlib>
 #include <cstring>
 
-static char * empty_string = "";
+static const char * empty_string = "";
 
 // Array of textures for the text area
 //GUITexture *Images;
@@ -299,14 +299,14 @@ void TextArea::SetText(const char *text) {
   ChompIntoItems(text, NULL);
 }
 
-char *TextArea::GetSelectedItemName(void) {
+const char *TextArea::GetSelectedItemName(void) const {
 	return GetSelectedItem(1);
 }
-char *TextArea::GetSelectedItemDesc(void) {
+const char *TextArea::GetSelectedItemDesc(void) const {
 	return GetSelectedItem(2);
 }
 
-char *TextArea::GetSelectedItem(int type) {
+const char *TextArea::GetSelectedItem(int type) const {
 	TextAreaItem *search;
 	search = ItemList->FindCount(cur_selected, 0);
 	if (search == 0) { return empty_string; }

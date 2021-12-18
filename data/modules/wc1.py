@@ -7,6 +7,8 @@ import save_util
 import unit
 import vsrandom
 import Vector
+import debug
+
 def findOriginAndMove(carrier,carrierloc=(0000,00,-10000)):
     origin =unit.getJumpPoint(vsrandom.randrange(0,99))
     beg=Vector.Add(origin.Position(),Vector.Add (carrierloc,(carrier.rSize(),0,0)))
@@ -36,8 +38,7 @@ class wc1 (Director.Mission):
         self.StartMission(VS.getSystemFile(),self.sector,self.mission)
 
     def StartMission (self,lastsector, cursector,mission):
-        print (cursector,)
-        print cursector
+        debug.debug(str(cursector)+' '+repr(cursector))
         save_util.saveStringList(0,"wc1sector",(cursector,))
         if (Director.getSaveDataLength (0,"wc1mission")>0):
             Director.putSaveData(0,"wc1mission",0,mission)
@@ -67,12 +68,12 @@ class wc1 (Director.Mission):
                 if (curmission!=self.mission or cursector!= self.sector):
                     self.StartMission (cursector,self.sector,self.mission)
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
 
 #def initstarsystem():
 #  random_encounters.initstarsystem() #??? that isn't there

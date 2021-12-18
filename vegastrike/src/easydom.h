@@ -43,6 +43,7 @@ using VSFileSystem::UnitFile;
 using VSFileSystem::UnknownFile;
 using VSFileSystem::AiFile;
 #include "xml_support.h"
+#include "log.h"
 
 using std::string;
 using std::vector;
@@ -56,7 +57,8 @@ extern string parseCalike(char const *filename);
 class easyDomNode {
  public:
   easyDomNode();
-
+  virtual ~easyDomNode();
+    
   void set(easyDomNode *parent,string name,const XML_Char **atts  );
   void printNode(ostream& out,int recurse_level,int level);
 
@@ -64,12 +66,17 @@ class easyDomNode {
 
   string Name() { return name ; }
 
+  bool isValid() { return valid; }
+    
   void set_attribute(string name,string value) { attribute_map[name]=value; };
 
   string attr_value(string attr_name);
   vector<easyDomNode *> subnodes;
 
+  void setValid(bool _valid) { valid = _valid; }
+    
  private:
+  bool valid;
   easyDomNode *parent;
   AttributeList *attributes;
   vsUMap<string,string> attribute_map;
@@ -126,6 +133,7 @@ template<class domNodeType> class easyDomFactory {
 domNodeType *LoadXML(const char *filename) {
 
   topnode=NULL;
+  while (nodestack.size()) nodestack.pop();
   // Not really nice but should do its job
   unsigned int length = strlen( filename);
   VSFile f;
@@ -169,8 +177,11 @@ domNodeType *LoadXML(const char *filename) {
   XML_SetElementHandler(parser, &easyDomFactory::beginElement, &easyDomFactory::endElement);
   XML_SetCharacterDataHandler(parser,&easyDomFactory::charHandler);
   
-  XML_Parse(parser, (f.ReadFull()).c_str(), f.Size(), 1);
-  /*
+  enum XML_Status parse_result = XML_Parse(parser, (f.ReadFull()).c_str(), f.Size(), 1);
+  if (parse_result != XML_STATUS_OK) {
+      VS_LOG("config", logvs::WARN, "*** WARNING *** XML file '%s' not fully loaded", filename);
+  }
+/*
   do {
 #ifdef BIDBG
     char *buf = (XML_Char*)XML_GetBuffer(parser, chunk_size);
@@ -217,6 +228,7 @@ domNodeType *LoadCalike(const char *filename) {
     return NULL;
   }
 
+  while (nodestack.size()) nodestack.pop();
   xml = new easyDomFactoryXML;
 
   XML_Parser parser = XML_ParserCreate(NULL);
@@ -255,7 +267,10 @@ domNodeType *LoadCalike(const char *filename) {
       is_final=true;
     }
 
-    XML_Parse(parser, buf, newlen, is_final);
+    enum XML_Status parse_result = XML_Parse(parser, buf, newlen, is_final);
+    if (parse_result == XML_STATUS_ERROR) {
+      VS_LOG("config", logvs::WARN, "*** WARNING *** XML file '%s' not fully loaded", filename);
+    }
   } while(!is_final);
 
   XML_ParserFree (parser);
@@ -317,11 +332,13 @@ void endElement(const string &name){
   doTextBuffer();
   domNodeType *stacktop=nodestack.top();
   if(stacktop->Name()!=name){
-    std::cout << "error: expected " << stacktop->Name() << " , got " << name << std::endl;
+    VS_LOG("config", logvs::ERROR, "error: expected %s , got %s", stacktop->Name().c_str(), name.c_str());
     exit(1);
   }
   else{
+    stacktop->setValid(true);
     nodestack.pop();
+    
   }
   
 }

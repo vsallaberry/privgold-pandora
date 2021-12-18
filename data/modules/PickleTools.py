@@ -14,8 +14,8 @@ def addSlashes(m,forbidden="#!|\\?\"\'\r\n",extended_forbidden=1):
 	rv = ""
 	for i in range(len(m)):
 		quote =    (extended_forbidden and ord(m[i])>=128) \
-		        or (m[i] in forbidden) \
-		        or (m[i] == '\\')
+			or (m[i] in forbidden) \
+			or (m[i] == '\\')
 		if quote:
 			rv += "\\"+bytehex(ord(m[i]))
 		else:

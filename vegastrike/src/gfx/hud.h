@@ -29,17 +29,21 @@ class Texture;
 
 class TextPlane {
 	std::string myText;
-
+    void * myFont;
+    float myFontHeight;
+    unsigned int flags;
+    
 	//Texture *myFont;
 	Vector myFontMetrics; // i = width, j = height
 	Vector myDims;
-	int numlet;
+	//int numlet;
 	/*
 	struct GlyphPosition {
 		float left, right, top, bottom;
 	} myGlyphPos[256];
 	*/
 public:
+	enum { FLG_NONE = 0, FLG_UNDERSCORE_AS_SPACE = 1 << 0 };
 	GFXColor col,bgcol;
 	TextPlane(const struct GFXColor &col=GFXColor(1,1,1,1),const struct GFXColor &bgcol=GFXColor(0,0,0,0));
 	~TextPlane();
@@ -51,11 +55,11 @@ public:
 	  myFontMetrics.i = x;
 	  myFontMetrics.j = y;
 	}
-	void GetCharSize (float &x, float &y) {
+	void GetCharSize (float &x, float &y) const {
 	  x = myFontMetrics.i;
 	  y = myFontMetrics.j;
 	}
-	void GetPos (float &y, float &x) {
+	void GetPos (float &y, float &x) const {
 	  y = myFontMetrics.k;
 	  x = myDims.k;
 	}
@@ -63,7 +67,7 @@ public:
 	  myDims.i = x;
 	  myDims.j = y;
 	}
-	void GetSize (float &x, float &y) {
+	void GetSize (float &x, float &y) const {
 	  x = myDims.i;
 	  y = myDims.j;
 	}
@@ -72,10 +76,29 @@ public:
 	void SetText(const std::string &newText) {
 		myText = newText;
 	}
-	std::string GetText()const {
+	const std::string & GetText()const {
 		return myText;
 	}
+    
+    void * SetFont(const std::string & fontName);
+    void * SetFont(void * font);
+    void * GetFont(bool forceinside=false, bool whichinside=false) const;
+    unsigned int SetFlag(unsigned int flag, bool enable);
+    unsigned int SetFlags(unsigned int flags);
 
+    float GetFontHeight() const;
+    float GetCharWidth(int c, float myFontMetrics) const;
+    
+private:
+    template<class IT>
+    bool doNewLine(IT begin, IT end,
+                   float cur_pos, float end_pos,
+                   float metrics,
+                   bool last_row);
 };
+
+float getFontHeight(void * font);
+void * getFontFromName(const std::string & fontName);
+std::string getFontName(void * font);
 
 #endif

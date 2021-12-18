@@ -8,6 +8,8 @@
 #include <algorithm>
 using std::priority_queue;
 #include "hashtable_3d.h"
+#include "log.h"
+
 //using std::list;
 using std::vector;
  //optimization globals
@@ -36,7 +38,16 @@ static priority_queue<light_key> lightQ;
 static vector <int> pickedlights [2];
 static vector <int>* newpicked=&pickedlights[0];
 static vector <int>* oldpicked=&pickedlights[1];
-
+#ifdef VS_GL_LIGHTS_FROM_FUTURE // imported update from privgold svn 2012 rev 297
+void removelightfromnewpick(int index) {
+    std::vector<int>::iterator where;
+    for (int i=0;i<2;++i) {
+        while ((where=std::find(pickedlights[i].begin(),pickedlights[i].end(),index))!=pickedlights[i].end()) {
+            pickedlights[i].erase(where);
+        }
+    }
+}
+#endif
 inline int getIndex (const LineCollide & t) {
     return t.object.i;
 }
@@ -53,12 +64,20 @@ static void swappicked () {
 
 void unpicklights () {
 	for (std::vector <int>::iterator i=newpicked->begin();i!=newpicked->end();i++) {
-	  if (GLLights[(*_llights)[*i].Target()].index!=*i) {
-	    //VSFileSystem::vs_fprintf (stderr,"uh oh");
+      if (*i>=(int)_llights->size()) { // imported update from privgold svn 2012 rev 297
+    	VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "GFXLIGHT FAILURE %d is beyond array of size %d",(int)*i,(int)_llights->size());
+        continue ;
+      }
+      int targ =(*_llights)[*i].Target();
+	  if (targ < 0 || targ >= GFX_MAX_LIGHTS || GLLights[targ].index!=*i) {
+#if defined (VS_GL_LIGHTS_FROM_FUTURE)
+        VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "unpicklights() - uh oh");
+#else
+        VS_LOG("gl", logvs::VERBOSE, "unpicklights() - uh oh");
+#endif
 	    (*_llights)[*i].Target()=-1;
 	    continue;//a lengthy operation... Since picked lights may have been smashed
 	  }
-    int targ =(*_llights)[*i].Target(); 
     if (GLLights[targ].options&OpenGLL::GL_ENABLED) {
       glDisable (GL_LIGHT0+targ);
       GLLights[targ].options=OpenGLL::GLL_LOCAL;
@@ -68,6 +87,9 @@ void unpicklights () {
 
   }
   newpicked->clear();
+#ifdef VS_GL_LIGHTS_FROM_FUTURE // imported update from privgold svn 2012 rev 297
+  oldpicked->clear();
+#endif
 }
 
 static float attenuatedIntensity(const gfx_light &light, const Vector& center, const float rad)
@@ -181,6 +203,11 @@ void gfx_light::dopickenables () {
   }
   oldtrav = oldpicked->begin();
   while (oldtrav!=oldpicked->end()) {
+    if (*oldtrav>=(int)_llights->size()) { // imported update from privgold svn 2012 rev 297
+        VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "GFXLIGHT FAILURE %d is beyond array of size %d",(int)*oldtrav,(int)_llights->size());
+        oldtrav++;
+        continue;
+    }
     if (GLLights[(*_llights)[(*oldtrav)].target].index != (*oldtrav)) {
       oldtrav++;
       continue;//don't clobber what's not yours
@@ -191,6 +218,11 @@ void gfx_light::dopickenables () {
   }
   traverse= newpicked->begin();
   while (traverse!=newpicked->end()) {
+    if (*traverse>=(int)_llights->size()) { // imported update from privgold svn 2012 rev 297
+        VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "GFXLIGHT FAILURE %d is beyond array of size %d",(int)*traverse,(int)_llights->size());
+        traverse++;
+        continue;
+    }
     if ((*_llights)[*traverse].target==-1) {
 	int gltarg = findLocalClobberable();
 	if (gltarg==-1) {
@@ -212,6 +244,10 @@ void gfx_light::dopickenables () {
     oldpicked->pop_front();
   }*/
   for (oldtrav = oldpicked->begin(); oldtrav!=oldpicked->end(); oldtrav++) {
+    if (*oldtrav>=(int)_llights->size()) { // imported update from privgold svn 2012 rev 297
+        VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "GFXLIGHT FAILURE %d is beyond array of size %d",(int)*oldtrav,(int)_llights->size());
+        continue;
+    }
     int glind=(*_llights)[*oldtrav].target;
     if ((GLLights[glind].options&OpenGLL::GL_ENABLED)&&GLLights[glind].index==-1) {//if hasn't been duly clobbered
       glDisable (GL_LIGHT0+glind);

@@ -27,7 +27,7 @@ def floatToRand(maximum):
 def GenerateCivilianFgShips (faction,factionnr,docapships):
     lst=[]
     capitals=faction_ships.capitals[factionnr]
-    fighters=faction_ships.fighters[factionnr]   
+    fighters=faction_ships.fighters[factionnr]
     numfighters=1
     try:
       numfighters=faction_ships.fightersPerFG["default"]
@@ -68,7 +68,7 @@ def GenerateFgShips (shipinfg,factionnr,friendly):
     cpr=XProductionRate(fac,faction_ships.capitalProductionRate)
     if cpr>0 and (friendly==2 or (friendly==1 and vsrandom.random()<cpr/fpr)):
         capship=((faction_ships.getRandomCapitolInt(factionnr),1),)
-        debug.debug("Generating capital "+str(capship))
+        debug.debug("Generating capital "+str(fac)+'/'+str(capship)+' ('+('friendly,' if friendly else '')+str(shipinfg)+')',debug.INFO)
     return ((faction_ships.getRandomFighterInt(factionnr),shipinfg),)+capship
 
 def GenerateAllShips ():
@@ -137,7 +137,7 @@ def GetNewFGName(faction):
     fgname=fgnames[factionnr][k]
     del fgnames[factionnr][k]
     return fgname
-    
+
 _generatedsys = 0
 def AddSysDict (cursys):
     global _generatedsys
@@ -146,7 +146,7 @@ def AddSysDict (cursys):
     sysfaction=VS.GetGalaxyFaction(cursys)
 
     numflightgroups = 1+vsrandom.randrange(fg_util.MinNumFlightgroupsInSystem(cursys)-1,fg_util.MaxNumFlightgroupsInSystem(cursys))
-    
+
     #debug.debug("Initializing system %s with %d flightgroups... " % (cursys,numflightgroups))
     #progress_percent = (float(_generatedsys) / getSystemCount())
     #ShowProgress.setProgressBar("loading",progress_percent)
@@ -178,7 +178,7 @@ def AddSysDict (cursys):
               typenumbertuple=GenerateCivilianFgShips(thisfac,thisfactionnr,False)
        if iscit:
           #debug.debug("generating gen civilian for "+cursys+" faction "+thisfac)
-          if VS.GetRelation(thisfac,sysfaction)>-.05:#brave citizens of the new order... 
+          if VS.GetRelation(thisfac,sysfaction)>-.05:#brave citizens of the new order...
              fgname=GetNewFGName(thisfac)
              typenumbertuple=GenerateCivilianFgShips(thisfac,thisfactionnr,True)
              fg_util.AddShipsToFG (fgname,thisfac,typenumbertuple,cursys)
@@ -191,7 +191,7 @@ def AddSysDict (cursys):
         friendly=0
         if vsrandom.random()>friendlychance or sysfaction=='unknown' or sysfaction=='':
             faction=faction_ships.get_rabble_of_no_citizen(sysfaction)#why even have citizens on the list then
-        else:            
+        else:
             faction=faction_ships.get_friend_of_no_citizen(sysfaction)#likewise--- maybe this should be a faction_ships fix
             if (faction==sysfaction):
                 friendly=1
@@ -208,11 +208,11 @@ def AddSysDict (cursys):
     return i
 
 def ForEachSys (functio):
-    debug.debug("Getting reachable systems...")
+    debug.debug("Getting reachable systems...",debug.INFO)
     systems = AllSystems()
-    debug.debug("done")
+    debug.debug("done",debug.INFO)
     for sys in systems:
-	functio(sys)
+        functio(sys)
     return len(systems)
 def MakeUniverse():
     # fg_util.DeleteAllFGFromAllSystems()
@@ -242,19 +242,20 @@ def ReloadUniverse():
   global genUniverse, hasUniverse
   if cp>=0:
     #ShowProgress.activateProgressScreen("loading",force=True)
-    debug.debug('Purging...')
+    debug.debug('Purging universe...')
     for i in fg_util.AllFactions():
         fg_util.PurgeZeroShips(i)
         systemcount[i]=0
-    debug.debug('StartSystemCount')
+    logging = debug.debug('StartSystemCount',debug.INFO)
     ForEachSys(CountSystems)
-    debug.debug(systemcount)
-    debug.debug('EndSystemCount')
+    if logging:
+        debug.debug(systemcount)
+        debug.debug('EndSystemCount',debug.INFO)
     genUniverse=0
     needNewUniverse=0
     curfaclist = fg_util.AllFactions()
     reflist = fg_util.ReadStringList(cp,"FactionRefList")
-    
+
     if (reflist !=curfaclist):
         needNewUniverse = 1
         debug.debug('reflist is '+str(reflist))
@@ -262,7 +263,7 @@ def ReloadUniverse():
 
     if (fg_util.HasLegacyFGFormat()):
         needNewUniverse = 1
-        debug.warn('save using legacy FG format... resetting universe to reformat')
+        debug.debug('save using legacy FG format... resetting universe to reformat',debug.NOTICE)
         fg_util.DeleteLegacyFGLeftovers()
 
     if needNewUniverse:
@@ -291,12 +292,12 @@ def KeepUniverseGenerated():
         dj_lib.enable()
         #debug.debug('Not generating dyn universe: Networked game')
         return False
-    
+
     sys = VS.getSystemFile()
     if not VS.GetNumAdjacentSystems(sys):
         #debug.debug('Not generating dyn universe: System has no jumps or is not in Universe XML.')
         return False
-    
+
     dj_lib.enable()
     #curfaclist = fg_util.AllFactions()
     #reflist = fg_util.ReadStringList(cp,"FactionRefList")

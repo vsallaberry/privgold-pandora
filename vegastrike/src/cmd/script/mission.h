@@ -45,6 +45,7 @@
 class Unit;
 class Order;
 class MessageCenter;
+class TextPlane;
 #endif
 
 #include <assert.h>
@@ -466,6 +467,7 @@ class Mission {
   void GetOrigin(QVector &pos,string &planetname);
 
   void DirectorLoop();
+  static void DirectorUpdateGameTime();
   void DirectorStart(missionNode *node);
   void DirectorStartStarSystem(StarSystem *ss);
   void DirectorInitgame();
@@ -494,7 +496,8 @@ varInst* lookupClassVariable(string modulename,string varname,unsigned int class
 void destroyClassInstance(string modulename,unsigned int classid);
 
   static MessageCenter *msgcenter;
-
+  static void RenderMessages(TextPlane *tp);
+    
 void call_vector_into_olist(varInst *vec_vi,QVector vec3);
 void  deleteVarInst(varInst *vi,bool del_local=false);
 

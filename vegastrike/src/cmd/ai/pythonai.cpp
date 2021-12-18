@@ -15,6 +15,10 @@
 #include "vs_globals.h"
 #include "vsfilesystem.h"
 #include "pythonai.h"
+#include "log.h"
+
+#define PYAI_LOG(lvl, ...) VS_LOG("pyAI", lvl, __VA_ARGS__)
+
 using namespace Orders;
 PythonAI * PythonAI::last_ai=NULL;
 PythonAI::PythonAI(PyObject * self_, float reaction_time, float aggressivity):FireAt (reaction_time,aggressivity) {
@@ -50,5 +54,6 @@ void PythonAI::InitModuleAI () {
   
 }
 PythonAI::~PythonAI () {
-  VSFileSystem::vs_fprintf (stderr,"Destruct called. If called from C++ this is death %ld (%lx)",(unsigned long)this,(unsigned long)this);
+  PYAI_LOG(logvs::INFO, "Destruct called. If called from C++ this is death %ld (%lx)",
+           (unsigned long)this,(unsigned long)this);
 }

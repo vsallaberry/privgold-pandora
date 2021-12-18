@@ -8,6 +8,7 @@
 #include "star_system.h"
 #include "cmd/collection.h"
 #include "cmd/unit_generic.h"
+#include <stdlib.h>
 
 Atmosphere::SunBox::~SunBox()
 {
@@ -33,7 +34,7 @@ void Atmosphere::setArray1(float c0[3], const GFXColor&c1)
 }
 
 
-Atmosphere::Atmosphere(const Parameters &params) : user_params(params), divisions(64)
+Atmosphere::Atmosphere(const Parameters &params) : user_params(params), cap(NULL), stack(NULL), l0(0), l1(0), l2(0), divisions(64)
 {
 	dome = new SphereMesh(params.radius, divisions, divisions, "white.bmp",NULL,true,ONE,ZERO,false,0,M_PI/2);
 }
@@ -72,7 +73,7 @@ void Atmosphere::Update(const QVector &position, const Matrix &tmatrix)
 	float rho1 = 0.0;
 	Unit * primary;
 
-	for(un_iter iter = system->getUnitList().createIterator();primary = *iter;++iter) {
+	for(un_iter iter = system->getUnitList().createIterator(); (primary = *iter) != NULL; ++iter) {
 		if(primary->isUnit()==PLANETPTR && (currPlanet = (GamePlanet*)primary)->hasLights()) {
 			//const std::vector <int> & lights = currPlanet->activeLights();
 			/* for now just assume all planets with lights are really bright */

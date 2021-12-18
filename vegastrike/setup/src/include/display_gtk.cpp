@@ -19,14 +19,7 @@
 void AddCats(GtkWidget *vbox, char *group, char *def);
 void ClickButton(GtkWidget *w, struct catagory *CUR);
 
-#ifdef _WIN32
-//#include <process.h>
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <shellapi.h>
-#else
-#include <unistd.h>
-#endif
+#include <stdio.h>
 
 //#define USE_RADIO
 
@@ -63,11 +56,7 @@ void InitGraphics(int *argc, char*** argv) {
 	gtk_widget_show(window);
 }
 void myexit(int exitval){
-#ifdef _WIN32
-	int err=(int)ShellExecute(NULL,"open","documentation\\readme.txt","","",1);
-#else
-	execlp("less", "less","readme.txt", NULL); //Will this work in Linux?
-#endif
+    ShowReadme();
 	exit(0);//exitval);
 }
 

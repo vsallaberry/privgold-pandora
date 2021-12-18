@@ -1,4 +1,5 @@
 #include <Python.h>
+#include <sstream>
 #include "cmd/unit_generic.h"
 #include "hashtable.h"
 #include <float.h>
@@ -15,7 +16,9 @@
 #include "networking/const.h"
 #include "vsfilesystem.h"
 #include "cmd/fg_util.h"
-
+#include "log.h"
+#include "unicode.h"
+#include "vs_log_modules.h"
 #include "options.h"
 
 extern vs_options game_options;
@@ -41,7 +44,7 @@ std::string GetHelperPlayerSaveGame (int num)
 			}
 			return CurrentSaveGameName;
 		}
-		cout << "Hi helper play " << num << endl;
+      GAME_LOG(logvs::NOTICE, "Hi helper play %d", num);
 	  static string *res=NULL;
 	  if (res==NULL) {
 		res = new std::string;
@@ -59,13 +62,13 @@ std::string GetHelperPlayerSaveGame (int num)
 		  }
 		  else
 		  {
-	  		fprintf( stderr, "!!! ERROR : Creating default save.4.x.txt file : %s\n", f.GetFullPath().c_str());
+	  		GAME_LOG(logvs::ERROR, "!!! ERROR : Creating default save.4.x.txt file : %s", f.GetFullPath().c_str());
 			exit(1);
 		  }
 		  err = f.OpenReadOnly( "save.4.x.txt", UnknownFile);
 		  if( err>Ok)
 		  {
-	  		fprintf( stderr, "!!! ERROR : Opening the default save we just created\n");
+	  		GAME_LOG(logvs::ERROR, "!!! ERROR : Opening the default save we just created");
 			exit(1);
 		  }
 		}
@@ -141,7 +144,7 @@ std::string GetHelperPlayerSaveGame (int num)
 	#endif
 	  }
 	  if (num==0||res->empty()) {
-		cout << "Here";
+		GAME_LOG(logvs::NOTICE, "Savegame Here");
 		return (*res);  
 	  }
 	  return (*res)+XMLSupport::tostring(num);
@@ -189,10 +192,10 @@ void SaveFileCopy (const char * src, const char * dst) {
 	    f.Close();
       }
 	  else
-	  	fprintf( stderr, "WARNING : couldn't open savegame to copy to : %s as SaveFile", dst);
+	  	GAME_LOG(logvs::WARN, "WARNING : couldn't open savegame to copy to : %s as SaveFile", dst);
   }
   else
-  	fprintf(stderr, "WARNING : couldn't find the savegame to copy : %s as SaveFile", src);
+  	GAME_LOG(logvs::WARN, "WARNING : couldn't find the savegame to copy : %s as SaveFile", src);
   }
 }
 
@@ -234,7 +237,7 @@ void SaveGame::SetPlayerLocation (const QVector &v) {
   if ((FINITE (v.i)&&FINITE(v.j)&&FINITE(v.k))) {
     PlayerLocation =v;
   }else {
-    VSFileSystem::vs_fprintf (stderr,"NaN ERROR saving unit\n");
+    GAME_LOG(logvs::ERROR, "NaN ERROR saving unit");
     assert(FINITE (v.i)&&FINITE(v.j)&&FINITE(v.k));
     PlayerLocation.Set(1,1,1);
   }
@@ -254,13 +257,14 @@ void SaveGame::RemoveUnitFromSave (long address) {
 }
 string SaveGame::WriteNewsData () {
   string ret("");
-  gameMessage last;
+  int i = 0;
   vector <gameMessage> tmp;
-  int i=0;
   vector <string> newsvec;
   newsvec.push_back ("news");
-  while ((mission->msgcenter->last(i++,last,newsvec))) {
-    tmp.push_back (last);
+  //for (gameMessage last; (mission->msgcenter->last(i,last,newsvec)); ++i) { tmp.push_back (last); }
+  for (MessageCenter::last_whoiterator it
+	   = mission->msgcenter->last_begin(MessageWhoStrPredicate(newsvec)); !it.end(); ++it, ++i) {
+    tmp.push_back (*it);
   }
   ret += XMLSupport::tostring(i)+"\n";
   for (int j=tmp.size()-1;j>=0;j--) {
@@ -278,18 +282,40 @@ string SaveGame::WriteNewsData () {
   }
   return ret;
 }
+std::string FixEncodingInString(const std::string & str) {
+    static bool fix_encoding = XMLSupport::parse_bool(vs_config->getVariable(
+                                    "general", "fix_savegame_encoding_on_load", "true"));
+    if ( ! fix_encoding) {
+        return str;
+    }
+    std::string fixed;
+    fixed.reserve(str.length()+20);
+    for (Utf8Iterator it = Utf8Iterator::begin(str); it != it.end(); ++it) {
+        char utf8[MB_CUR_MAX+1];
+        if (*it && utf32_to_utf8(utf8, *it) > 0) {
+            fixed.append(utf8);
+        } else {
+            GAME_LOG(logvs::WARN, "empty character (end:%d)", it == it.end());
+        }
+    }
+    if (strcmp(fixed.c_str(), str.c_str())) {
+        GAME_LOG(logvs::INFO, "The SaveGame data '%s' has been fixed to '%s'", str.c_str(), fixed.c_str());
+    }
+    return fixed;
+}
 vector <string> parsePipedString(string s) {
   string::size_type loc;
   vector <string> ret;
   while ((loc = s.find("|"))!=string::npos) {
-    ret.push_back( s.substr (0,loc));
-	cout<<"Found ship named : "<<s.substr( 0, loc)<<endl;
+	std::string sub = s.substr (0,loc);
+    ret.push_back(FixEncodingInString(sub));
+	GAME_LOG(logvs::NOTICE, "Found ship named : %s",s.substr( 0, loc).c_str());
     s = s.substr (loc+1);
   }
   if (s.length())
   {
-    ret.push_back(s);
-	cout<<"Found ship named : "<<s<<endl;
+    ret.push_back(FixEncodingInString(s));
+	GAME_LOG(logvs::NOTICE, "Found ship named : %s", s.c_str());
   }
   return ret;
 }
@@ -324,14 +350,14 @@ void CopySavedShips(std::string filename, int player_num, const std::vector<std:
         string srcdata=src.ReadFull();
         dst.Write(srcdata);
       }else {
-        printf ("Error: Cannot Copy Unit %s from save file %s to %s\n",
+        GAME_LOG(logvs::ERROR, "Error: Cannot Copy Unit %s from save file %s to %s",
                     starships[i].c_str(),
                 srcnam.c_str(),
                 dstnam.c_str());
         
       }
     }else {
-      printf ("Error: Cannot Open Unit %s from save file %s.\n",
+      GAME_LOG(logvs::ERROR, "Error: Cannot Open Unit %s from save file %s.",
               starships[i].c_str(),
               srcnam.c_str());
       
@@ -351,6 +377,7 @@ void WriteSaveGame (Cockpit * cp,bool auto_save) {
     return;
   }
   if (un->GetHull()>0) {
+    GAME_LOG(logvs::NOTICE, "WriteSaveGame '%s' (auto:%d)", GetCurrentSaveGame().c_str(), auto_save);
     cp->savegame->WriteSaveGame (cp->activeStarSystem->getFileName().c_str(),un->LocalPosition(),cp->credits,cp->unitfilename,auto_save?-1:player_num);
     un->WriteUnit(cp->GetUnitModifications().c_str());
     if (GetWritePlayerSaveGame(player_num).length()&&!auto_save) {
@@ -370,7 +397,7 @@ int hopto (char *buf,char endln, char endln2,int readlen) {
     }
   }
   for(; buf[readlen]!=0&&buf[readlen]!=endln&&buf[readlen]!=endln2; readlen++) ;
-  if (buf[readlen]&&buf[readlen]==endln||buf[readlen]==endln2)
+  if (buf[readlen]&&(buf[readlen]==endln||buf[readlen]==endln2))
     readlen++;
   return readlen;
 }
@@ -390,15 +417,16 @@ void SaveGame::ReadNewsData (char * &buf, bool just_skip) {
     for (i=0;i<numnews;i++) {
       offset = hopto (buf,'\n','\n',0);
       if (offset>0)
-	buf[offset-1]=0;
+    	  buf[offset-1]=0;
       int l=0;
       for (l=0;l<offset-1;l++) {
-	if (buf[l]!='\r'&&buf[l]!='\n') {
-	  break;
-	}
+    	  if (buf[l]!='\r'&&buf[l]!='\n') {
+    		  break;
+    	  }
       }
       if (!just_skip&&buf[l]!='\r'&&buf[l]!='\n'&&buf[l]) {
-	mission->msgcenter->add ("game","news",buf+l);
+    	  mission->msgcenter->add ("game","news",FixEncodingInString(std::string(buf+l)));
+    	  GAME_LOG(logvs::VERBOSE, "NEWS(#%d): %s", i, buf+l);
       }
       buf+=offset;
     }
@@ -461,7 +489,7 @@ std::string scanInString (char * &buf) {
     str+=c;
     buf++;
   }
-  return str;
+  return FixEncodingInString(str);
 }
 void SaveGame::ReadMissionData (char * &buf, bool select_data, const std::set<std::string> &select_data_filter) {
   missiondata->m.clear();
@@ -511,8 +539,10 @@ string AnyStringScanInString (char * &buf) {
   string ret;
   ret.resize(size);
   unsigned int i=0;
-  while (i<size&&*buf) ret[i++]=*(buf++);
-  return ret;
+  while (i<size&&*buf) {
+    ret[i++]=*(buf++);
+  }
+  return FixEncodingInString(ret);
 }
 void AnyStringSkipInString (char * &buf) {
   unsigned int size=0;
@@ -567,7 +597,7 @@ void SaveGame::PurgeZeroStarships() {
   for (MissionStringDat::MSD::iterator i=missionstringdata->m.begin(),ie=missionstringdata->m.end();i!=ie;++i) {
     if (fg_util::IsFGKey(i->first))
       if (fg_util::CheckFG(i->second)) {
-        printf("correcting flightgroup %s to have right landed ships\n",i->first.c_str());
+        GAME_LOG(logvs::INFO, "correcting flightgroup %s to have right landed ships",i->first.c_str());
      
       }
   }
@@ -658,7 +688,7 @@ std::string SaveGame::WriteMissionStringData () {
 void SaveGame::ReadStardate( char * &buf)
 {
 	string stardate( AnyStringScanInString( buf));
-	cout<<"Read stardate : "<<stardate<<endl;
+	GAME_LOG(logvs::NOTICE, "Read stardate : %s", stardate.c_str());
 	_Universe->current_stardate.InitTrek( stardate);
 }
 
@@ -693,18 +723,20 @@ void SaveGame::ReadSavedPackets (char * &buf, bool commitfactions, bool skip_new
     }else {
       char output[31]={0};
       strncpy(output, buf, 30);
-      printf ("buf unrecognized %s...\n",output);
+      GAME_LOG(logvs::NOTICE, "buf unrecognized %s...",output);
       //su.push_back (SavedUnits (unitname,(clsptr)a,factname));
     }
   }
-  cout<<"\tExiting ReadSavedPackets"<<endl;
+  GAME_LOG(logvs::NOTICE, "Exiting ReadSavedPackets");
 }
 
 void SaveGame::LoadSavedMissions() {
   unsigned int i;
   vector<string> scripts = getMissionStringData("active_scripts");
   vector<string> missions = getMissionStringData("active_missions");
-  PyRun_SimpleString("import VS\nVS.loading_active_missions=True\nprint \"Loading active missions \"+str(VS.loading_active_missions)\n");
+  if (PyRun_SimpleString("import VS\nVS.loading_active_missions=True\n"
+                         "VS.Log('game', 4, \"Loading active missions \"+str(VS.loading_active_missions))\n")
+      !=0) GAME_LOG(logvs::WARN, "cannot set loading_active_missions python flag");
   // kill any leftovers so they don't get loaded twice.
   Mission *ignoreMission = Mission::getNthPlayerMission(_Universe->CurrentCockpit(), 0);
   for (i=active_missions.size()-1;i>0;--i){// don't terminate zeroth mission
@@ -728,7 +760,9 @@ void SaveGame::LoadSavedMissions() {
     }
     
   }
-  PyRun_SimpleString("import VS\nVS.loading_active_missions=False\n");
+  if (PyRun_SimpleString("import VS\nVS.loading_active_missions=False\n"
+                         "VS.Log('game', 4, \"Loading active missions \"+str(VS.loading_active_missions))\n")
+      !=0) GAME_LOG(logvs::WARN, "cannot restore loading_active_missions python flag");
   getMissionStringData("active_scripts")=scripts;
   getMissionStringData("active_missions")=missions;
 }
@@ -736,94 +770,104 @@ string SaveGame::WriteSavedUnit (SavedUnits* su) {
   return string("\n")+XMLSupport::tostring(su->type)+string(" ")+su->filename+" "+su->faction;
 }
  extern bool STATIC_VARS_DESTROYED;
-static char * tmprealloc (char * var, int &oldlength, int newlength) {
+
+ /*static char * tmprealloc (char * var, int &oldlength, int newlength) {
   if (oldlength<newlength) {
     oldlength= newlength;
     var= (char *)realloc(var,newlength);
   }
   memset (var,0,newlength);
   return var;
-}
+}*/
 
 string SaveGame::WritePlayerData( const QVector &FP, std::vector<std::string> unitname, const char * systemname, float credits, std::string fact)
 {
-	  string playerdata("");
-  	  int MB = MAXBUFFER;
-  	  char * tmp=(char *)malloc (MB);
-  	  memset( tmp, 0, MB);
+	std::ostringstream playerdata_oss;
+	playerdata_oss.unsetf(std::ostringstream::floatfield); // cleared -> equivalent to %g
+	playerdata_oss.setf(std::ostringstream::fixed); // equivalent to %f
+	///*sprintf-version*/ string playerdata("");
+	///*sprintf-version*/   int MB = MAXBUFFER;
+	///*sprintf-version*/   char * tmp=(char *)malloc (MB);
+	///*sprintf-version*/   memset( tmp, 0, MB);
 
-      QVector FighterPos= PlayerLocation-FP;
-//    if (originalsystem!=systemname) {
-      FighterPos=FP;
-//    }
-      string pipedunitname = createPipedString(unitname);
-      tmp = tmprealloc(tmp,MB,pipedunitname.length()+strlen(systemname)+256/*4 floats*/);
-	  // If we specify no faction, it won't be saved in there
-	  if( fact != "")
-		sprintf (tmp,"%s^%f^%s %f %f %f %s",systemname,credits,pipedunitname.c_str(),FighterPos.i,FighterPos.j,FighterPos.k, fact.c_str());
-	  else
-		sprintf (tmp,"%s^%f^%s %f %f %f",systemname,credits,pipedunitname.c_str(),FighterPos.i,FighterPos.j,FighterPos.k);
-      playerdata = string( tmp);
-	  this->playerfaction = fact;
-      SetSavedCredits (credits);
-  	  free(tmp);tmp=NULL;
+	QVector FighterPos= PlayerLocation-FP;
+	//    if (originalsystem!=systemname) {
+	FighterPos=FP;
+	//    }
+	string pipedunitname = createPipedString(unitname);
+	///*sprintf-version*/ tmp = tmprealloc(tmp,MB,pipedunitname.length()+strlen(systemname)+256/*4 floats*/);
+	// If we specify no faction, it won't be saved in there
+	playerdata_oss << systemname << "^" << (float)credits << "^" << pipedunitname << " "
+				   << (float)FighterPos.i << " " << (float) FighterPos.j << " " << (float)FighterPos.k;
+	if( !fact.empty()) {
+		///*sprintf-version*/ sprintf (tmp,"%s^%f^%s %f %f %f %s",systemname,credits,pipedunitname.c_str(),FighterPos.i,FighterPos.j,FighterPos.k, fact.c_str());
+		 playerdata_oss << " " << fact;
+	} else {
+		///*sprintf-version*/ sprintf (tmp,"%s^%f^%s %f %f %f",systemname,credits,pipedunitname.c_str(),FighterPos.i,FighterPos.j,FighterPos.k);
+	}
+	///*sprintf-version*/ playerdata = string( tmp);
+	this->playerfaction = fact;
+	SetSavedCredits (credits);
+	///*sprintf-version*/ free(tmp);tmp=NULL;
 
-	  return playerdata;
+	return playerdata_oss.str();
 }
 
 string SaveGame::WriteDynamicUniverse()
 {
-	string dyn_univ("");
-  	int MB = MAXBUFFER;
-  	char * tmp=(char *)malloc (MB);
-  	memset( tmp, 0, MB);
+	///*sprintf-version*/ string dyn_univ("");
+	std::ostringstream dyn_univ_oss;
+  	///*sprintf-version*/ int MB = MAXBUFFER;
+  	///*sprintf-version*/ char * tmp=(char *)malloc (MB);
+  	///*sprintf-version*/ memset( tmp, 0, MB);
 
 	// Write mission data
 	// On server side we save the stardate
 	if( SERVER)
 	{
-		cerr<<"SAVING STARDATE - SERVER="<<SERVER<<endl;
-		dyn_univ += "\n0 stardate data "+AnyStringWriteString( _Universe->current_stardate.GetFullTrekDate());
+		GAME_LOG(logvs::NOTICE, "SAVING STARDATE - SERVER=%d", SERVER);
+		dyn_univ_oss << "\n0 stardate data " << AnyStringWriteString( _Universe->current_stardate.GetFullTrekDate());
 	}
-    memset( tmp, 0, MB);
-    sprintf (tmp,"\n%d %s %s",0,"mission","data ");
-    dyn_univ += string( tmp);
-    dyn_univ += WriteMissionData();
-    memset( tmp, 0, MB);
-    sprintf (tmp,"\n%d %s %s",0,"missionstring","data ");
-    dyn_univ += string( tmp);
-	//dyn_univ += WriteMissionStringData();
+    ///*sprintf-version*/ memset( tmp, 0, MB);
+    ///*sprintf-version*/ sprintf (tmp,"\n%d %s %s",0,"mission","data ");
+    ///*sprintf-version*/ dyn_univ += string( tmp);
+	dyn_univ_oss << "\n" << 0 << " " << "mission" << " " << "data" << " ";
+    dyn_univ_oss << WriteMissionData();
+    ///*sprintf-version*/ memset( tmp, 0, MB);
+    ///*sprintf-version*/ sprintf (tmp,"\n%d %s %s",0,"missionstring","data ");
+    ///*sprintf-version*/ dyn_univ += string( tmp);
+    dyn_univ_oss << "\n" << 0 << " " << "missionstring" << " " << "data" << " ";
 	vector <char> missionstringdata1;
     WriteMissionStringData(missionstringdata1);
-    dyn_univ +=string(&missionstringdata1[0],missionstringdata1.size());
+    dyn_univ_oss << string(&missionstringdata1[0],missionstringdata1.size());
 		
     if (!STATIC_VARS_DESTROYED)
       last_written_pickled_data=PickleAllMissions(); 
-    tmp = tmprealloc(tmp,MB,last_written_pickled_data.length()+256/*4 floats*/);
-    sprintf (tmp,"\n%d %s %s %s ",0,"python","data",last_written_pickled_data.c_str());
-    dyn_univ += string( tmp);
-
+    ///*sprintf-version*/ tmp = tmprealloc(tmp,MB,last_written_pickled_data.length()+256/*4 floats*/);
+    ///*sprintf-version*/ sprintf (tmp,"\n%d %s %s %s ",0,"python","data",last_written_pickled_data.c_str());
+    ///*sprintf-version*/ dyn_univ += string( tmp);
+    dyn_univ_oss << "\n" << 0 << " " << "python" << " " << "data" << " " << last_written_pickled_data << " ";
 	// Write news data
-    memset( tmp, 0, MB);
-    sprintf (tmp,"\n%d %s %s",0,"news","data ");
-    dyn_univ += string( tmp);
-    dyn_univ += WriteNewsData();
+    ///*sprintf-version*/ memset( tmp, 0, MB);
+    ///*sprintf-version*/ sprintf (tmp,"\n%d %s %s",0,"news","data ");
+    ///*sprintf-version*/ dyn_univ += string( tmp);
+    dyn_univ_oss << "\n" << 0 << " " << "news" << " " << "data" << " ";
+    dyn_univ_oss << WriteNewsData();
 	// Write faction relationships
-    memset( tmp, 0, MB);
-    sprintf (tmp,"\n%d %s %s",0,"factions","begin ");
-    dyn_univ += string( tmp);
-    dyn_univ += FactionUtil::SerializeFaction();
+    ///*sprintf-version*/ memset( tmp, 0, MB);
+    ///*sprintf-version*/ sprintf (tmp,"\n%d %s %s",0,"factions","begin ");
+    ///*sprintf-version*/ dyn_univ += string( tmp);
+    dyn_univ_oss << "\n" << 0 << " " << "factions" << " " << "begin" << " ";
+    dyn_univ_oss << FactionUtil::SerializeFaction();
 
-  	free(tmp);tmp=NULL;
-
-	return dyn_univ;
+	return dyn_univ_oss.str();
 }
 
 using namespace VSFileSystem;
 
 string SaveGame::WriteSaveGame (const char *systemname, const QVector &FP, float credits, std::vector<std::string> unitname, int player_num, std::string fact, bool write) {
   savestring = string("");
-    printf ("Writing Save Game %s",outputsavegame.c_str());
+    GAME_LOG(logvs::NOTICE, "Writing Save Game %s",outputsavegame.c_str());
 
 	savestring += WritePlayerData( FP, unitname, systemname, credits, fact);
 	savestring += WriteDynamicUniverse();
@@ -847,7 +891,7 @@ string SaveGame::WriteSaveGame (const char *systemname, const QVector &FP, float
 		}
 		else
 		{// error occured while opening file
-			cerr<<"occured while opening file: "<<outputsavegame<<endl;
+			GAME_LOG(logvs::WARN, "occured while opening file: %s", outputsavegame.c_str());
 		}
 	}	
   }
@@ -882,7 +926,7 @@ void SaveGame::ParseSaveGame (const string &filename_p, string &FSS, const strin
 		filename = filename_p;
 	*/
 	// Now leave filename empty, use the default name regardless...
-	
+    
 	shouldupdatepos=!(PlayerLocation.i==FLT_MAX||PlayerLocation.j==FLT_MAX||PlayerLocation.k==FLT_MAX);
 	// WE WILL ALWAYS SAVE THE CURRENT SAVEGAME IN THE MISSION SAVENAME (IT WILL BE COPIED TO THE SPECIFIED SAVENAME)
 	SetOutputFileName(filename);
@@ -893,13 +937,18 @@ void SaveGame::ParseSaveGame (const string &filename_p, string &FSS, const strin
 		 {
 				// TRY TO GET THE SPECIFIED SAVENAME TO LOAD
 				string plsave = GetReadPlayerSaveGame(player_num);
+             
 				if (plsave.length()) {
+                    GAME_LOG(logvs::NOTICE, "Loading Savegame '%s'...", plsave.c_str());
+                    
 					err = f.OpenReadOnly( plsave, SaveFile);
 					if (err>Ok) { // failed in SaveFile
 						// Try as an UnknownFile to get a datadir saved game, like New_Game.
 						err = f.OpenReadOnly( plsave, UnknownFile);
 					}
 				}else if (filename.length()>0) {
+                    GAME_LOG(logvs::NOTICE, "Loading Savegame '%s'...", filename.c_str());
+                    
 					// IF NONE SIMPLY LOAD THE MISSION DEFAULT ONE
 					err = f.OpenReadOnly( filename, SaveFile);
 				}
@@ -957,13 +1006,13 @@ void SaveGame::ParseSaveGame (const string &filename_p, string &FSS, const strin
 		  if( res==5)
 		  {
 		  	playerfaction = string( factionname);
-			cout<<"Found faction in save file : "<<playerfaction<<endl;
+			GAME_LOG(logvs::NOTICE, "Found faction in save file : %s",playerfaction.c_str());
 		  }
 		  else
 		  {
 		    // If no faction -> default to privateer
 		  	playerfaction = string( "privateer");
-			cout<<"Faction not found assigning default one : privateer !!!"<<endl;
+			GAME_LOG(logvs::NOTICE, "Faction not found assigning default one : privateer !!!");
 		  }
 		  free(factionname);
 

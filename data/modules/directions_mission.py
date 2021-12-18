@@ -9,6 +9,8 @@ import universe
 import unit
 import Director
 import quest
+import debug
+
 class go_none:
     def Execute(self):
         return 1
@@ -23,8 +25,8 @@ isambushrunning={}
 
 class directions_mission (Director.Mission):
     def dir_privateSetupPlayer(self,cp):
-        print "setting up mission"
-        print self.jumps
+        debug.debug("setting up mission")
+        debug.debug(repr(self.jumps))
         self.arrived=0
         self.wasnull=0
         self.you=VS.getPlayerX(cp)
@@ -34,14 +36,14 @@ class directions_mission (Director.Mission):
         self.dir_privateSetupPlayer(cp)
     def __init__ (self,savevar,jumps=(),destination=''):
         Director.Mission.__init__(self);
-        print 'Directions: Starting'
+        debug.debug('Directions: Starting')
         global isambushrunning
         self.var=savevar
         self.savedCargo=self.getCargo(VS.getPlayer())
-#        print self.savedCargo
+#        debug.debug(repr(self.savedCargo))
         if (self.var,self.savedCargo) in isambushrunning:
             #VS.terminateMission(0)
-            print 'Directions: Stopping: directions already running! (before mission restore)'
+            debug.debug('Directions: Stopping: directions already running! (before mission restore)')
         isambushrunning[(self.var,self.savedCargo)]=True
         self.jumps=jumps
         self.cp=VS.getCurrentPlayer()
@@ -61,7 +63,7 @@ class directions_mission (Director.Mission):
             del isambushrunning[(self.var,self.savedCargo)]
         VS.terminateMission(1)
         return
-        
+
     def findUnit(self, name):
         i = VS.getUnitList()
         while i.notDone():
@@ -92,7 +94,7 @@ class directions_mission (Director.Mission):
         if (self.arrived and self.base.isNull()):
             return
         if (self.wasnull):
-            print "INEQUALITY"
+            debug.debug("INEQUALITY")
             if (not self.checkCargo(VS.getPlayerX(self.cp))):
                 self.takeCargoAndTerminate(self.you,1)
                 return

@@ -50,6 +50,7 @@
 #include "pythonmission.h"
 //#include "vs_globals.h"
 //#include "vegastrike.h"
+#include "log.h"
 
 using std::cout;
 using std::cerr;
@@ -485,7 +486,7 @@ varInst *Mission::call_io_printmsglist(missionNode *node,int mode){
   if(mode==SCRIPT_RUN){
 	  gameMessage msg;
 	  while(msgcenter->last(i,msg,std::vector <std::string>()) && i<7.0){
-		  cout << "MESSAGE" << msg.message << endl;
+          VS_LOG("mission", logvs::INFO, "MESSAGE %s", (std::string(msg.message)).c_str());
 		  i++;
 	  }
   }

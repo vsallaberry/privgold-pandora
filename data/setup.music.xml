@@ -6,10 +6,10 @@
     Music
     <help>The musical score to your adventures.</help>
     <files>
-      .privateer100/*.m3u
+      .privateer120/*.m3u
       music/*.ogg
       sounds/*
     </files>
   </option>
-    
+
 </install>

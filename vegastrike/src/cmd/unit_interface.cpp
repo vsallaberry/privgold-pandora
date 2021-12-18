@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include "unit.h"
 //#include "cmd/images.h"
 #include "unit_factory.h"
@@ -20,8 +23,11 @@
 #include "configxml.h"
 #include "unit_util.h"
 #include "load_mission.h"
-#ifdef _WIN32
-#define strcasecmp stricmp
+#if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
 #endif
 extern int GetModeFromName (const char *);
 extern void ModifyMouseSensitivity(int&,int&);
@@ -366,6 +372,9 @@ void UpgradingInfo::SetMode (enum BaseMode mod, enum SubMode smod) {
 	curcategory.push_back("starships");
       }
       break;
+    case MAXMODE:
+      VS_LOG("unit", logvs::WARN, "warning: wrong value %d for UpgradingInfo::SetMode",mod);
+      break ;
     }
 	if (mode==NEWSMODE&&mod!=NEWSMODE&&readnews) {
 		muzak->Skip();
@@ -440,7 +449,7 @@ void UpgradingInfo::SetupCargoList () {
 		for (int i=len-1;i>=0;i--) {
 			string tmp = tostring(len-i-1)+" "+getSaveString(playernum,news_name,i);
 			CargoList->AddTextItem(tmp.c_str(),getSaveString(playernum,news_name,i).c_str());
-			VSFileSystem::vs_fprintf (stderr,"<*>%s",tmp.c_str());
+			VS_LOG("unit", logvs::INFO, "<*>%s",tmp.c_str());
 			
 		}
 
@@ -1202,7 +1211,7 @@ void UpgradingInfo::SelectLastSelected() {
     int ours = CargoList->DoMouse(lastselected.type, lastselected.x, lastselected.y, lastselected.button, lastselected.state);
     if (ours) {
       ProcessMouse(lastselected.type, float_to_int(lastselected.x), float_to_int(lastselected.y), lastselected.button, lastselected.state);
-      char *buy_name = CargoList->GetSelectedItemName();
+      const char *buy_name = CargoList->GetSelectedItemName();
       
       if (buy_name) {
 	if (buy_name[0]) {
@@ -1273,7 +1282,7 @@ void UpgradingInfo::CompleteTransactionConfirm () {
 void UpgradingInfo::ProcessMouse(int type, int x, int y, int button, int state) {
 	int ours = 0;
 	float cur_x = 0, cur_y = 0, new_x = x, new_y = y;
-	char *buy_name;
+	const char *buy_name;
 
 	cur_x = ((new_x / g_game.x_resolution) * 2) - 1;
 	cur_y = ((new_y / g_game.y_resolution) * -2) + 1;

@@ -1,3 +1,6 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 //#include "unit.h"
 //#include "unit_template.h"
 #include "unit_factory.h"
@@ -13,8 +16,11 @@
 #include "audiolib.h"
 #include "vs_globals.h"
 #include "unit_const_cache.h"
-#ifdef _WIN32
-#define strcasecmp stricmp
+#if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
 #endif
 extern int GetModeFromName (const char *);
 

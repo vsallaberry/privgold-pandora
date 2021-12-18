@@ -106,7 +106,7 @@ template<class domNodeType> class easyDomFactory {
   struct easyDomFactoryXML {
   } *xml;
 
-    domNodeType *LoadXML(const char *filename) {
+  domNodeType *LoadXML(const char *filename) {
 
   const int chunk_size = 16384;
 
@@ -116,7 +116,7 @@ template<class domNodeType> class easyDomFactory {
     //    assert(0);
     return NULL;
   }
-
+  while (nodestack.size()) nodestack.pop();
   xml = new easyDomFactoryXML;
 
   XML_Parser parser = XML_ParserCreate(NULL);
@@ -157,7 +157,7 @@ domNodeType *LoadCalike(const char *filename) {
     //    assert(0);
     return NULL;
   }
-
+  while (nodestack.size()) nodestack.pop();
   xml = new easyDomFactoryXML;
 
   XML_Parser parser = XML_ParserCreate(NULL);

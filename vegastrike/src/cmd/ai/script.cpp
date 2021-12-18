@@ -10,7 +10,9 @@
 #include "cmd/unit_generic.h"
 #include "hard_coded_scripts.h"
 #include "universe_util.h"
+#include "log.h"
 
+#define PYAI_LOG(lvl, ...) VS_LOG("pyAI", lvl, __VA_ARGS__)
 
 typedef vsUMap<string,CCScript *> HardCodedMap;
 static HardCodedMap MakeHardCodedScripts() {
@@ -94,13 +96,13 @@ struct AIScriptXML {
 float& AIScript::topf(){
   if (!xml->floats.size()) {
     xml->floats.push(xml->defaultf);
-    VSFileSystem::vs_fprintf(stderr,"\nERROR: Float stack is empty... Will return %f\n",xml->defaultf);
+    PYAI_LOG(logvs::WARN, "ERROR: Float stack is empty... Will return %f",xml->defaultf);
   }
   return xml->floats.top();
 }
 void AIScript::popf(){
   if (xml->floats.size()<=0) {
-    VSFileSystem::vs_fprintf(stderr,"\nERROR: Float stack is empty... Will not delete\n");
+    PYAI_LOG(logvs::WARN, "ERROR: Float stack is empty... Will not delete");
     return;
   }
   xml->floats.pop();
@@ -108,13 +110,13 @@ void AIScript::popf(){
 QVector& AIScript::topv(){
   if (!xml->vectors.size()) {
     xml->vectors.push(xml->defaultvec);
-    VSFileSystem::vs_fprintf(stderr,"\nERROR: Vector stack is empty... Will return <%f, %f, %f>\n",xml->defaultvec.i,xml->defaultvec.j,xml->defaultvec.k);
+    PYAI_LOG(logvs::WARN, "ERROR: Vector stack is empty... Will return <%f, %f, %f>", xml->defaultvec.i,xml->defaultvec.j,xml->defaultvec.k);
   }
   return xml->vectors.top();
 }
 void AIScript::popv (){
   if (xml->vectors.size()<=0) {
-    VSFileSystem::vs_fprintf(stderr,"\nERROR: Vector stack is empty... Will not delete\n");
+    PYAI_LOG(logvs::WARN, "ERROR: Vector stack is empty... Will not delete");
     return;
   }
   xml->vectors.pop();
@@ -676,7 +678,7 @@ using namespace AiXml;
     topv()=-topv();
     break;
   case MOVETO:
-    VSFileSystem::vs_fprintf (stderr,"Moveto <%f,%f,%f>",topv().i,topv().j,topv().k);
+    PYAI_LOG(logvs::NOTICE, "Moveto <%f,%f,%f>",topv().i,topv().j,topv().k);
     xml->unitlevel--;
     xml->orders.push_back(new Orders::MoveTo(topv(),xml->afterburn,xml->acc));
     popv();
@@ -774,7 +776,7 @@ using namespace VSFileSystem;
       }
     }
     if (aidebug>1)
-      VSFileSystem::vs_fprintf (stderr,"%f using hcs %s for %s threat %f\n",mission->getGametime(),filename, parent->name.get().c_str(),parent->GetComputerData().threatlevel);
+      PYAI_LOG(logvs::NOTICE, "%f using hcs %s for %s threat %f", mission->getGametime(),filename, parent->name.get().c_str(),parent->GetComputerData().threatlevel);
     if (_Universe->isPlayerStarship(parent->Target())){
       float value;
       static float game_speed=XMLSupport::parse_float(vs_config->getVariable("physics","game_speed","1"));
@@ -800,7 +802,7 @@ using namespace VSFileSystem;
     return;
   }else {
 	  if (aidebug>1)
-		  VSFileSystem::vs_fprintf (stderr,"using soft coded script %s",filename);
+		  PYAI_LOG(logvs::NOTICE, "using soft coded script %s",filename);
 	  if (aidebug>0)
 		  UniverseUtil::IOmessage(0,parent->name,"all",string("FAILED(or missile) script ")+string(filename)+" threat "+XMLSupport::tostring(parent->GetComputerData().threatlevel));
   }
@@ -822,7 +824,7 @@ using namespace VSFileSystem;
 #endif
 
   if(err>Ok) {
-    VSFileSystem::vs_fprintf (stderr,"cannot find AI script %s\n",filename);
+    PYAI_LOG(logvs::NOTICE, "cannot find AI script %s",filename);
     return;
   }
 #ifndef _WIN32

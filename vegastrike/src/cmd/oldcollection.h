@@ -162,7 +162,9 @@ class UnitCollection {
   friend void Iterate (UnitCollection &c);
 #endif
   //could be empty and this returns false...but usually correct...never has units when it returns true
+  //bool empty() const {return (u->next->unit==NULL);}
   bool empty() const {return (u->next->unit==NULL);}
+  size_t size() const;
   UnitIterator createIterator() {return UnitIterator(u);}
   ConstIterator constIterator() const {return ConstIterator (u);}
   FastIterator fastIterator() {return FastIterator (u);}

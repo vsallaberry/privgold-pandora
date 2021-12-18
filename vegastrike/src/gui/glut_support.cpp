@@ -25,6 +25,7 @@
 #include "gfx/vsimage.h"
 #include "vsfilesystem.h"
 #include "gldrv/gl_globals.h"
+#include "unicode.h"
 using namespace VSFileSystem;
 
 #define isspAce(chr) ((chr=='\t')||(chr=='\n')||(chr=='\v')||(chr=='\f')||(chr=='\r')||(chr==' '))
@@ -94,11 +95,12 @@ void ShowText(float x, float y, float wid, int size, const char *str, int no_end
 	end /= 2500;
 	//	if (no_end == 1) { end = 0; }
 	int h=0;
-        for (cur = 0; str[cur] != '\0'; cur++) {
-		cur_width = glutStrokeWidth(GLUT_STROKE_ROMAN, str[cur]);
+    for (Utf8Iterator it = Utf8Iterator::begin(str); it != it.end(); ++it) {
+        cur = it.pos();
+		cur_width = glutStrokeWidth(GLUT_STROKE_ROMAN, *it);
 		cur_width /= 2500;
 		
-		if ((width+end+word_length(str+cur) > page_wid|| str[cur]=='\\' )&& str[cur+1] != '\0' ) {
+		if ((width+end+word_length(str+cur) > page_wid|| *it=='\\' )&& *it != '\0' ) {
 		  if (no_end==0) {
 		    width += cur_width;
 		    for (int i = 1; i <= 3; i++) { glutStrokeCharacter(GLUT_STROKE_ROMAN, '.'); }
@@ -117,9 +119,9 @@ void ShowText(float x, float y, float wid, int size, const char *str, int no_end
 		}else {
 		  width += cur_width;
 		}
-		if (str[cur]!='\\') 
-		  glutStrokeCharacter(GLUT_STROKE_ROMAN, str[cur]);
-        }
+		if (*it!='\\')
+		  glutStrokeCharacter(GLUT_STROKE_ROMAN, *it);
+    }
 	glLoadIdentity();
 	if(gl_options.smooth_lines)
 	{

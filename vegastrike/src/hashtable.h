@@ -38,7 +38,7 @@ template<class KEY, class VALUE, int SIZ> class Hashtable :public vsUMap <KEY,VA
   typedef std::pair<KEY,VALUE*> HashElement;
   typedef vsUMap<KEY,VALUE* > supertype;
 public:
-	static int hash(const int key) {
+	static size_t hash(const int key) {
 		unsigned int k = key;
 		k%=SIZ;
 		return k;
@@ -54,7 +54,7 @@ public:
           k %= SIZ;
           return k;
 	}
-	static int hash(const std::string &key) {
+	static size_t hash(const std::string &key) {
           unsigned int k = 0;
           for(typename std::string::const_iterator start = key.begin(); start!=key.end(); ++start) {
             k ^= (*start&HASH_SALT_1);

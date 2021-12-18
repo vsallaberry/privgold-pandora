@@ -203,10 +203,12 @@ template<typename T> inline T& operator<<(T& stream, const StringPool::Reference
 	return stream << ref.get();
 }
 
+#if !defined(HAVE_UNORDERED_MAP)
 template<typename T> bool operator==(const typename SharedPool<T>::Reference &r, const T& s) 
 {
 	return r.get()==s;
 }
+#endif
 
 #include "SharedPool.cpp"
 #endif//__STRINGPOOL_H__INCLUDED__

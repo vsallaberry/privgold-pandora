@@ -62,10 +62,14 @@ void RemoveListener(InputListener *il) {
 void ProcessInput(int whichplayer) {
   ProcessKB(whichplayer);
   ProcessMouse();
+#if defined(HAVE_SDL)
+  JoystickProcessQueue(whichplayer);
+#else
   for (int i=0;i<MAX_JOYSTICKS;i++) {
     if (joystick[i]->player==whichplayer)
       ProcessJoystick(i);
   }
+#endif
 }
 
 void InitInput()

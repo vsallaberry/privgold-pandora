@@ -28,7 +28,7 @@
 #define _JOYSTICK_H_
 
 #if defined(HAVE_SDL)
-#include <SDL/SDL.h>
+#include <SDL.h>
 #endif
 
 #include "vegastrike.h"
@@ -44,6 +44,7 @@ class JoyStick;
 
 extern void ProcessJoystick(int whichjoystick);
 extern void InitJoystick();
+extern void UpdateJoystick(int index);
 extern void DeInitJoystick();
 
 const int MAX_JOYSTICKS=16;
@@ -64,6 +65,8 @@ class JoyStick {
     public:
     // initializes the joystick
     JoyStick(int);
+    void Update(int player, int index);
+    virtual ~JoyStick();
     // engine calls GetJoyStick to get coordinates and buttons
     void GetJoyStick(float &x,float &y, float &z, int &buttons);
     bool isAvailable(void);
@@ -111,5 +114,12 @@ void BindHatswitchKey (int hatswitch, int val_index, KBHandler handler, const KB
 void BindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index, KBHandler handler, const KBData&data);
 void UnbindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index);
 
+unsigned int GetNumJoysticks();
+int GetJoystickByID(int id);
+
+void RestoreJoystick();
+void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state);
+void JoystickProcessQueue(int player);
+void JoystickQueuePush(int which);
 
 #endif // _JOYSTICK_H_

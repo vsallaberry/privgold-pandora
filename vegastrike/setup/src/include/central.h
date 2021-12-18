@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "general.h"
 #include "file.h"
 
@@ -49,6 +50,8 @@ void SetGroup(char *group, char *setting);
 void SetInfo(char *catagory, char *info);
 char *GetInfo(char *catagory);
 char *GetSetting(char *group);
+void ShowReadme();
+
 struct catagory *GetCatStruct(char *name);
 struct group *GetGroupStruct(char *name);
 typedef struct _GtkWidget GtkWidget;
@@ -77,5 +80,7 @@ struct global_settings {
 extern struct catagory CATS;
 extern struct group GROUPS;
 extern struct global_settings CONFIG;
+
+extern char origpath[65536];
 
 #endif    //CENTRAL_H

@@ -1,6 +1,7 @@
 import VS
 import Director
 import directions_mission
+import debug
 
 class ambush(directions_mission.directions_mission):
 	def privateSetupPlayer(self):
@@ -11,7 +12,7 @@ class ambush(directions_mission.directions_mission):
 
 	def __init__(self,savevar,systems,delay,faction,numenemies,dyntype='',dynfg='',greetingText=["Hello there, smuggler. Prepare to die!", "The price on your head is big enough that I missed my lunch"], directions=[], destination='',AdjustFaction=True):
 		directions_mission.directions_mission.__init__ (self,savevar,directions,destination)
-		print 'Ambush: Starting'
+		debug.debug('Ambush: Starting')
 		self.faction=faction
 		self.systems=systems
 		if type(systems)!=tuple and type(systems)!=list :
@@ -25,7 +26,7 @@ class ambush(directions_mission.directions_mission):
 		self.privateSetupPlayer()
 		self.AdjustFaction=AdjustFaction
 	def setupPlayer(self,cp):
-		print "ambush setting player up"
+		debug.debug("ambush setting player up")
 		directions_mission.directions_mission.setupPlayer(self,cp)
 		self.privateSetupPlayer()
 
@@ -51,7 +52,7 @@ class ambush(directions_mission.directions_mission):
 					dyntype=""
 					if (len(self.dyntype)>i):
 						dyntype=self.dyntype[i]
-					print 'Ambush: Launch ships!'
+					debug.debug('Ambush: Launch ships!')
 					self.havelaunched=1
 					import launch
 					L=launch.Launch()
@@ -72,7 +73,7 @@ class ambush(directions_mission.directions_mission):
 					except:
 						pass
 					L.faction=faction
-					import universe		
+					import universe
 					enemy=L.launch(you)
 					lead=enemy.getFlightgroupLeader()
 					enemy.SetTarget(you)
@@ -81,16 +82,19 @@ class ambush(directions_mission.directions_mission):
 					else:
 						enemy.setFlightgroupLeader(enemy)
 					enemy.setFgDirective("A.")
-					self.enemy=lead			
+					self.enemy=lead
 					rel=VS.GetRelation(faction,"privateer")
 					if (AdjustFaction and rel>=0):
 						VS.AdjustRelation(faction,"privateer",-.02-rel,1.0)
 						rel=VS.GetRelation("privateer",faction)
 						VS.AdjustRelation("privateer",faction,-.02-rel,1.0)
 					if (i==len(self.faction)-1 and z==0):
+						enemy_name = enemy.getFactionName() + '/' + enemy.getName() if not enemy.isNull() else ''
+						you_name = you.getFactionName() + '/' + you.getName() if not you.isNull() else ''
+						debug.debug('ambush -> greetingText from '+str(enemy_name)+' to '+str(you_name)+' : '+str(self.greetingText),debug.DEBUG)
 						universe.greet(self.greetingText,enemy,you)
-					#print "launchin"
-					print 'Ambush: Ships have been launched. Exiting...'
+					#debug.debug("launchin")
+					debug.debug('Ambush: Ships have been launched. Exiting...')
 	def terminate(self):
 		self.terminated=1#VS.terminateMission(0)
 	def Execute(self):
@@ -108,11 +112,20 @@ class ambush(directions_mission.directions_mission):
 					if (sys[where-1]=='/'):
 						where=0
 				if (where==0):
-					#print 'Ambush: wait before launching ship...'
+					#debug.debug('Ambush: wait before launching ship...')
 					self.inescapable=1
 					self.timer=VS.GetGameTime()
 		if (self.inescapable and ((self.delay==0) or (VS.GetGameTime()-self.timer>=self.delay))):
 			self.Launch(you)
 			self.terminate()
-#					print "it's unavoidable, my young apprentice... in "+str(self.delay)+" seconds from "+str(self.timer)
-			
+#					debug.debug("it's unavoidable, my young apprentice... in "+str(self.delay)+" seconds from "+str(self.timer))
+
+#    def initbriefing(self):
+#		debug.debug("init briefing")
+#	def loopbriefing(self):
+#		import Briefing
+#                debug.debug("loop briefing")
+#		Briefing.terminate();
+#	def endbriefing(self):
+#		debug.debug("ending briefing")
+

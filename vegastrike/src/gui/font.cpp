@@ -21,11 +21,23 @@
 
 #include "vegastrike.h"
 
+#if defined(HAVE_CWCTYPE)
+# include <cwctype>
+#elif defined(HAVE_WCTYPE_H)
+# include <wctype.h>
+#else
+# include <ctype.h>
+# define iswprint(c) isprint(c)
+#endif
+
 #include "font.h"
 
 #include "guidefs.h"
 #include "vs_globals.h"
 #include "config_xml.h"
+#include "unicode.h"
+#include "log.h"
+
 // For some reason, the cumulative width of GLUT strings is smaller than the
 //  actual width when they are painted.  If we add this factor to the reference
 //  length of every GLUT character, things work a lot better.
@@ -42,6 +54,30 @@ bool useStroke() {
   static bool tmp=XMLSupport::parse_bool(vs_config->getVariable ("graphics","high_quality_font_computer",vs_config->getVariable ("graphics","high_quality_font","false")));
   return !tmp;
 }
+
+static void * getDefaultFont() {
+    static void * font = NULL;
+    if (font == NULL) {
+        std::string whichfont = vs_config->getVariable("graphics","computerfont",
+                                vs_config->getVariable("graphics","font","helvetica12"));
+        if (whichfont=="helvetica10")
+            font=GLUT_BITMAP_HELVETICA_10;
+        else if (whichfont=="helvetica18")
+            font=GLUT_BITMAP_HELVETICA_18;
+        else if (whichfont=="times24")
+            font=GLUT_BITMAP_TIMES_ROMAN_24;
+        else if (whichfont=="times10")
+            font=GLUT_BITMAP_TIMES_ROMAN_10;
+        else if (whichfont=="fixed13")
+            font=GLUT_BITMAP_8_BY_13;
+        else if (whichfont=="fixed15")
+            font=GLUT_BITMAP_9_BY_15;
+        else
+            font=GLUT_BITMAP_HELVETICA_12;
+    }
+  return font;
+}
+
 // Calculate the metrics for this font.
 // This does the real work, and doesn't check whether it needs to be done.
 void Font::calcMetrics(void) {
@@ -99,11 +135,22 @@ void Font::calcMetricsIfNeeded(void) const {
     }
 }
 
+static int corrected_char_width(void * font, int & c) {
+    int width;
+    if ((width = glutBitmapWidth(font?font:GLUT_BITMAP_HELVETICA_12,c)) == 0 && iswprint(c)) {
+        VS_DBG("gui", logvs::DBG+1, "FONT: unsupported character %x", c);
+        c = '?';
+        width = font ? glutBitmapWidth(font,c) : 0;
+    }
+    return width;
+}
+
 // Draw a character.
-float Font::drawChar(char c) const {
+float Font::drawChar(int c) const {
     calcMetricsIfNeeded();
     if (useStroke()) {
-      glutStrokeCharacter(GLUT_STROKE_ROMAN, c);
+        corrected_char_width(NULL, c);
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, c);
       if(c == SPACE_CHAR) {
         // Need to translate back a bit -- the width of the space is too big.
         glTranslated(m_spaceCharFixup, 0.0, 0.0);
@@ -112,14 +159,15 @@ float Font::drawChar(char c) const {
       }
       return 0;
     }else {
-      glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12,c);
-      return glutBitmapWidth(GLUT_BITMAP_HELVETICA_12,c);
-      
+        static void * const font = getDefaultFont();
+        int width = corrected_char_width(font, c);
+        glutBitmapCharacter(font,c);
+        return width;
     }
 }
 
 // The width of a character in reference units.
-double Font::charWidth(char c) const {
+double Font::charWidth(int c) const {
   calcMetricsIfNeeded();
   if (useStroke()) {
     if(c == SPACE_CHAR) {
@@ -131,7 +179,8 @@ double Font::charWidth(char c) const {
     const double charWidth = glutStrokeWidth(GLUT_STROKE_ROMAN, c);
     return(charWidth + m_extraCharWidth + GLUT_WIDTH_HACK);
   }else {
-    return glutBitmapWidth(GLUT_BITMAP_HELVETICA_12,c)/(size()*2);
+      static void * const font = getDefaultFont();
+    return corrected_char_width(font,c)/(size()*2);
   }
 }
 
@@ -140,7 +189,7 @@ double Font::stringWidth(const std::string& str) const {
     calcMetricsIfNeeded();
 
     double result = 0.0;
-    for(string::const_iterator i=str.begin(); i!=str.end(); i++) {
+    for(Utf8Iterator i = Utf8Iterator::begin(str); i != i.end(); ++i) {
         result += charWidth(*i);
     }
     return result;

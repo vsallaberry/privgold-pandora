@@ -1,5 +1,7 @@
 AC_INIT(vegastrike, 0.4.4.1)
 config_flags="$@"
+AC_DEFINE_UNQUOTED([VEGASTRIKE_VERSION],[VERSION],[VEGASTRIKE_VERSION])
+
 AC_DEFINE_UNQUOTED([CONFIGURE_CMD],["$config_flags"],[Flags passed to configure])
 AC_CONFIG_SRCDIR(src/vegastrike.h)
 AC_PREREQ(2.53)
@@ -76,7 +78,12 @@ VS_CXXFLAGS="-pipe "
 VS_LIBS=""
 
 dnl checking cxx -std argument
-for dialect in "-std=gnu++11" "-std=c++11" "-std=gnu++98" "-std=c++98"; do
+AC_ARG_WITH(cxx-std, AC_HELP_STRING([--cxx-std=STD], [CXX standard version]))
+case "x$with_cxx_std" in
+    "x"|"xno") cxx_std_arg="";;
+    *) cxx_std_arg="-std=$with_cxx_std";;
+esac
+for dialect in $cxx_std_arg "-std=gnu++11" "-std=c++11" "-std=gnu++98" "-std=c++98"; do
     AC_MSG_CHECKING([for cxx $dialect])
     saved_CXXFLAGS="${CXXFLAGS}"
     CXXFLAGS="-Werror $dialect"
@@ -145,7 +152,7 @@ AC_MSG_RESULT(${needutil})
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([OS.h arpa/inet.h fcntl.h fenv.h float.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h unistd.h values.h wchar.h wctype.h])
+AC_CHECK_HEADERS([OS.h arpa/inet.h fcntl.h fenv.h float.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h unistd.h values.h climits wchar.h cwchar cwctype wctype.h locale.h fnmatch.h clocale locale codecvt])
 
 
 if test "x$slabcheck" = "xyes"; then
@@ -201,11 +208,13 @@ AC_FUNC_STAT
 AC_FUNC_STRCOLL
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([atexit bzero fesetround floor getcwd gethostbyname gettimeofday inet_ntoa iswprint localtime_r mblen memchr memmove memset mkdir munmap pow putenv rint rmdir select setenv socket sqrt strcasecmp strchr strdup strerror strstr strtol strtoul])
+AC_CHECK_FUNCS([atexit bzero fesetround floor getcwd gethostbyname gettimeofday inet_ntoa iswprint localtime_r mblen memchr memmove memset mkdir munmap pow putenv rint rmdir select setenv socket sqrt strcasecmp strncasecmp stricmp strnicmp strchr strdup strerror strstr strtol strtoul])
 
 
 dnl Check for non-standard floating point functions and headers
 AC_CHECK_FUNCS([finite _finite isnan _isnan])
+
+PKG_PROG_PKG_CONFIG
 
 dnl --------------------------------------------------------------------------
 dnl Check if compiling for MacOSX
@@ -296,7 +305,9 @@ AC_ARG_ENABLE(ggdb3, AC_HELP_STRING([--enable-ggdb3], [Add the -ggdb3 compiler f
 AC_ARG_ENABLE(debug, AC_HELP_STRING([--enable-debug], [Produce an executable with debugging symbols]),
 	if test $enableval = yes ; then
 		AC_MSG_NOTICE(Enabling debug mode with $DEBUG_FLAGS)
-		VS_CXXFLAGS="${VS_CXXFLAGS} ${DEBUG_FLAGS}"
+		VS_CXXFLAGS="${VS_CXXFLAGS} ${DEBUG_FLAGS} -DVS_DEBUG_LOG"
+    else
+   		VS_CXXFLAGS="${VS_CXXFLAGS} -DNDEBUG"
 	fi)
 
 AC_ARG_ENABLE(release, AC_HELP_STRING([--enable-release=LEVEL], [Produce an executable with optimizations (LEVEL=2)]),
@@ -446,10 +457,12 @@ AC_MSG_RESULT([${is_freebsd}])
 #fi
 
 AC_ARG_WITH(macos-sdk, AC_HELP_STRING([--with-macos-sdk=DIR], [MacOS SDK location]))
-if test "x$with_macos_sdk" = "x"; then
-    macos_sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-else
-    macos_sdk="$with_macos_sdk"
+if test "x$with_macos_sdk" != "xno"; then
+    if test "x$with_macos_sdk" = "x"; then
+        macos_sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+    else
+        macos_sdk="$with_macos_sdk"
+    fi
 fi
 
 AC_ARG_WITH(python-inc, AC_HELP_STRING([--with-python-inc=DIR], [Python Inc location]))
@@ -469,7 +482,7 @@ if test "x$is_macosx" = "xyes" ; then
     fi
     AC_MSG_CHECKING([for -Wno-long-double])
     saved_CPPFLAGS="${CPPFLAGS}"
-    CPPFLAGS="-Werror -Wno-long-double"
+    CPPFLAGS="-Wall -Werror -Wno-long-double"
     AC_TRY_COMPILE(, , [wnolongdouble=yes], [wnolongdouble=no])
     CPPFLAGS="${saved_CPPFLAGS}"
     if test "x$wnolongdouble" = "xyes"; then

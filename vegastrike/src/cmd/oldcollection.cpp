@@ -5,6 +5,7 @@
 #ifndef LIST_TESTING
 #include "unit_generic.h"
 #endif
+#include "log.h"
 
 UnitCollection::UnitListNode::UnitListNode (Unit *unit):unit(unit), next(NULL){
   if (unit) {
@@ -34,6 +35,17 @@ void UnitCollection::destr() {
   u->unit = NULL;
   u->next = NULL;
   PushUnusedNode(u);
+}
+
+size_t UnitCollection::size() const {
+    size_t size = 0;
+    for (UnitListNode *n = u; n->next; n = n->next) {
+        if (n->next->unit != NULL) {
+            ++size;
+        }
+    }
+    VS_DBG("unit",logvs::NOTICE,"UnitCollection::size() = %zu", size);
+    return size;
 }
 
 void * UnitCollection::PushUnusedNode (UnitListNode * node) {

@@ -1,5 +1,6 @@
 
 import VS
+import site
 import vsrandom
 import string
 import stardate
@@ -337,7 +338,8 @@ class NewsManager:
             elif success == self.SUCCESS_DRAW:
                 return self.POV_BAD
         else:
-            debug.error("ERROR:  VS is returning -0 for relationship relatagg number")
+            debug.error("ERROR:  VS is returning -0 for relationship relatagg number (success: "+str(success)+" docked:"+str(self.dockedat_faction)
+                        +" defender:"+str(varlist[self.DEFENDER_INDEX])+ " aggressor:"+varlist[self.AGGRESSOR_INDEX]+")")
             return self.POV_NEUTRAL
 
     def sTovarlist(self, s):

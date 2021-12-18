@@ -62,7 +62,12 @@ void vs_options::init()
 	precull_dist = XMLSupport::parse_float(vs_config->getVariable("graphics","precull_dist","500000000"));
 	draw_near_stars_in_front_of_planets = XMLSupport::parse_bool(vs_config->getVariable("graphics","draw_near_stars_in_front_of_planets","false"));
 	starblend = XMLSupport::parse_bool(vs_config->getVariable ("graphics","starblend","true"));
-	
+	show_fps = XMLSupport::parse_bool(vs_config->getVariable ("graphics","show_fps","false"));
+    show_help = false;
+    force_msgcenter_log = false;
+    show_msgcenter = XMLSupport::parse_bool(vs_config->getVariable ("message_center","game_text","false"));
+    show_msgcenter_base = XMLSupport::parse_bool(vs_config->getVariable ("message_center","show_in_base","false"));
+    
 	/* Terrain Options */
 	xscale = XMLSupport::parse_float(vs_config->getVariable("terrain","xscale","1.0"));
 	yscale = XMLSupport::parse_float(vs_config->getVariable("terrain","yscale","1.0"));

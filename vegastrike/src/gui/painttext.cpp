@@ -26,6 +26,8 @@
 #include "vs_globals.h"
 #include "config_xml.h"
 #include "gldrv/gl_globals.h"
+#include "unicode.h"
+
 const int PaintText::END_LINE = 1000000;           // Draw to the end.
 extern bool useStroke();
 // This function allows a number of formatting characters.  Here are the rules:
@@ -214,11 +216,16 @@ static float drawChars(const string& str, int start, int end, const Font& font, 
         glRasterPos2f(inRasterPos/(g_game.x_resolution/2),0);
     }
 
-  
+#if 1
     // Draw all the characters.
+    for(Utf8Iterator it = Utf8Iterator::begin(str, start); it != it.end() && it.pos() <= end - start; ++it) {
+        inRasterPos += font.drawChar(*it);
+    }
+#else
     for(int charPos=start; charPos<=end; charPos++) {
       inRasterPos+=font.drawChar(str[charPos]);
     }
+#endif
     return inRasterPos;
 }
 

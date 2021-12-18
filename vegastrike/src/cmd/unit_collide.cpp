@@ -21,6 +21,8 @@
 #include "vs_globals.h"
 #include "configxml.h"
 #include "collide.h"
+#include "vs_log_modules.h"
+
 static bool operator == (const Collidable &a,const Collidable &b)
 {
 	return memcmp(&a,&b,sizeof(Collidable))==0;
@@ -32,7 +34,7 @@ void Unit::RemoveFromSystem()
 	for (unsigned int locind=0;locind<NUM_COLLIDE_MAPS;++locind) {
 		if (!is_null(this->location[locind])) {
 			if (activeStarSystem==NULL) {
-				printf ("NONFATAL NULL activeStarSystem detected...please fix\n");
+				UNIT_LOG(logvs::NOTICE, "NONFATAL NULL activeStarSystem detected...please fix");
 				activeStarSystem=_Universe->activeStarSystem();
 			}
 			static bool collidemap_sanity_check = XMLSupport::parse_bool(vs_config->getVariable("physics","collidemap_sanity_check","false"));
@@ -45,11 +47,11 @@ void Unit::RemoveFromSystem()
 					for (i=activeStarSystem->collidemap[locind]->begin();
 					i!=activeStarSystem->collidemap[locind]->end();++i) {
 						if (i==this->location[locind]) {
-							printf ("hussah %d\n",*i==*this->location[locind]);
+							UNIT_LOG(logvs::NOTICE, "RemoveFromSystem: hussah %d\n",*i==*this->location[locind]);
 							found=true;
 						}
 						if(**i<**j) {
-							printf ("(%f %f %f) and (%f %f %f) %f < %f %d!!!",
+							UNIT_LOG(logvs::NOTICE, "RemoveFromSystem: (%f %f %f) and (%f %f %f) %f < %f %d!!!",
 								(**i).GetPosition().i,
 								(**i).GetPosition().j,
 								(**i).GetPosition().k,
@@ -234,7 +236,7 @@ bool Unit::InsideCollideTree (Unit * smaller, QVector & bigpos, Vector &bigNorma
 	if (bigger->SubUnits.empty()==false&&(bigger->graphicOptions.RecurseIntoSubUnitsOnCollision==true||bigtype==ASTEROIDPTR)) {
 		i=bigger->getSubUnits();
 		float rad=smaller->rSize();
-		for (Unit * un;un=*i;++i) {
+		for (Unit * un; (un = *i) != NULL; ++i) {
 			float subrad=un->rSize();
 			if ((bigtype!=ASTEROIDPTR)&&(subrad/bigger->rSize()<rsizelim)) {
 				break;
@@ -252,7 +254,7 @@ bool Unit::InsideCollideTree (Unit * smaller, QVector & bigpos, Vector &bigNorma
 	if (smaller->SubUnits.empty()==false&&(smaller->graphicOptions.RecurseIntoSubUnitsOnCollision==true||smalltype==ASTEROIDPTR)) {
 		i=smaller->getSubUnits();
 		float rad=bigger->rSize();
-		for (Unit * un;un=*i;++i) {
+		for (Unit * un; (un = *i) != NULL; ++i) {
 			float subrad=un->rSize();
 			if ((smalltype!=ASTEROIDPTR)&&(subrad/smaller->rSize()<rsizelim)) {
 				//	  printf ("s:%f",un->rSize()/smaller->rSize());
@@ -468,7 +470,7 @@ Unit * Unit::queryBSP (const QVector &pt, float err, Vector & norm, float &dist,
 	int i;
 	if ((!SubUnits.empty())&&graphicOptions.RecurseIntoSubUnitsOnCollision) {
 		un_fiter i = SubUnits.fastIterator();
-		for (Unit * un;un=*i;++i) {
+		for (Unit * un; (un = *i) != NULL; ++i) {
 			Unit * retval;
 			if ((retval=un->queryBSP(pt,err, norm,dist,ShieldBSP))) {
 				return retval;
@@ -584,16 +586,17 @@ Unit * Unit::queryBSP (const QVector &start, const QVector & end, Vector & norm,
 {
 	Unit * tmp;
 	float rad=this->rSize();
-	if ((!SubUnits.empty())&&graphicOptions.RecurseIntoSubUnitsOnCollision)
-		if (tmp=*SubUnits.fastIterator())
+	if ((!SubUnits.empty())&&graphicOptions.RecurseIntoSubUnitsOnCollision) {
+		if ((tmp = *SubUnits.fastIterator()) != NULL)
 			rad+=tmp->rSize();
+	}
 	if (!globQuerySphere(start,end,cumulative_transformation_matrix.p,rad))
 		return NULL;
 	static bool use_bsp_tree = XMLSupport::parse_bool(vs_config->getVariable("physics","beam_bsp","false"));
 	if (graphicOptions.RecurseIntoSubUnitsOnCollision)
 	if (!SubUnits.empty()) {
 		un_fiter i(SubUnits.fastIterator());
-		for (Unit * un;un=*i;++i) {
+		for (Unit * un; (un = *i) != NULL; ++i) {
 			if ((tmp=un->queryBSP(start,end, norm,distance,ShieldBSP))!=0) {
 				return tmp;
 			}

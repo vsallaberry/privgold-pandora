@@ -6,7 +6,7 @@
 #include "vegastrike.h"
 #include "cg_global.h"
 #ifdef HAVE_SDL
-#include "SDL/SDL.h"
+#include <SDL.h>
 #endif
 #include "gfx/hud.h"
 #include "gldrv/winsys.h"

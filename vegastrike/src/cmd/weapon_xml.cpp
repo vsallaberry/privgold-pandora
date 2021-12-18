@@ -40,8 +40,8 @@ weapon_info	getWeaponInfoFromBuffer( char * netbuf, int & size)
 		memcpy( weapname, netbuf, weap_len);
 		wi.file = string( filename);
 		wi.weapon_name = string( weapname);
-		delete filename;
-		delete weapname;
+		delete[] filename;
+		delete[] weapname;
 
 		return wi;
 }
@@ -77,8 +77,8 @@ void		setWeaponInfoToBuffer( weapon_info wi, char * netbuf, int & bufsize)
 	// Copy the weapon_name in the buffer because in weapon_info, it is a string
 	memcpy( netbuf+offset, weapon_name, weap_len);
 
-	delete file;
-	delete weapon_name;
+	delete[] file;
+	delete[] weapon_name;
 }
 
 void	weapon_info::netswap()

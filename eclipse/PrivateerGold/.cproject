@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?fileVersion 4.0.0?><cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage">
+	<storageModule moduleId="org.eclipse.cdt.core.settings">
+		<cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065" moduleId="org.eclipse.cdt.core.settings" name="Debug">
+				<macros>
+					<stringMacro name="VS_ECL_BUILD_MACOS_SDK" type="VALUE_PATH_DIR" value="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk"/>
+					<stringMacro name="VS_ECL_BUILD_VEGA_PREFIX" type="VALUE_TEXT" value="/usr/local/vega05"/>
+					<stringMacro name="VS_ECL_BUILD_SDK_FWKS" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks"/>
+					<stringMacro name="VS_ECL_BUILD_OPENGL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenGL.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_GLUT_FWK" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_SDK_FWKS}/GLUT.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_PYTHON_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/Python.framework/Versions/2.7"/>
+					<stringMacro name="VS_ECL_BUILD_OPENAL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenAL.framework/Versions/Current"/>
+				</macros>
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065" name="Debug" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.609826816" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.182378953" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
+							<builder buildPath="${workspace_loc}/../vegastrike/build" command="make" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.706908573" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+								</outputEntries>
+							</builder>
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.1837506880" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.2044369839" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
+								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.1318972170" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.1282412818" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1628330247" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.968570435" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.860808878" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1675289480" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug">
+								<option id="gnu.cpp.compilermacosx.exe.debug.option.optimization.level.1154464603" name="Optimization Level" superClass="gnu.cpp.compilermacosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.587520302" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1798904781" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/build&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL2&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1421315348" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="VS_DEBUG_LOG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1477800914" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.483294712" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.macosx.exe.debug.option.optimization.level.473143224" name="Optimization Level" superClass="gnu.c.compiler.macosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.macosx.exe.debug.option.debugging.level.80018980" name="Debug Level" superClass="gnu.c.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="gnu.c.compiler.option.preprocessor.def.symbols.479663950" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.123922913" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1577924062" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="boost|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="gldrv/gl_sphere_list_server.cpp|cmd/beam_server.cpp|cmd/base_util_server.cpp|faction_util_server.cpp|force_feedback_server.cpp|gfxlib_struct_server.cpp|universe_util_server.cpp|cmd/atmosphere_server.cpp|cmd/script/script_call_unit_server.cpp|cmd/script/flightgroup_server.cpp|cmd/script/director_server.cpp|cmd/unit_factory_server.cpp|cmd/unit_functions_server.cpp|cmd/unit_util_server.cpp|mission" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.macosx.exe.release.1881678111">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.macosx.exe.release.1881678111" moduleId="org.eclipse.cdt.core.settings" name="Release">
+				<macros>
+					<stringMacro name="VS_ECL_BUILD_MACOS_SDK" type="VALUE_TEXT" value="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk"/>
+					<stringMacro name="VS_ECL_BUILD_VEGA_PREFIX" type="VALUE_TEXT" value="/usr/local/vega05"/>
+					<stringMacro name="VS_ECL_BUILD_SDK_FWKS" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks"/>
+					<stringMacro name="VS_ECL_BUILD_OPENGL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenGL.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_GLUT_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/GLUT.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_PYTHON_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/Python.framework/Versions/2.7"/>
+					<stringMacro name="VS_ECL_BUILD_OPENAL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenAL.framework/Versions/Current"/>
+				</macros>
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.macosx.exe.release.1881678111" name="Release" parent="cdt.managedbuild.config.macosx.exe.release">
+					<folderInfo id="cdt.managedbuild.config.macosx.exe.release.1881678111." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.release.1509350193" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.release">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.release.749356692" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.release"/>
+							<builder buildPath="${workspace_loc}/../vegastrike/build" command="make" id="cdt.managedbuild.target.gnu.builder.macosx.exe.release.629744357" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.release"/>
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release.1011789821" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release.867002558" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release">
+								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.427202463" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.release.564672360" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.release">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.34602606" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1940685988" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.714780562" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.126837962" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release">
+								<option id="gnu.cpp.compiler.macosx.exe.release.option.optimization.level.976127624" name="Optimization Level" superClass="gnu.cpp.compiler.macosx.exe.release.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.none" id="gnu.cpp.compiler.macosx.exe.release.option.debugging.level.1178750808" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.release.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1255612973" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/build&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL2&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1167855978" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="VS_DEBUG_LOG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.2054425240" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release.1335678755" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release">
+								<option defaultValue="gnu.c.optimization.level.most" id="gnu.c.compiler.macosx.exe.release.option.optimization.level.25947784" name="Optimization Level" superClass="gnu.c.compiler.macosx.exe.release.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.none" id="gnu.c.compiler.macosx.exe.release.option.debugging.level.1459350200" name="Debug Level" superClass="gnu.c.compiler.macosx.exe.release.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.89333324" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1729841544" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="boost|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="mission" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680" moduleId="org.eclipse.cdt.core.settings" name="Debug_SDL1">
+				<macros>
+					<stringMacro name="VS_ECL_BUILD_MACOS_SDK" type="VALUE_PATH_DIR" value="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk"/>
+					<stringMacro name="VS_ECL_BUILD_VEGA_PREFIX" type="VALUE_TEXT" value="/usr/local/vega05"/>
+					<stringMacro name="VS_ECL_BUILD_SDK_FWKS" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks"/>
+					<stringMacro name="VS_ECL_BUILD_OPENGL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenGL.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_GLUT_FWK" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_SDK_FWKS}/GLUT.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_PYTHON_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/Python.framework/Versions/2.7"/>
+					<stringMacro name="VS_ECL_BUILD_OPENAL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenAL.framework/Versions/Current"/>
+				</macros>
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680" name="Debug_SDL1" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.2076285651" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.375443699" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
+							<builder buildPath="${workspace_loc}/../vegastrike/build" command="make" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.1278126758" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+								</outputEntries>
+							</builder>
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.1598461619" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.972420671" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
+								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.588009178" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.4000052" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.131031170" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.614292456" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.1289978650" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1957898317" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug">
+								<option id="gnu.cpp.compilermacosx.exe.debug.option.optimization.level.2130206659" name="Optimization Level" superClass="gnu.cpp.compilermacosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.942401066" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.2000888899" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/build&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.305118872" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="VS_DEBUG_LOG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.337593893" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.2071952819" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.macosx.exe.debug.option.optimization.level.886199728" name="Optimization Level" superClass="gnu.c.compiler.macosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.macosx.exe.debug.option.debugging.level.1271324457" name="Debug Level" superClass="gnu.c.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="gnu.c.compiler.option.preprocessor.def.symbols.305379691" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.744169503" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1838741919" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="boost|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="gldrv/gl_sphere_list_server.cpp|cmd/beam_server.cpp|cmd/base_util_server.cpp|faction_util_server.cpp|force_feedback_server.cpp|gfxlib_struct_server.cpp|universe_util_server.cpp|cmd/atmosphere_server.cpp|cmd/script/script_call_unit_server.cpp|cmd/script/flightgroup_server.cpp|cmd/script/director_server.cpp|cmd/unit_factory_server.cpp|cmd/unit_functions_server.cpp|cmd/unit_util_server.cpp|mission" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405" moduleId="org.eclipse.cdt.core.settings" name="Debug_GLUT">
+				<macros>
+					<stringMacro name="VS_ECL_BUILD_MACOS_SDK" type="VALUE_PATH_DIR" value="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk"/>
+					<stringMacro name="VS_ECL_BUILD_VEGA_PREFIX" type="VALUE_TEXT" value="/usr/local/vega05"/>
+					<stringMacro name="VS_ECL_BUILD_SDK_FWKS" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks"/>
+					<stringMacro name="VS_ECL_BUILD_OPENGL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenGL.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_GLUT_FWK" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_SDK_FWKS}/GLUT.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_PYTHON_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/Python.framework/Versions/2.7"/>
+					<stringMacro name="VS_ECL_BUILD_OPENAL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenAL.framework/Versions/Current"/>
+				</macros>
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405" name="Debug_GLUT" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.2047170857" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.1192819854" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
+							<builder buildPath="${workspace_loc}/../vegastrike/build" command="make" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.2037471364" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+								</outputEntries>
+							</builder>
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.2017896845" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.1720629315" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
+								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.625446091" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.2050087644" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.1835586464" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.800173575" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.263364547" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.79841384" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug">
+								<option id="gnu.cpp.compilermacosx.exe.debug.option.optimization.level.1299150027" name="Optimization Level" superClass="gnu.cpp.compilermacosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.1696856101" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.246498571" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../build/glut&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL2&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1944913724" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="VS_DEBUG_LOG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.150020181" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.210566348" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.macosx.exe.debug.option.optimization.level.1127690100" name="Optimization Level" superClass="gnu.c.compiler.macosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.macosx.exe.debug.option.debugging.level.19120101" name="Debug Level" superClass="gnu.c.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="gnu.c.compiler.option.preprocessor.def.symbols.564083474" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1285886117" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.550803299" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="boost|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="gldrv/gl_sphere_list_server.cpp|cmd/beam_server.cpp|cmd/base_util_server.cpp|faction_util_server.cpp|force_feedback_server.cpp|gfxlib_struct_server.cpp|universe_util_server.cpp|cmd/atmosphere_server.cpp|cmd/script/script_call_unit_server.cpp|cmd/script/flightgroup_server.cpp|cmd/script/director_server.cpp|cmd/unit_factory_server.cpp|cmd/unit_functions_server.cpp|cmd/unit_util_server.cpp|mission" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+		<cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672" moduleId="org.eclipse.cdt.core.settings" name="Debug_GLUT1">
+				<macros>
+					<stringMacro name="VS_ECL_BUILD_MACOS_SDK" type="VALUE_PATH_DIR" value="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk"/>
+					<stringMacro name="VS_ECL_BUILD_VEGA_PREFIX" type="VALUE_TEXT" value="/usr/local/vega05"/>
+					<stringMacro name="VS_ECL_BUILD_SDK_FWKS" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks"/>
+					<stringMacro name="VS_ECL_BUILD_OPENGL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenGL.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_GLUT_FWK" type="VALUE_PATH_DIR" value="${VS_ECL_BUILD_SDK_FWKS}/GLUT.framework/Versions/Current"/>
+					<stringMacro name="VS_ECL_BUILD_PYTHON_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/Python.framework/Versions/2.7"/>
+					<stringMacro name="VS_ECL_BUILD_OPENAL_FWK" type="VALUE_TEXT" value="${VS_ECL_BUILD_SDK_FWKS}/OpenAL.framework/Versions/Current"/>
+				</macros>
+				<externalSettings/>
+				<extensions>
+					<extension id="org.eclipse.cdt.core.MachO64" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
+					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
+				</extensions>
+			</storageModule>
+			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672" name="Debug_GLUT1" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672." name="/" resourcePath="">
+						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.33696157" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
+							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.231764667" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
+							<builder buildPath="${workspace_loc}/../vegastrike/build" command="make" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.1284229740" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+								<outputEntries>
+									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="Debug"/>
+								</outputEntries>
+							</builder>
+							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug.1947747361" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.debug"/>
+							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug.1346280081" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.debug">
+								<inputType id="cdt.managedbuild.tool.macosx.cpp.linker.input.682629281" superClass="cdt.managedbuild.tool.macosx.cpp.linker.input">
+									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
+									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
+								</inputType>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug.1671529907" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.debug">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.both.asm.option.include.paths.2110834990" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.581164394" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.1187840457" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1242892473" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug">
+								<option id="gnu.cpp.compilermacosx.exe.debug.option.optimization.level.1315809217" name="Optimization Level" superClass="gnu.cpp.compilermacosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+								<option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.568346751" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.include.paths.1562753189" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../build/glut&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/src/cmd&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1879846836" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="VS_DEBUG_LOG=1"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.68489037" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.229498110" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug">
+								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.macosx.exe.debug.option.optimization.level.1228499008" name="Optimization Level" superClass="gnu.c.compiler.macosx.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option defaultValue="gnu.c.debugging.level.max" id="gnu.c.compiler.macosx.exe.debug.option.debugging.level.1897634679" name="Debug Level" superClass="gnu.c.compiler.macosx.exe.debug.option.debugging.level" useByScannerDiscovery="false" valueType="enumerated"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="true" id="gnu.c.compiler.option.preprocessor.def.symbols.474586538" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols"/>
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1241613908" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+								</option>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1147864546" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+							</tool>
+						</toolChain>
+					</folderInfo>
+					<sourceEntries>
+						<entry excluding="boost|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="gldrv/gl_sphere_list_server.cpp|cmd/beam_server.cpp|cmd/base_util_server.cpp|faction_util_server.cpp|force_feedback_server.cpp|gfxlib_struct_server.cpp|universe_util_server.cpp|cmd/atmosphere_server.cpp|cmd/script/script_call_unit_server.cpp|cmd/script/flightgroup_server.cpp|cmd/script/director_server.cpp|cmd/unit_factory_server.cpp|cmd/unit_functions_server.cpp|cmd/unit_util_server.cpp|mission" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+					</sourceEntries>
+				</configuration>
+			</storageModule>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+		</cconfiguration>
+	</storageModule>
+	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
+		<project id="PrivateerGold.cdt.managedbuild.target.macosx.exe.1495504650" name="Executable" projectType="cdt.managedbuild.target.macosx.exe"/>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug_SDL1"/>
+		<configuration configurationName="Debug_GLUT"/>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/PrivateerGold"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/PrivateerGold"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.2071952819;cdt.managedbuild.tool.gnu.c.compiler.input.1838741919">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.229498110;cdt.managedbuild.tool.gnu.c.compiler.input.1147864546">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.28034680.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1957898317;cdt.managedbuild.tool.gnu.cpp.compiler.input.337593893">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1675289480;cdt.managedbuild.tool.gnu.cpp.compiler.input.1477800914">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.210566348;cdt.managedbuild.tool.gnu.c.compiler.input.550803299">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.debug.483294712;cdt.managedbuild.tool.gnu.c.compiler.input.1577924062">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.macosx.exe.release.1881678111;cdt.managedbuild.config.macosx.exe.release.1881678111.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.126837962;cdt.managedbuild.tool.gnu.cpp.compiler.input.2054425240">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.macosx.exe.release.1881678111;cdt.managedbuild.config.macosx.exe.release.1881678111.;cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release.1335678755;cdt.managedbuild.tool.gnu.c.compiler.input.1729841544">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.79841384;cdt.managedbuild.tool.gnu.cpp.compiler.input.150020181">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672;cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065.1932764405.1226878672.;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.debug.1242892473;cdt.managedbuild.tool.gnu.cpp.compiler.input.68489037">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+	</storageModule>
+</cproject>

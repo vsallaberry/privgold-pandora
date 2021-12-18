@@ -28,6 +28,7 @@
 #include "in_handler.h"
 #include "gldrv/winsys.h"
 #include "in_kb_data.h"
+#include "log.h"
 //#include "cmd_unit.h"
 /*
 extern queue<InputListener*> activationreqqueue;
@@ -35,6 +36,7 @@ extern list<InputListener*> listeners;
 
 extern InputListener* activelistener;
 */
+
 static void DefaultKBHandler(const KBData&,KBSTATE newState) {
 	// do nothing
 	return;
@@ -52,8 +54,8 @@ KBSTATE keyState [LAST_MODIFIER][WSK_LAST];
 
 static void kbGetInput(int key, int modifiers, bool release, int x, int y){
   ///FIXME If key is out of array index range, do nothing. This is a quick hack, the underlying cause of invalid parameters ever being given should probably be fixed instead
-  if (key < 0 || key >= WSK_LAST)
-    return;
+  //if (key < 0 || key >= WSK_LAST) // check done before in glut_keyboard_cb
+  //  return;
 
   int i=_Universe->CurrentCockpit();
   _Universe->SetActiveCockpit(playerBindings[modifiers][key]);
@@ -73,23 +75,52 @@ static bool kbHasBinding(int key, int modifiers)
 	return (keyBindings[modifiers][key].function != defaultHandler.function);
 }
 
+// modifiers: enum KB_MODIFIER_ENUM
+bool HasKeyBinding(unsigned int key, unsigned int modifiers)
+{
+    static HandlerCall defaultHandler;
+    if (key >= WSK_LAST)
+        return false;
+    unsigned int internal_mod = (modifiers & (WSK_MOD_LALT | WSK_MOD_RALT) ? KB_MOD_ALT : 0)
+                              | (modifiers & (WSK_MOD_LSHIFT | WSK_MOD_RSHIFT) ? KB_MOD_SHIFT : 0)
+                              | (modifiers & (WSK_MOD_LCTRL | WSK_MOD_RCTRL) ? KB_MOD_CTRL : 0);
+    return (keyBindings[internal_mod][key].function != defaultHandler.function);
+}
+
+#ifdef SDL_WINDOWING
+# if !SDL_VERSION_ATLEAST(2,0,0)
+#  define SDL2_WINDOWING
+# endif
+#endif
+#if (!defined(__APPLE__) && !defined(SDL2_WINDOWING))
+# define QWERTY_US_SHIFT_TRANSLATE
+#else
+# undef QWERTY_US_SHIFT_TRANSLATE
+#endif
+
+#ifdef QWERTY_US_SHIFT_TRANSLATE // does not work on azerty or non-us qwerty
 static const char _lomap[] = "0123456789-=\';/.,`\\";
 static const char _himap[] = ")!@#$%^&*(_+\":?><~|";
+#endif
 
 int shiftup (int ch) {
-  if (ch == (ch&0xFF) && /*VSA priv/macos*/ kbHasBinding(ch,KB_MOD_SHIFT)) {
+    if (ch == (ch&0xFF)) {
+#ifdef QWERTY_US_SHIFT_TRANSLATE
     const char *c = strchr(_lomap,ch);
     if (c) 
 	return _himap[c-_lomap]; else
+#endif
 	return toupper(ch);
   } else return ch;
 }
 
 int shiftdown (int ch) {
-  if (ch == (ch&0xFF) && /*VSA priv/macos*/ kbHasBinding(ch,KB_MOD_SHIFT)) {
+    if (ch == (ch&0xFF)) {
+#ifdef QWERTY_US_SHIFT_TRANSLATE
     const char *c = strchr(_himap,ch);
     if (c) 
 	return _lomap[c-_himap]; else
+#endif
 	return tolower(ch);
   } else return ch;
 }
@@ -101,7 +132,11 @@ void setActiveModifiers(unsigned int mask)
 	_activeModifiers = mask;
 }
 #ifdef SDL_WINDOWING
+# if !SDL_VERSION_ATLEAST(2,0,0)
 void setActiveModifiersSDL(SDLMod mask)
+# else
+void setActiveModifiersSDL(SDL_Keymod mask)
+# endif
 {
     setActiveModifiers(
         ((mask&(KMOD_LSHIFT|KMOD_RSHIFT))?KB_MOD_SHIFT:0) |
@@ -140,15 +175,21 @@ int getModifier(bool alton, bool cntrlon, bool shifton) {
   bool shifton=false;
   int alton=false;
   int ctrlon=false;
-
+  unsigned int shiftup_ch, shiftdown_ch;
+    
   unsigned int modmask = KB_MOD_MASK;
 
-  //  VSFileSystem::Fprintf (stderr,"keyboard  %d",ch);
+  VS_DBG("keyboard", logvs::DBG, "'%c' (%d,0x%x) (mod:%d release:%d)",
+           ch < 127 ? ch : '?', ch, ch, mod, release);
+  
+  shiftup_ch = shiftup(ch);
+  shiftdown_ch = shiftdown(ch);
+    
   if ((WSK_MOD_LSHIFT==(mod&WSK_MOD_LSHIFT))||(WSK_MOD_RSHIFT==(mod&WSK_MOD_RSHIFT))) {
     // This is ugly, but we have to support legacy config files...
 	// ...maybe add config option to disable this soooo ugly thing...
 	if (!kbHasBinding(ch,KB_MOD_SHIFT)) {
-		ch = shiftup(ch);
+		ch = shiftup_ch;
 		modmask &= ~KB_MOD_SHIFT;
 	}
 	shifton=true;
@@ -166,23 +207,27 @@ int getModifier(bool alton, bool cntrlon, bool shifton) {
 	   |(alton  ?KB_MOD_ALT  :0)
 	   |(ctrlon ?KB_MOD_CTRL :0)  );  
 
+  // No Key State for unicode characters yet
+  if (shiftup_ch >= WSK_LAST || shiftdown_ch >= WSK_LAST) {
+      return ;
+  }
   int curmod=getModifier(alton,ctrlon,shifton) & modmask;
   kbGetInput( ch, curmod,release, x, y );
   if (release) {
     for (int i=0;i<LAST_MODIFIER;++i) {
       if (i!=curmod){
-        if(keyState[i][shiftdown(ch)]==DOWN)
-          kbGetInput (shiftdown(ch),i,release,x,y);
-        if(keyState[i][shiftup(ch)]==DOWN)
-          kbGetInput (shiftup(ch),i,release,x,y);
+        if(keyState[i][shiftdown_ch]==DOWN)
+          kbGetInput (shiftdown_ch,i,release,x,y);
+        if(keyState[i][shiftup_ch]==DOWN)
+          kbGetInput (shiftup_ch,i,release,x,y);
       }else{
         if (shifton) {
-          if (((unsigned int)shiftdown (ch))!=ch&&keyState[i][shiftdown(ch)]==DOWN) {
-            kbGetInput (shiftdown(ch),i,release,x,y);
+          if (shiftdown_ch!=ch&&keyState[i][shiftdown_ch]==DOWN) {
+            kbGetInput (shiftdown_ch,i,release,x,y);
           }
         }else {
-          if (((unsigned int)shiftup (ch))!=ch&&keyState[i][shiftup(ch)]==DOWN) {
-            kbGetInput (shiftup(ch),i,release,x,y);
+          if (shiftup_ch!=ch&&keyState[i][shiftup_ch]==DOWN) {
+            kbGetInput (shiftup_ch,i,release,x,y);
           }
         }
       }
@@ -258,15 +303,23 @@ void ProcessKB(unsigned int player)
   }
 }	
 
-void BindKey(int key,unsigned int mod, unsigned int player, KBHandler handler, const KBData&data) {
-	keyBindings[mod][key].function = handler;
+void BindKey(unsigned int key,unsigned int mod, unsigned int player, KBHandler handler, const KBData&data) {
+    if (key >= WSK_LAST || mod >= LAST_MODIFIER) {
+        // TODO: unicode with hashmap
+        VS_LOG("keyboard", logvs::WARN, "WARNING: Bindkey with key(%d)/mod(%d) out of bounds", key, mod);
+        return ;
+    }
+    keyBindings[mod][key].function = handler;
 	keyBindings[mod][key].data = data;
 	playerBindings[mod][key]=player;
 	handler(std::string(),RESET); // key is not used in handler
 }
 
-
-void UnbindKey(int key,unsigned int mod) {
+void UnbindKey(unsigned int key,unsigned int mod) {
+  if (key >= WSK_LAST || mod >= LAST_MODIFIER) {
+      // TODO: unicode with hashmap
+      VS_LOG("keyboard", logvs::WARN, "WARNING: Unbindkey with key(%d)/mod(%d) out of bounds", key, mod);
+      return ;
+  }
   keyBindings[mod][key] = HandlerCall();
 }
-

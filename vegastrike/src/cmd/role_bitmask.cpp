@@ -6,6 +6,8 @@
 #include "config_xml.h"
 #include "vsfilesystem.h"
 #include "csv.h"
+#include "vs_log_modules.h"
+
 using std::string;
 using std::pair;
 using namespace VSFileSystem;
@@ -17,7 +19,7 @@ namespace ROLES {
 				return i;
 			}
 		}
-		VSFileSystem::vs_fprintf (stderr,"undefined discrete log.");
+		UNIT_LOG(logvs::WARN, "undefined discrete log.");
 		return 0;
 	}
 	vector < vector <char > > buildroles ();
@@ -28,7 +30,7 @@ namespace ROLES {
 	}
 	vector <char>& getPriority(unsigned char rolerow) {
 		if (rolerow>getAllRolePriorities().size()) {
-			VSFileSystem::vs_fprintf (stderr,"FATAL ERROR ROLE OUT OF RANGE");
+			UNIT_LOG(logvs::ERROR, "FATAL ERROR ROLE OUT OF RANGE");
 			exit(1);
 		}
 		return getAllRolePriorities()[rolerow];
@@ -64,12 +66,12 @@ namespace ROLES {
 
 			vector <string> vec=readCSV(temp);
                         if (siz&&getAllRolePriorities()[0].size()!=vec.size()) {
-                          fprintf (stderr, "FATAL error in hash map... column %d in ai/VegaEvents.csv does not line up with that item in ai/VegaPriorities.csv\n",vec.size());
+                        	UNIT_LOG(logvs::ERROR, "FATAL error in hash map... column %zu in ai/VegaEvents.csv does not line up with that item in ai/VegaPriorities.csv",vec.size());
                         }
 			if (vec.size()) vec.erase (vec.begin());                        
                         for (unsigned int j=0;j<vec.size();j++) {
                           if (getRole(vec[j])!=j){
-                            fprintf (stderr, "FATAL error in hash map... column %d in ai/VegaEvents.csv does not line up with that item in ai/VegaPriorities.csv\n",j);
+                        	  UNIT_LOG(logvs::ERROR,  "FATAL error in hash map... column %u in ai/VegaEvents.csv does not line up with that item in ai/VegaPriorities.csv",j);
                           }
                         }
 			unsigned int i=0;
@@ -107,11 +109,11 @@ namespace ROLES {
 	  static vector < vector <string> > script = buildscripts();
 	  const static string def="default";
 	  if (ourrole>=script.size()) {
-	    VSFileSystem::vs_fprintf (stderr,"bad error with getRoleEvetnts (no event specified)");
+		  UNIT_LOG(logvs::WARN, "bad error with getRoleEvetnts (no event specified)");
 	    return def;
 	  }
 	  if (theirs>=script[ourrole].size()) {
-	    VSFileSystem::vs_fprintf (stderr,"bad error || with getRoleEvetnts (no event specified)");
+		  UNIT_LOG(logvs::WARN, "bad error || with getRoleEvetnts (no event specified)");
 	    return def;
 	  }
 	  return script[ourrole][theirs];

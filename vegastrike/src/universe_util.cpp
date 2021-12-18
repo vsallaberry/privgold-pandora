@@ -20,6 +20,8 @@
 #include "gfx/particle.h"
 #include "cmd/base.h"
 #include "options.h"
+#include "gldrv/winsys.h"
+#include "log.h"
 
 extern vs_options game_options;
 
@@ -178,7 +180,7 @@ namespace UniverseUtil
 
 	void sendCustom(int cp, string cmd, string args, string id) {
 		if (cp<0 || cp>=_Universe->numPlayers()) {
-			fprintf(stderr, "sendCustom %s with invalid player %d\n", cmd.c_str(), cp);
+			VS_LOG("universe", logvs::NOTICE, "sendCustom %s with invalid player %d", cmd.c_str(), cp);
 			return;
 		}
 		if (Network!=NULL) {
@@ -187,6 +189,36 @@ namespace UniverseUtil
 			receivedCustom(cp, true, cmd, args, id);
 		}
 	}
-}
 
+    #define UNIVERSE_KB_REPEAT_JUST_ONCE
+    static std::stack< std::pair<unsigned int,std::pair<int,int> > > s_kb_repeat_stack;
+    void enableKeyRepeat() {
+        static const bool handle_unicode_kb
+            = XMLSupport::parse_bool(vs_config->getVariable("keyboard","enable_unicode","true"));
+        int delay_ms = WS_KB_REPEAT_ENABLED_DEFAULT, interval_ms = 0; // WS_KB_REPEAT_INTERVAL
+        int delay_bak, interval_bak;
+        unsigned int unicode_bak;
+        unsigned int unicode = handle_unicode_kb ? WS_UNICODE_FULL : WS_UNICODE_DISABLED;
+        
+        #ifdef UNIVERSE_KB_REPEAT_JUST_ONCE
+        if (s_kb_repeat_stack.size() > 0) {
+            winsys_set_kb_mode(unicode, delay_ms, interval_ms, 0, 0, 0);
+        } else
+        #endif
+        {
+            winsys_set_kb_mode(unicode, delay_ms, interval_ms, &unicode_bak, &delay_bak, &interval_bak);
+            s_kb_repeat_stack.push(std::make_pair(unicode_bak,std::make_pair(delay_bak, interval_bak)));
+        }
+    }
+    bool restoreKeyRepeat() {
+        if (s_kb_repeat_stack.size()) {
+            std::pair<unsigned int,std::pair<int,int> > bak = s_kb_repeat_stack.top();
+            s_kb_repeat_stack.pop();
+            winsys_set_kb_mode(bak.first, bak.second.first, bak.second.second, 0, 0, 0);
+            return true;
+        }
+        return false;
+    }
+
+}
 #undef activeSys

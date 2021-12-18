@@ -128,15 +128,15 @@ namespace UniverseUtil
 	///this mutes sound - or unmutes it
 	void musicMute(bool stopSound);
 	///this plays a specific song, through the crossfader construct
-	inline void musicPlaySong(std::string str) { musicLayerPlaySong(str,-1); };
+	inline void musicPlaySong(std::string str) { musicLayerPlaySong(str,-1); }
 	///this plays msuci from a given list (where the int is what was returned by musicAddList)
-	inline void musicPlayList(int which) { musicLayerPlayList(which,-1); };
+	inline void musicPlayList(int which) { musicLayerPlayList(which,-1); }
 	///this plays msuci from a given list (where the int is what was returned by musicAddList)
-	inline void musicLoopList(int numloops) { musicLayerLoopList(numloops,-1); };
+	inline void musicLoopList(int numloops) { musicLayerLoopList(numloops,-1); }
 	///this skips the current music track (and goes to the next in the currently playing list)
-	inline void musicSkip() { musicLayerSkip(-1); };
+	inline void musicSkip() { musicLayerSkip(-1); }
 	///this stops the music currently playing - with a nice fadeout
-	inline void musicStop() { musicLayerStop(-1); };
+	inline void musicStop() { musicLayerStop(-1); }
 	///this gets the difficutly of the game... ranges between 0 and 1... many missions depend on it never going past .99 unless it's always at one.
 	float GetDifficulty ();
 	///this sets the difficulty
@@ -281,6 +281,8 @@ namespace UniverseUtil
 	void    ComputeSystemSerials( std::string & systempath);
 
 	std::string getSaveDir();
+    std::string getGuiLabelWithoutEscapes(const std::string & label);
+    std::string getEscapedGuiLabel(const std::string & str);
 	std::string getSaveInfo(const std::string &filename, bool formatForTextbox);
 	std::string getCurrentSaveGame();
 	std::string setCurrentSaveGame(const std::string &newsave);
@@ -297,6 +299,15 @@ namespace UniverseUtil
 
 	// Defined in gamemenu.cpp for vegastrike, universe_util_server.cpp for vegaserver.
 	void startMenuInterface(bool firsttime, string alert=string()); // If game fails, bring it back to a common starting point.
+
+    //keyboard repeat mngt
+    void enableKeyRepeat();
+    bool restoreKeyRepeat();
+
+    //logging
+    int Log(const std::string & module, unsigned int level, const std::string & message);
+    unsigned int LogLevel(const std::string & module, bool store = true);
+    std::string LogFile(const std::string & module);
 }
 
 

@@ -16,6 +16,8 @@
 #include "networking/netclient.h"
 #include "ai/aggressive.h"
 #include "lin_time.h"
+#include "log.h"
+
 extern char SERVER;
 extern bool isMissile(const weapon_info *);
 Mount::Mount() {
@@ -249,6 +251,9 @@ bool Mount::PhysicsAlignedFire(Unit * caller, const Transformation &Cumulative, 
     }
     time_to_lock = type->LockTime;
 			switch (type->type) {
+            case weapon_info::UNKNOWN:
+              VS_LOG("unit", logvs::WARN, "PhysicsAlignedFire(): undefined value for mount type");
+              break ;
 			case weapon_info::BEAM:
 				if (ref.gun)
 					ref.gun->Init(Transformation(orient,pos.Cast()),*type,owner,caller);
@@ -316,7 +321,7 @@ bool Mount::PhysicsAlignedFire(Unit * caller, const Transformation &Cumulative, 
 					
 				// Affect the stored mount serial to the new missile
 				temp->SetSerial( this->serial);
-				printf("Creating missile with SERIAL ID %d\n", this->serial);
+				VS_LOG("universe", logvs::INFO, "Creating missile with SERIAL ID %d", this->serial);
 				this->serial = 0;
 				if (target&&target!=owner) {
 					temp->Target (target);

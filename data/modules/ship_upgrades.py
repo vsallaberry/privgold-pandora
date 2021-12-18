@@ -1,5 +1,6 @@
 import vsrandom
 import VS
+import debug
 def GetDiffInt (diff):
     ch=0
     if (diff<=0.1):
@@ -41,10 +42,10 @@ def getItem (cat,parentcat=None):
     list=VS.getRandCargo(1,cat)#try to get a cargo from said category
     if (list.GetQuantity()<=0):#if no such cargo exists in this cateogry
         if (parentcat!=None):
-            print "UpgradeError finding %s using %s instead" % (cat,parentcat)
+            debug.debug("UpgradeError finding %s using %s instead" % (cat,parentcat))
             list=VS.getRandCargo(1,parentcat)#get it from the parent category
         if (list.GetQuantity()<=0):#otherwise get cargo from upgrades category
-            print "UpgradeError: terrible error lasers instead"
+            debug.debug("UpgradeError: terrible error lasers instead")
             list=VS.getRandCargo(1,"upgrades")#this always succeeds
     return list
 
@@ -114,21 +115,21 @@ def UpgradeEngine (un, diff):
     if (type!=0):
         temp=un.upgrade (cat,0,0,1,0)
         temp=un.upgrade (dog,0,0,1,0)
-        print "Upgrading Engine %s percent %f" % (cat,temp)
+        debug.debug("Upgrading Engine %s percent %f" % (cat,temp))
         if (temp>0.0):
             cat = GetRandomShield (2,type)
             temp=un.upgrade (cat,0,0,1,0)
-            print "Upgrading Shield %s percent %f" % (cat,temp)
+            debug.debug("Upgrading Shield %s percent %f" % (cat,temp))
             cat = GetRandomShield (4,type)
             temp=un.upgrade (cat,0,0,1,0)
-            print "Upgrading Shield4 %s percent %f" % (cat,temp)
+            debug.debug("Upgrading Shield4 %s percent %f" % (cat,temp))
             return True
     cat=GetShieldLevelZero(2)
     temp = un.upgrade(cat,0,0,1,0)
-    print "Upgrading Shield2 level 0... percent="+str(temp)
+    debug.debug("Upgrading Shield2 level 0... percent="+str(temp))
     cat=GetShieldLevelZero(4)
     temp = un.upgrade(cat,0,0,1,0)
-    print "Upgrading Shield4 level 0... percent="+str(temp)
+    debug.debug("Upgrading Shield4 level 0... percent="+str(temp))
     return False
 
 def GetRandomHull ():
@@ -180,7 +181,7 @@ def basicUnit (un, diff):
 def upgradeHelper (un, mycargo, curmount,creds, force, cycle):
     newcreds=0.0
     if (mycargo.GetQuantity()<=0): #if somehow the cargo isn't there
-        print "error.. cargo not found"
+        debug.warning("error.. cargo not found")
         return 0.0 #and terminate the enclosing loop by saying we're out of cash
     else:
         str=mycargo.GetContent() #otherwise our name is the GetQuantity() function

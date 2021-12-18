@@ -490,6 +490,13 @@ else
   GTKUTILS_PROG=
 endif
 
+if VS_MAKE_DIALOGUTILS
+  DIALOGUTILS_PROG=vssetup_dlg
+else
+  DIALOGUTILS_PROG=
+endif
+
+
 if VS_MAKE_NO_CLIENT
   CLIENT_PROG=
 else
@@ -509,8 +516,10 @@ bin_PROGRAMS = \
   vegaserver \
   vsrextract \
   vsrmake \
-  $(GTKUTILS_PROG)
-
+  unicode-conv \
+  test \
+  $(GTKUTILS_PROG) \
+  $(DIALOGUTILS_PROG)
 
 noinst_LIBRARIES_1=\
   libnetlowlevel.a
@@ -868,7 +877,15 @@ librootgeneric = \
   src/xml_support.cpp \
   src/xml_support.h \
   src/options.cpp \
-  src/options.h
+  src/options.h \
+  src/log.cpp \
+  src/log.h \
+  src/unicode.cpp \
+  src/unicode.h \
+  src/vs_log_modules.cpp \
+  src/vs_log_modules.h \
+  src/multimap.cpp \
+  src/multimap.h
 
 librootserver = \
   src/faction_util_server.cpp \
@@ -1148,6 +1165,38 @@ vsrextract_SOURCES= \
   tools/vsrextract.cpp \
   tools/vsrtools.h
 
+unicode_conv_LDFLAGS =
+unicode_conv_CXXFLAGS=-I.. -DVS_LOG_NO_XML
+unicode_conv_SOURCES= \
+  tools/unicode-conv.cpp \
+  tools/unicode.link.cpp
+
+test_LDFLAGS =
+test_CXXFLAGS=-I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS
+test_SOURCES= \
+  tests/test.cpp \
+  tests/log.link.cpp \
+  tests/unicode.link.cpp \
+  tests/multimap.link.cpp
+
+vegastrike_launch_tests: test
+	./test
+.PHONY: vegastrike_launch_tests
+check: vegastrike_launch_tests
+
+#i am a novice about autoconf/automake, for the moment this works
+# and allows building file with different flags than for main target
+tests/unicode.link.cpp: $(top_srcdir)/src/unicode.cpp
+	cp $< $@ || copy $< $@
+tests/multimap.link.cpp: $(top_srcdir)/src/multimap.cpp
+	cp $< $@ || copy $< $@
+tests/log.link.cpp: $(top_srcdir)/src/log.cpp
+	cp $< $@ || copy $< $@
+tools/unicode.link.cpp: $(top_srcdir)/src/unicode.cpp
+	cp $< $@ || copy $< $@
+tools/log.link.cpp: $(top_srcdir)/src/log.cpp
+	cp $< $@ || copy $< $@
+
 vssetup_LDFLAGS = $(GTK_LIBS)
 vssetup_CXXFLAGS= $(GTK_CFLAGS)
 vssetup_SOURCES = \
@@ -1155,6 +1204,20 @@ vssetup_SOURCES = \
     setup/src/include/central.cpp \
     setup/src/include/central.h \
     setup/src/include/display_gtk.cpp \
+    setup/src/include/display.h \
+    setup/src/include/file.cpp \
+    setup/src/include/file.h \
+    setup/src/include/general.cpp \
+    setup/src/include/general.h \
+    src/common/common.cpp \
+    src/common/common.h
+
+vssetup_dlg_LDFLAGS = $(DIALOG_LIBS)
+vssetup_dlg_CXXFLAGS= $(DIALOG_CFLAGS)
+vssetup_dlg_SOURCES = \
+    setup/src/c/setup.cpp \
+    setup/src/include/central.cpp \
+    setup/src/include/central.h \
     setup/src/include/display_dialog.cpp \
     setup/src/include/display.h \
     setup/src/include/file.cpp \
@@ -1163,6 +1226,7 @@ vssetup_SOURCES = \
     setup/src/include/general.h \
     src/common/common.cpp \
     src/common/common.h
+
 
 if USE_PRECOMPILED_HEADERS
 PRECOMPILED_FLAGS = -include $(PRECOMPILED)
@@ -1196,10 +1260,15 @@ dist-hook:
 done
 endif
 
+## BOOST 1_35 patch
+if BOOST1_35
 all: boost_patched_gcc44
 
 boost_patched_gcc44: $(top_srcdir)/boost_gcc44.patch
 	cd $(top_srcdir) && patch -N -p0 < boost_gcc44.patch || true
+
+endif
+## ! BOOST 1_35 patch
 
 %.h.gch: %.h
 	$(CXXCOMPILE) -o $@ $<

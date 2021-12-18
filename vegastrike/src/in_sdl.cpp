@@ -68,15 +68,18 @@ void BindDigitalHatswitchKey (int joystick, int key, int dir, KBHandler handler,
 void ProcessJoystick (int whichplayer) {
   float x,y,z;
   int buttons;
-#ifdef HAVE_SDL
-#ifndef NO_SDL_JOYSTICK
-  SDL_JoystickUpdate();//FIXME isn't this supposed to be called already by SDL?
-#endif
+#if !defined(HAVE_SDL)
+  SDL_JoystickUpdate();// this is called by SDL event loop (even by glut) / winsys.cpp
 #endif
   for (int i=whichplayer;i<whichplayer+1&&i<MAX_JOYSTICKS;i++) {
     buttons=0;
     if(joystick[i]->isAvailable()){
-      joystick[i]->GetJoyStick (x,y,z,buttons);
+#if !defined(HAVE_SDL)
+      joystick[i]->GetJoyStick (x,y,z,buttons); // This is done by winsys SDL event handler (winsys.cpp)
+#else
+      x = joystick[i]->joy_axis[0]; y = joystick[i]->joy_axis[1]; z = joystick[i]->joy_axis[2];
+      buttons = joystick[i]->joy_buttons;
+#endif
 
       for(int h=0;h<joystick[i]->nr_of_hats;h++){
 #ifdef HAVE_SDL
@@ -176,7 +179,7 @@ void ProcessJoystick (int whichplayer) {
 	int hs_axis=vs_config->hatswitch_axis[h];
 	int hs_joy=vs_config->hatswitch_joystick[h];
 
-	if(joystick[hs_joy]->isAvailable()){
+	if(joystick[hs_joy]->isAvailable() && hs_axis < joystick[hs_joy]->nr_of_axes){
 	  float axevalue=joystick[hs_joy]->joy_axis[hs_axis];
 	  
 	  for(int v=0;v<MAX_VALUES;v++){

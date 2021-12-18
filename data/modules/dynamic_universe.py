@@ -1,4 +1,5 @@
 import VS
+import site
 import Director
 import vsrandom
 import generate_dyn_universe
@@ -37,27 +38,26 @@ class ShipTracker:
         if (not dead):
             dead = self.un.GetHull()<=0
         if (dead):
-            debug.debug("Uunit died")
+            debug.debug("Unit %s/%s died" % (str(self.faction),str(self.fgname)), debug.INFO)
             if (VS.systemInMemory (self.starsystem)):
                 import dynamic_battle
                 if fg_util.RemoveShipFromFG(self.fgname,self.faction,self.type)!=0:
                   if (VS.getPlayerX(0)):
-                      debug.debug('unit died for real')
+                      debug.debug('Unit %s/%s died for real' % (str(self.faction),str(self.fgname)), debug.NOTICE)
                       if (VS.GetRelation(self.faction,VS.getPlayerX(0).getFactionName())>0):
                           import faction_ships
                           dynamic_battle.rescuelist[self.starsystem]=(self.faction,"Shadow",faction_ships.get_enemy_of(self.faction))
-                          debug.debug("friend in trouble")
+                          debug.debug("friend in trouble",debug.NOTICE)
                   global dnewsman_
                   import dynamic_battle
                   numships = updatePlayerKillList(0,self.faction)
-                  debug.debug("num ships killed ")
-                  debug.debug(numships)
+                  debug.debug("num ships killed : "+str(numships),debug.INFO if numships <= 0 else debug.NOTICE)
                   if ((numships>0 and VS.getPlayer()) or fg_util.NumShipsInFG(self.fgname,self.faction)==0): #generate news here fg killed IRL
                       varList=[str(Director.getSaveData(0,"stardate",0)),dnewsman_.TYPE_DESTROYED,dnewsman_.STAGE_END,"unknown",self.faction,dnewsman_.SUCCESS_WIN,str(dynamic_battle.getImportanceOfType(self.type)),self.starsystem,dnewsman_.KEYWORD_DEFAULT,"unknown","unknown",self.fgname,self.type]
                       if (numships>0 and VS.getPlayer()):
                           varList=[str(Director.getSaveData(0,"stardate",0)),dnewsman_.TYPE_DESTROYED,dnewsman_.STAGE_END,VS.getPlayer().getFactionName(),self.faction,dnewsman_.SUCCESS_WIN,str(dynamic_battle.getImportanceOfType(self.type)),self.starsystem,dnewsman_.KEYWORD_DEFAULT,VS.getPlayer().getFlightgroupName(),VS.getPlayer().getName(),self.fgname,self.type]
                       dnewsman_.writeDynamicString(varList)
-                      debug.debug('news about unit dying')
+                      debug.debug('generate news about unit dying',debug.INFO)
             else:
                 fg_util.LandShip(self.fgname,self.faction,self.type)
             return 0

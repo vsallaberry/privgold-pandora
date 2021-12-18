@@ -661,7 +661,7 @@ class Unit
 		Vector corner_min, corner_max;
 		Vector LocalCoordinates (Unit * un) const { return(ToLocalCoordinates ((un->Position()-Position()).Cast()));}
 		// how visible the ship is from 0 to 1
-		float CloakVisible() const { if(cloaking<0)return(1);return (((float)cloaking)/2147483647);}
+		float CloakVisible() const { if(cloaking<0)return(1);return ((cloaking)/2147483647.0);}
 		// cloaks or decloaks the starship depending on the bool
 		virtual void Cloak (bool cloak);
 		// deletes
@@ -1120,8 +1120,8 @@ class Unit
 		// get the full flightgroup ID (i.e 'green-4')
 		const std::string getFgID();
 
-		std::vector <struct CargoColor>& FilterDowngradeList (std::vector <struct CargoColor> & mylist, bool downgrade =true);
-		std::vector <struct CargoColor>& FilterUpgradeList (std::vector <struct CargoColor> & mylist);
+		std::vector <class CargoColor>& FilterDowngradeList (std::vector <class CargoColor> & mylist, bool downgrade =true);
+		std::vector <class CargoColor>& FilterUpgradeList (std::vector <class CargoColor> & mylist);
 
 		/***************************************************************************************/
 		/**** MISC STUFF                                                                    ****/
@@ -1224,7 +1224,7 @@ inline void UnitCollection::UnitIterator::GetNextValidUnit () {
 	while (pos->next->unit?pos->next->unit->Killed():false) {
 		remove();
 	}
-};
+}
 #endif
 
 extern std::set <std::string> GetListOfDowngrades();

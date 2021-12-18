@@ -297,7 +297,7 @@ earnable_upgrades= {
 		["shield_2_Level2","upgrades/Shield_Systems/Medium",25000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."],
 		["shield_2_Level3","upgrades/Shield_Systems/Medium",40000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."],
 		["shield_2_Level5","upgrades/Shield_Systems/Heavy",140000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."]],
-	
+
 	"shield2_tech":[["shield_2_Level4","upgrades/Shield_Systems/Heavy",90000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."],
 		["shield_2_Level6","upgrades/Shield_Systems/Heavy",180000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."],
 		["shield_2_Level7","upgrades/Shield_Systems/Heavy",200000,0.01,1,"@upgrades/shields.png@A combination of magnetic and gravitic protective shields. 2 emitter model."]]}
@@ -430,7 +430,7 @@ def Precache():
     VS.precacheUnit("Space_Salvage","upgrades")
     VS.precacheUnit("Weaponry.cargo","upgrades")
     VS.precacheUnit("Weaponry","upgrades")
-  
+
 fighters = (("stiletto","stiletto","stiletto","stiletto","broadsword","broadsword",), #confed
             ("dralthi","dralthi","gothri",), #kilrathi
             ("steltek_fighter",), #nephilim
@@ -489,6 +489,8 @@ stattable={
 	"refinery":(0,0,0,800,0),
         }
 
+import debug
+
 def blankify(tup):
     ret=[]
     for i in tup:
@@ -496,14 +498,14 @@ def blankify(tup):
     return tuple(ret)
 
 for i in tuple(stattable.keys()):
-	stattable[i+".blank"]=blankify(stattable[i])
+    stattable[i+".blank"]=blankify(stattable[i])
 
 
 def GetStats ( name):
     try:
         return stattable[name]
     except:
-        print 'cannot find '+name
+        debug.debug('cannot find '+str(name))
         return (.5,.5,1,1,1)
 
 
@@ -563,7 +565,7 @@ def getMaxFactions ():
 
 
 
-    
+
 
 def get_non_citizen_X_of (mylist, index):
     import vsrandom
@@ -574,12 +576,12 @@ def get_non_citizen_X_of (mylist, index):
     if VS.isCitizen(rez):
         while (newindex>0):
           newindex-=1
-          rez=intToFaction(enemylist[newindex])          
+          rez=intToFaction(enemylist[newindex])
           if not VS.isCitizen(rez):
               return rez
         while (newindex+1<len(enemylist)):
           newindex+=1
-          rez=intToFaction(enemylist[newindex])          
+          rez=intToFaction(enemylist[newindex])
           if not VS.isCitizen(rez):
               return rez
     return rez

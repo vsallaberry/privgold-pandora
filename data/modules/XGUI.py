@@ -65,6 +65,6 @@ class XGUIPythonScriptAPI:
 """                                                                """
 """----------------------------------------------------------------"""
 
-def XGUIInit()
+def XGUIInit():
 	XGUIRootSingleton = XGUIRoot()
 

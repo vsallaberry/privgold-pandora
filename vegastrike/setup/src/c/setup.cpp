@@ -123,6 +123,7 @@ int main(int argc, char *argv[]) {
 		data_paths.push_back( string(origpath)+"/data");
 		data_paths.push_back( string(origpath)+"/../data");
 		data_paths.push_back( string(origpath)+"/../Resources");
+        data_paths.push_back( string(origpath)+"/../Resources/data");
 		getcwd (origpath,65535);
 		origpath[65535]=0;
 		data_paths.push_back( ".");
@@ -200,7 +201,11 @@ int main(int argc, char *argv[]) {
 
 	mkdir(HOMESUBDIR.c_str(), 0755);
 	chdir (HOMESUBDIR.c_str());
-
+    
+    char tmp_path[16384];
+    getcwd(tmp_path,16384);
+    tmp_path[16383]=0;
+    printf("Now in Home Dir: %s\n",tmp_path);
 #endif
 
 	

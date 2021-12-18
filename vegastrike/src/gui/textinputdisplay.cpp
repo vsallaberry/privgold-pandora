@@ -22,6 +22,9 @@
 #include "textinputdisplay.h"
 #include "lin_time.h"
 #include "guidefs.h"
+#include "universe_util.h"
+#include "unicode.h"
+#include "log.h"
 
 using namespace std;
 
@@ -40,16 +43,24 @@ TextInputDisplay::TextInputDisplay(std::vector <unsigned int> *keyboard_input_qu
 
 bool TextInputDisplay::processMouseDown(const InputEvent&event) {
 	if (event.code != WHEELUP_MOUSE_BUTTON && event.code!= WHEELDOWN_MOUSE_BUTTON) {
-		// If click is on me, set me focused... otherwise, clear my focus.
+        bool was_focused = this->isFocused;
+        // If click is on me, set me focused... otherwise, clear my focus.
 		this->isFocused = (hitTest(event.loc));
+        if (!was_focused && this->isFocused) {
+            UniverseUtil::enableKeyRepeat();
+        }
 	}
 	return StaticDisplay::processMouseDown(event);
 }
 
 void TextInputDisplay::processUnfocus(const InputEvent&event) {
 	if (event.code != WHEELUP_MOUSE_BUTTON && event.code!= WHEELDOWN_MOUSE_BUTTON) {
-		// If click is on me, set me focused... otherwise, clear my focus.
+        bool was_focused = this->isFocused;
+        // If click is on me, set me focused... otherwise, clear my focus.
 		this->isFocused = false;
+        if (was_focused) {
+            UniverseUtil::restoreKeyRepeat();
+        }
 	}
 	StaticDisplay::processUnfocus(event);
 }
@@ -78,20 +89,34 @@ void TextInputDisplay::draw() {
 	if (!processKeypress(c)) continue;
 	
     if (c==8||c==127) {
-      text=text.substr(0,text.length()-1);
-    }else if (c!='\0'&&c<256) {
-      bool allowed=true;
-      for (int j=0;disallowed[j];++j) {
-	if (c==disallowed[j]) {
-	  allowed=false;
-	  break;
-	}
-      }
-      if (allowed ) {
-	char tmp[2]={0,0};
-	tmp[0]=(char)c;
-	text+=tmp;
-      }
+        Utf8Iterator end = Utf8Iterator::end(text) - 1;
+        if (*end == '#' && end.pos() != 0 && *(end-1) == '#') {
+            --end;
+        }
+        text = text.substr(0, end.pos());
+    }else if ((c!='\0'&&c<128) || WSK_CODE_IS_UTF32(c)) {
+        bool allowed=true;
+        for (Utf8Iterator it = Utf8Iterator::begin(disallowed); it != it.end(); ++it) {
+            if (c == *it) {
+                allowed=false;
+                break;
+            }
+        }
+        if (allowed) {
+            if (c < 128) {
+                char tmp[2]={0,0};
+                tmp[0]=(char)c;
+                text+=tmp;
+                if (c == '#') // '#' is an escape character in PaintText
+                    text += '#';
+            } else if (WSK_CODE_IS_UTF32(c)) {
+                c = WSK_CODE_TO_UTF32(c);
+                char tmp[MB_CUR_MAX+1];
+                size_t n = utf32_to_utf8(tmp, c);
+                text += tmp;
+            }
+            VS_DBG("gui", logvs::DBG, "TextInputDisplay: adding char '%c' %x", c, c);
+        }
     }
   }
   keyboard_queue->clear();
@@ -111,5 +136,6 @@ void TextInputDisplay::draw() {
 }
 
 TextInputDisplay::~TextInputDisplay() {
+  UniverseUtil::restoreKeyRepeat();
   delete []this->disallowed;
 }

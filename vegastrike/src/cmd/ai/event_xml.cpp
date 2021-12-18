@@ -10,10 +10,11 @@
 #include "vsfilesystem.h"
 #include "vs_globals.h"
 #include "configxml.h"
+#include "log.h"
 extern bool validateHardCodedScript(std::string s);
 //serves to run through a XML file that nests things for "and". 
 
-
+#define PYAI_LOG(_lvl, ...) VS_LOG("pyAI", _lvl, __VA_ARGS__)
 
 using XMLSupport::EnumMap;
 using XMLSupport::Attribute;
@@ -37,11 +38,14 @@ namespace AIEvents {
            static int aidebug = XMLSupport::parse_int(vs_config->getVariable("AI","debug_level","0"));
            if (aidebug) {
              for (int i=0;i<10;++i) {               
-               printf ("SERIOUS WARNING %s\n",this->script.c_str());
-               fprintf (stderr,"SERIOUS WARNING: %s\n",this->script.c_str());
+               PYAI_LOG(logvs::VERBOSE, "SERIOUS WARNING %s",this->script.c_str());
+               PYAI_LOG(logvs::VERBOSE, "SERIOUS WARNING: %s",this->script.c_str());
              }
            }
-           printf ("SERIOUS WARNING in AI script: no fast method to perform %s\nwhen type %d is at least %f and at most %f with priority %f for %f time\n",this->script.c_str(),type,min,max,priority,timetofinish);
+           if (PYAI_LOG(logvs::WARN, "SERIOUS WARNING in AI script: no fast method to perform %s", this->script.c_str()) > 0) {
+             logvs::vs_printf("  when type %d is at least %f and at most %f with priority %f for %f time\n",
+                              type,min,max,priority,timetofinish);
+           }
          }
   }
 
@@ -155,7 +159,7 @@ namespace AIEvents {
     VSError err;
     err = f.OpenReadOnly (filename, AiFile);
     if(err>Ok) {
-      printf("ai file %s not found\n",filename);
+      PYAI_LOG(logvs::NOTICE, "ai file %s not found",filename);
       string full_filename=filename;
       full_filename=full_filename.substr(0,strlen(filename)-4);
       string::size_type where = full_filename.find_last_of(".");
@@ -166,16 +170,16 @@ namespace AIEvents {
         err = f.OpenReadOnly (full_filename, AiFile);              
       }
       if (err>Ok) {
-        printf("ai file %s again not found\n",full_filename.c_str());
+        PYAI_LOG(logvs::NOTICE, "ai file %s again not found",full_filename.c_str());
         full_filename="default";
         full_filename+=type;
         err = f.OpenReadOnly (full_filename, AiFile);
       }
       if (err>Ok) {
-        printf("ai file again %s again not found\n",full_filename.c_str());
+        PYAI_LOG(logvs::NOTICE, "ai file again %s again not found",full_filename.c_str());
         err = f.OpenReadOnly ("default.agg.xml", AiFile);
         if (err>Ok) {
-          fprintf(stderr,"ai file again default.agg.xml again not found\n");
+          PYAI_LOG(logvs::WARN, "ai file again default.agg.xml again not found");
           return; // Who knows what will happen now? Crash?
         }
       }
@@ -196,7 +200,7 @@ namespace AIEvents {
 	XML_ParserFree (parser);
 //    assert (result.level==0);
 	if (result.level!=0) {
-		fprintf (stderr,"Error loading AI script %s for faction %s. Final count not zero.\n",filename,faction.c_str());
+		PYAI_LOG(logvs::ERROR, "Error loading AI script %s for faction %s. Final count not zero.",filename,faction.c_str());
 	}
     result.level =0;
       

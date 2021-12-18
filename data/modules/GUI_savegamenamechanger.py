@@ -147,10 +147,10 @@ class GUIRect:
 				y = 1 - 2*yi/screenY
 			"""
 			return ( (2.0 * self.x / screenX - 1.0)*(1.0-marginX) ,  \
-                           (-2.0 * self.y / screenY + 1.0)*(1.0-marginY) , \
-                           (2.0 * self.w / screenX * (1.0-marginX)) ,      \
-                           (2.0 * self.h / screenY * (1.0-marginY))        \
-                          )
+					(-2.0 * self.y / screenY + 1.0)*(1.0-marginY) , \
+					(2.0 * self.w / screenX * (1.0-marginX)) ,      \
+					(2.0 * self.h / screenY * (1.0-marginY))        \
+					)
 		elif (self.mode=='normalized_biased_scaled'):
 			""" direct coordinates: top-left = (-1,+1), bottom-right = (+1,-1) - margins WILL NOT be applied """
 			return (self.x,self.h,self.w,self.h)
@@ -633,13 +633,13 @@ class GUILineEdit(GUIGroup):
 		(uw,uh) = GUIRect(0,0,10,10).getNormalWH()
 		self.index=index
 		Base.TextBox(room.getIndex(), str(self.index)+'line1', '---', x, y, (x+w, y+uh, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line2', '!', x, y, (x-uw, y+h, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line3', '---', x, y-h, (x+w, y+uh, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line4', '!', x+w, y, (x+uw, y+h, 1),
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					color.getRGB(), color.getAlpha(), color.getRGB())
 		if _doWhiteHack != 0:
 			""" ugly hack, needed to counter a stupid bug """
 			Base.TextBox(self.room.getIndex(),str(self.index)+"_white_hack","", -100.0, -100.0, (0.01, 0.01, 1), (0,0,0), 0, GUIColor.white().getRGB())
@@ -730,13 +730,13 @@ class GUIButton(GUIStaticImage):
 		self.textOverlay.hide()
 
 		self.pythonstr = \
-                  "# <-- this disables precompiled python objects\n" \
-                 +"from GUI import GUIRootSingleton\n" \
-		     +"evData = Base.GetEventData()\n" \
-		     +"typeToMessage = {'click':'click','up':'up','down':'down','move':'move','enter':'enter','leave':'leave'}\n" \
-		     +"if ('type' in evData) and (evData['type'] in typeToMessage):\n" \
-                 +"\tGUIRootSingleton.dispatchMessage("+str(self.id)+",typeToMessage[evData['type']],evData)\n" \
-                 +"\tGUIRootSingleton.redrawIfNeeded()\n"
+			"# <-- this disables precompiled python objects\n" \
+			+"from GUI import GUIRootSingleton\n" \
+			+"evData = Base.GetEventData()\n" \
+			+"typeToMessage = {'click':'click','up':'up','down':'down','move':'move','enter':'enter','leave':'leave'}\n" \
+			+"if ('type' in evData) and (evData['type'] in typeToMessage):\n" \
+				+"\tGUIRootSingleton.dispatchMessage("+str(self.id)+",typeToMessage[evData['type']],evData)\n" \
+				+"\tGUIRootSingleton.redrawIfNeeded()\n"
 
 	def _getStateSprite(self,state):
 		if self.sprites:
@@ -1026,9 +1026,9 @@ class GUICheckButton(GUIButton):
 	def onMessage(self,message,params):
 		""" Intercept group reset """
 		if (    (message=='setcheck' or message=='check' or message=='uncheck') \
-		    and (not ('group' in params) or (self.group == params['group'])) \
-		    and (not ('exclude' in params) or (self.id != params['exclude'])) \
-		    and (not ('index' in params) or (self.index == params['index']))   ):
+			and (not ('group' in params) or (self.group == params['group'])) \
+			and (not ('exclude' in params) or (self.id != params['exclude'])) \
+				and (not ('index' in params) or (self.index == params['index']))   ):
 			if (message=='setcheck'):
 				if ('state' in params):
 					self.setChecked(params['state'])

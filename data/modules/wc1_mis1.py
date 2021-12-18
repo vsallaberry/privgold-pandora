@@ -2,6 +2,7 @@ import vsrandom
 import VS
 import unit
 import launch
+import debug
 from Vector import Add
 from wc1 import findOriginAndMove
 class wc1_mis1:
@@ -22,11 +23,11 @@ class wc1_mis1:
                   self.jump]
         self.roids = [VS.launch("Asteroids","AFieldSparse","neutral","asteroid","default",1,1,Add(self.origin,(0000,00000,10000)),"")]
     def moveTrans (self,targ):
-        print "moving trans"
+        debug.debug("moving trans")
         self.transport.SetPosAndCumPos(Add(targ.Position(),(0,0,-1000)))
 
     def LaunchNav (self,i,playa):
-        print "launching %d" % i
+        debug.debug("launching %d" % i)
         if (i==0):
             launch.launch_wave_around_unit("BadGuys","aera","lekra","default",3,100,1000,playa)
             self.moveTrans(self.nav[0])
@@ -35,7 +36,7 @@ class wc1_mis1:
                 self.moveTrans(self.nav[1])
                 launch.launch_wave_around_unit("BadGuys","aera","kyta","default",2,100,1000,playa)
     def EndMission (self):
-        print "endmission"
+        debug.debug("endmission")
         self.wingman.Kill()
         for n in self.nav:
             n.Kill()
@@ -44,7 +45,7 @@ class wc1_mis1:
         VS.terminateMission(1)
         if (self.transport):
             if (not unit.inSystem(self.transport)):
-                print "success"
+                debug.debug("success")
                 return ("vega_sector/vega",0)
             #success (change debrief maybe?)
         return ("vega_sector/hellskitchen",0)

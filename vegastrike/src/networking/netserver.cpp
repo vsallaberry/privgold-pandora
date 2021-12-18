@@ -107,6 +107,15 @@ void	getZoneInfoBuffer( unsigned short zoneid, NetBuffer & netbuf)
 	VSServer->zonemgr->getZoneBuffer( zoneid, netbuf);
 }
 
+#ifndef _WIN32
+# include <errno.h>
+# include <signal.h>
+static sig_atomic_t s_last_signal = 0;
+static void sig_handler(int sig) {
+    s_last_signal = sig;
+}
+#endif
+
 /**************************************************************/
 /**** Constructor / Destructor                             ****/
 /**************************************************************/
@@ -169,6 +178,9 @@ void	NetServer::start(int argc, char **argv)
      int j;
      if (strncmp(argv[i],"-p",2)==0) {
        serverport=argv[i]+2;
+     }else if (strcmp(argv[i],"-h")==0 || strcmp(argv[i],"--help")==0) {
+         cout << "Usage: %s [-p<serverport>] [-h,--help]" << std::endl;
+         exit(0);
      }else {
        match=0;
      }
@@ -398,10 +410,16 @@ void	NetServer::start(int argc, char **argv)
 		cout << " --------------------------------------- " << endl;
 		cout << "To stop this server, hit Ctrl-C, Ctrl-\\, Ctrl-Break, or close this window." << endl;
 		cout << endl << "Have fun!" << endl << endl;
+#ifndef _WIN32
+        signal(SIGINT, sig_handler);
+#endif
 	}
 	// Server loop
-	while( keeprun)
-	{
+	while( keeprun
+#ifndef _WIN32
+          && s_last_signal != SIGINT
+#endif
+    ) {
 		// int       nb;
 
 		UpdateTime();
@@ -1471,7 +1489,7 @@ void	NetServer::processPacket( ClientPtr clt, unsigned char cmd, const AddressIP
 				} else if (buyer==sender) {
 					faction = buyer->faction;
 					templateName = unitDir + ".template";
-				}
+                }
 				// Get the "limiter" for the upgrade.  Stats can't increase more than this.
 				const Unit * templateUnit = UnitConstCache::getCachedConst(StringIntKey(templateName,faction));
 				if (!templateUnit) {

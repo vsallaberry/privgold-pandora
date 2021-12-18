@@ -1,5 +1,6 @@
 //#include "unit.h"
 //#include "unit_template.h"
+#include <stdlib.h>
 #include "unit_factory.h"
 #include "ai/order.h"
 #include "gfx/animation.h"
@@ -308,7 +309,7 @@ bool GameUnit<UnitType>::Explode (bool drawit, float timeit) {
     bool sub=this->isSubUnit();
     Unit * un=NULL;
     if (!sub) {
-      if (un=_Universe->AccessCockpit(0)->GetParent()) {
+      if ((un=_Universe->AccessCockpit(0)->GetParent()) != NULL) {
         static float explosion_closeness=XMLSupport::parse_float(vs_config->getVariable("audio","explosion_closeness",".8"));
         exploc = un->Position()*explosion_closeness+exploc*(1-explosion_closeness); 
       }			
@@ -353,7 +354,8 @@ bool GameUnit<UnitType>::Explode (bool drawit, float timeit) {
 			if (!BaseInterface::CurrentBase) {
 				static float lasttime = 0;
 				float newtime=getNewTime();
-                if (newtime-lasttime>timelapse||_Universe->isPlayerStarship(this)&&this->isUnit()!=MISSILEPTR&&this->faction!=upgradesfaction) { //No victory for missiles or spawned explosions
+                if (newtime-lasttime>timelapse
+                ||  (_Universe->isPlayerStarship(this)&&this->isUnit()!=MISSILEPTR&&this->faction!=upgradesfaction)) { //No victory for missiles or spawned explosions
 					if (rel>goodrel) {
 						lasttime=newtime;
 						muzak->SkipRandSong(Music::LOSSLIST);
@@ -391,7 +393,7 @@ bool GameUnit<UnitType>::Explode (bool drawit, float timeit) {
   bool alldone = this->image->explosion?!this->image->explosion->Done():false;
   if (!this->SubUnits.empty()) {
     Unit * su;
-	for(un_iter ui = this->getSubUnits();su = *ui;++ui){
+	for(un_iter ui = this->getSubUnits();(su = *ui)!=NULL;++ui){
       bool temp = su->Explode(drawit,timeit);
       if (su->GetImageInformation().explosion)
 	alldone |=temp;

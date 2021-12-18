@@ -50,7 +50,7 @@ class GameVegaConfig: public VegaConfig {
 #define AXIS_Y 1
 #define AXIS_Z 2
 #define AXIS_THROTTLE 3
-
+    
  private:
   void initCommandMap();
   void initKeyMap();

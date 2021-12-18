@@ -1,6 +1,7 @@
 import VS
 import traceback
 import sys
+import debug
 
 procedures = {
 	}
@@ -91,7 +92,7 @@ def run(cmd, args, continuation, id=None, cp=-1):
 		id = putFunction(continuation, id, cp)
 	if not isinstance(id,str):
 		id = "null"
-	print "running: "+cmd+", "+str(args)+"; id: "+id
+	debug.debug("running: "+cmd+", "+str(args)+"; id: "+id)
 	VS.sendCustom(cp, cmd, joinArgs(args), id)
 	return id
 
@@ -99,10 +100,10 @@ def respond(args, continuation, id, cp=-1):
 	run("response", args, continuation, id, cp)
 
 class LineBufferWriter:
-	def __init__(self,line=''):
+	def __init__(self,line='',level=debug.INFO):
 		self.line=line
 	def println(self,line):
-		print line
+		debug.dprint(repr(line), '\n', level)
 	def write(self,text):
 		lines = text.split('\n')
 		self.line=lines[-1]
@@ -119,7 +120,7 @@ class IOmessageWriter(LineBufferWriter):
 			self.cpstr = 'p'+str(cpnum)
 	def println(self, l):
 		VS.IOmessage(0,"game",self.cpstr,l)
-	
+
 
 def processMessage(local, cmd, argstr, id, writer=None):
 	cp = VS.getCurrentPlayer();
@@ -129,12 +130,12 @@ def processMessage(local, cmd, argstr, id, writer=None):
 			writer = sys.stderr
 		else:
 			writer = IOmessageWriter(cp)
-	print "======= Processing message "+str(id)+" ======="
+	debug.debug("======= Processing message "+str(id)+" =======",debug.INFO)
 	try:
 		args = splitArgs(argstr)
-		print "Command: "+cmd
+		debug.debug("Command: "+cmd,debug.INFO)
 		for arg in args:
-			print arg
+			debug.debug(repr(arg),debug.INFO)
 		if cmd=='reloadlib' and local and len(args)>=1:
 			reload(__import__(args[0]))
 			writer.write("Reloaded "+str(args[0])+"\n")
@@ -177,5 +178,5 @@ def processMessage(local, cmd, argstr, id, writer=None):
 		writer.write("An error occurred when processing custom command: \n"
 			+ str(cmd)+" "+argstr + "\n")
 		traceback.print_exc(file=writer)
-	print "-------------------------- " +str(id)+" -------"
+	debug.debug("-------------------------- " +str(id)+" -------",debug.INFO)
 

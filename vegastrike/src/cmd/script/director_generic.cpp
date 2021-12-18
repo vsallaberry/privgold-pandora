@@ -253,7 +253,7 @@ void Mission::loadModule(string modulename){
   
   debug(3,node,SCRIPT_PARSE,"loading module "+modulename);
   
-  cout << "  loading module " << modulename << endl;
+  VS_LOG("mission",logvs::NOTICE, "  loading module %s", modulename.c_str());
   
   string filename="modules/"+modulename+".module";
   missionNode *import_top=importf->LoadXML(filename.c_str());
@@ -273,7 +273,7 @@ void Mission::loadMissionModules(){
     while(import_stack.size()>0){
     string importname=import_stack.back();
     import_stack.pop_back();
-
+    
     missionNode *module=runtime.modules[importname];
     if(module==NULL){
       loadModule(importname);
@@ -338,7 +338,7 @@ void Mission::UnPickle (string pickled) {
 }
 
 void Mission::DirectorStart(missionNode *node){
-  cout << "DIRECTOR START" << endl;
+  VS_LOG("mission",logvs::NOTICE, "DIRECTOR START");
 
   static int st_debuglevel=atoi(vs_config->getVariable("interpreter","debuglevel","0").c_str());
   static bool st_start_game=XMLSupport::parse_bool(vs_config->getVariable("interpreter","startgame","true"));
@@ -369,13 +369,14 @@ void Mission::DirectorStart(missionNode *node){
       return;
     }
   }
-  cout << "parsing declarations for director" << endl;
+  VS_LOG("mission",logvs::NOTICE, "parsing declarations for director");
 
   parsemode=PARSE_DECL;
 
   doModule(node,SCRIPT_PARSE);
 
-  importf=new easyDomFactory<missionNode>();
+  if (importf == NULL)
+    importf=new easyDomFactory<missionNode>();
 
   loadMissionModules();
 
@@ -391,7 +392,7 @@ void Mission::DirectorStart(missionNode *node){
     missionNode *mnode=(*iter).second;
 
     if(mname!="director"){
-      cout << "  parsing full module " << mname << endl;
+      VS_LOG("mission",logvs::NOTICE, "  parsing full module %s", mname.c_str());
       doModule(mnode,SCRIPT_PARSE);
     }
   }

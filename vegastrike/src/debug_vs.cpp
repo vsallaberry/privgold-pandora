@@ -1,7 +1,13 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #ifndef VS_DEBUG
 
 #else
 #include <stdio.h>
+
+#include "debug_vs.h"
 
 #include "hashtable.h"
 #if defined (_MSC_VER) && defined(_DEBUG)
@@ -12,7 +18,7 @@ Hashtable <long,char,65535> constructed;
 Hashtable <long,char,65535> destructed;
 bool DEBUG_ERROR_IN_MY_CODE=true;
 void VS_DEBUG_ERROR () {
-  VSFileSystem::Fprintf(stderr,"WARNING: invalid refcount in vegastrike object\n");
+  VSFileSystem::vs_fprintf(stderr,"WARNING: invalid refcount in vegastrike object\n");
 #if defined (_MSC_VER) && defined(_DEBUG)
   if (DEBUG_ERROR_IN_MY_CODE) {
     _RPT0(_CRT_ERROR, "WARNING: invalid refcount in vegastrike object\n");

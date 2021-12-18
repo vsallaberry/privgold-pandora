@@ -12,6 +12,11 @@ uniform vec4 cloaking;
 uniform vec4 damage;
 uniform vec4 envColor;
 
+vec4 texture2DLod(sampler2D sampler, vec2 P, float lod)
+{
+    // Turn into bias
+    return texture2D(sampler, P, lod);
+}
 vec3 matmul(vec3 tangent, vec3 binormal, vec3 normal,vec3 lightVec) {
   return vec3(dot(lightVec,tangent),dot(lightVec,binormal),dot(lightVec,normal));
 }

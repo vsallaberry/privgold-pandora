@@ -22,7 +22,11 @@
 /*
   Joystick support written by Alexander Rawass <alexannika@users.sourceforge.net>
 */
+#if defined(HAVE_CONFIG_H)
+# include "config.h"
+#endif
 #include <list>
+#include <deque>
 #include <lin_time.h>
 #include "vegastrike.h"
 #include "vs_globals.h"
@@ -42,6 +46,8 @@
 #endif
 
 #include "options.h"
+#include "vs_log_modules.h"
+#include "gnuhash.h"
 
 extern vs_options game_options;
 
@@ -53,8 +59,32 @@ static int miny=-1;
 static int maxz=1;
 static int minz=-1;
 
+typedef vsUMap<int, int> 	JoystickIDMap;
+typedef std::deque<int> 	JoystickEventQueue;
+
+static JoystickIDMap 		joystickIDMap;
+static JoystickEventQueue 	joystickEventQueue;
+
 JoyStick *joystick[MAX_JOYSTICKS]; // until I know where I place it
 int num_joysticks=0;
+
+unsigned int GetNumJoysticks() {
+	return num_joysticks;
+}
+
+void RestoreJoystick() {
+	joystickEventQueue.clear();
+#if !defined(NO_SDL_JOYSTICK) && !defined(HAVE_SDL)
+  //use glut
+  if (glutDeviceGet(GLUT_HAS_JOYSTICK)||game_options.force_use_of_joystick) {
+          glutJoystickFunc (myGlutJoystickCallback,JoystickPollingRate());
+  }
+#else
+	//winsys_set_joystick_func(NULL);
+  winsys_set_joystick_func(JoystickGameHandler);
+#endif
+}
+
 void modifyDeadZone(JoyStick * j) {
     for(int a=0;a<j->nr_of_axes;a++){
         if(fabs(j->joy_axis[a])<=j->deadzone){
@@ -87,27 +117,30 @@ void JoyStickToggleKey (const KBData& key, KBSTATE a) {
 void myGlutJoystickCallback (unsigned int buttonmask, int x, int y, int z) {
     //printf ("joy %d x %d y %d z %d\n",buttonmask, x,y,z);
     unsigned int i;
-	
 
-	
-    for (i=0;i<MAX_AXES;i++) joystick[0]->joy_axis[i]=0.0;
+    for (i=0;i<MAX_AXES;i++) {
+    	joystick[0]->joy_axis[i]=0.0;
+    }
     joystick[0]->joy_buttons=0;
     if (JoyStickToggle) {
       joystick[0]->joy_buttons=buttonmask;
-      if (joystick[0]->nr_of_axes>0)
+      if (joystick[0]->nr_of_axes>0) {
               // Set the max and min of each axis - Okona
               if (x<minx) minx=x;
               if (x>maxx) maxx=x;
 	      // Calculate an autocalibrated value based on the max min values - Okona
               joystick[0]->joy_axis[0]=((float)x-(((float)(maxx+minx))/2.0))/(((float)(maxx-minx))/2.0);
-      if (joystick[0]->nr_of_axes>1)
+      }
+      if (joystick[0]->nr_of_axes>1) {
               if (y<miny) miny=y;
               if (y>maxy) maxy=y;
 	      joystick[0]->joy_axis[1]=((float)y-(((float)(maxy+miny))/2.0))/(((float)(maxy-miny))/2.0);
-      if (joystick[0]->nr_of_axes>2)
+      }
+      if (joystick[0]->nr_of_axes>2) {
               if (z<minz) minz=z;
               if (z>maxz) maxz=z;
 	      joystick[0]->joy_axis[2]=((float)z-(((float)(maxz+minz))/2.0))/(((float)(maxz-minz))/2.0);
+      }
       modifyDeadZone(joystick[0]);
       modifyExponent(joystick[0]);
     }
@@ -127,6 +160,15 @@ int JoystickPollingRate () {
 void InitJoystick(){
   int i;
   
+#if defined(HAVE_SDL) && !defined(NO_SDL_JOYSTICK)
+    // && defined(HAVE_SDL_MIXER)
+    if (  SDL_InitSubSystem( SDL_INIT_JOYSTICK )) {
+        JOY_LOG(logvs::ERROR, "Couldn't initialize SDL: %s", SDL_GetError());
+        winsys_exit(1);
+    }
+    //SDL_EventState (SDL_JOYBUTTONDOWN,SDL_ENABLE);
+    //SDL_EventState (SDL_JOYBUTTONUP,SDL_ENABLE);
+#endif
 
   for (i=0;i<NUMJBUTTONS;i++) {
     for (int j=0;j<MAX_JOYSTICKS;j++) {
@@ -139,57 +181,92 @@ void InitJoystick(){
     }
   }
   for(int j=0;j<MAX_JOYSTICKS;j++){
-
+	if (j < num_joysticks && joystick[j])
+		delete joystick[j];
+	joystick[j] = NULL;
     for(int h=0;h<MAX_DIGITAL_HATSWITCHES;h++){
       for(int v=0;v<MAX_DIGITAL_VALUES;v++){
 	UnbindDigitalHatswitchKey(j,h,v);
       }
     }
   }
+  UpdateJoystick(-1);
+}
 
+void UpdateJoystick(int index) {
+	int i;
 #ifndef NO_SDL_JOYSTICK
 #ifdef HAVE_SDL
-  num_joysticks=SDL_NumJoysticks() ;
-  printf("%i joysticks were found.\n\n", num_joysticks);
-  printf("The names of the joysticks are:\n");
+	num_joysticks = SDL_NumJoysticks() ;
+	JOY_LOG(logvs::NOTICE, "%i joysticks were found.", num_joysticks);
+	if (num_joysticks > 0)
+		JOY_LOG(logvs::NOTICE, "The names of the joysticks are:");
 #else
-  //use glut
-  if (glutDeviceGet(GLUT_HAS_JOYSTICK)||game_options.force_use_of_joystick) {
-          printf ("setting joystick functionality:: joystick online");
-          glutJoystickFunc (myGlutJoystickCallback,JoystickPollingRate());
-          num_joysticks=1;
-      
-  }
+	//use glut
+	if (glutDeviceGet(GLUT_HAS_JOYSTICK)||game_options.force_use_of_joystick) {
+		JOY_LOG(logvs::NOTICE, "setting joystick functionality:: joystick online");
+		glutJoystickFunc (myGlutJoystickCallback,JoystickPollingRate());
+		num_joysticks=1;
+	} else {
+		num_joysticks = 0;
+	}
+	JOY_LOG(logvs::NOTICE, "Glut detects %d joystick", num_joysticks);
 #endif
 #endif
 
-  for(i=0; i < MAX_JOYSTICKS; i++ )  {
-#ifndef NO_SDL_JOYSTICK
-#ifdef HAVE_SDL
-    if (i<num_joysticks){
-      //      SDL_EventState (SDL_JOYBUTTONDOWN,SDL_ENABLE);
-      //      SDL_EventState (SDL_JOYBUTTONUP,SDL_ENABLE);
-      printf("    %s\n", SDL_JoystickName(i));
-    }
+	for(i = 0; i < MAX_JOYSTICKS; ++i ) {
+		if (joystick[i]) {
+			if (num_joysticks > 0 && index >= num_joysticks - 1 && !joystick[i]->isAvailable()) {
+				joystick[i]->Update(joystick[i]->player, index);
+				JOY_LOG(logvs::INFO, "Joystick #%d.%d added for player %d", i, index, joystick[i]->player);
+				index = -1;
+			} else if (index == i && joystick[i]->isAvailable()) {
+				// removed;
+				joystick[i]->Update(joystick[i]->player, num_joysticks);
+				for (JoystickIDMap::iterator it = joystickIDMap.begin(); it != joystickIDMap.end(); ) {
+					if (it->second == i) {
+#if defined(HAVE_TR1_UNORDERED_MAP) || defined(HAVE_UNORDERED_MAP)
+						it = joystickIDMap.erase(it);
 #else
-      if (i<num_joysticks){
-          //      SDL_EventState (SDL_JOYBUTTONDOWN,SDL_ENABLE);
-          //      SDL_EventState (SDL_JOYBUTTONUP,SDL_ENABLE);
-          printf("Glut detects %d joystick",i+1);
-      }      
+						JoystickIDMap::iterator next = it; ++next;
+						joystickIDMap.erase(it); it = next;
 #endif
+					}
+					else ++it;
+				}
+				JOY_LOG(logvs::INFO, "Joystick #%d.%d removed for player %d", i, index, joystick[i]->player);
+			}
+		} else {
+			joystick[i]=new JoyStick(i); // SDL_Init is done in winsys.cpp
+		}
+		if (i != MOUSE_JOYSTICK && joystick[i]->isAvailable()) {
+#if !defined(HAVE_SDL) || !SDL_VERSION_ATLEAST(2,0,0)
+			joystickIDMap.insert(std::make_pair(i, i));
+#else
+			joystickIDMap.insert(std::make_pair(SDL_JoystickInstanceID(joystick[i]->joy), i));
 #endif
-    joystick[i]=new JoyStick(i); // SDL_Init is done in main.cpp
-    
+		}
+	}
+}
 
-  }
+int GetJoystickByID(int id) {
+	JoystickIDMap::iterator it = joystickIDMap.find(id);
+	if (it != joystickIDMap.end())
+		return it->second;
+	return num_joysticks;
 }
 
 void DeInitJoystick() {
-  for (int i=0;i<MAX_JOYSTICKS;i++) {
-    delete joystick[i];
-  }
+	joystickEventQueue.clear();
+	num_joysticks = 0;
+	for (int i = 0; i < MAX_JOYSTICKS; ++i) {
+		if (joystick[i]) {
+			delete joystick[i];
+			joystick[i] = NULL;
+		}
+	}
 }
+
 JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
   for (int j=0;j<MAX_AXES;++j) {
     axis_axis[j]=-1;
@@ -208,21 +285,34 @@ JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
   if (which==MOUSE_JOYSTICK) {
     InitMouse(which);
   }
+  this->Update(player, which);
+}
+
+JoyStick::~JoyStick() {
+#if !defined(NO_SDL_JOYSTICK) && defined(HAVE_SDL)
+	if (joy != NULL) {
+		//SDL_JoystickClose(joy);
+	}
+#endif
+}
+
+void JoyStick::Update(int player, int index) {
+	this->player = player;
 #if defined (NO_SDL_JOYSTICK)
   return;
 #else
 #ifdef HAVE_SDL
   num_joysticks=SDL_NumJoysticks() ;
-  if (which>=num_joysticks) {
-    if (which!=MOUSE_JOYSTICK)
+  if (index >= num_joysticks || index == MOUSE_JOYSTICK) {
+    if (index!=MOUSE_JOYSTICK)
       joy_available=false;
     return;
   }
   
   //    SDL_JoystickEventState(SDL_ENABLE);
-  joy=SDL_JoystickOpen(which);  // joystick nr should be configurable
+  joy=SDL_JoystickOpen(index);  // joystick nr should be configurable
   if(joy==NULL){
-      printf("warning: no joystick nr %d\n",which);
+      JOY_LOG(logvs::NOTICE, "warning: no joystick nr %d",index);
       joy_available = false;
       return;
   }
@@ -232,7 +322,7 @@ JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
   nr_of_hats=SDL_JoystickNumHats(joy);
 #else
     //WE HAVE GLUT
-    if (which>0&&which!=MOUSE_JOYSTICK) {
+    if (index>0&&index!=MOUSE_JOYSTICK) {
         joy_available=false;
         return;
     }
@@ -242,19 +332,32 @@ JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
     nr_of_hats=0;
 #endif // we have GLUT
 #endif
-     printf("axes: %d buttons: %d hats: %d\n",nr_of_axes,nr_of_buttons,nr_of_hats);
+#if !defined(NO_SDL_JOYSTICK) && defined(HAVE_SDL)
+# if !SDL_VERSION_ATLEAST(2,0,0)
+    JOY_LOG(logvs::NOTICE, "    #%d.%d: %s", player, index, SDL_JoystickName(index));
+# else
+    JOY_LOG(logvs::NOTICE, "    #%d.%d: %s", player, index, SDL_JoystickNameForIndex(index));
+# endif
+#endif
+     JOY_LOG(logvs::NOTICE, "      axes: %d buttons: %d hats: %d",
+    		 nr_of_axes,nr_of_buttons,nr_of_hats);
 }
+
 void JoyStick::InitMouse (int which) {
   player=0;//default to first player
   joy_available=true;
   nr_of_axes=2;//x and y for mouse
   nr_of_buttons=15;
   nr_of_hats=0;
+#if defined(HAVE_SDL)
+  joy = NULL;
+#endif
 }
 
 bool JoyStick::isAvailable(){
   return joy_available;
 }
+
 struct mouseData{
   int dx;
   int dy;
@@ -262,7 +365,11 @@ struct mouseData{
   mouseData() {dx=dy=0;time=0;}
   mouseData(int ddx,int ddy, float ttime) {dx=ddx;dy=ddy;time=ttime;}
 };
+
 extern void GetMouseXY(int &mousex,int &mousey);
+
+static std::list <mouseData> md;
+
 void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
   int def_mouse_sens = 1;
   int _dx, _dy;
@@ -271,13 +378,12 @@ void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
   GetMouseXY (_mx,_my);
   GetMouseDelta (_dx,_dy);
   if (0&&(_dx||_dy))
-    printf ("x:%d y:%d\n",_dx,_dy);
+    JOY_DBG(logvs::DBG, "dx:%d dy:%d",_dx,_dy);
   if (!game_options.warp_mouse) {
     fdx=(float)(_dx = _mx-g_game.x_resolution/2);
     def_mouse_sens=25;
     fdy=(float)(_dy = _my-g_game.y_resolution/2);
   }else {
-    static std::list <mouseData> md;
     std::list<mouseData>::iterator i=md.begin();
     float ttime=getNewTime();
     float lasttime=ttime-game_options.mouse_blur;
@@ -315,7 +421,7 @@ void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
     }
     fdx=float(valx)/game_options.mouse_blur;
     fdy=float(valy)/game_options.mouse_blur;
-    //printf (" x:%.2f y:%.2f %d ",fdx,fdy,avg);
+    //JOY_LOG(logvs::DBG, " x:%.2f y:%.2f %d",fdx,fdy,avg);
   }
   joy_axis[0] = fdx/(g_game.x_resolution*def_mouse_sens/game_options.mouse_sensitivity);
   joy_axis[1] = fdy/(g_game.y_resolution*def_mouse_sens/game_options.mouse_sensitivity);
@@ -328,10 +434,10 @@ void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
   joy_axis[1]*=game_options.mouse_exponent;
   x = joy_axis[0];
   y = joy_axis[1];
- 
-  joy_axis[2]=z=0;
-  buttons = getMouseButtonStatus();
+  joy_axis[2] = z = 0;
+  joy_buttons = buttons = getMouseButtonStatus();
 }
+
 void JoyStick::GetJoyStick(float &x,float &y, float &z, int &buttons)
 {
     //int status;
@@ -391,4 +497,44 @@ void JoyStick::GetJoyStick(float &x,float &y, float &z, int &buttons)
 int JoyStick::NumButtons(){
   return nr_of_buttons;
 }
-		
+
+void JoystickQueuePush(int which) {
+	joystickEventQueue.push_back(which);
+}
+
+void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
+	(void)x; (void)y; (void)z; (void)buttons; (void)state;
+	JoystickQueuePush(which);
+}
+
+void JoystickProcessQueue(int player) {
+	bool done[MAX_JOYSTICKS];
+	memset(done, 0, sizeof(done));
+	if (md.size() > 0 && joystick[MOUSE_JOYSTICK]->isAvailable() && joystick[MOUSE_JOYSTICK]->player == player) {
+		float x, y, z; int buttons;
+		joystick[MOUSE_JOYSTICK]->GetJoyStick (x,y,z,buttons);
+		JoystickQueuePush(MOUSE_JOYSTICK);
+	}
+	for (JoystickEventQueue::iterator it = joystickEventQueue.begin(); it != joystickEventQueue.end(); ) {
+		unsigned int which = *it;
+		if (!joystick[which]->isAvailable()) {
+			it = joystickEventQueue.erase(it);
+		} else if (joystick[which]->player == player) {
+			if (!done[which]) {
+				ProcessJoystick(which);
+				JOY_DBG(logvs::DBG, "Joystick #%u x:%g y:%g z:%g buttons:%d", which, joystick[which]->joy_axis[0],
+					    joystick[which]->joy_axis[1], joystick[which]->joy_axis[2], joystick[which]->joy_buttons);
+			}
+			if (done[which] || (joystick[which]->joy_buttons == 0)) { // The game loop needs to receive repeated buttons events
+				it = joystickEventQueue.erase(it);
+			} else {
+				++it;
+			}
+			done[which] = true;
+		} else if (joystick[*it]->player >= _Universe->numPlayers()) {
+			it = joystickEventQueue.erase(it);
+		} else {
+			++it;
+		}
+	}
+}

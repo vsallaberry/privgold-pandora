@@ -70,6 +70,7 @@ bool NavigationSystem::ParseFile(string filename)
 					float x_mesh_coord = atof( (retrievedata(data, "x_mesh_coord")).c_str() );
 					float y_mesh_coord = atof( (retrievedata(data, "y_mesh_coord")).c_str() );
 					float z_mesh_coord = atof( (retrievedata(data, "z_mesh_coord")).c_str() );
+                    screens_aspect = atof( (retrievedata(data, "aspect")).c_str() );
 					meshcoordinate_x[0] = x_mesh_coord;
 					meshcoordinate_y[0] = y_mesh_coord;
 					meshcoordinate_z[0] = z_mesh_coord;

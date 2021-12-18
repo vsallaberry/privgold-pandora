@@ -1,4 +1,7 @@
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #ifdef HAVE_PYTHON
 #include <Python.h>
 #include <pyerrors.h>
@@ -6,6 +9,7 @@
 #include <compile.h>
 #include <eval.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <boost/version.hpp>
 #if BOOST_VERSION != 102800
@@ -28,6 +32,7 @@
 #include "python_compile.h"
 #include "python_class.h"
 #include "cmd/unit_generic.h"
+#include "log.h"
 #if defined(_WIN32) && !defined(__CYGWIN__)
 #include <direct.h>
 #endif
@@ -162,7 +167,7 @@ def_read_write(pointer-to-member, name) // read/write access to the member via a
 class MyFA : public CommunicatingAI {
 public:
 	MyFA() :CommunicatingAI(0,0){}
-	virtual void Execute() {printf("CommAI\n");}
+	virtual void Execute() { VS_LOG("python", logvs::NOTICE, "CommAI"); }
 	virtual ~MyFA(){}
 };
 
@@ -213,6 +218,33 @@ BOOST_PYTHON_MODULE_INIT(Vegastrike)
 #define PATHSEP "/"
 #endif
 
+static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 40) {
+    std::string res = pythonscript;
+    for (std::string::iterator it = res.begin(); it != res.end(); ++it) {
+        if (*it == '\n') *it = ';'; //res = res.replace(it, it+1, ';');
+    }
+    return res.substr(0, (res.size() < maxsize ? res.size() : maxsize));
+}
+
+void Python::overridePythonEnv() {
+    std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
+
+    std::string pythonenv("");
+    // Find all the mods dir (ignore homedir)
+    for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
+    {
+        if(pythonenv.size()) {
+            pythonenv += ":";
+        }
+        pythonenv += VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "builtin";
+    }
+    static bool override_python_path
+      = XMLSupport::parse_bool (vs_config->getVariable ("python","override_python_path","true"));
+    VS_LOG("python", logvs::NOTICE, "override PYTHON path: %s -> '%s'", override_python_path?"true":"false", pythonenv.c_str());
+    setenv("PYTHONHOME", pythonenv.c_str(), override_python_path);
+    setenv("PYTHONPATH", pythonenv.c_str(), override_python_path);
+}
+
 void Python::initpaths(){
   /*
   char pwd[2048];
@@ -235,23 +267,25 @@ void Python::initpaths(){
    */
   std::string modpaths("");
   // Find all the mods dir (ignore homedir)
-  for( int i=1; i<VSFileSystem::Rootdir.size(); i++)
+  for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
   {
+      if(modpaths.size()) {
+          modpaths += ",";
+      }
 	  modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "builtin\",";
       modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "quests\",";
       modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "missions\",";
       modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "ai\",";
       modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+"\",";
       modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +basesdir+"\"";
-	  if( i+1<VSFileSystem::Rootdir.size())
-		  modpaths+= ",";
   }
   /*
   string::size_type backslash;
   while ((backslash=modpaths.find("\\"))!=std::string::npos) {
      modpaths[backslash]='/';
      }*/
-   std::string changepath ("import sys\nprint sys.path\nsys.path = ["+modpaths+"]\n");
+  std::string changepath ("import sys\nprint sys.path\nsys.path = ["+modpaths+"]\n");
+  changepath += "import site\nprint 'encoding:'+site.encoding\n";
   /*
    std::string changepath ("import sys\nprint sys.path\nsys.path = ["
 			  "\""+VSFileSystem::datadir+DELIMSTR"modules"DELIMSTR"builtin\""
@@ -259,8 +293,10 @@ void Python::initpaths(){
 			  ",\""+VSFileSystem::datadir+DELIMSTR+basesdir + string("\"")+
 			  "]\n");
 	*/
-  VSFileSystem::vs_fprintf (stderr,"running %s",changepath.c_str());
   char * temppython = strdup(changepath.c_str());
+  if (VS_LOG("python", logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
+    VS_LOG("python", logvs::NOTICE, "running '%s'...",pretty_python_script(changepath).c_str());
+  }
   PyRun_SimpleString(temppython);	
   Python::reseterrors();
   free (temppython);
@@ -327,6 +363,7 @@ void Python::init() {
     return;
   }
   isinit=true;
+  overridePythonEnv();
 // initialize python library
   Py_Initialize();
   initpaths();
@@ -336,10 +373,12 @@ void Python::init() {
 #endif
 	InitBriefing ();
 	InitVS ();
-	VSFileSystem::vs_fprintf (stderr,"testing VS random");
+	VS_LOG("python", logvs::NOTICE, "testing VS random");
 	std::string changepath ("import sys\nprint sys.path\n");
-	VSFileSystem::vs_fprintf (stderr,"running %s",changepath.c_str());
 	char * temppython = strdup(changepath.c_str());
+    if (VS_LOG("python", logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
+        VS_LOG("python", logvs::NOTICE, "running '%s'...", pretty_python_script(changepath).c_str());
+    }
 	PyRun_SimpleString(temppython);	
 	Python::reseterrors();
 	free (temppython);

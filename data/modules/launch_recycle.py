@@ -15,29 +15,29 @@ def NextPos (un, pos, FarApart=1):
     #print "next coord is "+str(3.0*rad*FarApart)+" awa"
     pos[whichcoord]=x
     return tuple(pos)
-  
+
 def move_to (un, where):
     un.SetPosition(where)
     unit.moveOutOfPlayerPath(un)
     un.SetTarget (VS.Unit())
     return NextPos (un,where)
-  
+
 def whereTo (radius, launch_around):
     if (type(launch_around)==type( (1,2,3))):
         pos=launch_around
         rsize = faction_ships.max_radius
     else:
-        pos = launch_around.Position ()    
+        pos = launch_around.Position ()
         rsize = ((launch_around.rSize())*5.0)
     if (rsize > faction_ships.max_radius):
-	    rsize=faction_ships.max_radius
+        rsize=faction_ships.max_radius
     rsize+=radius;
     import fg_util
     dir = fg_util.randDirection()
     return (pos[0]+rsize*dir[0],
             pos[1]+rsize*dir[1],
             pos[2]+rsize*dir[2])
-  
+
 def unOrTupleDistance(un,unortuple,significantp):
     if (type(unortuple)==type((1,2,3))):
         import Vector
@@ -47,7 +47,7 @@ def unOrTupleDistance(un,unortuple,significantp):
             return un.getSignificantDistance(unortuple)
         else:
             return un.getDistance(unortuple)
-      
+
 def look_for (fg, faction, numships,myunit,  pos, gcd,newship=[None]):
     i=0
     un = VS.getUnit (i)
@@ -58,7 +58,7 @@ def look_for (fg, faction, numships,myunit,  pos, gcd,newship=[None]):
     while ((i>=0) and (numships>0)):
         un = VS.getUnit (i)
         if (un):
-                    
+
             if (unOrTupleDistance(un,myunit,1)>gcd ):
                 fac = un.getFactionName ()
                 fgname = un.getFlightgroupName ()
@@ -69,16 +69,16 @@ def look_for (fg, faction, numships,myunit,  pos, gcd,newship=[None]):
                             pos=move_to (un,pos)
                             numships-=1
                             newship[0]=un
-                            print "TTYmoving %s to current area" % (name)
+                            debug.debug("TTYmoving %s to current area" % (name),debug.INFO)
                     else:
                         #toast 'im!
                         un.Kill()
-                        print "TTYaxing %s" % (name)
+                        debug.debug("TTYaxing %s" % (name),debug.INFO)
         i-=1
     return (numships,pos)
-  
+
 def LaunchNext (fg, fac, type, ai, pos, logo,newshp=[None],fgappend='',FarApart=1):
-    debug.debug("Launch nexting "+str(type))
+    debug.debug("Launch nexting "+str(fac)+'/'+str(type))
     combofg=fg+fgappend
     if (fgappend=='Base'):
         combofg=fgappend
@@ -108,12 +108,12 @@ def launch_types_around ( fg, faction, typenumbers, ai, radius, myunit, garbage_
     nr_ships=0
     for t in typenumbers:
         nr_ships+=t[1]
-    debug.debug("before"+str(nr_ships))
+    debug.debug("before: "+str(nr_ships)+' ships',debug.INFO)
     retcontainer=[None]
     if (fgappend=='' and nr_ships>1):
         (nr_ships,pos) = look_for (fg,faction,nr_ships-1,myunit,pos,garbage_collection_distance,retcontainer)
         nr_ships+=1
-    debug.debug("after "+str(nr_ships)+ str(retcontainer))
+    debug.debug("after: "+str(nr_ships)+' ships '+str(retcontainer),debug.INFO)
     count=0
     ret=retcontainer[0]
     found=0
@@ -123,7 +123,7 @@ def launch_types_around ( fg, faction, typenumbers, ai, radius, myunit, garbage_
             num=nr_ships
         for i in range(num):
             newship=[None]
-            debug.debug(pos)
+            debug.debug('launching at position: '+str(pos),debug.INFO)
             pos = LaunchNext (fg,faction,tn[0], ai, pos,logo,newship,fgappend,FarApart)
             if (i==0 and found==0):
                 ret=newship[0]
@@ -136,8 +136,8 @@ def launch_types_around ( fg, faction, typenumbers, ai, radius, myunit, garbage_
     if (not skipdj):
         dj_lib.PlayMusik(0,dj_lib.HOSTILE_NEWLAUNCH_DISTANCE)
     return ret
-    
-  
+
+
 def launch_wave_around ( fg, faction, ai, nr_ships, capship, radius, myunit, garbage_collection_distance,logo,skipdj=0):
     pos = whereTo(radius, myunit)
     debug.debug("before"+str(nr_ships))
@@ -153,4 +153,4 @@ def launch_wave_around ( fg, faction, ai, nr_ships, capship, radius, myunit, gar
         nr_ships-=1
     if (not skipdj):
         dj_lib.PlayMusik(0,dj_lib.HOSTILE_NEWLAUNCH_DISTANCE)
-     
+

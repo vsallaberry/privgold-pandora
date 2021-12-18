@@ -22,6 +22,8 @@
 /*
   Force Feedback support by Alexander Rawass <alexannika@users.sourceforge.net>
 */
+#include <errno.h>
+#include <string.h>
 
 #include "force_feedback.h"
 
@@ -32,6 +34,9 @@
 #include "config_xml.h"
 #include "cmd/script/mission.h"
 #include "options.h"
+#include "vs_log_modules.h"
+
+#define FF_LOG(lvl, ...) JOY_LOG(lvl, __VA_ARGS__)
 
 extern vs_options game_options;
 
@@ -43,7 +48,7 @@ ForceFeedback::ForceFeedback(){
   init();
 #else
   have_ff=false;
-  printf("Force feedback support disabled when compiled\n");
+  FF_LOG(logvs::NOTICE, "Force feedback support disabled when compiled");
 #endif
 };
 
@@ -69,15 +74,15 @@ bool ForceFeedback::haveFF(){
 }
 
 void ForceFeedback::updateForce(float angle,float strength){
-  printf("update force %f degrees %f\n",angle,strength);
+  FF_LOG(logvs::NOTICE, "update force %f degrees %f",angle,strength);
 }
 
 void ForceFeedback::updateSpeedEffect(float strength){
-  printf("speed effect %f\n",strength);
+  FF_LOG(logvs::NOTICE, "speed effect %f",strength);
 }
 
 void ForceFeedback::playHit(float angle,float strength){
-  printf("shield hit %f degrees %f\n",angle,strength);
+  FF_LOG(logvs::NOTICE, "shield hit %f degrees %f",angle,strength);
 }
 
 void ForceFeedback::playAfterburner(bool activate){
@@ -95,7 +100,7 @@ void ForceFeedback::playAfterburner(bool activate){
   }
 
   if(activate==true && is_played[eff_nr]==false){
-    printf("starting ab\n");
+    FF_LOG(logvs::VERBOSE, "starting ab");
     playEffect(eff_ab_wiggle_x);
     playEffect(eff_ab_wiggle_y);
     playEffect(eff_ab_jerk);
@@ -104,7 +109,7 @@ void ForceFeedback::playAfterburner(bool activate){
   }
   else if(activate==false && is_played[eff_nr]==true){
     if(nowtime>eff_last_time[eff_nr]+min_effect_time){
-      printf("stopped ab\n");
+      FF_LOG(logvs::VERBOSE, "stopped ab");
       stopEffect(eff_ab_wiggle_x);
       stopEffect(eff_ab_wiggle_y);
       stopEffect(eff_ab_jerk);
@@ -186,14 +191,14 @@ void ForceFeedback::playEffect(unsigned int eff_nr){
   play.value = 1;
   
   if (write(ff_fd, (const void*) &play, sizeof(play)) == -1) {
-    perror("ff: Play effect");
+    FF_LOG(logvs::NOTICE, "ff: Play effect: %s", strerror(errno));
     have_ff=false;
     close(ff_fd);
     return;
   }
 #endif
 
-  printf("played effect nr %d\n",eff_nr);
+  FF_LOG(logvs::NOTICE, "played effect nr %d",eff_nr);
 }
 
 void ForceFeedback::stopEffect(unsigned int eff_nr){
@@ -203,21 +208,21 @@ void ForceFeedback::stopEffect(unsigned int eff_nr){
   stop.value = 0;
   
   if (write(ff_fd, (const void*) &stop, sizeof(stop)) == -1) {
-    perror("ff: stop effect");
+    FF_LOG(logvs::NOTICE, "ff: stop effect: %s", strerror(errno));
     have_ff=false;
     close(ff_fd);
     return;
   }
 #endif
 
-  printf("stopped effect nr %d\n",eff_nr);
+  FF_LOG(logvs::NOTICE, "stopped effect nr %d",eff_nr);
 }
 
 
 void ForceFeedback::init()
 {
   if(!game_options.force_feedback){
-    printf("force feedback disabled in config file\n");
+    FF_LOG(logvs::NOTICE, "force feedback disabled in config file");
     return;
   }
   
@@ -226,48 +231,47 @@ void ForceFeedback::init()
 
   ff_fd=open(devname,O_RDWR);
   if(ff_fd==-1){
-    perror("error while opening force feedback device");
+    FF_LOG(logvs::NOTICE, "error while opening force feedback device: %s", strerror(errno));
     have_ff=false;
     return;
   }
   
-  printf("Device %s opened\n", devname);
+  FF_LOG(logvs::NOTICE, "Device %s opened", devname);
 	
 	/* Query device */
 	if (ioctl(ff_fd, EVIOCGBIT(EV_FF, sizeof(unsigned long) * 4), features) == -1) {
-		perror("ff:Ioctl query");
+		FF_LOG(logvs::ERROR, "ff:Ioctl query: %s", strerror(errno));
 		have_ff=false;
 		close(ff_fd);
 		return;
 	}
 
-	printf("Axes query: ");
-
-	if (test_bit(ABS_X, features)) printf("Axis X ");
-	if (test_bit(ABS_Y, features)) printf("Axis Y ");
-	if (test_bit(ABS_WHEEL, features)) printf("Wheel ");
-
-	printf("\nEffects: ");
-
-	if (test_bit(FF_CONSTANT, features)) printf("Constant ");
-	if (test_bit(FF_PERIODIC, features)) printf("Periodic ");
-	if (test_bit(FF_SPRING, features)) printf("Spring ");
-	if (test_bit(FF_FRICTION, features)) printf("Friction ");
-	if (test_bit(FF_RUMBLE, features)) printf("Rumble ");
-
-	printf("\nNumber of simultaneous effects: ");
-
+	bool logging = FF_LOG_START(logvs::NOTICE, "Axes query: ");
+    if (logging) {
+        if (test_bit(ABS_X, features)) logvs::vs_printf("Axis X ");
+        if (test_bit(ABS_Y, features)) logvs::vs_printf("Axis Y ");
+        if (test_bit(ABS_WHEEL, features)) logvs::vs_printf("Wheel ");
+        FF_LOG_END(logvs::NOTICE, NULL);
+        FF_LOG_START(logvs::NOTICE, "Effects: ");
+        if (test_bit(FF_CONSTANT, features)) logvs::vs_printf("Constant ");
+        if (test_bit(FF_PERIODIC, features)) logvs::vs_printf("Periodic ");
+        if (test_bit(FF_SPRING, features)) logvs::vs_printf("Spring ");
+        if (test_bit(FF_FRICTION, features)) logvs::vs_printf("Friction ");
+        if (test_bit(FF_RUMBLE, features)) logvs::vs_printf("Rumble ");
+        FF_LOG_END(logvs::NOTICE, NULL);
+        FF_LOG_START(logvs::NOTICE, "Number of simultaneous effects: ");
+    }
 	if (ioctl(ff_fd, EVIOCGEFFECTS, &n_effects) == -1) {
-		perror("Ioctl number of effects");
+		FF_LOG(logvs::NOTICE, "Ioctl number of effects: %s", strerror(errno));
 		have_ff=false;
 		close(ff_fd);
 		return;
 	}
 
-	printf("nr_effects: %d\n", n_effects);
+	if (logging) FF_LOG_END(logvs::NOTICE, "nr_effects: %d", n_effects);
 
 	if(n_effects<N_EFFECTS){
-	  printf("not enough effects in device - ff disabled\n");
+	  LOG_VS(logvs::NOTICE, "not enough effects in device - ff disabled");
 	  close(ff_fd);
 	  have_ff=false;
 	  return;
@@ -474,9 +478,9 @@ void ForceFeedback::init()
 
 
 	for(int i=0;i<N_EFFECTS;i++){
-	  printf("uploading effect %d\n",i);
+	  FF_LOG(logvs::NOTICE, "uploading effect %d",i);
 	  if (ioctl(ff_fd, EVIOCSFF, &effects[i]) == -1) {
-	    perror("error while uploading effect");
+	    FF_LOG(logvs::ERROR, "error while uploading effect: %s", strerror(errno));
 	    have_ff=false;
 	    close(ff_fd);
 	    return;

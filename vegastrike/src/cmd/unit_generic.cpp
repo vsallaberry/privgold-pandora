@@ -1,4 +1,5 @@
 #include "config.h"
+#include <stdlib.h>
 #include <set>
 #include "configxml.h"
 #include "audiolib.h"
@@ -40,8 +41,14 @@
 #include "vs_random.h"
 #include "galaxy_xml.h"
 #include "gfx/camera.h"
-#ifdef _WIN32
-#define strcasecmp stricmp
+#include "log.h"
+#include "vs_log_modules.h"
+
+#if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
 #endif
 
 #include "unit_find.h"
@@ -52,6 +59,7 @@ static float mymin (float a, float b) {return a<b?a:b;}
 
 using namespace Orders;
 extern void DestroyMount(Mount*);
+
 
 void Mount::SetMountPosition(const Vector &v)
 {
@@ -111,7 +119,7 @@ void Unit::SetNebula(Nebula *neb)
 	if (!SubUnits.empty()) {
 		un_fiter iter =SubUnits.fastIterator();
 		Unit * un;
-		while (un = *iter) {
+		while ((un = *iter) != NULL) {
 			un->SetNebula(neb);
 			++iter;
 		}
@@ -783,7 +791,7 @@ void CheckUnit(Unit * un)
 {
 	if (deletedUn.Get ((long)un)!=NULL) {
 		while (deathofvs) {
-			printf ("%ld died",(long)un);
+			UNIT_LOG(logvs::NOTICE, "%ld died",(long)un);
 		}
 	}
 }
@@ -936,10 +944,10 @@ Unit::~Unit()
 {
 	free(image->cockpit_damage);
 	if ((!killed)) {
-		VSFileSystem::vs_fprintf (stderr,"Assumed exit on unit %s(if not quitting, report error)\n",name.get().c_str());
+		UNIT_LOG(logvs::WARN, "Assumed exit on unit %s(if not quitting, report error)",name.get().c_str());
 	}
 	if (ucref) {
-		VSFileSystem::vs_fprintf (stderr,"DISASTER AREA!!!!");
+		UNIT_LOG(logvs::ERROR, "DISASTER AREA!!!!");
 	}
 #ifdef DESTRUCTDEBUG
 	VSFileSystem::vs_fprintf (stderr,"stage %d %x %d\n", 0,this,ucref);
@@ -1267,7 +1275,7 @@ void Unit::Init()
 
 	// No cockpit reference here
 	if (!image->cockpit_damage) {
-		int numg= (1+MAXVDUS+UnitImages::NUMGAUGES)*2;
+		unsigned int numg= (1+MAXVDUS+UnitImages::NUMGAUGES)*2;
 		image->cockpit_damage=(float*)malloc((numg)*sizeof(float));
 		for (unsigned int damageiterator=0;damageiterator<numg;++damageiterator) {
 			image->cockpit_damage[damageiterator]=1;
@@ -1413,7 +1421,7 @@ void Unit::Init(const char *filename, bool SubU, int faction,std::string unitMod
 		bool istemplate=(string::npos!=(string(filename).find(".template")));
 		static bool usingtemplates = XMLSupport::parse_bool(vs_config->getVariable("data","usingtemplates","true"));
 		if(!istemplate||(istemplate&&usingtemplates)){
-			cout << "Unit file " << filename << " not found" << endl;
+            UNIT_LOG(logvs::NOTICE, "Unit file %s not found", filename);
 /*
 			VSFileSystem::vs_fprintf (stderr,"Assertion failed in Unit::Init -- Unit %s not found\n",filename);
 
@@ -1517,7 +1525,7 @@ void Unit::calculate_extent(bool update_collide_queue)
 		corner_max = corner_max.Max(meshdata[a]->corner_max());
 	}							 /* have subunits now in table*/
 	const Unit * un;
-	for(un_kiter iter = SubUnits.constIterator();un = *iter;++iter){
+	for(un_kiter iter = SubUnits.constIterator();(un = *iter) != NULL;++iter){
 		corner_min = corner_min.Min(un->LocalPosition().Cast()+un->corner_min);
 		corner_max = corner_max.Max(un->LocalPosition().Cast()+un->corner_max);
 	}
@@ -2260,7 +2268,7 @@ void Unit::ExecuteAI()
 	if (!SubUnits.empty()) {
 		un_iter iter =getSubUnits();
 		Unit * un;
-		while (un = *iter) {
+		while ((un = *iter) != NULL) {
 			un->ExecuteAI();	 //like dubya
 			++iter;
 		}
@@ -2347,7 +2355,7 @@ void Unit::SetTurretAI ()
 	static bool talkinturrets = XMLSupport::parse_bool(vs_config->getVariable("AI","independent_turrets","false"));
 	if (talkinturrets) {
 		Unit * un;
-		for(un_iter iter = getSubUnits();un = *iter;++iter){
+		for(un_iter iter = getSubUnits();(un = *iter) != NULL;++iter){
 			if (!CheckAccessory(un)) {
 				un->EnqueueAIFirst (new Orders::FireAt(15.0f));
 				un->EnqueueAIFirst (new Orders::FaceTarget (false,3));
@@ -2357,7 +2365,7 @@ void Unit::SetTurretAI ()
 	}
 	else {
 		Unit * un;
-		for(un_iter iter = getSubUnits();un = *iter;++iter){
+		for(un_iter iter = getSubUnits();(un = *iter) != NULL;++iter){
 			if (!CheckAccessory(un)) {
 				if (un->aistate) {
 					un->aistate->Destroy();
@@ -2375,7 +2383,7 @@ void Unit::DisableTurretAI ()
 {
 	turretstatus=1;
 	Unit * un;
-	for(un_iter iter = getSubUnits();un = *iter;++iter){
+	for(un_iter iter = getSubUnits();(un = *iter) != NULL;++iter){
 		if (un->aistate) {
 			un->aistate->Destroy();
 		}
@@ -2445,7 +2453,7 @@ static std::string NearestSystem (std::string currentsystem,QVector pos)
 					if (test>.2) {
 						//            test=1-test;
 						double tmp=dir.MagnitudeSquared()/test/test/test;
-						for (unsigned int cp=0;cp<_Universe->numPlayers();++cp) {
+						for (int cp=0;cp<_Universe->numPlayers();++cp) {
 							std::string whereto=_Universe->AccessCockpit(cp)->GetNavSelectedSystem();
 							if (whereto.length()==1+i->first.length()+j->first.length()) {
 								if (whereto.substr(0,i->first.length())==i->first && whereto.substr(i->first.length()+1)==j->first) {
@@ -2821,7 +2829,7 @@ void Unit::UpdateSubunitPhysics (const Transformation &trans, const Matrix &tran
 		float backup=SIMULATION_ATOM;
 		float basesimatom=(this->sim_atom_multiplier?backup/(float)this->sim_atom_multiplier:backup);
 		unsigned int cur_sim_frame = _Universe->activeStarSystem()->getCurrentSimFrame();
-		for(un_iter iter = getSubUnits();su = *iter;++iter){
+		for(un_iter iter = getSubUnits();(su = *iter) != NULL;++iter){
 			if (this->sim_atom_multiplier&&su->sim_atom_multiplier) {
 				//This ugly thing detects skipped frames.
 				//This shouldn't happen during normal execution, as the interpolation will not be correct
@@ -3474,10 +3482,11 @@ bool Unit::jumpReactToCollision (Unit * smalle)
 			return false;
 		}
 		//  ActivateAnimation(smalle);
-		if (!SPEC_interference&&((GetJumpStatus().drive>=0&&
-			(warpenergy>=GetJumpStatus().energy
-			||(ai_jump_cheat&&cp==NULL)
-			)))
+		if ((!SPEC_interference
+            &&((GetJumpStatus().drive>=0&&
+			    (warpenergy>=GetJumpStatus().energy
+			     ||(ai_jump_cheat&&cp==NULL)
+			))))
 		||smalle->image->forcejump) {
 			warpenergy-=GetJumpStatus().energy;
 			DeactivateJumpDrive();
@@ -3572,7 +3581,7 @@ void Unit::ApplyForce(const Vector &Vforce)
 		NetForce += Vforce;
 	}
 	else {
-		VSFileSystem::vs_fprintf (stderr,"fatal force");
+		UNIT_LOG(logvs::NOTICE, "fatal force");
 	}
 }
 
@@ -3584,7 +3593,7 @@ void Unit::ApplyLocalForce(const Vector &Vforce)
 		NetLocalForce += Vforce;
 	}
 	else {
-		VSFileSystem::vs_fprintf (stderr,"fatal local force");
+		UNIT_LOG(logvs::NOTICE, "fatal local force");
 	}
 }
 
@@ -3595,7 +3604,7 @@ void Unit::Accelerate(const Vector &Vforce)
 		NetForce += Vforce * GetMass();
 	}
 	else {
-		VSFileSystem::vs_fprintf (stderr,"fatal force");
+		UNIT_LOG(logvs::NOTICE, "fatal force");
 	}
 }
 
@@ -3683,7 +3692,7 @@ Vector Unit::ClampTorque (const Vector &amt1)
 	fuel-=GetFuelUsage(false)*SIMULATION_ATOM*Res.Magnitude()*FMEC_exit_vel_inverse/Lithium6constant;
 #ifndef __APPLE__
 	if (ISNAN(fuel)) {
-		fprintf (stderr,"FUEL is NAN\n");
+		UNIT_LOG(logvs::WARN, "FUEL is NAN");
 		fuel=0;
 	}
 #endif
@@ -3889,7 +3898,7 @@ Vector Unit::ClampThrust (const Vector &amt1, bool afterburn)
 		fuel-=((afterburn&&finegrainedFuelEfficiency)?afterburnenergy:GetFuelUsage(afterburn))*SIMULATION_ATOM*Res.Magnitude()*FMEC_exit_vel_inverse/Lithium6constant;
 #ifndef __APPLE__
 		if (ISNAN(fuel)) {
-			fprintf(stderr,"Fuel is NAN A\n");
+			UNIT_LOG(logvs::WARN, "Fuel is NAN A");
 			fuel=0;
 		}
 #endif
@@ -3899,7 +3908,7 @@ Vector Unit::ClampThrust (const Vector &amt1, bool afterburn)
 		fuel-=GetFuelUsage(false)*SIMULATION_ATOM*Res.Magnitude()*FMEC_exit_vel_inverse/Lithium6constant;
 #ifndef __APPLE__
 		if (ISNAN(fuel)) {
-			fprintf(stderr,"Fuel is NAN B\n");
+			UNIT_LOG(logvs::WARN, "Fuel is NAN B");
 			fuel=0;
 		}
 #endif
@@ -4038,7 +4047,7 @@ float totalShieldEnergyCapacitance (const Shield & shield)
 {
 	static float shieldenergycap = XMLSupport::parse_float(vs_config->getVariable ("physics","shield_energy_capacitance",".2"));
 	static bool use_max_shield_value = XMLSupport::parse_bool(vs_config->getVariable("physics","use_max_shield_energy_usage","false"));
-	return shieldenergycap * use_max_shield_value?totalShieldVal(shield):currentTotalShieldVal(shield);
+	return (shieldenergycap * use_max_shield_value) ? totalShieldVal(shield) : currentTotalShieldVal(shield);
 }
 
 
@@ -4284,7 +4293,7 @@ void Unit::RegenShields ()
 		fuel-=FMEC_factor*((recharge*SIMULATION_ATOM-(reactor_idle_efficiency*excessenergy))/(min_reactor_efficiency+(image->LifeSupportFunctionality*(1-min_reactor_efficiency))));
 		if (fuel<0) fuel=0;
 		if (!FINITE(fuel)) {
-			fprintf (stderr,"Fuel is nan C\n");
+			UNIT_LOG(logvs::WARN, "Fuel is nan C");
 			fuel=0;
 		}
 	}
@@ -4307,7 +4316,7 @@ Vector Unit::ResolveForces (const Transformation &trans, const Matrix &transmat)
 	if (GetMoment()){
 		temp1=temp1/GetMoment();
 	} else{
-		VSFileSystem::vs_fprintf (stderr,"zero moment of inertia %s\n",name.get().c_str());
+		UNIT_LOG(logvs::NOTICE, "zero moment of inertia %s",name.get().c_str());
 	}
 	Vector temp (temp1*SIMULATION_ATOM);
 	/*  //FIXME  does this shit happen!
@@ -4904,7 +4913,7 @@ void Unit::DamageRandSys(float dam, const Vector &vec, float randnum, float degr
 		else if (randnum>=cargo_damage_prob) {
 			//Do something NASTY to the cargo
 			if (image->cargo.size()>0) {
-				int i=0;
+				size_t i=0;
 				unsigned int cargorand_o=rand();
 				unsigned int cargorand;
 				do {
@@ -5123,12 +5132,12 @@ void Unit::Kill(bool erasefromsave, bool quitting)
 	}
 	aistate=NULL;
 	Unit *un;
-	for(un_iter iter = getSubUnits();un = *iter;++iter){
+	for(un_iter iter = getSubUnits();(un = *iter) != NULL;++iter){
 		un->Kill();
 	}
 	if (isUnit()!=MISSILEPTR) {
-		printf("UNIT HAS DIED: %s %s (file %s)\n",name.get().c_str(),
-				fullname.c_str(), filename.get().c_str());
+		UNIT_LOG(logvs::INFO, "UNIT HAS DIED: %s %s (file %s)",name.get().c_str(),
+				 fullname.c_str(), filename.get().c_str());
 	}
 	if (ucref==0) {
 		Unitdeletequeue.push_back(this);
@@ -5578,7 +5587,7 @@ float Unit::DealDamageToHullReturnArmor (const Vector & pnt, float damage, float
 				}
 			}
 			static unsigned int max_dump_cargo=XMLSupport::parse_int(vs_config->getVariable("physics","max_dumped_cargo","15"));
-			int dumpedcargo=0;
+			unsigned int dumpedcargo=0;
 			if (SERVER||Network==NULL)
 			if (faction!=neutralfac&&faction!=upgradesfac) {
 				for (unsigned int i=0;i<numCargo();++i) {
@@ -5735,7 +5744,7 @@ void Unit::TargetTurret (Unit * targ)
 		Unit * su;
 		bool inrange = (targ!=NULL)?InRange(targ):true;
 		if (inrange) {
-			for(un_iter iter = getSubUnits();su = *iter;++iter){
+			for(un_iter iter = getSubUnits();(su = *iter) != NULL;++iter){
 				su->Target (targ);
 				su->TargetTurret(targ);
 			}
@@ -6010,7 +6019,7 @@ template<bool FORWARD> class WeaponComparator
 			WeaponGroupSet myset;
 			unsigned int i;
 			typename WeaponGroupSet::const_iterator iter;
-			printf("ToggleWeaponSet: %s\n", FORWARD?"true":"false");
+			UNIT_LOG(logvs::INFO, "ToggleWeaponSet: %s", FORWARD?"true":"false");
 			for (i=0;i<un->mounts.size();++i) {
 				if (checkmount(un,i,missile)) {
 					WeaponGroup mygroup;
@@ -6048,20 +6057,22 @@ template<bool FORWARD> class WeaponComparator
 				myset.insert(allWeapons);
 			myset.insert(allWeaponsNoSpecial);
 			for (iter=myset.begin();iter!=myset.end();++iter) {
-				for (WeaponGroup::const_iterator iter2=(*iter).begin();iter2!=(*iter).end();++iter2) {
-					printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
-				}
-				printf("\n");
+                if (UNIT_LOG_START(logvs::INFO, "WeaponGroup: ") > 0) {
+                    for (WeaponGroup::const_iterator iter2=(*iter).begin();iter2!=(*iter).end();++iter2) {
+                        logvs::vs_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
+                    }
+                    UNIT_LOG_END(logvs::INFO, NULL);
+                }
 			}
 			WeaponGroup activeWeapons;
-			printf("CURRENT: ");
+			int logging = UNIT_LOG_START(logvs::INFO, "CURRENT: ");
 			for (i=0;i<un->mounts.size();++i) {
 				if (un->mounts[i].status==Mount::ACTIVE&&checkmount(un,i,missile)) {
 					activeWeapons.insert(i);
-					printf("%d:%s ", i, un->mounts[i].type->weapon_name.c_str());
+					if (logging) logvs::vs_printf("%d:%s ", i, un->mounts[i].type->weapon_name.c_str());
 				}
 			}
-			printf("\n");
+			if (logging) UNIT_LOG_END(logvs::INFO, NULL);
 			iter=myset.upper_bound(activeWeapons);
 			if (iter==myset.end()) {
 				iter=myset.begin();
@@ -6072,13 +6083,13 @@ template<bool FORWARD> class WeaponComparator
 			for (i=0;i<un->mounts.size();++i) {
 				un->mounts[i].DeActive(missile);
 			}
-			printf("ACTIVE: ");
+			logging = UNIT_LOG_START(logvs::INFO, "ACTIVE: ");
 			for (WeaponGroup::const_iterator iter2=(*iter).begin();iter2!=(*iter).end();++iter2) {
-				printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
+				if (logging) logvs::vs_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
 				un->mounts[*iter2].Activate(missile);
 			}
-			printf("\n");
-			printf("ToggleWeapon end...\n");
+			if (logging) UNIT_LOG_END(logvs::INFO, NULL);
+			UNIT_LOG(logvs::INFO, "ToggleWeapon end...");
 		}
 };
 
@@ -6213,7 +6224,7 @@ void Unit::SetRecursiveOwner(Unit *target)
 {
 	owner=target;
 	Unit * su;
-	for(un_iter iter = getSubUnits();su = *iter;++iter)
+	for(un_iter iter = getSubUnits();(su = *iter) != NULL;++iter)
 		su->SetRecursiveOwner (target);
 }
 
@@ -6306,7 +6317,7 @@ double Unit::getMinDis (const QVector &pnt)
 		}
 	}
 	Unit * su;
-	for(un_iter ui = getSubUnits();su = *ui;++ui){
+	for(un_iter ui = getSubUnits();(su = *ui) != NULL;++ui){
 		tmpvar = su->getMinDis (pnt);
 		if (tmpvar<minsofar) {
 			minsofar=tmpvar;
@@ -6381,7 +6392,7 @@ float Unit::querySphereClickList (const QVector &st, const QVector &dir, float e
 		}
 	}
 	const Unit * su;
-	for(un_kiter ui = viewSubUnits();su = *ui;++ui){
+	for(un_kiter ui = viewSubUnits();(su = *ui) != NULL;++ui){
 		float tmp=su->querySphereClickList (st,dir,err);
 		if (tmp==0) {
 			continue;
@@ -6419,7 +6430,7 @@ bool Unit::queryBoundingBox (const QVector &pnt, float err)
 		delete bbox;
 	}
 	Unit * su;
-	for(un_iter ui = getSubUnits();su = *ui;++ui){
+	for(un_iter ui = getSubUnits();(su = *ui) != NULL;++ui){
 		if ((su)->queryBoundingBox (pnt,err)) {
 			return true;
 		}
@@ -6447,7 +6458,7 @@ int Unit::queryBoundingBox (const QVector &origin, const Vector &direction, floa
 		}
 	}
 	Unit  * su;
-	for(un_iter iter = getSubUnits();su = *iter;++iter){
+	for(un_iter iter = getSubUnits();(su = *iter) != NULL;++iter){
 		switch (su->queryBoundingBox (origin,direction,err)) {
 			case 1:
 				return 1;
@@ -6802,9 +6813,9 @@ bool Unit::UnDock (Unit * utdw)
 			this->owner = NULL;
 	}
 
-	cerr<<"Asking to undock"<<endl;
+	UNIT_LOG(logvs::NOTICE, "Asking to undock");
 	if( Network!=NULL && !SERVER && !_Universe->netLocked()) {
-		cerr<<"Sending an undock notification"<<endl;
+		UNIT_LOG(logvs::NOTICE,"Sending an undock notification");
 		int playernum = _Universe->whichPlayerStarship( this);
 		if( playernum>=0)
 			Network[playernum].undockRequest( utdw->serial);
@@ -7497,10 +7508,10 @@ double Unit::Upgrade (const std::string &file, int mountoffset, int subunitoffse
 {
 #if 0
 	if (shield.number==2) {
-		printf ("shields before %s %f %f",file.c_str(),shield.fb[2],shield.fb[3]);
+		UNIT_LOG(logvs::VERBOSE, "shields before %s %f %f",file.c_str(),shield.fb[2],shield.fb[3]);
 	}
 	else {
-		printf ("shields before %s %d %d",file.c_str(),shield.fbrl.frontmax,shield.fbrl.backmax);
+		UNIT_LOG(logvs::VERBOSE, "shields before %s %d %d",file.c_str(),shield.fbrl.frontmax,shield.fbrl.backmax);
 
 	}
 #endif
@@ -7531,10 +7542,10 @@ double Unit::Upgrade (const std::string &file, int mountoffset, int subunitoffse
 	}
 #if 0
 	if (shield.number==2) {
-		printf ("shields before %s %f %f",file.c_str(),shield.fb[2],shield.fb[3]);
+		UNIT_LOG(logvs::VERBOSE, "shields before %s %f %f",file.c_str(),shield.fb[2],shield.fb[3]);
 	}
 	else {
-		printf ("shields before %s %d %d",file.c_str(),shield.fbrl.frontmax,shield.fbrl.backmax);
+		UNIT_LOG(logvs::VERBOSE, "shields before %s %d %d",file.c_str(),shield.fbrl.frontmax,shield.fbrl.backmax);
 
 	}
 #endif
@@ -7782,7 +7793,7 @@ bool Unit::UpAndDownGrade (const Unit * up, const Unit * templ, int mountoffset,
 				if (_Universe->getNumActiveStarSystem()&&!ss) ss=_Universe->activeStarSystem();
 				if (ss) {
 					Unit * un;
-					for (un_iter i = ss->gravitationalUnits().createIterator();un=*i;++i) {
+					for (un_iter i = ss->gravitationalUnits().createIterator();(un=*i) != NULL;++i) {
 						if (un==this){
 							i.remove();
 							// NOTE: I think we can only be in here once
@@ -8107,14 +8118,16 @@ bool Unit::UpAndDownGrade (const Unit * up, const Unit * templ, int mountoffset,
 		// NOTE: Afterburner type 1 (gas)
 		// NOTE: Afterburner type 0 (pwr)
 
-		if ((afterburnenergy>up->afterburnenergy||(afterburntype!=up->afterburntype&&up->afterburnenergy!=32767))&&up->afterburnenergy>0||force_change_on_nothing) {
+		if (((afterburnenergy>up->afterburnenergy
+              || (afterburntype!=up->afterburntype&&up->afterburnenergy!=32767))
+             && up->afterburnenergy>0) || force_change_on_nothing) {
 			++numave;
 			if (touchme) afterburnenergy=up->afterburnenergy, afterburntype=up->afterburntype;
 		}
 		else if (afterburnenergy<=up->afterburnenergy&&afterburnenergy>=0&&up->afterburnenergy>0&&up->afterburnenergy<32767) {
 			cancompletefully=false;
 		}
-		if (jump.drive==-2&&up->jump.drive>=-1||force_change_on_nothing) {
+		if ((jump.drive==-2 && up->jump.drive>=-1) || force_change_on_nothing) {
 			if (touchme) {jump.drive = up->jump.drive;jump.damage=0;}
 			++numave;
 		}
@@ -8565,7 +8578,7 @@ void Unit::TurretFAW()
 {
 	turretstatus=3;
 	Unit * un;
-	for(un_iter iter = getSubUnits();un = *iter;++iter){
+	for(un_iter iter = getSubUnits();(un = *iter)!=NULL;++iter){
 		if (!CheckAccessory(un)) {
 			un->EnqueueAIFirst (new Orders::FireAt(15.0f));
 			un->EnqueueAIFirst (new Orders::FaceTarget (false,3));
@@ -8908,7 +8921,7 @@ void Unit::EjectCargo (unsigned int index)
 int Unit::RemoveCargo (unsigned int i, int quantity,bool eraseZero)
 {
 	if (!(i<image->cargo.size())) {
-		fprintf (stderr,"(previously) FATAL problem...removing cargo that is past the end of array bounds.");
+		UNIT_LOG(logvs::WARN, "(previously) FATAL problem...removing cargo that is past the end of array bounds.");
 		return 0;
 	}
 	Cargo *carg = &(image->cargo[i]);
@@ -9401,7 +9414,7 @@ std::string Unit::subunitSerializer (const XMLType &input, void * mythis)
 	int index=input.w.hardint;
 	Unit *su;
 	int i=0;
-	for (un_iter ui=un->getSubUnits();su=*ui;++ui,++i) {
+	for (un_iter ui=un->getSubUnits();(su=*ui)!=NULL;++ui,++i) {
 		if (i==index) {
 			if (su->image->unitwriter) {
 				return su->image->unitwriter->getName();
@@ -9554,7 +9567,7 @@ bool Unit::TransferUnitToSystem (StarSystem * Current)
 		return true;
 	}
 	else {
-		VSFileSystem::vs_fprintf (stderr,"Fatal Error: cannot remove starship from critical system");
+		UNIT_LOG(logvs::ERROR, "Fatal Error: cannot remove starship from critical system");
 	}
 	return false;
 }
@@ -9618,7 +9631,7 @@ void Unit::Repair()
 						const Unit * up=getUnitFromUpgradeName(carg->content,upfac);
 						static std::string loadfailed("LOAD_FAILED");
 						if (up->name == loadfailed) {
-							printf ("Bug: Load failed cargo encountered: report to hellcatv@hotmail.com\n");
+							UNIT_LOG(logvs::WARN, "Bug: Load failed cargo encountered: report to hellcatv@hotmail.com");
 						}
 						else {
 							double percentage=0;
@@ -9626,7 +9639,7 @@ void Unit::Repair()
 							if (up->SubUnits.empty()&&up->GetNumMounts()==0) {
 								this->Upgrade(up,0,0,0,true,percentage,makeTemplateUpgrade(this->name,this->faction),false,false);
 								if (percentage==0) {
-									VSFileSystem::vs_fprintf (stderr,"Failed repair for unit %s, cargo item %d: %s (%s) - please report error\n",name.get().c_str(),image->next_repair_cargo,carg->GetContent().c_str(),carg->GetCategory().c_str());
+									UNIT_LOG(logvs::WARN, "Failed repair for unit %s, cargo item %d: %s (%s) - please report error",name.get().c_str(),image->next_repair_cargo,carg->GetContent().c_str(),carg->GetCategory().c_str());
 								}
 							}
 						}

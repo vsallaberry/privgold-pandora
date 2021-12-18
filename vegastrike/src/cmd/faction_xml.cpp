@@ -13,10 +13,13 @@
 #include "cmd/music.h"
 #include "faction_generic.h"
 //#include "faction_util.h"
+#include "log.h"
+
 static int unitlevel;
 using namespace XMLSupport;
 //using std::sort;
 
+#define FACTION_LOG(lvl, ...) VS_LOG("game", lvl, __VA_ARGS__)
 
 static FSM * getFSM (const std::string & value) {
   static Hashtable <std::string, FSM, 17> fsms;
@@ -323,10 +326,11 @@ using namespace std;
   VSError err;
   if( buflength==0 || xmlbuffer==NULL)
   {
-	  cout << "FactionXML:LoadXML " << filename << endl;
+      FACTION_LOG(logvs::NOTICE, "FactionXML:LoadXML %s", filename);
 	  err = f.OpenReadOnly( filename, UnknownFile);
 	  if(err>Ok) {
-		cout << "Failed to open '" << filename << "' this probably means it can't find the data directory" << endl;
+		FACTION_LOG(logvs::ERROR, "Failed to open '%s', this probably means it can't find the data directory",
+                    filename);
 		assert(0);
 	  }
   }

@@ -8,6 +8,8 @@ import universe
 import unit
 import quest
 import Director
+import debug
+
 class patrol (Director.Mission):
     def __init__ (self,numsystemsaway, num_significants_to_patrol, distance_from_base, creds, jumps=(), donevar=''):
         Director.Mission.__init__(self)
@@ -103,12 +105,12 @@ class patrol (Director.Mission):
                     self.SuccessMission()
 
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
 def initrandom (minsysaway,maxsysaway,minsigtopatrol,maxsigtopatrol,mincred,maxcred):
     nsys = vsrandom.randrange (minsysaway, maxsysaway)
     nsig = vsrandom.randrange (minsigtopatrol, maxsigtopatrol)

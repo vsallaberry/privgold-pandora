@@ -858,7 +858,8 @@ else
   ord =       (new Orders::FaceTargetITTS(0, 3));
   AddOrd (aisc,un,ord);    
   un->SelectAllWeapon(false);
-  un->Fire((weapon_info::LIGHT || weapon_info::MEDIUM),false);
+  //WAS: un->Fire((weapon_info::LIGHT || weapon_info::MEDIUM),false);//LIGHT==1 => 1||2 = 1
+  un->Fire((weapon_info::LIGHT /*|| weapon_info::MEDIUM*/),false);
   TurnTowards(aisc, un);
 //  un->Fire(weapon_info::MEDIUM,false);
 //  un->Fire(weapon_info::HEAVY,false);

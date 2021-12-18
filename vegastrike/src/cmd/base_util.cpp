@@ -1,3 +1,23 @@
+/*
+ * Vega Strike
+ * Copyright (C) 2001-2021 VegaStrike developers
+ *
+ * http://vegastrike.sourceforge.net/
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 #include <Python.h>
 #include "python/python_class.h"
 #include <string>
@@ -26,8 +46,9 @@ typedef boost::python::dictionary BoostPythonDictionary ;
 #endif
 
 #include "in_kb.h"
-
-extern float getFontHeight();
+#include "unicode.h"
+#include "log.h"
+#include "vs_log_modules.h"
 
 namespace BaseUtil {
 	inline BaseInterface::Room *CheckRoom (int room) {
@@ -41,28 +62,33 @@ namespace BaseUtil {
 		BaseInterface::CurrentBase->rooms.back()->deftext=text;
 		return BaseInterface::CurrentBase->rooms.size()-1;
 	}
-	void Texture(int room, std::string index, std::string file, float x, float y) {
+	static BaseInterface::Room::BaseVSSprite * CreateTexture(int room, std::string index, std::string file, float x, float y) {
 		BaseInterface::Room *newroom=CheckRoom(room);
-		if (!newroom) return;
-		newroom->objs.push_back(new BaseInterface::Room::BaseVSSprite(file.c_str(),index));
+		if (!newroom) return NULL;
+		BaseInterface::Room::BaseVSSprite* newobj = new BaseInterface::Room::BaseVSSprite(file.c_str(),index);
+		newroom->AddObj(newobj);
 #ifdef BASE_MAKER
-		((BaseInterface::Room::BaseVSSprite*)newroom->objs.back())->texfile=file;
+		newobj->texfile=file;
 #endif
 		float tx=0, ty=0;
 		static bool addspritepos = XMLSupport::parse_bool(vs_config->getVariable("graphics","offset_sprites_by_pos","true"));
 		if (addspritepos)
-			((BaseInterface::Room::BaseVSSprite*)newroom->objs.back())->spr.GetPosition(tx,ty);
+			newobj->spr.GetPosition(tx,ty);
                 
-		dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs.back())->spr.SetPosition(x+tx,y+ty);
+		newobj->spr.SetPosition(x+tx,y+ty);
+		return newobj;
+	}
+	void Texture(int room, std::string index, std::string file, float x, float y) {
+		CreateTexture(room, index, file, x, y);
 	}
     void Video(int room, std::string index, std::string vfile, std::string afile, float x, float y) {
         BaseInterface::Room *newroom=CheckRoom(room);
         if (!newroom) return;
         
-        BaseUtil::Texture(room, index, vfile, x, y);
+        BaseInterface::Room::BaseVSSprite * newobj = BaseUtil::CreateTexture(room, index, vfile, x, y);
         
         int sndstream = AUDCreateMusic(afile);
-        dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs.back())->spr.SetTimeSource(sndstream);
+        newobj->spr.SetTimeSource(sndstream);
     }
     void VideoStream(int room, std::string index, std::string streamfile, float x, float y, float w, float h) {
         BaseInterface::Room *newroom=CheckRoom(room);
@@ -81,18 +107,19 @@ namespace BaseUtil {
         newobj->texfile=file;
 #endif
         
-        newroom->objs.push_back(newobj);
+        newroom->AddObj(newobj);
     }
 	void SetTexture(int room, std::string index, std::string file)
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->objs.size();i++) {
-			if (newroom->objs[i]) {
-				if (newroom->objs[i]->index==index) {
-					// FIXME: Will crash if not a Sprite object.
-					dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs[i])->SetSprite(file);
-				}
+		for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+				its.first != its.second; ++its.first) {
+			BaseInterface::Room::BaseVSSprite* sprite = newroom->GetObj<BaseInterface::Room::BaseVSSprite>(its.first);
+			if (newroom->CheckObj(sprite)) {
+				sprite->SetSprite(file);
+			} else if (!sprite) {
+				BASE_LOG(logvs::WARN, "SetTexture: the object '%s' is not a Sprite !", index.c_str());
 			}
 		}
 	}
@@ -100,12 +127,13 @@ namespace BaseUtil {
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->objs.size();i++) {
-			if (newroom->objs[i]) {
-				if (newroom->objs[i]->index==index) {
-					// FIXME: Will crash if not a Sprite object.
-					dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs[i])->SetSize(w,h);
-				}
+		for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+				its.first != its.second; ++its.first) {
+			BaseInterface::Room::BaseVSSprite* sprite = newroom->GetObj<BaseInterface::Room::BaseVSSprite>(its.first);
+			if (newroom->CheckObj(sprite)) {
+				sprite->SetSize(w,h);
+			} else if (!sprite) {
+				BASE_LOG(logvs::WARN, "SetTextureSize: the object '%s' is not a Sprite !", index.c_str());
 			}
 		}
 	}
@@ -113,72 +141,111 @@ namespace BaseUtil {
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->objs.size();i++) {
-			if (newroom->objs[i]) {
-				if (newroom->objs[i]->index==index) {
-					// FIXME: Will crash if not a Sprite object.
-					dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs[i])->SetPos(x,y);
-				}
+		for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::BaseVSSprite* sprite = newroom->GetObj<BaseInterface::Room::BaseVSSprite>(its.first);
+			if (newroom->CheckObj(sprite)) {
+				sprite->SetPos(x,y);
+			} else if (!sprite) {
+				BASE_LOG(logvs::WARN, "SetTexturePos: the object '%s' is not a Sprite !", index.c_str());
 			}
 		}
 	}
     void PlayVideo(int room, std::string index)
     {
-        BaseInterface::Room *newroom=CheckRoom(room);
-        if (!newroom) return;
-        for (int i=0;i<newroom->objs.size();i++) {
-            if (newroom->objs[i]) {
-                if (newroom->objs[i]->index==index) {
-                    // FIXME: Will crash if not a Sprite object.
-                    int snd = dynamic_cast<BaseInterface::Room::BaseVSSprite*>(newroom->objs[i])->spr.GetTimeSource();
-                    if (snd)
-                        AUDStartPlaying(snd);
-                }
-            }
-        }
+    	BaseInterface::Room *newroom=CheckRoom(room);
+    	if (!newroom) return;
+    	for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+    		 its.first != its.second; ++its.first) {
+    		BaseInterface::Room::BaseVSSprite* sprite = newroom->GetObj<BaseInterface::Room::BaseVSSprite>(its.first);
+    		if (newroom->CheckObj(sprite)) {
+    			int snd = sprite->spr.GetTimeSource();
+    			if (snd)
+    				AUDStartPlaying(snd);
+    		} else if (!sprite) {
+    			BASE_LOG(logvs::WARN, "PlayVideo: the object '%s' is not a Sprite !", index.c_str());
+    		}
+    	}
     }
 	void Ship (int room, std::string index,QVector pos,Vector Q, Vector R) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
 		Vector P = R.Cross(Q);
 		P.Normalize();
-		newroom->objs.push_back(new BaseInterface::Room::BaseShip(P.i,P.j,P.k,Q.i,Q.j,Q.k,R.i,R.j,R.k,pos,index));
+		newroom->AddObj(new BaseInterface::Room::BaseShip(P.i,P.j,P.k,Q.i,Q.j,Q.k,R.i,R.j,R.k,pos,index));
 //		return BaseInterface::CurrentBase->rooms[BaseInterface::CurrentBase->curroom]->links.size()-1;
 	}
 	void RunScript (int room, std::string ind, std::string pythonfile, float time) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		newroom->objs.push_back(new BaseInterface::Room::BasePython(ind, pythonfile, time));
+		newroom->AddObj(new BaseInterface::Room::BasePython(ind, pythonfile, time));
 	}
 	void TextBox (int room, std::string ind, std::string text, float x, float y, Vector widheimult, Vector backcol, float backalp, Vector forecol) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		newroom->objs.push_back(new BaseInterface::Room::BaseText(text, x, y, widheimult.i, widheimult.j, widheimult.k, GFXColor(backcol, backalp), GFXColor(forecol), ind));
+		newroom->AddObj(new BaseInterface::Room::BaseText(text, x, y, widheimult.i, widheimult.j, widheimult.k, GFXColor(backcol, backalp), GFXColor(forecol), ind));
 	}
 	void SetTextBoxText(int room, std::string index, std::string text) {
-		BaseInterface::Room *newroom=CheckRoom(room);
+        BASE_DBG(logvs::DBG+1, "SetTextBoxText '%s'", text.c_str());
+        BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->objs.size();i++) {
-			if (newroom->objs[i]) {
-				if (newroom->objs[i]->index==index) {
-					// FIXME: Will crash if not a Text object.
-					dynamic_cast<BaseInterface::Room::BaseText*>(newroom->objs[i])->SetText(text);
-				}
+		for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::BaseText* basetext = newroom->GetObj<BaseInterface::Room::BaseText>(its.first);
+			if (newroom->CheckObj(basetext)) {
+				basetext->SetText(text);
+			} else if (!basetext) {
+				BASE_LOG(logvs::WARN, "SetTextBoxText: the object '%s' is not a TextBox !", index.c_str());
 			}
 		}
 	}
+    void SetTextBoxFont(int room, std::string index, std::string fontname) {
+        BASE_DBG(logvs::DBG+1, "SetTextBoxFont '%s'", fontname.c_str());
+        BaseInterface::Room *newroom=CheckRoom(room);
+        if (!newroom) {
+            if (BaseInterface::CurrentBase && room == -1 && index.empty())
+                BaseInterface::CurrentFont = fontname.empty() ? NULL : getFontFromName(fontname);
+            return;
+        }
+        for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+        	 its.first != its.second; ++its.first) {
+        	BaseInterface::Room::BaseText* basetext = newroom->GetObj<BaseInterface::Room::BaseText>(its.first);
+        	if (newroom->CheckObj(basetext)) {
+        		basetext->SetFont(fontname);
+        	} else if (!basetext) {
+        		BASE_LOG(logvs::WARN, "SetTextBoxFont: the object '%s' is not a TextBox !", index.c_str());
+        	}
+        }
+    }
+    std::string GetTextBoxFont(int room, std::string index) {
+    	BASE_DBG(logvs::DBG+1, "GetTextBoxFont %d '%s'", room, index.c_str());
+    	BaseInterface::Room *newroom=CheckRoom(room);
+    	if (!newroom) {
+    		return getFontName(BaseInterface::CurrentFont);
+    	}
+        for (BaseInterface::Room::objsmap_range_type its = newroom->GetObjRange(index);
+        		its.first != its.second; ++its.first) {
+        	BaseInterface::Room::BaseText* basetext = newroom->GetObj<BaseInterface::Room::BaseText>(its.first);
+        	if (newroom->CheckObj(basetext)) {
+        		return getFontName(basetext->GetFont());
+        	} else if (!basetext) {
+        		BASE_LOG(logvs::WARN, "GetTextBoxFont: the object '%s' is not a TextBox !", index.c_str());
+        	}
+    	}
+        return "";
+    }
 	void SetLinkArea(int room, std::string index, float x, float y, float wid, float hei)
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					newroom->links[i]->x   = x;
-					newroom->links[i]->y   = y;
-					newroom->links[i]->wid = wid;
-					newroom->links[i]->hei = hei;
-				}
+		for (BaseInterface::Room::linksmap_range_type its = newroom->GetLinkRange(index);
+		     its.first != its.second; ++its.first) {
+			BaseInterface::Room::Link* link = newroom->GetLink(its.first);
+		    if (newroom->CheckLink(link)) {
+				link->x   = x;
+				link->y   = y;
+				link->wid = wid;
+				link->hei = hei;
 			}
 		}
 	}
@@ -186,11 +253,11 @@ namespace BaseUtil {
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					newroom->links[i]->text= text;
-				}
+		for (BaseInterface::Room::linksmap_range_type its = newroom->GetLinkRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::Link* link = newroom->GetLink(its.first);
+			if (newroom->CheckLink(link)) {
+				link->text= text;
 			}
 		}
 	}
@@ -198,11 +265,11 @@ namespace BaseUtil {
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					newroom->links[i]->Relink(python);
-				}
+		for (BaseInterface::Room::linksmap_range_type its = newroom->GetLinkRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::Link* link = newroom->GetLink(its.first);
+			if (newroom->CheckLink(link)) {
+				link->Relink(python);
 			}
 		}
 	}
@@ -210,12 +277,11 @@ namespace BaseUtil {
 	{
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					// FIXME: Will crash if not a Goto object.
-					dynamic_cast<BaseInterface::Room::Goto*>(newroom->links[i])->index = to;
-				}
+		for (BaseInterface::Room::linksmap_range_type its = newroom->GetLinkRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::Goto * lgoto = newroom->GetLink<BaseInterface::Room::Goto>(its.first);
+			if (newroom->CheckLink(lgoto)) {
+				lgoto->lnkindex = to;
 			}
 		}
 	}
@@ -233,7 +299,7 @@ namespace BaseUtil {
 			case 'e': case 'E': mask |= BaseInterface::Room::Link::EnterEvent; break;
 			case 'l': case 'L': mask |= BaseInterface::Room::Link::LeaveEvent; break;
 			case 'm': case 'M':
-				fprintf(stderr,"%s: WARNING: Ignoring request for movement event mask.\n", __FILE__);
+				BASE_LOG(logvs::NOTICE, "SetLinkEventMask: WARNING: Ignoring request for movement event mask.");
 				//mask |= BaseInterface::Room::Link::MoveEvent;
 				break;
 			}
@@ -241,27 +307,22 @@ namespace BaseUtil {
 
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (i=0; i<newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					// FIXME: Will crash if not a Goto object.
-					newroom->links[i]->setEventMask(mask);
-				}
+		for (BaseInterface::Room::linksmap_range_type its = newroom->GetLinkRange(index);
+			 its.first != its.second; ++its.first) {
+			BaseInterface::Room::Link* link = newroom->GetLink(its.first);
+			if (newroom->CheckLink(link)) {
+				link->setEventMask(mask);
 			}
 		}
 	}
-	static void BaseLink (BaseInterface::Room *room,float x, float y, float wid, float hei, std::string text,bool reverse=false) {
-		BaseInterface::Room::Link *lnk;
-		if (reverse) {
-			lnk=room->links.front();
-		} else {
-			lnk=room->links.back();
-		}
+	static BaseInterface::Room::linksmap_type::iterator BaseLink (BaseInterface::Room *room, BaseInterface::Room::Link * lnk,
+						  float x, float y, float wid, float hei, const std::string & text, bool front = false) {
 		lnk->x=x;
 		lnk->y=y;
 		lnk->wid=wid;
 		lnk->hei=hei;
 		lnk->text=text;
+		return room->AddLink(lnk, front);
 	}
 	void Link (int room, std::string index, float x, float y, float wid, float hei, std::string text, int to) {
 		LinkPython (room, index, "",x, y,wid, hei, text, to);
@@ -269,9 +330,9 @@ namespace BaseUtil {
 	void LinkPython (int room, std::string index,std::string pythonfile, float x, float y, float wid, float hei, std::string text, int to) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		newroom->links.push_back(new BaseInterface::Room::Goto (index,pythonfile));
-		BaseLink(newroom,x,y,wid,hei,text);
-		((BaseInterface::Room::Goto*)newroom->links.back())->index=to;
+		BaseInterface::Room::Goto * lgoto = new BaseInterface::Room::Goto (index,pythonfile);
+		BaseLink(newroom,lgoto,x,y,wid,hei,text);
+		lgoto->lnkindex=to;
 	}
 	void Launch (int room, std::string index, float x, float y, float wid, float hei, std::string text) {
 		LaunchPython (room, index,"", x, y, wid, hei, text);
@@ -279,25 +340,21 @@ namespace BaseUtil {
 	void LaunchPython (int room, std::string index,std::string pythonfile, float x, float y, float wid, float hei, std::string text) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		newroom->links.push_back(new BaseInterface::Room::Launch (index,pythonfile));
-		BaseLink(newroom,x,y,wid,hei,text);
+		BaseLink(newroom, new BaseInterface::Room::Launch (index,pythonfile), x,y,wid,hei,text);
 	}
 	void EjectPython (int room, std::string index,std::string pythonfile, float x, float y, float wid, float hei, std::string text) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		newroom->links.push_back(new BaseInterface::Room::Eject (index,pythonfile));
-		BaseLink(newroom,x,y,wid,hei,text);
+		BaseLink(newroom, new BaseInterface::Room::Eject (index,pythonfile), x,y,wid,hei,text);
 	}
 	void Comp(int room, std::string index, float x, float y, float wid, float hei, std::string text, std::string modes) {
 	  CompPython(room, index,"", x, y, wid, hei, text,modes) ;
- 
 	}
 	void CompPython(int room, std::string index,std::string pythonfile, float x, float y, float wid, float hei, std::string text, std::string modes) { 
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
 		BaseInterface::Room::Comp *newcomp=new BaseInterface::Room::Comp (index,pythonfile);
-		newroom->links.push_back(newcomp);
-		BaseLink(newroom,x,y,wid,hei,text);
+		BaseLink(newroom, newcomp, x,y,wid,hei,text);
 		static const EnumMap::Pair modelist [] = {
 			EnumMap::Pair ("Cargo", BaseComputer::CARGO), 
 			EnumMap::Pair ("Upgrade", BaseComputer::UPGRADE), 
@@ -329,7 +386,7 @@ namespace BaseUtil {
 			if (modearg<BaseComputer::DISPLAY_MODE_COUNT) {
 				newcomp->modes.push_back((BaseComputer::DisplayMode)(modearg));
 			} else {
-				VSFileSystem::vs_fprintf(stderr,"WARNING: Unknown computer mode %s found in python script...\n",curmode);
+				BASE_LOG(logvs::WARN, "WARNING: Unknown computer mode %s found in python script...",curmode);
 			}
 		}
 		delete [] curmode;
@@ -338,13 +395,7 @@ namespace BaseUtil {
 		//instead of "Talk"/"Say" tags
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		BaseInterface::Room::Python * tmp = new BaseInterface::Room::Python (index,pythonfile);
-		if (front) {
-			newroom->links.insert(newroom->links.begin(),tmp);
-		} else {
-			newroom->links.push_back(tmp);
-		}
-		BaseLink(newroom,x,y,wid,hei,text,front);
+		BaseLink(newroom, new BaseInterface::Room::Python (index,pythonfile), x,y,wid,hei,text,front);
 	}
 
 	void GlobalKeyPython(std::string pythonfile)
@@ -354,12 +405,14 @@ namespace BaseUtil {
 	}
 
 	void MessageToRoom(int room, std::string text) {
-		if (!BaseInterface::CurrentBase) return;
-		BaseInterface::CurrentBase->rooms[room]->objs.push_back(new BaseInterface::Room::BaseTalk(text,"currentmsg",true));
+		BaseInterface::Room *newroom=CheckRoom(room);
+		if (!newroom) return;
+		newroom->AddObj(new BaseInterface::Room::BaseTalk(text,"currentmsg",true));
 	}
 	void EnqueueMessageToRoom(int room, std::string text) {
-		if (!BaseInterface::CurrentBase) return;
-		BaseInterface::CurrentBase->rooms[room]->objs.push_back(new BaseInterface::Room::BaseTalk(text,"currentmsg",false));
+		BaseInterface::Room *newroom=CheckRoom(room);
+		if (!newroom) return;
+		newroom->AddObj(new BaseInterface::Room::BaseTalk(text,"currentmsg",false));
 	}
 	void Message(std::string text) {
 		if (!BaseInterface::CurrentBase) return;
@@ -372,28 +425,14 @@ namespace BaseUtil {
 	void EraseLink (int room, std::string index) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<(int)newroom->links.size();i++) {
-			if (newroom->links[i]) {
-				if (newroom->links[i]->index==index) {
-					newroom->links.erase(newroom->links.begin()+i);
-                                        i--;
-//					break;
-				}
-			}
-		}
+		BASE_DBG(logvs::DBG+2, "api: Erasing links '%s'", index.c_str());
+		newroom->EraseLink(index);
 	}
 	void EraseObj (int room, std::string index) {
 		BaseInterface::Room *newroom=CheckRoom(room);
 		if (!newroom) return;
-		for (int i=0;i<(int)newroom->objs.size();i++) {
-			if (newroom->objs[i]) {
-				if (newroom->objs[i]->index==index) {
-					newroom->objs.erase(newroom->objs.begin()+i);
-                                        i--;
-//					break;
-				}
-			}
-		}
+		BASE_DBG(logvs::DBG+2, "api: Erasing objs '%s'", index.c_str());
+		newroom->EraseObj(index);
 	}
 	int GetCurRoom () {
 		if (!BaseInterface::CurrentBase) return -1;
@@ -409,16 +448,16 @@ namespace BaseUtil {
 		if (!BaseInterface::CurrentBase) return -1;
 		return BaseInterface::CurrentBase->rooms.size();
 	}
-        bool BuyShip(std::string name, bool my_fleet, bool force_base_inventory) {
-          Unit * base = BaseInterface::CurrentBase->baseun.GetUnit();
-          Unit * un=BaseInterface::CurrentBase->caller.GetUnit();
-          return ::buyShip(base,un,name,my_fleet,force_base_inventory,NULL);
-        }
-        bool SellShip(std::string name) {
-          Unit * base = BaseInterface::CurrentBase->baseun.GetUnit();
-          Unit * un=BaseInterface::CurrentBase->caller.GetUnit();
-          return ::sellShip(base,un,name,NULL);
-        }
+	bool BuyShip(std::string name, bool my_fleet, bool force_base_inventory) {
+		Unit * base = BaseInterface::CurrentBase->baseun.GetUnit();
+		Unit * un=BaseInterface::CurrentBase->caller.GetUnit();
+		return ::buyShip(base,un,name,my_fleet,force_base_inventory,NULL);
+	}
+	bool SellShip(std::string name) {
+		Unit * base = BaseInterface::CurrentBase->baseun.GetUnit();
+		Unit * un=BaseInterface::CurrentBase->caller.GetUnit();
+		return ::sellShip(base,un,name,NULL);
+	}
 
 	Dictionary& _GetEventData()
 	{
@@ -468,10 +507,17 @@ namespace BaseUtil {
 
 		// Keycode
 		data["key"] = keycode;
-		if ((keycode>0x20) && (keycode < 0xff))
-			data["char"] = string(1,keycode); else
+		if ((keycode>0x20) && (keycode < 128))
+			data["char"] = string(1,keycode);
+        else if (WSK_CODE_IS_UTF32(keycode)) {
+            char utf8[MB_CUR_MAX+1];
+            unsigned int utf32 = WSK_CODE_TO_UTF32(keycode);
+            data["key"] = utf32;
+            utf32_to_utf8(utf8, utf32);
+            data["char"] = string(utf8);
+        } else {
 			data["char"] = string();
-
+        }
 		SetKeyStatusEventData(modmask);
 	}
 
@@ -485,7 +531,7 @@ namespace BaseUtil {
 		static bool force_highquality = true;
 		static bool use_bit = force_highquality||XMLSupport::parse_bool(vs_config->getVariable ("graphics","high_quality_font","false"));
 		static float font_point = XMLSupport::parse_float (vs_config->getVariable ("graphics","font_point","16"));
-		return use_bit ? getFontHeight() : (font_point * 2 / g_game.y_resolution);
+		return use_bit ? getFontHeight(BaseInterface::CurrentFont) : (font_point * 2 / g_game.y_resolution);
 	}
 
 	float GetTextWidth(std::string text, Vector widheimult)

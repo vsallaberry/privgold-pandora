@@ -23,11 +23,11 @@ class escort_mission (Director.Mission):
         self.gametime=VS.GetGameTime()
         self.adjsys=go_to_adjacent_systems(self.you, numsysaway,jumps)
         self.var_to_set = var_to_set;
-        print "e"
+        debug.debug("e",debug.VERBOSE)
         self.adjsys.Print("You should start in the system named %s","Then jump to %s","Finally, jump to %s, your final destination","escort mission",1)
-        print "f"
+        debug.debug("f",debug.VERBOSE)
         self.distfrombase=distance_from_base
-        print "g"
+        debug.debug("g",debug.VERBOSE)
         self.faction=factionname
         global escort_num
         escort_num+=1
@@ -58,18 +58,19 @@ class escort_mission (Director.Mission):
         self.escortee.setMissionRelevant()
         self.escortee.upgrade("jump_drive",0,0,0,1)
         self.you.SetTarget(self.escortee)
-        print "h"
+        debug.debug("h",debug.VERBOSE)
         self.escortee.setFlightgroupLeader(self.you)
-        print "dd"
+        debug.debug("dd",debug.VERBOSE)
         self.difficulty=missiondifficulty
         self.creds = creds
+        debug.debug('escort mission initialized fac=%s creds=%d' % (factionname,creds))
     def initbriefing(self):
-        print "ending briefing"                
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"        
+        debug.debug("ending briefing")
     def Execute (self):
         if (VS.GetGameTime()-self.gametime>10):
             self.escortee.setFgDirective('F')
@@ -86,7 +87,7 @@ class escort_mission (Director.Mission):
             if (self.var_to_set!=''):
                 quest.removeQuest (self.you.isPlayerStarship(),self.var_to_set,-1)
             VS.terminateMission(0)
-            return   
+            return
         if (not self.adjsys.Execute()):
             if (self.arrived):
                 self.adjsys.SignificantUnit().setSpeed(0.0)

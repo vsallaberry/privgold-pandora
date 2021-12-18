@@ -2,6 +2,7 @@ import mission_lib
 import vsrandom
 import Base
 import VS
+import debug
 import quest
 # import Director
 import fixers
@@ -82,26 +83,27 @@ class GenericGuild:
 		self.prefix=prefix
 		self.acceptMessage=acceptmsg
 		self.tooManyMissionsTrigger = 4
-	
+
 	def CanTakeMoreMissions(self):
 		return (VS.numActiveMissions()<self.tooManyMissionsTrigger)
-		
+
 	def MakeMissions(self):
 		"""Creates the missions using the mission_lib interface"""
 		self.nummissions=vsrandom.randrange(self.minmissions,self.maxmissions+1)
+		debug.debug('Guild.MakeMissions(%s,n=%d,min=%d,max=%d)'%(self.name, self.nummissions,self.minmissions,self.maxmissions),debug.INFO)
 		self.nummissions=mission_lib.CreateGuildMissions(self.name, self.nummissions, self.missions, self.prefix, self.acceptMessage)
 		return ["success", self.nummissions]
-	
+
 	def HasJoined(self):
 		if (self.membership<=0):
 			return True;
 		else:
 			plr=VS.getPlayer().isPlayerStarship()
 			return quest.checkSaveValue(plr,self.savestring)
-	
+
 	def CanPay(self):
-            return (self.membership<=0) or (self.membership<VS.getPlayer().getCredits())
-	
+		return (self.membership<=0) or (self.membership<VS.getPlayer().getCredits())
+
 	def Join(self):
 		plr=VS.getPlayer()
 		plrnum=plr.isPlayerStarship()
@@ -115,7 +117,7 @@ class GenericGuild:
 			return ["success"]
 		else:
 			return ["failure"]
-	
+
 	def Accept(self, missionname):
 		if not self.CanTakeMoreMissions():
 			return ["toomany"]
@@ -125,7 +127,7 @@ class GenericGuild:
 				return ["success"]
 			else:
 				return ["notavailable","Mission no longer available"]
-		
+
 	def handle_server_cmd(self,cmd,args):
 		if cmd=='join':
 			return self.Join()
@@ -140,7 +142,7 @@ class Guild(GenericGuild):
 	"""Stores information about the guild itself (name, mission types, number of missions)"""
 	def __init__(self, name, min, max, missiontypes, membership, prefix='#G#', acceptmsg='', tech=[]):
 		GenericGuild.__init__(self, name, min, max, missiontypes, membership, prefix, acceptmsg, tech)
-	
+
 	def RequestJoin(self):
 		def JoinStatus(args):
 			if args[0]=="success":
@@ -187,7 +189,7 @@ class Button:
 		self.index=index
 		self.pythonstr=pythonstr
 		self.state=0
-	
+
 	def drawobjs(self):
 		"""Creates the button in the guild room"""
 		if self.state==0:
@@ -195,7 +197,7 @@ class Button:
 			if self.sprite and type(self.sprite)==tuple and len(self.sprite)>2:
 				Base.Texture(self.room,self.index,self.sprite[0],self.sprite[1],self.sprite[2])
 			self.state=1
-	
+
 	def removeobjs(self):
 		"""Hides the button"""
 		if self.state==1:
@@ -224,14 +226,14 @@ class MissionButton(Button):
 		self.missionname=guildroom.guild.name+'/'+str(missionnum)
 		self.isactive=False
 		self.visible=visible
-	
+
 	def select(self):
 		if not self.guild.CanTakeMoreMissions():
 			self.guild.TooManyMissions()
 		else:
 			self.removeobjs()
 			mission_lib.BriefLastMission(self.missionname,0,self.guild.textbox,self.guild.briefingTemplate)
-	
+
 	def deselect(self):
 		self.drawobjs()
 
@@ -243,9 +245,9 @@ class MissionButton(Button):
 		if not self.isactive:
 			if self.visible and (not isinstance(self.missionnum,type(int())) or self.missionnum<self.guild.guild.nummissions):
 				Button.drawobjs(self)
-	
+
 	def accept(self):
-		print "MISSION XNAME "+self.missionname
+		debug.debug('accept: MISSION XNAME '+self.missionname)
 		if not self.guild.CanTakeMoreMissions():
 			self.guild.TooManyMissions()
 		else:
@@ -264,7 +266,7 @@ class MissionButton(Button):
 			if not VS.networked():
 				mission_lib.BriefLastMission(self.missionname,1,self.guild.textbox)
 			custom.run("guilds",[self.guild.guild.name,"accept",self.missionname],completeAccept)
-			
+
 #			Base.Message('Thank you. We look forward to the completion of your mission.')
 
 class GuildRoom:
@@ -279,16 +281,16 @@ class GuildRoom:
 		self.briefingTemplate=briefingTemplate
 		self.tooManyMissionsText = tooManyMissionsText
 		self.tooManyMissionsTrigger = 4 #1 more than the actual value
-	
+
 	def AddMissionButton(self,button):
 		self.buttons[button.missionnum]=button
-	
+
 	def AddAcceptButton(self,abutton):
 		self.acceptbutton=abutton
-	
+
 	def AddTextBox(self,textbox):
 		self.textbox=textbox
-	
+
 	def AcceptMission(self):
 		if self.missionnum>=0:
 			self.buttons[self.missionnum].accept()
@@ -306,7 +308,7 @@ class GuildRoom:
 
 	def CanTakeMoreMissions(self):
 		return self.guild.CanTakeMoreMissions()
-	
+
 	def SetCurrentMission(self,missionnum):
 		if missionnum == 'next':
 			missionnum = self.missionnum + 1
@@ -332,7 +334,7 @@ class GuildRoom:
 		for a in self.buttons:
 			self.buttons[a].drawobjs()
 		self.missionnum=int(missionnum)
-		print str(self.missionnum)
+		debug.debug('current mission: ' + str(self.missionnum),debug.INFO)
 		if self.missionnum>=0:
 			self.buttons[self.missionnum].select()
 
@@ -358,16 +360,15 @@ class GuildRoom:
 					self.buttons['last'].drawobjs()
 				else:
 					self.buttons['last'].removeobjs()
-	
+
 	def drawobjs(self):
-		print 'len buttons'
-		print len(self.buttons)
-		print 'num missions'
-		print self.guild.nummissions
-		print 'button list'
-		print self.buttons
+		debug.debug(self.guild.name + ': num missions ' + str(self.guild.nummissions))
+		logging = debug.debug(self.guild.name + ': len buttons:' + str(len(self.buttons)), debug.VERBOSE)
+		if logging:			
+			debug.debug(self.guild.name + 'button list: ' + str(self.buttons),debug.VERBOSE)
 		for m in self.buttons:
-			print 'draw button'
+			if logging:
+				debug.debug(self.guild.name + ': draw button', debug.VERBOSE)
 			if not isinstance(m,type(int())) or m < self.guild.nummissions:
 				self.buttons[m].drawobjs()
 
@@ -395,11 +396,11 @@ def SetCurrentMission(room,guildname,missionnum):
 def JoinGuild(guildname):
 	guilds[guildname].RequestJoin()
 	fixers.DestroyActiveButtons()
-	print 'Creahte it ' + guildname
+	debug.debug(guildname + ': Create it')
 	if guildname in guildrooms:
-		print 'Create it ' + str(guildrooms[guildname])
+		debug.debug('in room, Create it ' + str(guildrooms[guildname]))
 		for guildroom in guildrooms[guildname]:
-			print "drawing"
+			debug.debug("drawing guildroom " + str(guildroom))
 			CreateJoinedGuild(guildname, guildroom)
 
 def TalkToReceptionist(guildname,introtext):
@@ -407,7 +408,7 @@ def TalkToReceptionist(guildname,introtext):
 	import campaign_lib
 	if campaign_lib.doTalkingHeads():
 		campaign_lib.AddConversationStoppingSprite("Receptionist","bases/heads/"+guildname.lower()+".spr",(.582,-.2716),(3.104,2.4832),"Return_To_Guild").__call__(Base.GetCurRoom(),None)
-	print 'start ('+str(guildname)+','+str(introtext)+')'
+	debug.debug('talking: start ('+str(guildname)+','+str(introtext)+')')
 	if guildname in guilds:
 		guild=guilds[guildname]
 		if not guild.HasJoined():
@@ -425,13 +426,13 @@ def TalkToReceptionist(guildname,introtext):
 
 				VS.playSound("guilds/"+str(guild.name).lower()+"invite.wav",(0,0,0),(0,0,0))
 			else:
-				VS.playSound("guilds/"+str(guild.name).lower()+"notenoughmoney.wav",(0,0,0),(0,0,0))			
+				VS.playSound("guilds/"+str(guild.name).lower()+"notenoughmoney.wav",(0,0,0),(0,0,0))
 		return
 
 def CreateJoinedGuild(guildname,guildroom):
-	print 'has joined.'
+	debug.debug('has joined ' + guildname + '.',debug.INFO)
 	if not VS.networked():
-		print 'make missions'
+		debug.debug(guildname + ': make missions')
 		guildroom.guild.MakeMissions()
 		guildroom.drawobjs()
 	else:
@@ -440,18 +441,18 @@ def CreateJoinedGuild(guildname,guildroom):
 				guildroom.guild.nummissions = int(args[1])
 				guildroom.drawobjs()
 			else:
-				print "MakeMissions call returned "+str(args)
+				debug.debug(guildname + ": MakeMissions call returned "+str(args))
 		custom.run('guilds',[guildname,'MakeMissions'], MakeStatus)
 
 def CreateGuild(guildroom):
 	guildname=guildroom.guild.name
-	print 'Create it ' + guildname
+	debug.debug('Create guild ' + guildname,debug.INFO)
 #	if guildname in guildrooms:
 #		guildrooms[guildname].append(guildroom)
 #	else:
 	if True:
 		guildrooms[guildname]=[guildroom]
-		print 'true'
+		debug.debug(str(guildroom) + ': true',debug.VERBOSE)
 		if guildroom.guild.HasJoined():
 			CreateJoinedGuild(guildname,guildroom)
 

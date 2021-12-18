@@ -38,7 +38,14 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-easyDomNode::easyDomNode(){
+
+easyDomNode::easyDomNode() : valid(false) {
+}
+
+easyDomNode::~easyDomNode() {
+    for (vector<easyDomNode*>::const_iterator it = subnodes.begin(); it != subnodes.end(); ++it) {
+        delete *it;
+    }
 }
 
 void easyDomNode::set(easyDomNode *_parent,string _name,const XML_Char **atts ){

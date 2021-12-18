@@ -28,11 +28,12 @@
 void InitGraphics(int*,char***);
 void ShowMain();
 
-#define GET_TITLE char title[1000]="VegaStrike Configurator"; \
+#define GET_TITLE char title[1000]= {0,}; \
   if (strlen(CONFIG.program_name)+strlen(VERSION)<800) { \
     sprintf(title, "Program Configuration - %s - Version %s", CONFIG.program_name, VERSION); \
-  }
+  } else strcpy(title, "VegaStrike Configurator")
 
-#define GET_STATIC_TEXT char static_text[1000]="Vega Strike requires the latest drivers for your video card.\nIf you run into problems please upgrade your video drivers.\n\nTo adjust volume levels in-game, use F9/F10 for sound and F11/F12 for music."
+#define GET_STATIC_TEXT char static_text[1000]={0,}; \
+	strcpy(static_text, "Vega Strike requires the latest drivers for your video card.\nIf you run into problems please upgrade your video drivers.\n\nTo adjust volume levels in-game, use F9/F10 for sound and F11/F12 for music.")
 
 #endif    //DISPLAY_H

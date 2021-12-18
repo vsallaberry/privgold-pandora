@@ -1,4 +1,5 @@
 import campaign_bonus
+import debug
 campaignsloaders=[lambda:LoadMainCampaign(),lambda:LoadRFCampaign(),lambda:LoadRFMurphyCampaign(),lambda:LoadRFGoodinCampaign(),lambda:LoadRFTaylaCampaign(),lambda:LoadRFLynchCampaign(), lambda:campaign_bonus.LoadBonusCampaign()]
 campaigns=[]
 
@@ -88,7 +89,7 @@ tayla1={"intro":[("Tayla","Ah. You look just like your picture. Too bad.", "bars
 				  ("Burrows","Suits me, so long as you tell me about the artifact now."),
 				  ("Tayla","After you're done. Now listen, the first mission is easy. Your cargo will be a legal load of plastics. Although your manifest will say you're running it to Newcastle, you'll deviate from your course along the way and deliver it to Oakham, a hidden pirate base where I have connections. While you work for me, the pirates will leave you alone. Count on it. Leave your ship unattended and I'll meet you there in the bar."),
 				  ("Burrows","Just be sure no one kills you while I'm gone, Tayla. I've got an investment in you... and I mean to collect.")],
-		"accept2":[("Burrows","Sure.  Why not?  I could use the credits.", "barspeech/campaign/tayla1accept2.wav")],                  
+		"accept2":[("Burrows","Sure.  Why not?  I could use the credits.", "barspeech/campaign/tayla1accept2.wav")],
 		"reminder":[("Tayla","Hey, I just spoke with my contact on Oakham. They told me you still haven't delivered the cargo!", "barspeech/campaign/tayla1reminder.wav"),
 					("Burrows","Something came up, sweetheart. You know how it is."),
 					("Tayla","Sure do. Unless you transport that load of plastic to Oakham , deviating from your flight path to Newcastle to throw off pursuit , you can forget about the 10000 credits!"),
@@ -117,7 +118,7 @@ tayla2={
 			  ("Burrows","Yeah? And what about all these pirates? What if they get greedy?"),
 			  ("Tayla","While you work for me, no one'll hassle you. If you make it back, meet me back here in the bar for your pay."),
 			  ("Burrows","When I get back, Tayla, you better have some answers.")],
-	"accept2":[("Burrows","Sure.  Why not?  I could use the credits.", "barspeech/campaign/tayla2accept2.wav")],                  
+	"accept2":[("Burrows","Sure.  Why not?  I could use the credits.", "barspeech/campaign/tayla2accept2.wav")],
 	"reminder":[("Tayla","You haven't flown the mission yet? What's the problem?", "barspeech/campaign/tayla2reminder.wav"),
 				("Burrows","I'm waiting for the mood to hit me."),
 				("Tayla","Unless you fly that load of Brilliance to Hector mining base in Troy quick, the only thing that's gonna hit you is hard times."),
@@ -140,7 +141,7 @@ tayla3={"intro":[("Tayla","You took your sweet time, Captain.", "barspeech/campa
                 ("Tayla","Good. You'll transfer the cargo from here to New Constantinople. Once you arrive, leave your ship unattended for an hour..."),
                 ("Burrows","...then get out. I know the drill, Tayla."),
                 ("Tayla","A hotshot pilot with brains. Wonders never cease. Hurry back. I'll be waiting right here with your pay.")],
-        "accept2":[("Burrows","Sure.", "barspeech/campaign/tayla3accept2.wav")],              
+        "accept2":[("Burrows","Sure.", "barspeech/campaign/tayla3accept2.wav")],
 		"reject1":[("Burrows","Wealth sounds great, but I tell you what, sweetheart... I'm going to find it on my own. Later.", "barspeech/campaign/tayla3reject1.wav"),
                     ( "Tayla", "Stay alive without my help... if you can.")],
 		"reject2":[("Tayla","If you don't want the job, just leave me alone!", "barspeech/campaign/tayla3reject2.wav")],
@@ -281,7 +282,7 @@ lynch3={"intro":[("Lynch","I understand you thwarted Mr Kroiz. Well done. Here's
                 ("Miggs","Yeah, it just makes an ass out of me."),
                 ("Burrows","If a little knowledge is a dangerous thing, Miggs has Kilrah licked. I'll get your cousin out of New Constantinople safely, Lynch. Just make sure you deliver the goods on the artifact when I return.")],
 		"failure":lynchfailure
-		
+
 		}
 lynch4={"intro":[("Lynch","I trust you took care of my dear cousin.", "barspeech/campaign/lynch4intro.wav"),
                 ("Burrows","InterSys was ready for us. But I got him to Romulus all right."),
@@ -312,7 +313,7 @@ mastersonfailure=[("Burrows","So what's next? Evicting bookworms? Repossessing d
                 ("Burrows","What do you mean?"),
                 ("Masterson","Our deal is null and void. You failed a task I gave you. That's not the way to earn access to the Oxford Library, sir."),
                 ("Burrows","Look, I need that access. Just give me another chance."),
-                ("Masterson","Impossible, I'm afraid. Now kindly leave... or I'll have security assist you out.")] 
+                ("Masterson","Impossible, I'm afraid. Now kindly leave... or I'll have security assist you out.")]
 
 masterson1={"intro":[("Masterson","I'm sorry, but library use is restricted to students and teachers only. ", "barspeech/campaign/masterson1intro.wav"),
                     ("Burrows","Yeah? What makes you think I'm not enrolled at Oxford?"),
@@ -413,7 +414,7 @@ masterson4={"intro":[("Masterson","I don't have time to swap pleasantries. Here'
 			"failure":mastersonfailure}
 mastersonhelp=[("Masterson","The freighter is safe, thanks to you.", "barspeech/campaign/mastersonfinal.wav"),
 			   ("Burrows","Skip the hearts and flowers. My library access...?"),
-                ("Masterson","Everything has been arranged. And here's your final payment of 10000 credits. Good luck with that personal business. I hope you find what you're looking for.")] 
+                ("Masterson","Everything has been arranged. And here's your final payment of 10000 credits. Good luck with that personal business. I hope you find what you're looking for.")]
 monkhouseintro=[("Burrows","Dr Monkhouse, I presume.", "barspeech/campaign/monkhouse1intro.wav"),
                 ("Monkhouse","Yes, you do, greatly. I wish to be alone."),
                 ("Burrows","Sorry, Doc, but I didn't run the blockade just to be treated like a vacuum salesman. I need a favour. I understand you're an expert on alien... antiquities."),
@@ -449,7 +450,7 @@ murphy1={"intro":[("Murphy","You here to sign up?", "barspeech/campaign/murphy1i
                 ("Murphy","Just trying to spare you, ace. You look like the squeamish type to me."),
                 ("Burrows","Yeah? Guess you've never seen a real man up close. I could arrange it, if you like."),
                 ("Murphy","Sure. If one comes by, let me know. Just stop those reinforcements, and meet me back here afterwards... without the cheap come-ons, got it?"),
-                ("Burrows","Murphy... you're all heart.")],                    
+                ("Burrows","Murphy... you're all heart.")],
 		 "reject1":[("Burrows","I'm not looking to get involved in any corporate war. I'll take my chances with the blockade alone.", "barspeech/campaign/murphy1reject1.wav"),
                 ("Murphy","Your loss, ace, I got no time to argue with you. It's your funeral.")],
 		 "reconsider":[("Murphy","Back again? If you're here to bust my chops some more...", "barspeech/campaign/murphy1reconsider.wav"),
@@ -474,12 +475,12 @@ murphy2={"intro":[("Burrows","Scratch one set of reinforcements, Lynn.", "barspe
                 ("Murphy","Again with the cheap come-ons? How about a fat lip, Mister?"),
                 ("Burrows","Lighten up. I only meant for you to have the money when I get back. I like you, Murphy, but you ain't keeping me up nights."),
                 ("Murphy","At last, we have something in common.")],
-         "accept2":[("Burrows","I can handle that patrol, no sweat. Where do I find them?", "barspeech/campaign/murphy2accept2.wav"),       
+         "accept2":[("Burrows","I can handle that patrol, no sweat. Where do I find them?", "barspeech/campaign/murphy2accept2.wav"),
                 ("Murphy","They're currently sweeping the Palan system. Intercept and eliminate them at Nav 1... assuming you can."),
                 ("Burrows","Like I said, don't sweat it. I'll handle things on my end. It's your end I'm concerned with."),
                 ("Murphy","Again with the cheap come-ons? How about a fat lip, Mister?"),
                 ("Burrows","Lighten up. I only meant for you to have the money when I get back. I like you, Murphy, but you ain't keeping me up nights."),
-                ("Murphy","At last, we have something in common.")],             
+                ("Murphy","At last, we have something in common.")],
 		 "reject1":[("Burrows","No can do. The downside's too steep. I think I'd do better against this blockade on my own.", "barspeech/campaign/murphy2reject1.wav"),
                 ("Murphy","I think you're kidding yourself. You'll never get down to Palan without help... but that's not my problem. Good luck. You'll need it.")],
 		 "reconsider":[("Murphy","You want me to beg you to take the blasted mission? Forget it! A large scout patrol may be headed toward our base... but I'll never be desperate enough to plead with someone like you.", "barspeech/campaign/murphy2reconsider.wav"),
@@ -502,12 +503,12 @@ murphy3={"intro":[("Murphy","I heard you waxed the patrol. Not too bad, Ace.", "
                 ("Murphy","Believe me, if you had left without saying hello I'd be delighted."),
                 ("Burrows","You're one tough broad, Murphy."),
                 ("Murphy","Why... that's the nicest thing you've ever said to me.")],
-         "accept2":[("Burrows","I can't speak for everyone, but... I like kicking a guy when he's down.", "barspeech/campaign/murphy3accept1.wav"),                
+         "accept2":[("Burrows","I can't speak for everyone, but... I like kicking a guy when he's down.", "barspeech/campaign/murphy3accept1.wav"),
                 ("Murphy","Then you'll start right away, before more reinforcements jump in-system. This'll be a tough one. If you make it through, pick up your friend and return here for your pay."),
                 ("Burrows","You worried about my pay... or that I might leave without saying goodbye?"),
                 ("Murphy","Believe me, if you had left without saying hello I'd be delighted."),
                 ("Burrows","You're one tough broad, Murphy."),
-                ("Murphy","Why... that's the nicest thing you've ever said to me.")],             
+                ("Murphy","Why... that's the nicest thing you've ever said to me.")],
 		 "reject1":[("Burrows","This is a really bad idea, Murphy. Bronte's net isn't as frayed as it seems. This is a suicide run. I want out.", "barspeech/campaign/murphy3reject1.wav"),
                 ("Murphy","This is the best chance we'll get, we can't hold off the reinforcements forever... but do whatever you want. No skin off my nose.")],
 		 "reconsider":[("Murphy","What's your problem? You're about as decisive as a politico.", "barspeech/campaign/murphy3reconsider.wav"),
@@ -550,7 +551,7 @@ monkhouse1={"intro":[("Burrows","Ah, Dr Monkhouse. I'm glad to see you.", "barsp
                     ("Monkhouse","Meet me in the bar on Basra for your payment, and your analysis. Most assuredly. If I can't tell you about your find... no one can.")],
 			"accept2":[("Burrows","Okay, Doc. I'll get you off this rock and fly you to Basra. But once we hit Basra, you better prove you were worth the trouble.", "barspeech/campaign/monkhouse2accept2.wav"),
                     ("Monkhouse","Meet me in the bar on Basra for your payment, and your analysis. Most assuredly. If I can't tell you about your find... no one can.")],
-			"reject1":[("Burrows","Sorry, Doc. I don't like those terms at all.", "barspeech/campaign/monkhouse2reject1.wav"),                    
+			"reject1":[("Burrows","Sorry, Doc. I don't like those terms at all.", "barspeech/campaign/monkhouse2reject1.wav"),
                     ("Monkhouse","And yet you expect to employ my years of hard earned knowledge for nothing? No, young man. I don't like those terms either. Farewell.")],
 			"reconsider":[("Monkhouse","See here, young man. I won't be trifled with. If you'll transport me off this wretched world and get me to the Basra refinery base, I'll pay you 5000 credits and help you identify your find. Have we a bargain?", "barspeech/campaign/monkhouse2reconsider.wav")],
 			"reject2":[("Burrows","I want the information up front, Monkhouse.", "barspeech/campaign/monkhouse2reject2.wav"),
@@ -606,13 +607,13 @@ taryn1={"intro":[("Burrows","Excuse me, I'm looking for Taryn Cross.", "barspeec
                 ("Cross","Neither."),
                 ("Burrows","Then get ready to strike \"Here there be dragons\" from your map, Ms Cross."),
                 ("Cross","It'll be a pleasure. Good luck.")],
-        "accept2":[("Cross","You'll leave Rygannon, travel to the Delta system and scout it through 4 nav points. The navigational info you'll need will be programmed into your nav computer. Basically, for charting purposes, you'll be flying a small loop, and standard nav points which make up the loop have been calculated. Simply hit all the nav points and return here safely, and we'll download what we need from your flight disc... and pay you, of course.", "barspeech/campaign/cross1accept2.wav"),        
+        "accept2":[("Cross","You'll leave Rygannon, travel to the Delta system and scout it through 4 nav points. The navigational info you'll need will be programmed into your nav computer. Basically, for charting purposes, you'll be flying a small loop, and standard nav points which make up the loop have been calculated. Simply hit all the nav points and return here safely, and we'll download what we need from your flight disc... and pay you, of course.", "barspeech/campaign/cross1accept2.wav"),
                 ("Burrows","Sounds pretty easy."),
                 ("Cross","Easy? We've lost three vessels so far."),
                 ("Burrows","Yeah, but did those pilots have scars or pirate hats?"),
                 ("Cross","Neither."),
                 ("Burrows","Then get ready to strike \"Here there be dragons\" from your map, Ms Cross."),
-                ("Cross","It'll be a pleasure. Good luck.")],            
+                ("Cross","It'll be a pleasure. Good luck.")],
 		"reject1":[("Burrows","Somehow the idea doesn't grab me. Got anything else?", "barspeech/campaign/cross1reject1.wav"),
                 ("Cross","Not at the moment."),
                 ("Burrows","Then I'll pass. Thanks anyway."),
@@ -643,7 +644,7 @@ taryn2={"intro":[("Cross","Well, are the dragons slain?", "barspeech/campaign/cr
                 ("Burrows","Yeah, but it's the unknown hazards that scare me. Still, I'll do my best and meet you back here when I'm done."),
                 ("Cross","Good. By the way, there's one more thing I need you to do on this run. One of my men, Captain Garrovick, made the same run you're making. He never came back, so one of your objectives is to find him if you can."),
                 ("Burrows","I thought this wasn't a known hazard area."),
-                ("Cross","We don't know if anything hazardous happened to Garrovick... but keep your eyes peeled just the same, okay?")],                
+                ("Cross","We don't know if anything hazardous happened to Garrovick... but keep your eyes peeled just the same, okay?")],
 		"reject1":[("Burrows","Sounds kind of boring. I think I'll bow out.", "barspeech/campaign/cross2reject1.wav"),
                 ("Cross","Too bad. I think this one would've been a lot easier... but I guess you have your reasons...")],
 		"reconsider":[("Cross","Why are you hesitating about taking this mission? It's not difficult. You'll launch from Rygannon, pass through Delta to a new jump point which you'll use to jump to the uncharted system we've designated Beta. Then all you have to do is hit all the nav points in your computer. I'll update the chart using your flight disc and pay you 10000 credits for your charts. That's my offer. Sound good to you?", "barspeech/campaign/cross2reconsider.wav")],
@@ -666,7 +667,7 @@ taryn3={"intro":[("Cross","Finished your mapping loop, privateer?", "barspeech/c
                 ("Cross","Keep exploring. What else can we do? I have maps to prepare. I'll pay you 10000 credits to make another mapping run... ")],
 		"accept":[("Burrows","Ah, why not? Some say life is hell and death an escape, others say heaven awaits us in the world beyond... but either way, I need a new pair of shoes.", "barspeech/campaign/cross3accept1.wav"),
                 ("Cross","Then listen. You'll leave Rygannon, pass through Beta system, and use the jump point there to reach the uncharted Gamma system. Fly the loop pattern in your nav comp by hitting each nav point in sequence, complete the mapping spiral through Gamma and hurry back here to collect your pay.")],
-        "accept2":[("Burrows","Ah, why not? Some say life is hell and death an escape, others say heaven awaits us in the world beyond... but either way, I need a new pair of shoes.", "barspeech/campaign/cross3accept2.wav")],                
+        "accept2":[("Burrows","Ah, why not? Some say life is hell and death an escape, others say heaven awaits us in the world beyond... but either way, I need a new pair of shoes.", "barspeech/campaign/cross3accept2.wav")],
 		"reject1":[("Burrows","What, with Death Incarnate sucking around out there? No way.", "barspeech/campaign/cross3reject1.wav"),
                 ("Cross","I'm disappointed... but I can't say I blame you. Good luck and... good-bye.")],
 		"reconsider":[("Cross","Thinking twice before bailing out? Smart boy. This is easy money if ever there was such a thing. All you need to do is pilot through the Beta system and use the jump point there, which should take you to the uncharted Gamma system. Fly the loop pattern in your nav comp by hitting each nav point in sequence, complete the mapping spiral through Gamma and hurry back here to collect your 10000 credits.", "barspeech/campaign/cross3reconsider.wav"),
@@ -693,7 +694,7 @@ taryn4={"intro":[("Cross","Did you complete the run?", "barspeech/campaign/cross
 		"accept":[("Cross","This time you'll map a newly-discovered system, designated Delta Prime for it's transpacial proximity to Delta system.", "barspeech/campaign/cross4accept1.wav"),
                 ("Burrows","Transpacial, eh? So I'll be doing a little jumping to get there."),
                 ("Cross","Right. You'll need to fly through Gamma to the jump point there, jump to Delta Prime and hit the nav point we've programmed into your computer. Afterwards, report back here for your pay. If it goes well, this will be the last run in this sector. Good luck.")],
-        "accept2":[("Cross","If it goes well, this will be our last run for this sector. Good luck.", "barspeech/campaign/cross4accept2.wav")], 
+        "accept2":[("Cross","If it goes well, this will be our last run for this sector. Good luck.", "barspeech/campaign/cross4accept2.wav")],
 		"reject1":[("Burrows","If I'd wanted to tangle with Kilrathi, I'd have enlisted. Forget it.", "barspeech/campaign/cross4reject1.wav"),
                 ("Cross","Too bad. Another run, and we'd have finished with this sector...")],
 		"reconsider":[("Cross","You've changed your mind?", "barspeech/campaign/cross4reconsider.wav"),
@@ -737,7 +738,7 @@ goodin={"intro":[("Goodin","I'm Captain Goodin, attache to Admiral Terrell. We'v
 		"accept":[("Burrows","I'll hear the Admiral out, Goodin. But I don't like sleeping with the military.", "barspeech/campaign/goodin1accept1.wav"),
                 ("Goodin","You don't have to kiss us, just grit your teeth and close your eyes. Better get a move on. You never know what's out there waiting for you...")],
         "accept2":[("Burrows","I'll hear the Admiral out, Goodin. But I don't like sleeping with the military.", "barspeech/campaign/goodin1accept2.wav"),
-                ("Goodin","You don't have to kiss us, just grit your teeth and close your eyes. Better get a move on. You never know what's out there waiting for you...")],                
+                ("Goodin","You don't have to kiss us, just grit your teeth and close your eyes. Better get a move on. You never know what's out there waiting for you...")],
 		"reject1":[("Burrows","Sorry, but working with you military types makes me nervous. I'd rather tackle a monster than a bureaucracy.", "barspeech/campaign/goodin1reject1.wav"),
                 ("Goodin","Red tape or blood, same colour either way. No skin off my nose. I'll be here if you change your mind.")],
 		"reconsider":[("Goodin","Really, you'd be smart to head to Perry Naval Base at max speed. The Admiral wants your help in destroying that thing, whatever it is, and if you've got a brain in your head, you'll co-operate. Will you meet with him at Perry or not?", "barspeech/campaign/goodin1reconsider.wav")],
@@ -748,7 +749,7 @@ goodin={"intro":[("Goodin","I'm Captain Goodin, attache to Admiral Terrell. We'v
 		"failure":["Having to hitch a ride from a patrolling broadsword is not my idea of a good time. You should consider yourself a fool and an enemy of confed. I've already earmarked your files--good luck getting out of system."]
 		}
 terrellfailure=[("Terrell","I'm disappointed, son. I thought I could count on you to deliver, but I guess that I was wrong. It goes to show that you can never trust someone without a uniform to do the duty of a soldier")]
-				
+
 terrell={"intro":[("Terrell","We don't have a lot of time, privateer, so let's cut the niceties. I'm Admiral Terrell, and the Confederation needs your help.", "barspeech/campaign/terrel1intro.wav"),
                 ("Burrows","Goodin accuses me of being a kitty collaborator, and now you want my help?"),
                 ("Terrell","Yes, well, Goodin has always been a little overzealous in executing her orders. We know you're not responsible for the destruction of our fleet... at least not directly."),
@@ -766,7 +767,7 @@ terrell={"intro":[("Terrell","We don't have a lot of time, privateer, so let's c
 		 "accept2":[("Burrows","Even though the though of being your sitting duck doesn't thrill me, running has never been my style, Admiral. Deal me in.", "barspeech/campaign/terrel1accept1.wav"),
                 ("Terrell","Excellent. This should be the easiest mission you've ever flown. Simply fly to the ambush point at Blockade Point Tango, Nav 1. That's far enough away to minimise civilian casualties. Once there all you have to do is kick back and wait. We'll do the rest."),
                 ("Burrows","I hope so, Admiral. I surely do hope so.")],
- 		 "reject1":[("Burrows","I've done all right so far, Admiral. Frankly, the thought of being your sitting duck doesn't thrill me. I'll take my chances on my own.", "barspeech/campaign/terrel1reject1.wav"),
+		 "reject1":[("Burrows","I've done all right so far, Admiral. Frankly, the thought of being your sitting duck doesn't thrill me. I'll take my chances on my own.", "barspeech/campaign/terrel1reject1.wav"),
                 ("Terrell","As I said, I won't force you to do this... but you're making a bad mistake... and I hope you live long enough to realise it.")],
 		 "reconsider":[("Terrell","What're you doing here? Thought you'd be gone by now. Gone as in dead.", "barspeech/campaign/terrel1reconsider.wav"),
                 ("Burrows","I'm not that anxious to hit space again. I'm thinking your offer over."),
@@ -815,7 +816,7 @@ def LoadTest():
 	GOODIN_SPRITE    = ("goodin.spr", "Talk_To_Goodin","bases/heads/goodin.spr")
 	SANDOVAL_SPRITE  = ("sandoval.spr","Talk_To_Sandoval","bases/heads/sandoval.spr") #sprite file for the fixer
 	priv=Campaign("kiddie")
-	priv.Init(MakeMission(priv,	
+	priv.Init(MakeMission(priv,
 				CROSS_SPRITE,
 				[InSystemCondition("Gemini/Tingerhoff","Munchen")],
 				[],
@@ -826,7 +827,7 @@ def LoadTest():
 				goodin,
 				None,
 				CampaignEndNode(priv),CampaignEndNode(priv)));
-	return priv	
+	return priv
 def LoadMainCampaign():
 	SANDOVAL_SPRITE  = ("sandoval.spr","Talk_To_Sandoval","bases/heads/sandoval.spr") #sprite file for the fixer
 	ARTIFACT1_SPRITE = "artifact1.spr"
@@ -834,7 +835,7 @@ def LoadMainCampaign():
 	ARTIFACT_POSITION= (0.582, -0.2716)
 	ARTIFACT_SIZE    = (3.104, 2.4832)
 	SandovalMission1 = CampaignClickNode() # Initialize each node
-	TAYLA_ND_SPRITE     = ("tayla.spr","Talk_To_Tayla","bases/heads/taylanewdetroit.spr")	
+	TAYLA_ND_SPRITE     = ("tayla.spr","Talk_To_Tayla","bases/heads/taylanewdetroit.spr")
 	TAYLA_SPRITE     = ("tayla.spr","Talk_To_Tayla","bases/heads/taylapirate.spr") #sprite file for the fixer
 	TaylaMission1    = CampaignClickNode() # Initialize each node
 	SandovalFinish   = TaylaMission1
@@ -842,7 +843,7 @@ def LoadMainCampaign():
 	TaylaMission3    = CampaignClickNode() # Initialize each node
 	TaylaMission4    = CampaignClickNode() # Initialize each node
 	TaylaFinish      = CampaignClickNode() # Talks to you, then proceeds to Lynch missions!
-	
+
 	LYNCH_SPRITE     = ("lynch.spr","Talk_To_Lynch","bases/heads/lynch.spr") #sprite file for the fixer
 	MIGGS_SPRITE     = "miggs.spr" # miggs is a special case...
 	MIGGS_POSITION   = (-0.7820625, -0.3783)
@@ -850,7 +851,7 @@ def LoadMainCampaign():
 	LynchMission2    = CampaignNode() # Initialize each node
 	LynchMission3    = CampaignNode() # Initialize each node
 	LynchMission4    = CampaignClickNode() # Initialize each node
-	
+
 	LynchFinish      = CampaignNode()
 	MastersonMission1= CampaignClickNode() # Initialize each node
 	MastersonMission2= CampaignClickNode() # Initialize each node
@@ -869,7 +870,7 @@ def LoadMainCampaign():
 
 	MonkhouseMission1= CampaignClickNode()
 	MonkhouseFinish  = CampaignClickNode()
-	
+
 	CROSS_SPRITE     = ("taryn.spr", "Talk_To_Taryn_Cross","bases/heads/cross.spr")
 	CrossMission1    = CampaignClickNode() # Initialize each node
 	CrossMission2    = CampaignClickNode() # Initialize each node
@@ -882,10 +883,10 @@ def LoadMainCampaign():
 	TERRELL_SPRITE   = ("terrell.spr", "Talk_To_Admiral_Terrell")
 	TerrellMission   = CampaignClickNode() # Initialize each node
 	TerrellFinish    = CampaignNode() # Initialize each node
-	
+
 	priv=Campaign("privateer_campaign") # Name of the save game variable for the entire campaign. Can't contain spaces
 	priv.Init(SandovalMission1) # the first node.
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		SANDOVAL_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/New_Detroit","New_Detroit")], # Where fixer meets you to start the mission
@@ -896,7 +897,7 @@ def LoadMainCampaign():
 				AddRemovingSprite("artifact_1", ARTIFACT1_SPRITE, ARTIFACT_POSITION, ARTIFACT_SIZE, "Put_Away_the_Artifact",
 					LoadMission("directions_mission","directions_mission",
 						(priv.name+"_mission",['Gemini/New_Constantinople', 'Gemini/Newcastle'], 'Liverpool'),
-						vars=dict(MISSION_SHORTDESC=sandovalspeech.get('shortdesc','Campaign mission')) )))), 
+						vars=dict(MISSION_SHORTDESC=sandovalspeech.get('shortdesc','Campaign mission')) )))),
 		# Script to be run to start the mission (usually None if you don't have a script, but ambush is also common.)
 		("Iron",10), # Mission arguments.
 		#[['Gemini/New_Constantinople', 'Gemini/Newcastle'], 'Liverpool'], # directions
@@ -906,7 +907,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		SandovalFinish, # If you win the mission. Usually points to the next mission
 		SandovalMission1) # The current mission node.
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		TAYLA_ND_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/New_Detroit","New_Detroit")], # Where fixer meets you to start the mission
@@ -922,7 +923,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		TaylaMission2, # If you win the mission. Usually points to the next mission
 		TaylaMission1) # The current mission node.
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		TAYLA_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Pentonville")], # Where fixer meets you to start the mission
@@ -938,7 +939,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		TaylaMission3, # If you win the mission. Usually points to the next mission
 		TaylaMission2) # The current mission node.
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		TAYLA_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Pentonville")], # Where fixer meets you to start the mission
@@ -954,7 +955,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		TaylaMission4, # If you win the mission. Usually points to the next mission
 		TaylaMission3) # The current mission node.
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		TAYLA_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Pentonville")], # Where fixer meets you to start the mission
@@ -982,7 +983,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		TaylaFinish, # If you win the mission. Usually points to the next mission
 		TaylaMission4) # The current mission node.
-	
+
 	TaylaFinish.Init(priv,
 		[InSystemCondition("Gemini/Pentonville")],
 		tayla_final,
@@ -990,7 +991,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,AddCredits(10000,AddTechnology("pirates",PopRelation('pirates')))),
 		None,
 		[LynchMission1])
-	
+
 	LynchMission1.Init(priv,
 		[InSystemCondition("Gemini/New_Constantinople","New_constantinople")],
 		[],
@@ -1018,7 +1019,7 @@ def LoadMainCampaign():
 		None, # If you reject the mission twice. "None" means that he continues asking you forever until you accept
 		CampaignEndNode(priv), # If you lose the mission
 		LynchMission2)]) # If you win the mission. Usually points to the next mission
-	
+
 	LynchMission2.Init(priv,
 		[InSystemCondition("Gemini/New_Constantinople","New_constantinople")],
 		[],
@@ -1048,7 +1049,7 @@ def LoadMainCampaign():
 		None, # If you reject the mission twice. "None" means that he continues asking you forever until you accept
 		CampaignEndNode(priv), # If you lose the mission
 		LynchMission3)]) # If you win the mission. Usually points to the next mission
-	
+
 	LynchMission3.Init(priv,
 		[InSystemCondition("Gemini/New_Constantinople","New_constantinople")],
 		[],
@@ -1070,9 +1071,9 @@ def LoadMainCampaign():
 		None, # If you reject the mission twice. "None" means that he continues asking you forever until you accept
 		CampaignEndNode(priv), # If you lose the mission
 		LynchMission4)]) # If you win the mission. Usually points to the next mission
-	
+
 	#################### FIXME: Mission 3: Should be Regis. Escaped Political Prisoners was as close as I can get to this.
-	
+
 	MakeVariableMission(priv, # Creates any type of mission
 		LYNCH_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/New_Constantinople","New_constantinople")], # Where fixer meets you to start the mission
@@ -1091,7 +1092,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		LynchFinish, # If you win the mission. Usually points to the next mission
 		LynchMission4) # The current mission node.
-	
+
 	LynchFinish.Init(priv,
 		[],
 		[],
@@ -1099,7 +1100,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,SetSaveVariable('access_to_library',2.000000)),
 		None,
 		[MastersonMission1])
-	
+
 	MakeMission(priv, # Creates any type of mission
 		None, # Campaign, sprite
 		[InSystemCondition("Gemini/Oxford","Oxford")], # Where fixer meets you to start the mission
@@ -1113,7 +1114,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MastersonMission2, # If you win the mission. Usually points to the next mission
 		MastersonMission1) # The current mission node.
-	
+
 	MakeMission(priv, # Creates any type of mission
 		None, # Campaign, sprite
 		[InSystemCondition("Gemini/Oxford","Oxford")], # Where fixer meets you to start the mission
@@ -1127,9 +1128,9 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MastersonMission3, # If you win the mission. Usually points to the next mission
 		MastersonMission2) # The current mission node.
-	
+
 	############## FIXME: Mission 2: Black Rhombus (Galaxy) is defended by 7 Talons, not 7 Galaxies. ###############
-	
+
 	MakeMission(priv, # Creates any type of mission
 		None, # Campaign, sprite
 		[InSystemCondition("Gemini/Oxford","Oxford")], # Where fixer meets you to start the mission
@@ -1143,7 +1144,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MastersonMission4, # If you win the mission. Usually points to the next mission
 		MastersonMission3) # The current mission node.
-	
+
 	MakeMission(priv, # Creates any type of mission
 		None, # Campaign, sprite
 		[InSystemCondition("Gemini/Oxford","Oxford")], # Where fixer meets you to start the mission
@@ -1157,7 +1158,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MastersonFinish, # If you win the mission. Usually points to the next mission
 		MastersonMission4) # The current mission node.
-	
+
 	MastersonFinish.Init(priv,
 		[InSystemCondition("Gemini/Oxford","Oxford")],
 		mastersonhelp,
@@ -1165,7 +1166,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,AdjustRelation('hunter','privateer',-1.25,SetSaveVariable('access_to_library',1.000000,AddCredits(10000,AddTechnology("merchant"))))),
 		None,
 		[MonkhouseIntro])
-	
+
 	MonkhouseIntro.Init(priv,
 		[],
 		[],
@@ -1180,7 +1181,7 @@ def LoadMainCampaign():
 			MonkhouseIntro,
 			[]),
 		 MurphyMission1])
-	
+
 	MakeMission(priv, # Creates any type of mission #111
 		MURPHY_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Palan","Basra")], # Where fixer meets you to start the mission
@@ -1194,7 +1195,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MurphyMission2, # If you win the mission. Usually points to the next mission
 		MurphyMission1) # The current mission node.
-	
+
 	MakeMission(priv, # Creates any type of mission
 		MURPHY_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Palan","Basra")], # Where fixer meets you to start the mission
@@ -1208,9 +1209,9 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MurphyMission3, # If you win the mission. Usually points to the next mission
 		MurphyMission2) # The current mission node.
-	
+
 	############# FIXME: Mission 2: "Upon reaching Nav one you are greeted by an inital wave of 3 Demons. These are soon backed up by 4 Centurions."
-	
+
 	MakeMission(priv, # Creates any type of mission
 		MURPHY_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Palan","Basra")], # Where fixer meets you to start the mission
@@ -1224,7 +1225,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MurphyFinish, # If you win the mission. Usually points to the next mission
 		MurphyMission3) # The current mission node.
-	
+
 	MurphyFinish.Init(priv,
 		[InSystemCondition("Gemini/Palan","Basra")],
 		murphyfinish,
@@ -1232,7 +1233,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,ChangeSystemOwner("Gemini/Palan","merchant",AddCredits(15000,PopRelation('militia')))),
 		None,
 		[MonkhouseMission1])
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		MONKHOUSE_PALAN_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Palan","Palan")], # Where fixer meets you to start the mission
@@ -1248,7 +1249,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		MonkhouseFinish, # If you win the mission. Usually points to the next mission
 		MonkhouseMission1) # The current mission node.
-	
+
 	MonkhouseFinish.Init(priv,
 		[InSystemCondition("Gemini/Palan","Basra")],
 		monkhouseinfo,
@@ -1256,7 +1257,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,AddRemovingSprite("artifact_2", ARTIFACT2_SPRITE, ARTIFACT_POSITION, ARTIFACT_SIZE, "Put_Away_the_Artifact", AddCargo('Artifact',1,True,AddCredits(5000,AddTechnology("hunter"))))),
 		None,
 		[CrossMission1])
-	
+
 	MakeVariableMission(priv, # Creates any type of mission
 		CROSS_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Rygannon","mining_base")], # Where fixer meets you to start the mission
@@ -1271,7 +1272,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		CrossMission2, # If you win the mission. Usually points to the next mission
 		CrossMission1) # The current mission node.
-	
+
 	MakeVariableMission(priv, # Creates any type of mission
 		CROSS_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Rygannon","mining_base")], # Where fixer meets you to start the mission
@@ -1294,7 +1295,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		CrossMission3, # If you win the mission. Usually points to the next mission
 		CrossMission2) # The current mission node.
-	
+
 	MakeVariableMission(priv, # Creates any type of mission
 		CROSS_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Rygannon","mining_base")], # Where fixer meets you to start the mission
@@ -1309,9 +1310,9 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		CrossMission4, # If you win the mission. Usually points to the next mission
 		CrossMission3) # The current mission node.
-	
+
 	######## FIXME: Mission 3: "At Nav 2, you'll find an initial force of 4 Dralthi, followed by 3 Gothri, and then another 3 Dralthi. This is on top of random pirate and Kilrathi forces at other Nav points."
-	
+
 	MakeVariableMission(priv, # Creates any type of mission
 		CROSS_SPRITE, # Campaign, sprite
 		[InSystemCondition("Gemini/Rygannon","mining_base")], # Where fixer meets you to start the mission
@@ -1324,7 +1325,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		CrossFinish, # If you win the mission. Usually points to the next mission
 		CrossMission4) # The current mission node.
-	
+
 	CrossFinish.Init(priv,
 		[InSystemCondition("Gemini/Rygannon","mining_base")],
 		taryninfo,
@@ -1332,7 +1333,7 @@ def LoadMainCampaign():
 		GoToSubnode(0,AddCredits(10000,AddTechnology("militia"))),
 		None,
 		[GoodinMission])
-	
+
 	MakeCargoMission(priv, # Creates a cargo mission
 		GOODIN_SPRITE, # Campaign, sprite
 		[NotCondition(InSystemCondition("Gemini/Rygannon")),InSystemCondition(None,"mining_base")], # Where fixer meets you to start the mission
@@ -1350,7 +1351,7 @@ def LoadMainCampaign():
 		CampaignEndNode(priv), # If you lose the mission
 		TerrellMission, # If you win the mission. Usually points to the next mission
 		GoodinMission) # The current mission node.
-	
+
 	MakeMission(priv,
 		None, # Campaign, sprite
 		[InSystemCondition("Gemini/Perry","Perry")], # Where fixer meets you to start the mission
@@ -1358,13 +1359,13 @@ def LoadMainCampaign():
 		None, # Add your moneys
 		None, # script to be run.
 		'defend_drone',('steltek_fighter','steltek','Gemini/Nitir','drone','unknown',10,'confed',('Gemini/Nitir','Gemini/Blockade_Point_Tango'),priv.name+"_mission", steltekhelptext), # Mission arguments.
-		priv.name+"_mission", 
+		priv.name+"_mission",
 		terrell, # Dictionary containing what the fixer says.
 		None, # If you reject the mission twice. "None" means that he continues asking you forever until you accept
 		CampaignEndNode(priv), # If you lose the mission
 		TerrellFinish, # If you win the mission. Usually points to the next mission
 		TerrellMission) # The current mission node.
-	
+
 	TerrellFinish.Init(priv,
 		[],
 		None,
@@ -1378,7 +1379,7 @@ def LoadMainCampaign():
 			TrueSubnode(AddCredits(30000,AddTechnology("confed"))),
 			None,
 			[CampaignEndNode(priv)])]) # YOU WIN!!!
-	
+
 	return priv #return the newly created campaign back.
 
 class StealGun(InSystemCondition):
@@ -1388,20 +1389,20 @@ class StealGun(InSystemCondition):
 		self.stoleit=False
 	def __call__(self):
 		import VS
-		print "CHECKING INSYSTEM COND"
+		debug.debug("CHECKING INSYSTEM COND")
 		if (InSystemCondition.__call__(self)):
-			print "CHECKING GUN"
+			debug.debug("CHECKING GUN")
 			if (VS.getPlayer().removeWeapon(self.guntype,0,True)!=-1):
 				import universe
 				universe.addTechLevel("tech",False)
 				#add sprite!
 				import quest
 				quest.removeQuest(VS.getCurrentPlayer(),"removed_"+self.guntype,1)
-				print "REMOVED GUN"
+				debug.debug("REMOVED GUN")
 				self.stoleit=True
 				return True
 			else:
-				print "CANNOT REMOVE GUN"
+				debug.debug("CANNOT REMOVE GUN")
 		import quest
 		if (quest.checkSaveValue(VS.getCurrentPlayer(),"removed_"+self.guntype,1)):
 			return True
@@ -1410,7 +1411,7 @@ class StealGun(InSystemCondition):
 
 def LoadRFMurphyCampaign():
 	MURPHY_SPRITE    = ("murphy.spr", "Talk_To_Murphy","bases/heads/murphy.spr")
-	rf=Campaign("rf_murphy_campaign")	
+	rf=Campaign("rf_murphy_campaign")
 	MurphyMission1=CampaignClickNode()
 	MurphyMission2=CampaignClickNode()
 	MurphyMission3=CampaignClickNode()
@@ -1485,7 +1486,7 @@ def LoadRFMurphyCampaign():
 					[CampaignClickNode().Init(rf,
 						[InSystemCondition("Gemini/New_Constantinople","Edom"),SaveVariableCondition("menesch_dead",1)],
 						[("Murphy","Good to see you again. Here's the 20000 I promised you. Don't spend it all in one place."),("Burrows","Thanks."),("Murphy","By the way, I've heard the Confeds are also offering a bounty. You might want to go to Perry and see what's up. I'll see you around.")],
-	
+
 						MURPHY_SPRITE,
 						GoToSubnode(0,AddCredits(20000)),
 						None,
@@ -1512,11 +1513,11 @@ def MakeDrakePirateNode(rf,creds,contingency=None):
 	WinInformant.Init(rf,
 		[InSystemCondition("Gemini/Capella"),SaveVariableCondition("jones_dead",1.0)],
 		[("Informant","Greetings. I thank you for your service. But I must also warn you that I am once again your mortal enemy. I am a man of my word, and will carry out my promise. All plans and copies of the Steltek gun will be destroyed. In return, you must refrain from revealing the location of Eden to the Confederation."),("Burrows","The Confederation would pay a lot for that information. What's to stop me?"),("Informant","Only the threat of vengeance. And your conscience, if you have one. Our acquaintance has been brief, and we will not meet again. Farewell, infidel.", "barspeech/campaign/rf/informant3.ogg")],
-		INFORMANT_SPRITE,	
+		INFORMANT_SPRITE,
 		GoToSubnode(0),
 		None,
 		[WinRF])
-	JonesBountyMissionNode = CampaignNode()			
+	JonesBountyMissionNode = CampaignNode()
 	return CampaignClickNode().Init(rf,
 				[InSystemCondition("Gemini/Capella")],
 				[("Burrows","You were looking for me?", "barspeech/campaign/rf/informant2.ogg"),
@@ -1573,8 +1574,8 @@ def MakeDrakePirateNode(rf,creds,contingency=None):
 						 ("Burrows","Where is he? I was, er, supposed to fly with him, but I have been left behind."),
 						  "He flies directly towards our beautiful grey moon. Perhaps you should do the same. Alas that your initiation will be postponed.",
 						 ("Burrows","Yeah, alas."),
-						  "Farewell. I must return to my meditation."  ],	
-						IDIOT_SPRITE,				
+						  "Farewell. I must return to my meditation."  ],
+						IDIOT_SPRITE,
 						TrueSubnode(
 							LoadMission("bounty_leader","bounty_leader",
 								(0,0,0,0,13,"retro",(),"jones_dead",'',"centurion.blank",0,"","salthi",
@@ -1587,7 +1588,7 @@ def MakeDrakePirateNode(rf,creds,contingency=None):
 									 "isometal","plasteel_hull"],True),
 								vars=dict(MISSION_SHORTDESC='Kill jones') )),
 						JonesBountyMissionNode,[JonesBountyMissionNode])])])
-						
+
 def LoadRFLynchCampaign():
 	rf=Campaign("rf_lynch_campaign")
 	LYNCH_SPRITE     = ("lynch.spr","Talk_To_Lynch","bases/heads/lynch.spr") #sprite file for the fixer
@@ -1672,8 +1673,8 @@ def LoadRFLynchCampaign():
 	return rf
 
 
-					
-					
+
+
 def LoadRFGoodinCampaign():
 	GOODIN_SPRITE    = ("goodin.spr", "Talk_To_Goodin","bases/heads/goodinperry.spr")
 	rf=Campaign("rf_goodin_campaign")
@@ -1683,126 +1684,126 @@ def LoadRFGoodinCampaign():
 	GoodinMission4=CampaignClickNode()
 	GoodinMission5=CampaignClickNode()
 	TerrellMission=CampaignClickNode()
-	
+
 	goodin1 = {
-		'failure': goodinfailure, 
+		'failure': goodinfailure,
 		'intro': [
-			('Goodin', "Wow. It's been quite a while.", "barspeech/campaign/rf/goodin1.ogg"), 
-			('Burrows', 'Yes it has. How are you, Captain Goodin?'), 
-			('Goodin', "The navy's been treating me pretty good. In fact, I think I stand a good chance at promotion next month. How's the privateer business?"), 
-			('Burrows', 'I was taking an extended break, but it got cut short. Someone ripped off my Steltek gun.'), 
-			('Goodin', 'Sounds like a serious blow. Do you know who?'), 
-			('Burrows', "Not yet. That's what I'm aiming to find out."), 
-			('Goodin', "Well, I'm afraid I don't have any info about stolen guns."), 
-			('Burrows', "I know. I'm actually looking for work. I understand you guys have been giving a lot of contracts to privateers lately."), 
-			('Goodin', "That's certainly true. With our forces spread so thin, we need all the help we can get. As a matter of fact, I do have a mission for you. Kilrathi activity has increased steadily in the last year. Many of our border bases are having a tough time of it. Nitir, an agriculture base in the Nitir system, is currently being harassed by the Kilrathi. Fly there and defend it from a Kilrathi attack. Then return here for 10000. Not much, but it should be pretty smooth sailing.") ], 
+			('Goodin', "Wow. It's been quite a while.", "barspeech/campaign/rf/goodin1.ogg"),
+			('Burrows', 'Yes it has. How are you, Captain Goodin?'),
+			('Goodin', "The navy's been treating me pretty good. In fact, I think I stand a good chance at promotion next month. How's the privateer business?"),
+			('Burrows', 'I was taking an extended break, but it got cut short. Someone ripped off my Steltek gun.'),
+			('Goodin', 'Sounds like a serious blow. Do you know who?'),
+			('Burrows', "Not yet. That's what I'm aiming to find out."),
+			('Goodin', "Well, I'm afraid I don't have any info about stolen guns."),
+			('Burrows', "I know. I'm actually looking for work. I understand you guys have been giving a lot of contracts to privateers lately."),
+			('Goodin', "That's certainly true. With our forces spread so thin, we need all the help we can get. As a matter of fact, I do have a mission for you. Kilrathi activity has increased steadily in the last year. Many of our border bases are having a tough time of it. Nitir, an agriculture base in the Nitir system, is currently being harassed by the Kilrathi. Fly there and defend it from a Kilrathi attack. Then return here for 10000. Not much, but it should be pretty smooth sailing.") ],
 		'reconsider': [
-			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin1reconsider.ogg"), 
-			('Burrows', 'What is it again?'), 
-			('Goodin', 'Fly to Nitir, an agriculture base in the Nitir system. Defend it from a Kilrathi attack. Then return here for 10000.') ], 
+			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin1reconsider.ogg"),
+			('Burrows', 'What is it again?'),
+			('Goodin', 'Fly to Nitir, an agriculture base in the Nitir system. Defend it from a Kilrathi attack. Then return here for 10000.') ],
 		'reject1': [
-			('Burrows', "No dice.", "barspeech/campaign/rf/goodin1reject1.ogg"), 
-			('Goodin', 'Whatever you say. We sure could use you, though.') ], 
-		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin1reject2.ogg")], 
-		'reminder': [('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin1reminder.ogg"), ('Burrows', 'What is it again?'), ('Goodin', 'Fly to Nitir, an agriculture base in the Nitir system. Defend it from a Kilrathi attack. Then return here for 10000.')], 
+			('Burrows', "No dice.", "barspeech/campaign/rf/goodin1reject1.ogg"),
+			('Goodin', 'Whatever you say. We sure could use you, though.') ],
+		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin1reject2.ogg")],
+		'reminder': [('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin1reminder.ogg"), ('Burrows', 'What is it again?'), ('Goodin', 'Fly to Nitir, an agriculture base in the Nitir system. Defend it from a Kilrathi attack. Then return here for 10000.')],
 		'accept': [('Burrows', "Okay.", "barspeech/campaign/rf/goodin1accept1.ogg"), ('Goodin', 'See you soon.')]}
 	goodin2 = {
-	'failure': goodinfailure, 
+	'failure': goodinfailure,
 	'intro': [
-		('Burrows', "Well, that's that. The furballs didn't stand much chance.", "barspeech/campaign/rf/goodin2.ogg"), 
-		('Goodin', 'Good work. You interested in further missions?'), 
-		('Burrows', 'Possibly.'), 
-		('Goodin', 'I need you to fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.'), ('Burrows', 'How can you afford to be so cheap with such a shortage of ships?'), 
-		('Goodin', 'Believe me, there are plenty of hungry privateers out there.'), 
-		('Burrows', "But they're not as good as me."), 
-		('Goodin', 'Take it or leave it.') ], 
+		('Burrows', "Well, that's that. The furballs didn't stand much chance.", "barspeech/campaign/rf/goodin2.ogg"),
+		('Goodin', 'Good work. You interested in further missions?'),
+		('Burrows', 'Possibly.'),
+		('Goodin', 'I need you to fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.'), ('Burrows', 'How can you afford to be so cheap with such a shortage of ships?'),
+		('Goodin', 'Believe me, there are plenty of hungry privateers out there.'),
+		('Burrows', "But they're not as good as me."),
+		('Goodin', 'Take it or leave it.') ],
 	'reconsider': [
-		('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin2reconsider.ogg"), 
-		('Burrows', 'What is it again?'), 
-		('Goodin', 'Fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.') ], 
-	'reject1': [('Burrows', "I'll leave it.", "barspeech/campaign/rf/goodin2reject1.ogg")], 
-	'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin2reject2.ogg")], 
+		('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin2reconsider.ogg"),
+		('Burrows', 'What is it again?'),
+		('Goodin', 'Fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.') ],
+	'reject1': [('Burrows', "I'll leave it.", "barspeech/campaign/rf/goodin2reject1.ogg")],
+	'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin2reject2.ogg")],
 	'reminder': [
-		('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin2reminder.ogg"), 
-		('Burrows', 'What is it again?'), 
-		('Goodin', 'Fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.') ], 
+		('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin2reminder.ogg"),
+		('Burrows', 'What is it again?'),
+		('Goodin', 'Fly to Charon in the Hyades system. Defend it from a Kilrathi attack. Then return here for 10000.') ],
 	'accept': [('Burrows', "I'll take it.", "barspeech/campaign/rf/goodin2accept1.ogg")] }
 	goodin3 = {
-		'failure': goodinfailure, 
+		'failure': goodinfailure,
 		'intro': [
-			('Goodin', "Once again, good work.", "barspeech/campaign/rf/goodin3.ogg"), 
-			('Burrows', 'Naturally. I presume you have some more missions?'), 
-			('Goodin', "Certainly. We've managed to take the heat off a couple of bases, so now we can concentrate on reducing the Kilrathi presence in Confed space. Patrol the New Caledonia system. Patrol all nav points and destroy all Kilrathi vessels you encounter. Return here afterwards. The pay is 10000 again.") ], 
+			('Goodin', "Once again, good work.", "barspeech/campaign/rf/goodin3.ogg"),
+			('Burrows', 'Naturally. I presume you have some more missions?'),
+			('Goodin', "Certainly. We've managed to take the heat off a couple of bases, so now we can concentrate on reducing the Kilrathi presence in Confed space. Patrol the New Caledonia system. Patrol all nav points and destroy all Kilrathi vessels you encounter. Return here afterwards. The pay is 10000 again.") ],
 		'reconsider': [
-			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin3reconsider.ogg"), 
-			('Burrows', 'What is it again?'), 
-			('Goodin', 'Patrol the New Caledonia system. Destroy all Kilrathi vessels. Then return here for 10000.') ], 
-		'reject1': [('Burrows', "Nope.", "barspeech/campaign/rf/goodin3reject1.ogg")], 
-		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin3reject2.ogg")], 
+			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin3reconsider.ogg"),
+			('Burrows', 'What is it again?'),
+			('Goodin', 'Patrol the New Caledonia system. Destroy all Kilrathi vessels. Then return here for 10000.') ],
+		'reject1': [('Burrows', "Nope.", "barspeech/campaign/rf/goodin3reject1.ogg")],
+		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin3reject2.ogg")],
 		'reminder': [
-			('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin3reminder.ogg"), 
-			('Burrows', 'What is it again?'), 
-			('Goodin', 'Patrol the New Caledonia system. Destroy all Kilrathi vessels. Then return here for 10000.') ], 
+			('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin3reminder.ogg"),
+			('Burrows', 'What is it again?'),
+			('Goodin', 'Patrol the New Caledonia system. Destroy all Kilrathi vessels. Then return here for 10000.') ],
 		'accept': [('Burrows', "Okay.", "barspeech/campaign/rf/goodin3accept1.ogg")]}
 	goodin4 = {
-		'failure': goodinfailure, 
+		'failure': goodinfailure,
 		'intro': [
-			('Goodin', "Excellent. You really stuck it to them. You've been doing the Confederation a great service.", "barspeech/campaign/rf/goodin4.ogg"), 
-			('Burrows', "You know me. I'm all heart."), 
-			('Goodin', "I've got one more mission for you. It's the toughest one we've got right now. We need to continue fighting the Kilrathi presence in Confed space. Fly to the Regallis system. Patrol all nav points. Destroy all Kilrathi vessels. Then return here for 10000.") ], 
+			('Goodin', "Excellent. You really stuck it to them. You've been doing the Confederation a great service.", "barspeech/campaign/rf/goodin4.ogg"),
+			('Burrows', "You know me. I'm all heart."),
+			('Goodin', "I've got one more mission for you. It's the toughest one we've got right now. We need to continue fighting the Kilrathi presence in Confed space. Fly to the Regallis system. Patrol all nav points. Destroy all Kilrathi vessels. Then return here for 10000.") ],
 		'reconsider': [
-			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin4reconsider.ogg"), 
-			('Burrows', 'What is it again?'), 
-			('Goodin', 'Patrol the Regallis system. Destroy all Kilrathi vessels. Then return here for 10000.') ], 
+			('Goodin', "You're back. Want the mission?", "barspeech/campaign/rf/goodin4reconsider.ogg"),
+			('Burrows', 'What is it again?'),
+			('Goodin', 'Patrol the Regallis system. Destroy all Kilrathi vessels. Then return here for 10000.') ],
 		'reject1': [
-			('Burrows', "No thanks.", "barspeech/campaign/rf/goodin4reject1.ogg"), 
-			('Goodin', 'Chickening out, huh... Too bad.') ], 
-		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin4reject2.ogg")], 
+			('Burrows', "No thanks.", "barspeech/campaign/rf/goodin4reject1.ogg"),
+			('Goodin', 'Chickening out, huh... Too bad.') ],
+		'reject2': [('Burrows', "No dice.", "barspeech/campaign/rf/goodin4reject2.ogg")],
 		'reminder': [
-			('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin4reminder.ogg"), 
-			('Burrows', 'What is it again?'), 
-			('Goodin', 'Patrol the Regallis system. Destroy all Kilrathi vessels. Then return here for 10000.') ], 
+			('Goodin', "You haven't finished the mission.", "barspeech/campaign/rf/goodin4reminder.ogg"),
+			('Burrows', 'What is it again?'),
+			('Goodin', 'Patrol the Regallis system. Destroy all Kilrathi vessels. Then return here for 10000.') ],
 		'accept': [('Burrows', "Sounds straightforward. See you soon.", "barspeech/campaign/rf/goodin4accept1.ogg")] }
 
 	goodin5={
-		'failure': goodinfailure, 
+		'failure': goodinfailure,
 		'intro': [
-			('Goodin', "Good day. I hope you remember me.", "barspeech/campaign/rf/goodin5.ogg"), 
-			('Burrows', 'Of course, Captain Goodin.'), 
-			('Goodin', "I'm very glad to see that Menesch is dead. You beat out a lot of other top-notch bounty hunters. I'm transferring the Confederation's 40000 bounty to your account."), 
-			('Burrows', 'Good deal.'), 
-			('Goodin', "I'd like to get right to business. As you know, the Confederation has spread its forces very thin in Gemini. Our fight against the Retros has greatly weakened our lines on the Kilrathi front, and the war there has become purely defensive."), 
-			('Burrows', 'And you need all the help you can get.'), 
-			('Goodin', "I'm afraid so. Incidentally, please remember that this conversation is strictly confidential."), 
-			('Burrows', "I'll keep that in mind."), 
-			('Goodin', "We are currently trying to secure the Blockade systems, and drive back Kilrathi intrusions there. We want your help at Blockade Point Alpha. I'm offering you 20000 to fly to Nav 1 there, and rendezvous with our Commodore Uhler. He will give you further instructions.") ], 
+			('Goodin', "Good day. I hope you remember me.", "barspeech/campaign/rf/goodin5.ogg"),
+			('Burrows', 'Of course, Captain Goodin.'),
+			('Goodin', "I'm very glad to see that Menesch is dead. You beat out a lot of other top-notch bounty hunters. I'm transferring the Confederation's 40000 bounty to your account."),
+			('Burrows', 'Good deal.'),
+			('Goodin', "I'd like to get right to business. As you know, the Confederation has spread its forces very thin in Gemini. Our fight against the Retros has greatly weakened our lines on the Kilrathi front, and the war there has become purely defensive."),
+			('Burrows', 'And you need all the help you can get.'),
+			('Goodin', "I'm afraid so. Incidentally, please remember that this conversation is strictly confidential."),
+			('Burrows', "I'll keep that in mind."),
+			('Goodin', "We are currently trying to secure the Blockade systems, and drive back Kilrathi intrusions there. We want your help at Blockade Point Alpha. I'm offering you 20000 to fly to Nav 1 there, and rendezvous with our Commodore Uhler. He will give you further instructions.") ],
 		'reconsider': [
-			('Goodin', "Ah. Have you reconsidered?", "barspeech/campaign/rf/goodin5reconsider.ogg"), 
-			('Burrows', "Maybe. Let's hear the story again."), 
-			('Goodin', "We're trying to secure Blockade Point Alpha against further Kilrathi aggression. We want your help at Blockade Point Alpha. Fly to Nav 1 there and meet with Commodore Uhler. Follow his instructions, then return here for 20000.") ], 
-		'reject1': [('Goodin', "I see. Remember, the instability in Gemini threatens everyone, including you.", "barspeech/campaign/rf/goodin5reject1.ogg")], 
-		'reject2': [('Goodin', "I wish there was something I could say to change your mind.", "barspeech/campaign/rf/goodin5reject2.ogg")], 
-		'reminder': [('Goodin', "The Commodore's orders have not been carried out. The Kilrathi threat at Blockade Point Alpha remains. Let me remind you of your duties. Fly to Nav 1 at Blockade Point Alpha and meet with Commodore Uhler. Follow his instructions, then return here for 20000.", "barspeech/campaign/rf/goodin5reminder.ogg")], 
+			('Goodin', "Ah. Have you reconsidered?", "barspeech/campaign/rf/goodin5reconsider.ogg"),
+			('Burrows', "Maybe. Let's hear the story again."),
+			('Goodin', "We're trying to secure Blockade Point Alpha against further Kilrathi aggression. We want your help at Blockade Point Alpha. Fly to Nav 1 there and meet with Commodore Uhler. Follow his instructions, then return here for 20000.") ],
+		'reject1': [('Goodin', "I see. Remember, the instability in Gemini threatens everyone, including you.", "barspeech/campaign/rf/goodin5reject1.ogg")],
+		'reject2': [('Goodin', "I wish there was something I could say to change your mind.", "barspeech/campaign/rf/goodin5reject2.ogg")],
+		'reminder': [('Goodin', "The Commodore's orders have not been carried out. The Kilrathi threat at Blockade Point Alpha remains. Let me remind you of your duties. Fly to Nav 1 at Blockade Point Alpha and meet with Commodore Uhler. Follow his instructions, then return here for 20000.", "barspeech/campaign/rf/goodin5reminder.ogg")],
 		'accept': [('Goodin', "Good. Embark as soon as you can.", "barspeech/campaign/rf/goodin5accept1.ogg")] }
 	terrell = {
-		'failure': terrellfailure, 
+		'failure': terrellfailure,
 		'intro': [
-			('Terrell', 'Good day, privateer. I trust you remember me?', 'barspeech/campaign/rf/terrell1.ogg'), 
-			('Burrows', 'Naturally.'), 
-			('Terrell', "I've been impressed by your recent efforts to help the Confederation. Captain Goodin's reports to me have been most positive. As I'm sure you have learned, the Retros have got out of hand. Their recent surge in activity is attributable to one Mordecai Jones. Stopping the threat means eliminating Jones. Unfortunately, we have very little information about his current location. Intelligence analysis indicates that he's operating from the Fariss quadrant. But that's all we know. Therefore, were going to begin a thorough search of Fariss. Were going to comb each system until we find him."), 
-			('Burrows', 'So how do I fit in?'), 
-			('Terrell', "As you know, we've got nearly all our forces mobilised already. They're split between the Kilrathi and the Retros. We can only spare a handful of ships for the search. But a handful is not enough. Using Confederation ships alone, the search would take years. We need volunteers to beef up our search teams. That's how you fit in."), 
-			('Burrows', 'What are you offering?'), 
-			('Terrell', 'We need you to patrol Death, Pestilence, and War. You get 20000.'), 
-			('Burrows', "That's an awful lot of space to cover in one flight."), 
-			('Terrell', 'I know. You should fuel up at Macabee in Nexus before starting.')], 
-		'reconsider': [('Terrell', 'Good to see you again. We need you badly. Let me describe my offer again. You are to patrol Death, Pestilence and War. I recommend you fuel up at Macabee in Nexus first. Return here afterwards. The pay is 20000.', 'barspeech/campaign/rf/terrell1reconsider.ogg')], 
-		'reject1': [('Terrell', "That's too bad. Our effort depends on you. Please reconsider.", "barspeech/campaign/rf/terrell1reject1.ogg")], 
-		'reject2': [('Terrell', 'I see. Then our cause is all but lost.', 'barspeech/campaign/rf/terrell1reject2.ogg')], 
+			('Terrell', 'Good day, privateer. I trust you remember me?', 'barspeech/campaign/rf/terrell1.ogg'),
+			('Burrows', 'Naturally.'),
+			('Terrell', "I've been impressed by your recent efforts to help the Confederation. Captain Goodin's reports to me have been most positive. As I'm sure you have learned, the Retros have got out of hand. Their recent surge in activity is attributable to one Mordecai Jones. Stopping the threat means eliminating Jones. Unfortunately, we have very little information about his current location. Intelligence analysis indicates that he's operating from the Fariss quadrant. But that's all we know. Therefore, were going to begin a thorough search of Fariss. Were going to comb each system until we find him."),
+			('Burrows', 'So how do I fit in?'),
+			('Terrell', "As you know, we've got nearly all our forces mobilised already. They're split between the Kilrathi and the Retros. We can only spare a handful of ships for the search. But a handful is not enough. Using Confederation ships alone, the search would take years. We need volunteers to beef up our search teams. That's how you fit in."),
+			('Burrows', 'What are you offering?'),
+			('Terrell', 'We need you to patrol Death, Pestilence, and War. You get 20000.'),
+			('Burrows', "That's an awful lot of space to cover in one flight."),
+			('Terrell', 'I know. You should fuel up at Macabee in Nexus before starting.')],
+		'reconsider': [('Terrell', 'Good to see you again. We need you badly. Let me describe my offer again. You are to patrol Death, Pestilence and War. I recommend you fuel up at Macabee in Nexus first. Return here afterwards. The pay is 20000.', 'barspeech/campaign/rf/terrell1reconsider.ogg')],
+		'reject1': [('Terrell', "That's too bad. Our effort depends on you. Please reconsider.", "barspeech/campaign/rf/terrell1reject1.ogg")],
+		'reject2': [('Terrell', 'I see. Then our cause is all but lost.', 'barspeech/campaign/rf/terrell1reject2.ogg')],
 		'reminder': [
-			('Terrell', "What are you doing here... Your mission's not complete.", "barspeech/campaign/rf/terrell1reminder.ogg"), 
-			('Burrows', 'I may be reconsidering. What are the details again?'), 
-			('Terrell', 'You are to patrol Death, Pestilence and War. I recommend you fuel up at Macabee in Nexus first. Return here afterwards. The pay is 20000.')], 
+			('Terrell', "What are you doing here... Your mission's not complete.", "barspeech/campaign/rf/terrell1reminder.ogg"),
+			('Burrows', 'I may be reconsidering. What are the details again?'),
+			('Terrell', 'You are to patrol Death, Pestilence and War. I recommend you fuel up at Macabee in Nexus first. Return here afterwards. The pay is 20000.')],
 		'accept': [('Terrell', "Good. Return here when you're done. We'll analyse your data and see if there's any place to attack.", "barspeech/campaign/rf/terrell1accept1.ogg")]}
 
 	rf.Init(CampaignNode().Init(rf,
@@ -1811,7 +1812,7 @@ def LoadRFGoodinCampaign():
 					GOODIN_SPRITE,
 					TrueBackwardsSubnode(),
 					None,
-					[GoodinMission1,GoodinMission5]))					
+					[GoodinMission1,GoodinMission5]))
 	MakeMission(rf,
 		GOODIN_SPRITE,
 		[InSystemCondition("Gemini/Perry","Perry")],
@@ -1931,11 +1932,11 @@ def LoadRFGoodinCampaign():
 			[MakeDrakePirateNode(rf,100000,ChoiceDrakeTerrell),CampaignClickNode().Init(rf,
 				[InSystemCondition("Gemini/Perry","Perry"),SaveVariableCondition("rf_patrol_war",1.0),SaveVariableCondition("rf_patrol_death",1.0)],
 				[("Terrell","Good work. Your data is complete. I'm afraid that there was no evidence of any bases in the systems you patrolled. You're not alone. All patrols so far have turned up nothing. All except the Epsilon group, which hasn't returned yet. They were sent to patrol 17-AR, J-900, Telar, and Valhalla. We?ve lost contact with them. I'm sending additional ships to look for them. Anyway, I want to thank you for your help, and to inform you that I'll pay you 80000 if you can somehow get rid of Jones. That's all. Goodbye.", "barspeech/campaign/rf/terrell2.ogg")],
-				None,				
+				None,
 				GoToSubnode(0,AddCredits(20000)),
 				ChoiceDrakeTerrell,
 				[MakeDrakePirateNode(rf,80000)])]),
-		TerrellMission)		
+		TerrellMission)
 	return rf
 def LoadRFTaylaCampaign():
 	TAYLA_SPRITE     = ("tayla.spr","Talk_To_Tayla","bases/heads/taylapirate.spr") #sprite file for the fixer
@@ -1946,82 +1947,82 @@ def LoadRFTaylaCampaign():
 	TaylaMission4=CampaignClickNode()
 	TaylaMissionFinal=CampaignClickNode()
 	tayla1 = {
-		'failure': taylafailure, 
+		'failure': taylafailure,
 		'intro': [
-			('Burrows', "Hello, Tayla.", "barspeech/campaign/rf/tayla1.ogg"), 
-			('Tayla', "Wow. I never expected to see you again. What's new?"), 
-			('Burrows', 'The usual. Boy meets gun, boy blows up drone, boy loses gun, you know the story.'), 
-			('Tayla', 'I heard. Say, you interested in some dirty work?'), 
-			('Burrows', 'Probably.'), 
-			('Tayla', "I could use you to deliver some personal cargo for me. I need it to go to Tuck in Sherwood. No contraband, and I'll make sure the pirates stay off your back. The job pays 10000. I'll meet you at Tuck. How about it?")], 
+			('Burrows', "Hello, Tayla.", "barspeech/campaign/rf/tayla1.ogg"),
+			('Tayla', "Wow. I never expected to see you again. What's new?"),
+			('Burrows', 'The usual. Boy meets gun, boy blows up drone, boy loses gun, you know the story.'),
+			('Tayla', 'I heard. Say, you interested in some dirty work?'),
+			('Burrows', 'Probably.'),
+			('Tayla', "I could use you to deliver some personal cargo for me. I need it to go to Tuck in Sherwood. No contraband, and I'll make sure the pirates stay off your back. The job pays 10000. I'll meet you at Tuck. How about it?")],
 		'reconsider': [
-			('Tayla', "I knew you'd come back.", "barspeech/campaign/rf/tayla1reconsider.ogg"), 
-			('Burrows', "Let's hear the specs again."), 
-			('Tayla', "Here it is. You deliver some personal cargo for me to Tuck in Sherwood. There's no contraband, and I'll keep the pirates on your side. You get 10000, and I'll be at Tuck to greet you.")], 
-		'reject1': [('Tayla', "Not good enough for you, huh... I know you. You'll change your tune.", "barspeech/campaign/rf/tayla1reject1.ogg")], 
-		'reject2': [('Tayla', "Why do I bother with you?", "barspeech/campaign/rf/tayla1reject2.ogg")], 
+			('Tayla', "I knew you'd come back.", "barspeech/campaign/rf/tayla1reconsider.ogg"),
+			('Burrows', "Let's hear the specs again."),
+			('Tayla', "Here it is. You deliver some personal cargo for me to Tuck in Sherwood. There's no contraband, and I'll keep the pirates on your side. You get 10000, and I'll be at Tuck to greet you.")],
+		'reject1': [('Tayla', "Not good enough for you, huh... I know you. You'll change your tune.", "barspeech/campaign/rf/tayla1reject1.ogg")],
+		'reject2': [('Tayla', "Why do I bother with you?", "barspeech/campaign/rf/tayla1reject2.ogg")],
 		'reminder': [
-			('Tayla', "I see you still haven't delivered my goods to Tuck.", "barspeech/campaign/rf/tayla1reminder.ogg"), 
-			('Burrows', 'I had some stuff to take care of. What was the plan again?'), 
-			('Tayla', "Let me refresh your memory. Deliver some personal cargo for me to Tuck in Sherwood. There's no contraband, and I'll keep the pirates on your side. The pay is 10000. I'll be at Tuck to greet you. Once and for all, are you going to do it or not?")], 
+			('Tayla', "I see you still haven't delivered my goods to Tuck.", "barspeech/campaign/rf/tayla1reminder.ogg"),
+			('Burrows', 'I had some stuff to take care of. What was the plan again?'),
+			('Tayla', "Let me refresh your memory. Deliver some personal cargo for me to Tuck in Sherwood. There's no contraband, and I'll keep the pirates on your side. The pay is 10000. I'll be at Tuck to greet you. Once and for all, are you going to do it or not?")],
 		'accept': [('Tayla', "Great. See you there.", "barspeech/campaign/rf/tayla1accept1.ogg")]}
 	tayla2 = {
-		'failure': taylafailure, 
+		'failure': taylafailure,
 		'intro': [
-			('Tayla', "Congratulations, you finally made it.", "barspeech/campaign/rf/tayla2.ogg"), 
-			('Burrows', "Yeah, yeah. Say, just what was that 'personal stuff, anyway?"), 
-			('Tayla', "None of your business, naturally. And speaking of business, I've got a load of Brilliance for you to smuggle."), 
-			('Burrows', "Great. There's nothing like running a gauntlet of self-righteous Confeds. Where's the Brilliance going?"), 
-			('Tayla', 'A mining base in Prasepe called Saratov. It should be a piece of cake, if you can avoid contraband searches. Come back here for payment.'), 
-			('Burrows', "What's the wages?"), 
-			('Tayla', '20000. Deal?')], 
+			('Tayla', "Congratulations, you finally made it.", "barspeech/campaign/rf/tayla2.ogg"),
+			('Burrows', "Yeah, yeah. Say, just what was that 'personal stuff, anyway?"),
+			('Tayla', "None of your business, naturally. And speaking of business, I've got a load of Brilliance for you to smuggle."),
+			('Burrows', "Great. There's nothing like running a gauntlet of self-righteous Confeds. Where's the Brilliance going?"),
+			('Tayla', 'A mining base in Prasepe called Saratov. It should be a piece of cake, if you can avoid contraband searches. Come back here for payment.'),
+			('Burrows', "What's the wages?"),
+			('Tayla', '20000. Deal?')],
 		'reconsider': [
-			('Burrows', "Tayla, I've thought about your offer. Tell me the details again.", "barspeech/campaign/rf/tayla2reconsider.ogg"), 
-			('Tayla', "Take a load of Brilliance to Saratov base in Prasepe. Come back here and get 20000. It's that simple.")], 
-		'reject1': [('Burrows', "Sorry. Not my style.", "barspeech/campaign/rf/tayla2reject1.ogg")], 
-		'reject2': [('Tayla', "You have to quit changing your mind like this... It will give you a bad rep.", "barspeech/campaign/rf/tayla2reject2.ogg")], 
-		'reminder': [('Tayla', "The boys on Saratov say they haven't got their Brilliance yet. What's the deal... Just bring the Brilliance to Saratov, and you get 20000. Are you going to do it?", "barspeech/campaign/rf/tayla2reminder.ogg")], 
+			('Burrows', "Tayla, I've thought about your offer. Tell me the details again.", "barspeech/campaign/rf/tayla2reconsider.ogg"),
+			('Tayla', "Take a load of Brilliance to Saratov base in Prasepe. Come back here and get 20000. It's that simple.")],
+		'reject1': [('Burrows', "Sorry. Not my style.", "barspeech/campaign/rf/tayla2reject1.ogg")],
+		'reject2': [('Tayla', "You have to quit changing your mind like this... It will give you a bad rep.", "barspeech/campaign/rf/tayla2reject2.ogg")],
+		'reminder': [('Tayla', "The boys on Saratov say they haven't got their Brilliance yet. What's the deal... Just bring the Brilliance to Saratov, and you get 20000. Are you going to do it?", "barspeech/campaign/rf/tayla2reminder.ogg")],
 		'accept': [('Tayla', "Good luck. See you soon.", "barspeech/campaign/rf/tayla2accept1.ogg")]}
 	tayla3 = {
-		'failure': taylafailure, 
+		'failure': taylafailure,
 		'intro': [
-			('Tayla', "You're back. Good work. I've got another Brilliance run for you, if you're interested.", "barspeech/campaign/rf/tayla3.ogg"), 
-			('Burrows', 'Tell me the payoff first.'), 
-			('Tayla', '30000.'), 
-			('Burrows', 'Go on.'), 
-			('Tayla', 'Fly to Junction and deliver the stuff to Speke. Come back here for payment.'), 
-			('Burrows', "Why aren't you giving any of these missions to your normal pirate pals?"), 
-			('Tayla', "I think some of them are nervous about the increased Retro activity. Plus you've proven yourself more reliable."), 
-			('Burrows', "I'm glad you've finally noticed."), 
-			('Tayla', 'What do you say?')], 
+			('Tayla', "You're back. Good work. I've got another Brilliance run for you, if you're interested.", "barspeech/campaign/rf/tayla3.ogg"),
+			('Burrows', 'Tell me the payoff first.'),
+			('Tayla', '30000.'),
+			('Burrows', 'Go on.'),
+			('Tayla', 'Fly to Junction and deliver the stuff to Speke. Come back here for payment.'),
+			('Burrows', "Why aren't you giving any of these missions to your normal pirate pals?"),
+			('Tayla', "I think some of them are nervous about the increased Retro activity. Plus you've proven yourself more reliable."),
+			('Burrows', "I'm glad you've finally noticed."),
+			('Tayla', 'What do you say?')],
 		'reconsider': [
-			('Tayla', "Back so soon?", "barspeech/campaign/rf/tayla3reconsider.ogg"), 
-			('Burrows', "Yeah, back so soon. Let's hear the deal again."), 
-			('Tayla', 'Okay. For 30000, you deliver a cargo of Brilliance to Speke in Junction. Return here afterwards.')], 
-		'reject1': [('Tayla', "Seems strange to back out now, ace.", "barspeech/campaign/rf/tayla3reject1.ogg")], 
-		'reject2': [('Burrows', "Nope. Still don't want it.", "barspeech/campaign/rf/tayla3reject2.ogg")], 
+			('Tayla', "Back so soon?", "barspeech/campaign/rf/tayla3reconsider.ogg"),
+			('Burrows', "Yeah, back so soon. Let's hear the deal again."),
+			('Tayla', 'Okay. For 30000, you deliver a cargo of Brilliance to Speke in Junction. Return here afterwards.')],
+		'reject1': [('Tayla', "Seems strange to back out now, ace.", "barspeech/campaign/rf/tayla3reject1.ogg")],
+		'reject2': [('Burrows', "Nope. Still don't want it.", "barspeech/campaign/rf/tayla3reject2.ogg")],
 		'reminder': [
-			('Tayla', "They haven't got the Brilliance yet. What's going on?", "barspeech/campaign/rf/tayla3reminder.ogg"), 
-			('Burrows', 'Yeah, I know. Sorry. I got side-tracked. Let me hear the scoop again.'), 
-			('Tayla', "I don't know why, but I'll give you another chance. Take the load of Brilliance to Speke in Junction. That's it. The job pays 30000.")], 
+			('Tayla', "They haven't got the Brilliance yet. What's going on?", "barspeech/campaign/rf/tayla3reminder.ogg"),
+			('Burrows', 'Yeah, I know. Sorry. I got side-tracked. Let me hear the scoop again.'),
+			('Tayla', "I don't know why, but I'll give you another chance. Take the load of Brilliance to Speke in Junction. That's it. The job pays 30000.")],
 		'accept': [('Tayla', "Good luck.", "barspeech/campaign/rf/tayla3accept1.ogg")]}
 	tayla4 = {
-		'failure': taylafailure, 
+		'failure': taylafailure,
 		'intro': [
-			('Tayla', "Excellent work. That last run made a lot of important people happy.", "barspeech/campaign/rf/tayla4.ogg"), 
-			('Burrows', 'Swell. Then it was all worth while.'), 
-			('Tayla', "I do have another run, if you're interested."), 
-			('Burrows', 'Let me guess. Brilliance.'), 
-			('Tayla', "Correct. Bring it to Basque base in the Pyrenees system. Pyrenees is quite a trip from here, and you'll be compensated accordingly: 40000. Come back here afterwards.")], 
+			('Tayla', "Excellent work. That last run made a lot of important people happy.", "barspeech/campaign/rf/tayla4.ogg"),
+			('Burrows', 'Swell. Then it was all worth while.'),
+			('Tayla', "I do have another run, if you're interested."),
+			('Burrows', 'Let me guess. Brilliance.'),
+			('Tayla', "Correct. Bring it to Basque base in the Pyrenees system. Pyrenees is quite a trip from here, and you'll be compensated accordingly: 40000. Come back here afterwards.")],
 		'reconsider': [
-			('Burrows', "Tell me about the mission again.", "barspeech/campaign/rf/tayla4reconsider.ogg"), 
-			('Tayla', 'Okay. For 40000, you deliver a cargo of Brilliance to Basque in Pyrenees.')], 
-		'reject1': [('Tayla', "Too bad. 40000 would buy a lot of spare missiles, you know.", "barspeech/campaign/rf/tayla4reject1.ogg")], 
-		'reject2': [('Tayla', "Ok. But I can't hold the offer for you much longer.", "barspeech/campaign/rf/tayla4reject2.ogg")], 
+			('Burrows', "Tell me about the mission again.", "barspeech/campaign/rf/tayla4reconsider.ogg"),
+			('Tayla', 'Okay. For 40000, you deliver a cargo of Brilliance to Basque in Pyrenees.')],
+		'reject1': [('Tayla', "Too bad. 40000 would buy a lot of spare missiles, you know.", "barspeech/campaign/rf/tayla4reject1.ogg")],
+		'reject2': [('Tayla', "Ok. But I can't hold the offer for you much longer.", "barspeech/campaign/rf/tayla4reject2.ogg")],
 		'reminder': [
-			('Tayla', "I hope you're not going to ask for payment, since you haven't made the delivery yet.", "barspeech/campaign/rf/tayla4reminder.ogg"), 
-			('Burrows', 'Sorry. Are you still offering?'), 
-			('Tayla', 'Yes, but only because of your past success. You are to take the Brilliance to Basque in Pyrenees for 40000. Decide carefully. Do you want the job?')], 
+			('Tayla', "I hope you're not going to ask for payment, since you haven't made the delivery yet.", "barspeech/campaign/rf/tayla4reminder.ogg"),
+			('Burrows', 'Sorry. Are you still offering?'),
+			('Tayla', 'Yes, but only because of your past success. You are to take the Brilliance to Basque in Pyrenees for 40000. Decide carefully. Do you want the job?')],
 		'accept': [('Tayla', "Good.", "barspeech/campaign/rf/tayla4accept1.ogg")]}
 	taylafinal=[
 		("Tayla","Great job. You've made my friends on Basque very happy. Well, that's all the work I have for you. Be advised, though, I've got several contacts who are interested in your exploits. I'll make sure to put in a good word for you.", "barspeech/campaign/rf/taylafinal.ogg"),
@@ -2045,7 +2046,7 @@ def LoadRFTaylaCampaign():
 	MakeCargoMission(rf,
 			TAYLA_SPRITE,
 			[InSystemCondition("Gemini/Sherwood")],#where you get mission
-			[InSystemCondition("Gemini/Prasepe","Saratov")],#where you get mission			
+			[InSystemCondition("Gemini/Prasepe","Saratov")],#where you get mission
 			AddCredits(10000),
 			LoadMission("ambush","ambush",
 				(rf.name+"_mission",("Gemini/New_Caledonia",),0,'militia',3,'talon','',['Filthy Little Brilliance Runner',"You're busted! The run stops here"],['Gemini/New_Caledonia', 'Gemini/Prasepe'], "Saratov"),
@@ -2061,7 +2062,7 @@ def LoadRFTaylaCampaign():
 	MakeCargoMission(rf,
 			TAYLA_SPRITE,
 			[InSystemCondition("Gemini/Sherwood")],#where you get mission
-			[InSystemCondition("Gemini/Junction","Speke")],#where you get mission			
+			[InSystemCondition("Gemini/Junction","Speke")],#where you get mission
 			AddCredits(20000),
 			LoadMission("ambush","ambush",
 				(rf.name+"_mission",("Gemini/Capella","Gemini/Junction"),0,'militia',4,'talon','',['Filthy Little Brilliance Runner',"You're busted! The run stops here"],['Gemini/Capella', 'Gemini/Nexus',"Gemini/Junction"], "Speke"),
@@ -2077,7 +2078,7 @@ def LoadRFTaylaCampaign():
 	MakeCargoMission(rf,
 			TAYLA_SPRITE,
 			[InSystemCondition("Gemini/Sherwood")],#where you get mission
-			[InSystemCondition("Gemini/Pyrenees","Basque")],#where you get mission			
+			[InSystemCondition("Gemini/Pyrenees","Basque")],#where you get mission
 			AddCredits(30000),
 			LoadMission("ambush","ambush",
 				(rf.name+"_mission",("Gemini/Regallis",),0,'militia',4,'talon','',['Filthy Little Brilliance Runner',"You're busted! The run stops here"],['Gemini/Regallis', 'Gemini/Freyja',"Gemini/Pyrenees"], "Basque"),
@@ -2119,185 +2120,185 @@ def LoadRFCampaign():
 	MonteMission4 = CampaignClickNode()
 	montefailure=[("Monte","You could have done Gemini a great service. Too bad.")]
 	monte1 = {
-		'failure': montefailure, 
+		'failure': montefailure,
 		'intro': [
-			('Monte', "Greetings. You must be that privateer.", "barspeech/campaign/rf/monte1.ogg"), 
-			('Burrows', "That's right. I was sent to see you by Masterson."), 
-			('Monte', 'I know.'), 
-			('Burrows', 'Just who are you?'), 
-			('Monte', 'Call me Monte. The details of my identity do not concern you. I have information that you may find quite valuable, but I must request a few favours in exchange.'), 
-			('Burrows', 'You want me to fly missions for you.'), 
-			('Monte', 'Certainly. Some will be difficult, but I have faith in your abilities.'), 
-			('Burrows', "Let's talk money. How much for the first job?"), 
-			('Monte', "No money, I'm afraid. I'm a rather poor man."), 
-			('Burrows', "I sympathise, but I can't afford to do charity work. Sorry."), 
-			('Monte', 'Hold on, my friend. The information in my possession is more important than you realise. For example, I have been able to obtain a list of the Retros, most wanted enemies. It names the ten individuals who pose the greatest threat to the Retros, growing empire. Your name is on that list. The danger to your life becomes ever more serious. Your survival depends on the defeat of the Retros.'), 
-			('Burrows', "Well, I'll hear you out. What's the first job?"), 
-			('Monte', 'Quite simple. I desire safe transport to New Detroit. If you take me there, our discussions can proceed.')], 
-		'reconsider': [('Monte', "I hope you've reconsidered. I would like safe transport to New Detroit. Take me there, and our discussions can proceed.", "barspeech/campaign/rf/monte1reconsider.ogg")], 
-		'reject1': [('Monte', "Time is running out. Please reconsider.", "barspeech/campaign/rf/monte1reject1.ogg")], 
-		'reject2': [('Monte', "Remember, the Retros are not asleep.", "barspeech/campaign/rf/monte1reject2.ogg")], 
-		'reminder': [('Monte', "This is not New Detroit. Please take me there.", "barspeech/campaign/rf/monte1reminder.ogg")], 
+			('Monte', "Greetings. You must be that privateer.", "barspeech/campaign/rf/monte1.ogg"),
+			('Burrows', "That's right. I was sent to see you by Masterson."),
+			('Monte', 'I know.'),
+			('Burrows', 'Just who are you?'),
+			('Monte', 'Call me Monte. The details of my identity do not concern you. I have information that you may find quite valuable, but I must request a few favours in exchange.'),
+			('Burrows', 'You want me to fly missions for you.'),
+			('Monte', 'Certainly. Some will be difficult, but I have faith in your abilities.'),
+			('Burrows', "Let's talk money. How much for the first job?"),
+			('Monte', "No money, I'm afraid. I'm a rather poor man."),
+			('Burrows', "I sympathise, but I can't afford to do charity work. Sorry."),
+			('Monte', 'Hold on, my friend. The information in my possession is more important than you realise. For example, I have been able to obtain a list of the Retros, most wanted enemies. It names the ten individuals who pose the greatest threat to the Retros, growing empire. Your name is on that list. The danger to your life becomes ever more serious. Your survival depends on the defeat of the Retros.'),
+			('Burrows', "Well, I'll hear you out. What's the first job?"),
+			('Monte', 'Quite simple. I desire safe transport to New Detroit. If you take me there, our discussions can proceed.')],
+		'reconsider': [('Monte', "I hope you've reconsidered. I would like safe transport to New Detroit. Take me there, and our discussions can proceed.", "barspeech/campaign/rf/monte1reconsider.ogg")],
+		'reject1': [('Monte', "Time is running out. Please reconsider.", "barspeech/campaign/rf/monte1reject1.ogg")],
+		'reject2': [('Monte', "Remember, the Retros are not asleep.", "barspeech/campaign/rf/monte1reject2.ogg")],
+		'reminder': [('Monte', "This is not New Detroit. Please take me there.", "barspeech/campaign/rf/monte1reminder.ogg")],
 		'accept': [('Monte', "Excellent. I'm ready to go.", "barspeech/campaign/rf/monte1accept1.ogg")]}
 	monte2 = {
-		'failure': montefailure, 
+		'failure': montefailure,
 		'intro': [
-			('Monte', "Thank you for the transportation.", "barspeech/campaign/rf/monte2.ogg"), 
-			('Burrows', 'No problem. Tell me what you know.'), 
-			('Monte', 'Patience. I receive my information slowly. Besides, it would be unwise to divulge all my knowledge immediately.'), 
-			('Burrows', "I'm starting to wonder just how much you do know, pal."), 
-			('Monte', "Let me try to pacify you. I know that the Retros have recently been united. This unity has given them the strength to begin their conquest. It has all been possible because of a strong new Retro leader, as you may have discovered. Probably no more than ten people in Gemini, including the Retros themselves, know the identity of this new leader. I am one of those ten. The leader's name is Mordecai Jones."), 
-			('Burrows', "I don't care about his name. What do you know about him?"), 
-			('Monte', 'Not much, admittedly. He is some sort of scientist or engineer. He became a Retro only recently. His organisation of the Retros has been astounding. I have never heard of any organisation going from disarray to power in such a short time.'), 
-			('Burrows', "Yeah, I think he's swell, too. The question is, where is he?"), 
-			('Monte', 'I do not know. But I may be able to find out soon.'), 
-			('Burrows', 'How soon?'), 
-			('Monte', 'Patience. First, you must fly another mission.'), 
-			('Burrows', "I guess I'm at your mercy."), 
-			('Monte', 'I want you to go to Drake in the Capella system. You will meet a man there. Follow his instructions. That is all.')], 
-		'reconsider': [('Monte', "You have returned. Will you accept my mission... I want you to fly to Drake in the Capella system, and carry out the instructions of the person you will meet there.", "barspeech/campaign/rf/monte2reconsider.ogg")], 
-		'reject1': [('Monte', "I see. Then I can give you no further information.", "barspeech/campaign/rf/monte2reject1.ogg")], 
-		'reject2': [('Burrows', "I'm tired of these games Monte. See you around.", "barspeech/campaign/rf/monte2reject2.ogg")], 
-		'reminder': [('Monte', "I have not heard from my associate. Apparently you have not completed his task.", "barspeech/campaign/rf/monte2reminder.ogg"), ('Burrows', 'Yeah, I guess not. Who was that again?'), ('Monte', 'He is on the Drake base in Capella. He will give you further instructions.')], 
+			('Monte', "Thank you for the transportation.", "barspeech/campaign/rf/monte2.ogg"),
+			('Burrows', 'No problem. Tell me what you know.'),
+			('Monte', 'Patience. I receive my information slowly. Besides, it would be unwise to divulge all my knowledge immediately.'),
+			('Burrows', "I'm starting to wonder just how much you do know, pal."),
+			('Monte', "Let me try to pacify you. I know that the Retros have recently been united. This unity has given them the strength to begin their conquest. It has all been possible because of a strong new Retro leader, as you may have discovered. Probably no more than ten people in Gemini, including the Retros themselves, know the identity of this new leader. I am one of those ten. The leader's name is Mordecai Jones."),
+			('Burrows', "I don't care about his name. What do you know about him?"),
+			('Monte', 'Not much, admittedly. He is some sort of scientist or engineer. He became a Retro only recently. His organisation of the Retros has been astounding. I have never heard of any organisation going from disarray to power in such a short time.'),
+			('Burrows', "Yeah, I think he's swell, too. The question is, where is he?"),
+			('Monte', 'I do not know. But I may be able to find out soon.'),
+			('Burrows', 'How soon?'),
+			('Monte', 'Patience. First, you must fly another mission.'),
+			('Burrows', "I guess I'm at your mercy."),
+			('Monte', 'I want you to go to Drake in the Capella system. You will meet a man there. Follow his instructions. That is all.')],
+		'reconsider': [('Monte', "You have returned. Will you accept my mission... I want you to fly to Drake in the Capella system, and carry out the instructions of the person you will meet there.", "barspeech/campaign/rf/monte2reconsider.ogg")],
+		'reject1': [('Monte', "I see. Then I can give you no further information.", "barspeech/campaign/rf/monte2reject1.ogg")],
+		'reject2': [('Burrows', "I'm tired of these games Monte. See you around.", "barspeech/campaign/rf/monte2reject2.ogg")],
+		'reminder': [('Monte', "I have not heard from my associate. Apparently you have not completed his task.", "barspeech/campaign/rf/monte2reminder.ogg"), ('Burrows', 'Yeah, I guess not. Who was that again?'), ('Monte', 'He is on the Drake base in Capella. He will give you further instructions.')],
 		'accept': [('Monte', "Good luck.", "barspeech/campaign/rf/monte2accept1.ogg")]}
 	monte3 = {
-		'failure': montefailure, 
+		'failure': montefailure,
 		'intro': [
-			('Monte', "Excellent. You have made the delivery as requested. Now I will give you what little additional information I have. I was hoping to find out where Mordecai Jones resides. Unfortunately, I have not been given that information. I do know, however, that he has a secret base in Gemini. Inevitably, it is well guarded by the Retros.", "barspeech/campaign/rf/monte3.ogg"), 
-			('Burrows', "That's not much to go on, Monte."), 
-			('Monte', "No, it isn't. I apologise. If I knew more, I would tell you."), 
-			('Burrows', "If that's it, I guess I'll be going."), 
-			('Monte', 'I do have one more request of you. I will pay this time.'), 
-			('Burrows', 'And how much?'), 
-			('Monte', "5000. It's not much, but it's all I have. I too am on the Retros, most wanted list. I'm not sure why. They may have found out about my information dealing. In any case, I need to travel to the Nexus system, but I have learned that a group of Retros awaits me there. I would like you to destroy those Retros. They should be waiting to surprise me at Nav 4."), 
-			('Burrows', '5000 is not much money.'), 
-			('Monte', 'There is more. I am about to receive additional information that will interest you. If you return here after completing the mission, I will give it to you. That is surely worth something.')], 
+			('Monte', "Excellent. You have made the delivery as requested. Now I will give you what little additional information I have. I was hoping to find out where Mordecai Jones resides. Unfortunately, I have not been given that information. I do know, however, that he has a secret base in Gemini. Inevitably, it is well guarded by the Retros.", "barspeech/campaign/rf/monte3.ogg"),
+			('Burrows', "That's not much to go on, Monte."),
+			('Monte', "No, it isn't. I apologise. If I knew more, I would tell you."),
+			('Burrows', "If that's it, I guess I'll be going."),
+			('Monte', 'I do have one more request of you. I will pay this time.'),
+			('Burrows', 'And how much?'),
+			('Monte', "5000. It's not much, but it's all I have. I too am on the Retros, most wanted list. I'm not sure why. They may have found out about my information dealing. In any case, I need to travel to the Nexus system, but I have learned that a group of Retros awaits me there. I would like you to destroy those Retros. They should be waiting to surprise me at Nav 4."),
+			('Burrows', '5000 is not much money.'),
+			('Monte', 'There is more. I am about to receive additional information that will interest you. If you return here after completing the mission, I will give it to you. That is surely worth something.')],
 		'reconsider': [
-			('Burrows', "I've reconsidered.", "barspeech/campaign/rf/monte3reconsider.ogg"), 
-			('Monte', 'I see. Let me describe the mission again. Fly to Nav 4 in the Nexus system. Destroy the Retros you will find there. Return here afterwards for 5000 and additional information.')], 
-		'reject1': [('Monte', "Then I suppose our dealings end here.", "barspeech/campaign/rf/monte3reject1.ogg")], 
-		'reject2': [('Burrows', "Sorry, Monte, I'm not interested.", "barspeech/campaign/rf/monte3reject2.ogg")], 
+			('Burrows', "I've reconsidered.", "barspeech/campaign/rf/monte3reconsider.ogg"),
+			('Monte', 'I see. Let me describe the mission again. Fly to Nav 4 in the Nexus system. Destroy the Retros you will find there. Return here afterwards for 5000 and additional information.')],
+		'reject1': [('Monte', "Then I suppose our dealings end here.", "barspeech/campaign/rf/monte3reject1.ogg")],
+		'reject2': [('Burrows', "Sorry, Monte, I'm not interested.", "barspeech/campaign/rf/monte3reject2.ogg")],
 		'reminder': [
-			('Monte', "You have not completed my mission. I cannot help you until you help me.", "barspeech/campaign/rf/monte3reminder.ogg"), 
-			('Burrows', 'Right. Where were the Retros again?'), 
-			('Monte', 'They await me at Nav 4 in the Nexus system. I will give you 5000 and some useful information.')], 
+			('Monte', "You have not completed my mission. I cannot help you until you help me.", "barspeech/campaign/rf/monte3reminder.ogg"),
+			('Burrows', 'Right. Where were the Retros again?'),
+			('Monte', 'They await me at Nav 4 in the Nexus system. I will give you 5000 and some useful information.')],
 		'accept': [
-			('Burrows', "All right. I'll do it.", "barspeech/campaign/rf/monte3accept1.ogg"), 
+			('Burrows', "All right. I'll do it.", "barspeech/campaign/rf/monte3accept1.ogg"),
 			('Monte', 'Wonderful. I await your safe return.')]}
 	monte4 = {
-		'failure': montefailure, 
+		'failure': montefailure,
 		'intro': [
-			('Monte', "Fine work. I will be able to return to Nexus soon.", "barspeech/campaign/rf/monte4.ogg"), 
-			('Burrows', "Let's hear the information. What else do you know about Jones?"), 
-			('Monte', "Nothing, I'm afraid. The knowledge I referred to earlier is not about Jones. It is about someone else you may have heard of, Governor Menesch."), 
-			('Burrows', 'That name sounds familiar.'), 
-			('Monte', "The man is a menace. Years ago, Menesch was governor of a base in a more populated system. As his influence grew, so did his lust for money. He had used his connections to sell Confederation ships, mostly Talons, to outlaw groups such as the pirates and the Retros. It's been years since his administration collapsed, and now, he's come out of hiding to do business in Gemini. It seems more than coincidence that your gun should disappear with Menesch around. I wouldn't put anything past him. If he can stoop to becoming the Retros main supplier, I wouldn't be surprised if he had connections with the Kilrathi."), 
-			('Burrows', 'Sounds like true slime to me.'), 
-			('Monte', "I'll give you this tip. If you want to get to Mordecai Jones, the first step is to destroy his supply line. Eliminate Menesch, and we'll see how the Retros get their weapons."), 
-			('Burrows', 'I can only kill him if I can find him.'), 
-			('Monte', "The best I can do is steer you in the right direction, if you're interested."), 
-			('Burrows', 'Are you offering a bounty?'), 
-			('Monte', 'No. If you complete the mission, I will return to Nexus and go into hiding. I understand, however, that there may be others in Gemini offering to pay a bounty. If I was a fighting man I would try to collect the bounties myself, but, do what you will with the information. The choice and risk are yours.')], 
-		'reconsider': [('Monte', "Have you thought it over... Do you wish to accept... The mission is to kill Governor Menesch. I know he is currently in operation somewhere near the Troy system. If you don't find him in Troy, he's bound to be hiding out in one of the neighbouring systems. Of course, I can offer no reward, but others in Gemini are offering bounties. What do you say?", "barspeech/campaign/rf/monte4reconsider.ogg")], 
-		'reject1': [('Monte', "I see. I will await your reconsideration.", "barspeech/campaign/rf/monte4reject1.ogg")], 
-		'reject2': [('Burrows', "Not a chance, Monte. Ship maintenance isn't free, you know.", "barspeech/campaign/rf/monte4reject2.ogg")], 
-		'reminder': [('Monte', "Menesch lives. Did you forget his location... I will repeat it. He is currently in operation somewhere near the Troy system. If you don't find him in Troy, he's bound to be hiding out in one of the neighbouring systems. Your mission is to destroy him.", "barspeech/campaign/rf/monte4reminder.ogg")], 
+			('Monte', "Fine work. I will be able to return to Nexus soon.", "barspeech/campaign/rf/monte4.ogg"),
+			('Burrows', "Let's hear the information. What else do you know about Jones?"),
+			('Monte', "Nothing, I'm afraid. The knowledge I referred to earlier is not about Jones. It is about someone else you may have heard of, Governor Menesch."),
+			('Burrows', 'That name sounds familiar.'),
+			('Monte', "The man is a menace. Years ago, Menesch was governor of a base in a more populated system. As his influence grew, so did his lust for money. He had used his connections to sell Confederation ships, mostly Talons, to outlaw groups such as the pirates and the Retros. It's been years since his administration collapsed, and now, he's come out of hiding to do business in Gemini. It seems more than coincidence that your gun should disappear with Menesch around. I wouldn't put anything past him. If he can stoop to becoming the Retros main supplier, I wouldn't be surprised if he had connections with the Kilrathi."),
+			('Burrows', 'Sounds like true slime to me.'),
+			('Monte', "I'll give you this tip. If you want to get to Mordecai Jones, the first step is to destroy his supply line. Eliminate Menesch, and we'll see how the Retros get their weapons."),
+			('Burrows', 'I can only kill him if I can find him.'),
+			('Monte', "The best I can do is steer you in the right direction, if you're interested."),
+			('Burrows', 'Are you offering a bounty?'),
+			('Monte', 'No. If you complete the mission, I will return to Nexus and go into hiding. I understand, however, that there may be others in Gemini offering to pay a bounty. If I was a fighting man I would try to collect the bounties myself, but, do what you will with the information. The choice and risk are yours.')],
+		'reconsider': [('Monte', "Have you thought it over... Do you wish to accept... The mission is to kill Governor Menesch. I know he is currently in operation somewhere near the Troy system. If you don't find him in Troy, he's bound to be hiding out in one of the neighbouring systems. Of course, I can offer no reward, but others in Gemini are offering bounties. What do you say?", "barspeech/campaign/rf/monte4reconsider.ogg")],
+		'reject1': [('Monte', "I see. I will await your reconsideration.", "barspeech/campaign/rf/monte4reject1.ogg")],
+		'reject2': [('Burrows', "Not a chance, Monte. Ship maintenance isn't free, you know.", "barspeech/campaign/rf/monte4reject2.ogg")],
+		'reminder': [('Monte', "Menesch lives. Did you forget his location... I will repeat it. He is currently in operation somewhere near the Troy system. If you don't find him in Troy, he's bound to be hiding out in one of the neighbouring systems. Your mission is to destroy him.", "barspeech/campaign/rf/monte4reminder.ogg")],
 		'accept': [('Monte', "Unfortunately, I don't know his exact location, but I can tell you he is currently in operation somewhere near the Troy system. If you don't find him in Troy, he's bound to be hiding out in one of the neighbouring systems. I believe that if you patrol all those systems, you will be able to find him. I do not know how well he defends himself. Good luck, this may be our last meeting.", "barspeech/campaign/rf/monte4accept1.ogg")]}
-	
+
 	Monte=CampaignClickNode()
 	masterson1 = {
-		'failure': mastersonfailure, 
+		'failure': mastersonfailure,
 		'intro': [
-			('Burrows', "Hello, Masterson. I've come looking for a little help.", "barspeech/campaign/rf/masterson1.ogg"), 
-			('Masterson', 'Great, we can use all the help we can get these days.'), 
-			('Burrows', "You misunderstood. I'm looking for information that'll help me find my gun."), 
-			('Masterson', "I heard news. I thought that gun was dangerous in your hands, but... Perhaps we can trade services. I have a friend who considers himself an expert on every fringe organisation in Gemini. He has his ear open to all underground activity, but, he's leery of meeting new people. Somewhat paranoid. I can't blame him. He's pretty unpopular from exposing certain groups. But, if you could help me out I would consider introducing you."), 
-			('Burrows', "Meeting your friend doesn't sound too exciting, but I can check my own leads with your money. I hope you're not expecting charity work."), 
-			('Masterson', "Well we are an academic institution, and rather needy at the moment. The constant threat from the Retros has us worried. We are disassembling the Oxford library. With the Retros on the rise, having all our knowledge in one place has become dangerous. We've become too big of a target. And with the Confederation occupied with the Kilrathi, we're virtually unprotected. I need you to deliver part of our rare books collection to a safer place, Base Edom in New Constantinople. The job pays 10000. Return here afterwards. How about it?")], 
+			('Burrows', "Hello, Masterson. I've come looking for a little help.", "barspeech/campaign/rf/masterson1.ogg"),
+			('Masterson', 'Great, we can use all the help we can get these days.'),
+			('Burrows', "You misunderstood. I'm looking for information that'll help me find my gun."),
+			('Masterson', "I heard news. I thought that gun was dangerous in your hands, but... Perhaps we can trade services. I have a friend who considers himself an expert on every fringe organisation in Gemini. He has his ear open to all underground activity, but, he's leery of meeting new people. Somewhat paranoid. I can't blame him. He's pretty unpopular from exposing certain groups. But, if you could help me out I would consider introducing you."),
+			('Burrows', "Meeting your friend doesn't sound too exciting, but I can check my own leads with your money. I hope you're not expecting charity work."),
+			('Masterson', "Well we are an academic institution, and rather needy at the moment. The constant threat from the Retros has us worried. We are disassembling the Oxford library. With the Retros on the rise, having all our knowledge in one place has become dangerous. We've become too big of a target. And with the Confederation occupied with the Kilrathi, we're virtually unprotected. I need you to deliver part of our rare books collection to a safer place, Base Edom in New Constantinople. The job pays 10000. Return here afterwards. How about it?")],
 		'reconsider': [
-			('Masterson', "I had a hunch you'd return.", "barspeech/campaign/rf/masterson1reconsider.ogg"), 
-			('Burrows', 'Swell. Tell me about the mission again.'), 
-			('Masterson', "You're to deliver a load of rare books to Base Edom in New Constantinople. Your reward will be 10000 credits.")], 
-		'reject1': [('Masterson', "I know it's not many credits, but I'm offering extended employment, and the chance to meet an invaluable contact. We're desperate, but you would be crazy to pass up this opportunity. You'll be back.", "barspeech/campaign/rf/masterson1reject1.ogg")], 
-		'reject2': [('Masterson', "If you want to meet my contact, you'll have to fly my missions.", "barspeech/campaign/rf/masterson1reject2.ogg")], 
+			('Masterson', "I had a hunch you'd return.", "barspeech/campaign/rf/masterson1reconsider.ogg"),
+			('Burrows', 'Swell. Tell me about the mission again.'),
+			('Masterson', "You're to deliver a load of rare books to Base Edom in New Constantinople. Your reward will be 10000 credits.")],
+		'reject1': [('Masterson', "I know it's not many credits, but I'm offering extended employment, and the chance to meet an invaluable contact. We're desperate, but you would be crazy to pass up this opportunity. You'll be back.", "barspeech/campaign/rf/masterson1reject1.ogg")],
+		'reject2': [('Masterson', "If you want to meet my contact, you'll have to fly my missions.", "barspeech/campaign/rf/masterson1reject2.ogg")],
 		'reminder': [
-			('Masterson', "I see you still haven't delivered my rare books. Why is that?", "barspeech/campaign/rf/masterson1reminder.ogg"), 
-			('Burrows', "Not your concern, Masterson. Let's hear the details again."), 
-			('Masterson', "All right, then. You're to deliver a load of rare books to Base Edom in New Constantinople. It's that simple. Your reward will be 10000 credits.")], 
+			('Masterson', "I see you still haven't delivered my rare books. Why is that?", "barspeech/campaign/rf/masterson1reminder.ogg"),
+			('Burrows', "Not your concern, Masterson. Let's hear the details again."),
+			('Masterson', "All right, then. You're to deliver a load of rare books to Base Edom in New Constantinople. It's that simple. Your reward will be 10000 credits.")],
 		'accept': [('Masterson', "Hurry back for more work, and I'll see about locating my friend.", "barspeech/campaign/rf/masterson1accept1.ogg")]}
 	masterson2 = {
-		'failure': mastersonfailure, 
+		'failure': mastersonfailure,
 		'intro': [
-			('Masterson', "Good to see you back. We've been needing your help.", "barspeech/campaign/rf/masterson2.ogg"), 
-			('Burrows', "Yeah, well, I didn't realise how dangerous research had become."), 
-			('Masterson', 'The Retros are always at our throats trying to stop it, and the pirates trying to get to it. Which, of course, could mean money for you. We need someone to patrol Oxford.'), 
-			('Burrows', "Well, I suppose I could take easy money from you. Don't you have less skilled help for your simple chores?"), 
-			('Masterson', "The militia reinforcements are weeks late. They're in high demand these days. We need you to patrol each nav point, and eliminate any threats, fanatical or opportunistic. Come back here for payment."), 
-			('Burrows', 'I could use the target practice, but not for free, of course.'), 
-			('Masterson', 'I can offer the usual 10000.')], 
+			('Masterson', "Good to see you back. We've been needing your help.", "barspeech/campaign/rf/masterson2.ogg"),
+			('Burrows', "Yeah, well, I didn't realise how dangerous research had become."),
+			('Masterson', 'The Retros are always at our throats trying to stop it, and the pirates trying to get to it. Which, of course, could mean money for you. We need someone to patrol Oxford.'),
+			('Burrows', "Well, I suppose I could take easy money from you. Don't you have less skilled help for your simple chores?"),
+			('Masterson', "The militia reinforcements are weeks late. They're in high demand these days. We need you to patrol each nav point, and eliminate any threats, fanatical or opportunistic. Come back here for payment."),
+			('Burrows', 'I could use the target practice, but not for free, of course.'),
+			('Masterson', 'I can offer the usual 10000.')],
 		'reconsider': [
-			('Burrows', "Okay, Masterson, I've reconsidered. Tell me the details again.", "barspeech/campaign/rf/masterson2reconsider.ogg"), 
-			('Masterson', 'Patrol the nav points in Oxford. Destroy all Retro and pirate threats, and return for your 10000.')], 
-		'reject1': [('Burrows', "Sorry. Not my style.", "barspeech/campaign/rf/masterson2reject1.ogg")], 
-		'reject2': [('Masterson', "You must not value my opinion of your dependability. I'm sure my friend would not approve.", "barspeech/campaign/rf/masterson2reject2.ogg")], 
+			('Burrows', "Okay, Masterson, I've reconsidered. Tell me the details again.", "barspeech/campaign/rf/masterson2reconsider.ogg"),
+			('Masterson', 'Patrol the nav points in Oxford. Destroy all Retro and pirate threats, and return for your 10000.')],
+		'reject1': [('Burrows', "Sorry. Not my style.", "barspeech/campaign/rf/masterson2reject1.ogg")],
+		'reject2': [('Masterson', "You must not value my opinion of your dependability. I'm sure my friend would not approve.", "barspeech/campaign/rf/masterson2reject2.ogg")],
 		'reminder': [
-			('Masterson', "Oxford Security reports increased activity in the system. Obviously, you've not held up your end of the deal.", "barspeech/campaign/rf/masterson2reminder.ogg"), 
-			('Burrows', 'Could be temporary amnesia. What was I supposed to do?'), 
-			('Masterson', 'Simply Patrol all nav points of Oxford system, and return for 10000. Deal?')], 
+			('Masterson', "Oxford Security reports increased activity in the system. Obviously, you've not held up your end of the deal.", "barspeech/campaign/rf/masterson2reminder.ogg"),
+			('Burrows', 'Could be temporary amnesia. What was I supposed to do?'),
+			('Masterson', 'Simply Patrol all nav points of Oxford system, and return for 10000. Deal?')],
 		'accept': [('Masterson', "Good luck. See you soon", "barspeech/campaign/rf/masterson2accept1.ogg")]}
 	masterson3 = {
-		'failure': mastersonfailure, 
+		'failure': mastersonfailure,
 		'intro': [
-			('Burrows', "Hello, Masterson. I'm back.", "barspeech/campaign/rf/masterson3.ogg"), 
-			('Masterson', 'Great.'), 
-			('Burrows', "What's next?"), 
-			('Masterson', 'I need you to deliver part of our rare books collection to Burton in Junction. The job pays 10000. Return here afterwards. How about it?')], 
+			('Burrows', "Hello, Masterson. I'm back.", "barspeech/campaign/rf/masterson3.ogg"),
+			('Masterson', 'Great.'),
+			('Burrows', "What's next?"),
+			('Masterson', 'I need you to deliver part of our rare books collection to Burton in Junction. The job pays 10000. Return here afterwards. How about it?')],
 		'reconsider': [
-			('Masterson', "I knew you'd come back.", "barspeech/campaign/rf/masterson3reconsider.ogg"), 
-			('Burrows', "Let's hear the specs again."), 
-			('Masterson', 'Here it is. You deliver some books for me to Burton in Junction. You get 10000, and return here.')], 
-		'reject1': [('Masterson', "I know you. You'll change your tune.", "barspeech/campaign/rf/masterson3reject1.ogg")], 
-		'reject2': [('Masterson', "Whatever you say.", "barspeech/campaign/rf/masterson3reject2.ogg")], 
+			('Masterson', "I knew you'd come back.", "barspeech/campaign/rf/masterson3reconsider.ogg"),
+			('Burrows', "Let's hear the specs again."),
+			('Masterson', 'Here it is. You deliver some books for me to Burton in Junction. You get 10000, and return here.')],
+		'reject1': [('Masterson', "I know you. You'll change your tune.", "barspeech/campaign/rf/masterson3reject1.ogg")],
+		'reject2': [('Masterson', "Whatever you say.", "barspeech/campaign/rf/masterson3reject2.ogg")],
 		'reminder': [
-			('Masterson', "I see you still haven't delivered books to Burton.", "barspeech/campaign/rf/masterson3reminder.ogg"), 
-			('Burrows', 'I had a memory lapse. What was the plan again?'), 
-			('Masterson', "Let me refresh your memory. Deliver rare books to Burton in Junction. The pay is 10000. I'll see you back here. Once and for all, are you going to do it or not?")], 
+			('Masterson', "I see you still haven't delivered books to Burton.", "barspeech/campaign/rf/masterson3reminder.ogg"),
+			('Burrows', 'I had a memory lapse. What was the plan again?'),
+			('Masterson', "Let me refresh your memory. Deliver rare books to Burton in Junction. The pay is 10000. I'll see you back here. Once and for all, are you going to do it or not?")],
 		'accept': [('Masterson', "Hurry back for more work and I'll see about locating my friend.", "barspeech/campaign/rf/masterson3accept1.ogg")]}
 	masterson4 = {
-		'failure': mastersonfailure, 
+		'failure': mastersonfailure,
 		'intro': [
-			('Masterson', "I don't have time to swap pleasantries. We have a freighter making the jump to Saxtogue from Nav 1, Oxford system. We're making a series of transports of library support machinery. We believe they could be in some danger from Retro attacks. Escort the freighter and make sure it jumps out safely and return here for your payment, along with more work.", "barspeech/campaign/rf/masterson4.ogg"), 
-			('Burrows', 'How long before they strike?'), 
-			('Masterson', 'They could arrive at any moment. Please help. Surely, 10000 credits still interests you.')], 
-		'reconsider': [('Masterson', "Look, we need a freighter escort. Our freighters are sitting ducks without protection. The freighter is making the jump to Saxtogue at Nav 1, Oxford. I told you, if you want 10000 credits and an introduction to my friend, you need to defend it! Will you help us, or not?", "barspeech/campaign/rf/masterson4reconsider.ogg")], 
+			('Masterson', "I don't have time to swap pleasantries. We have a freighter making the jump to Saxtogue from Nav 1, Oxford system. We're making a series of transports of library support machinery. We believe they could be in some danger from Retro attacks. Escort the freighter and make sure it jumps out safely and return here for your payment, along with more work.", "barspeech/campaign/rf/masterson4.ogg"),
+			('Burrows', 'How long before they strike?'),
+			('Masterson', 'They could arrive at any moment. Please help. Surely, 10000 credits still interests you.')],
+		'reconsider': [('Masterson', "Look, we need a freighter escort. Our freighters are sitting ducks without protection. The freighter is making the jump to Saxtogue at Nav 1, Oxford. I told you, if you want 10000 credits and an introduction to my friend, you need to defend it! Will you help us, or not?", "barspeech/campaign/rf/masterson4reconsider.ogg")],
 		'reject1': [
-			('Burrows', "Shove off, pal. Consider this payback for all the crap you've given me.", "barspeech/campaign/rf/masterson4reject1.ogg"), 
-			('Masterson', 'Unless you take this mission, consider our agreement terminated.')], 
-		'reject2': [('Burrows', "Forget it, Masterson. This mission looks like a suicide run. I need the information, but it's only useful to me if I'm around to enjoy it.", "barspeech/campaign/rf/masterson4reject2.ogg")], 
+			('Burrows', "Shove off, pal. Consider this payback for all the crap you've given me.", "barspeech/campaign/rf/masterson4reject1.ogg"),
+			('Masterson', 'Unless you take this mission, consider our agreement terminated.')],
+		'reject2': [('Burrows', "Forget it, Masterson. This mission looks like a suicide run. I need the information, but it's only useful to me if I'm around to enjoy it.", "barspeech/campaign/rf/masterson4reject2.ogg")],
 		'reminder': [
-			('Masterson', "Of all the, what are you doing here... Our freighters are being attacked even now! Unless you hurry up, we won't get sufficient equipment for the reconstruction.", "barspeech/campaign/rf/masterson4reminder.ogg"), 
-			('Burrows', 'Well, I...'), 
-			('Masterson', 'What are you standing there for... Launch and escort our freighter to the jump point at Nav 1, or kiss your precious information good-bye. Please decide. Are you going to do it or not?')], 
+			('Masterson', "Of all the, what are you doing here... Our freighters are being attacked even now! Unless you hurry up, we won't get sufficient equipment for the reconstruction.", "barspeech/campaign/rf/masterson4reminder.ogg"),
+			('Burrows', 'Well, I...'),
+			('Masterson', 'What are you standing there for... Launch and escort our freighter to the jump point at Nav 1, or kiss your precious information good-bye. Please decide. Are you going to do it or not?')],
 		'accept': [
-			('Burrows', "Okay, I'll save your equipment. But I'd better get a full letter of recommendation to your friend.", "barspeech/campaign/rf/masterson4accept1.ogg"), 
+			('Burrows', "Okay, I'll save your equipment. But I'd better get a full letter of recommendation to your friend.", "barspeech/campaign/rf/masterson4accept1.ogg"),
 			('Masterson', "We'll see about that.")]}
 	masterson5 = {
-		'failure': mastersonfailure, 
+		'failure': mastersonfailure,
 		'intro': [
-			('Burrows', "Hello, Masterson. I'm back.", "barspeech/campaign/rf/masterson5.ogg"), 
-			('Masterson', 'Great.'), 
-			('Burrows', "What's next?"), 
-			('Masterson', 'I need you to deliver our Twentieth Century Artwork collection to Perry Naval Base in Perry. The job pays 10000. Return here afterwards. How about it?')], 
+			('Burrows', "Hello, Masterson. I'm back.", "barspeech/campaign/rf/masterson5.ogg"),
+			('Masterson', 'Great.'),
+			('Burrows', "What's next?"),
+			('Masterson', 'I need you to deliver our Twentieth Century Artwork collection to Perry Naval Base in Perry. The job pays 10000. Return here afterwards. How about it?')],
 		'reconsider': [
-			('Masterson', "I knew you'd come back.", "barspeech/campaign/rf/masterson5reconsider.ogg"), 
-			('Burrows', "Let's hear the specs again."), 
-			('Masterson', 'Here it is. You deliver artwork to Perry Naval Base in Perry. You get 10000, and return here.')], 
-		'reject1': [('Masterson', "Dealing with you can be very frustrating.", "barspeech/campaign/rf/masterson5reject1.ogg")], 
-		'reject2': [('Masterson', "Why do I bother with you?", "barspeech/campaign/rf/masterson5reject2.ogg")], 
+			('Masterson', "I knew you'd come back.", "barspeech/campaign/rf/masterson5reconsider.ogg"),
+			('Burrows', "Let's hear the specs again."),
+			('Masterson', 'Here it is. You deliver artwork to Perry Naval Base in Perry. You get 10000, and return here.')],
+		'reject1': [('Masterson', "Dealing with you can be very frustrating.", "barspeech/campaign/rf/masterson5reject1.ogg")],
+		'reject2': [('Masterson', "Why do I bother with you?", "barspeech/campaign/rf/masterson5reject2.ogg")],
 		'reminder': [
-			('Masterson', "I see you still haven't delivered the artwork to Perry Naval Base.", "barspeech/campaign/rf/masterson5reminder.ogg"), 
-			('Burrows', 'I had a memory lapse. What was the plan again?'), 
-			('Masterson', "Let me refresh your memory. Deliver artwork to Perry Naval Base in Perry. The pay is 10000. I'll be see you back here. Once and for all, are you going to do it or not?")], 
+			('Masterson', "I see you still haven't delivered the artwork to Perry Naval Base.", "barspeech/campaign/rf/masterson5reminder.ogg"),
+			('Burrows', 'I had a memory lapse. What was the plan again?'),
+			('Masterson', "Let me refresh your memory. Deliver artwork to Perry Naval Base in Perry. The pay is 10000. I'll be see you back here. Once and for all, are you going to do it or not?")],
 		'accept': [('Masterson', "Great, I'll see about locating my friend.", "barspeech/campaign/rf/masterson5accept.ogg")]}
 
 
@@ -2525,7 +2526,7 @@ def LoadRFCampaign():
 			[("Monte","Well done. Menesch is dead. I'm afraid I have to go now, but I wanted to thank you. You have done the Gemini sector an invaluable service. Goodbye.", "barspeech/campaign/rf/montethankyou.ogg")],
 			MONTE_NEWDET_SPRITE,
 			GoToSubnode(0),
-			None,					
+			None,
 			[CampaignClickNode().Init(rf,
 				[InSystemCondition("Gemini/Oxford")],
 				["The library is closed for good. Now, go Away or I shall taunt you a second time, matey."],
@@ -2541,5 +2542,5 @@ def LoadRFCampaign():
 					[CampaignEndNode(rf)])])]),
 		MonteMission4)
 
-	
+
 	return rf

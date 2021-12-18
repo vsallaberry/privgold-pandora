@@ -570,6 +570,7 @@ std::string vegastrike_cwd;
 			data_paths.push_back( vegastrike_cwd+"/data");
 			data_paths.push_back( vegastrike_cwd+"/../data");
 			data_paths.push_back( vegastrike_cwd+"/../Resources");
+            data_paths.push_back( vegastrike_cwd+"/../Resources/data");
 		}
 
 		data_paths.push_back( ".");
@@ -660,7 +661,7 @@ std::string vegastrike_cwd;
 
 	// Config file has been loaded from data dir but now we look at the specified moddir in order
 	// to see if we should use a mod config file
-	void	LoadConfig( string subdir)
+	void	LoadConfig( string subdir, ConfigOverrides_type * overrides)
 	{
 		bool found = false;
                 bool foundweapons = false;
@@ -766,17 +767,22 @@ std::string vegastrike_cwd;
 		vs_config = createVegaConfig( conffile);
 		delete []conffile;
 
+        if (overrides != NULL && vs_config != NULL) {
+            for (ConfigOverrides_type::const_iterator it = overrides->begin(); it != overrides->end(); ++it) {
+                vs_config->setVariable(it->first.first, it->first.second, it->second);
+            }
+        }
 		// Now check if there is a data directory specified in it
 		// NOTE : THIS IS NOT A GOOD IDEA TO HAVE A DATADIR SPECIFIED IN THE CONFIG FILE
 		static string data_path( vs_config->getVariable( "data", "datadir", ""));
 		if( data_path != "")
 		{
 			// We found a path to data in config file
-			cout<<"DATADIR - Found a datadir in config, using : "<<data_path<<endl;
+			VS_LOG("config", logvs::NOTICE, "DATADIR - Found a datadir in config, using : %s",data_path.c_str());
 			datadir = data_path;
 		}
 		else
-			cout<<"DATADIR - No datadir specified in config file, using ; "<<datadir<<endl;
+			VS_LOG("config", logvs::NOTICE, "DATADIR - No datadir specified in config file, using ; %s",datadir.c_str());
 	}
 
 	void	InitMods()
@@ -836,7 +842,7 @@ std::string vegastrike_cwd;
 	}
 
 
-	void	InitPaths( string conf, string subdir)
+	void	InitPaths( string conf, string subdir, ConfigOverrides_type * overrides)
 	{
 		config_file = conf;
 
@@ -853,7 +859,7 @@ std::string vegastrike_cwd;
 
 		InitDataDirectory();	// Need to be first for win32
 		InitHomeDirectory();
-		LoadConfig( subdir);
+		LoadConfig( subdir, overrides );
 
 		// Paths relative to datadir or homedir (both should have the same structure)
 		// Units are in sharedunits/unitname/, sharedunits/subunits/unitname/ or sharedunits/weapons/unitname/ or in sharedunits/faction/unitname/
@@ -938,7 +944,7 @@ std::string vegastrike_cwd;
 		Directories[AccountFile] = "accounts";
 
 		simulation_atom_var=atof(vs_config->getVariable("general","simulation_atom","0.1").c_str());
-		cout << "SIMULATION_ATOM: " << SIMULATION_ATOM << endl;
+		VS_LOG("config", logvs::NOTICE, "SIMULATION_ATOM: %f", SIMULATION_ATOM);
 
 		/************************* Home directory subdirectories creation ************************/
 		CreateDirectoryHome( savedunitpath);
@@ -1635,7 +1641,7 @@ std::string vegastrike_cwd;
 				}
 				// Test if we have found a file in another FileType's dir and if it doesn't use volumes
 				// If so we open the file as a normal one
-				if( this->volume_type==VSFSNone || this->alt_type!=this->file_type && !UseVolumes[this->alt_type])
+				if( this->volume_type==VSFSNone || (this->alt_type!=this->file_type && !UseVolumes[this->alt_type]))
 				{
 					filestr = this->GetFullPath();
 					this->fp = fopen( filestr.c_str(), "rb");

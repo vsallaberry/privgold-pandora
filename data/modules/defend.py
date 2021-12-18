@@ -9,9 +9,10 @@ import universe
 import unit
 import Director
 import quest
+import debug
 running_defend_missions={}
 class defend (Director.Mission):
-        
+
     def __init__ (self,factionname,numsystemsaway, enemyquantity, distance_from_base, escape_distance, creds, defendthis, defend_base,protectivefactionname='',jumps=(),var_to_set='',dynamic_flightgroup='',dynamic_type='', dynamic_defend_fg='',waves=0, greetingText=['We will defeat your assets in this battle, privateer...','Have no doubt!']):
         Director.Mission.__init__(self)
         self.dedicatedattack=vsrandom.randrange(0,2)
@@ -22,8 +23,8 @@ class defend (Director.Mission):
         self.var_to_set=var_to_set
         self.quantity=0
         self.mplay="all"
-        self.defendbase = defend_base   
-        self.dynatkfg = dynamic_flightgroup     
+        self.defendbase = defend_base
+        self.dynatkfg = dynamic_flightgroup
         self.dynatktype = dynamic_type
         self.dyndeffg = dynamic_defend_fg
         self.attackers = []
@@ -48,7 +49,7 @@ class defend (Director.Mission):
         self.younum=VS.getCurrentPlayer()
         name = self.you.getName ()
         self.mplay=universe.getMessagePlayer(self.you)
-        self.adjsys = go_to_adjacent_systems(self.you,numsystemsaway,jumps)  
+        self.adjsys = go_to_adjacent_systems(self.you,numsystemsaway,jumps)
         self.adjsys.Print("You are in the %s system,","Proceed swiftly to %s.","Your arrival point is %s.","defend",1)
         VS.IOmessage (2,"defend",self.mplay,"And there eliminate any %s starships."  % self.faction)
         self.key=str(VS.getCurrentPlayer())+str(factionname)+str(numsystemsaway)+str(enemyquantity)+str(distance_from_base)+str(escape_distance)+str(creds)+str(defendthis)+str(defend_base)+str(protectivefactionname)+str(jumps)+str(var_to_set)+str(dynamic_flightgroup)+str(dynamic_type)+str(dynamic_defend_fg)+str(waves)+str(greetingText);
@@ -69,7 +70,7 @@ class defend (Director.Mission):
         VS.terminateMission(1)
     def FailMission (self):
         self.you.addCredits (-self.cred)
-        VS.AdjustRelation(self.you.getFactionName(),self.faction,-.02,1)                
+        VS.AdjustRelation(self.you.getFactionName(),self.faction,-.02,1)
         self.SetVarValue(-1)
         VS.IOmessage (0,"defend",self.mplay,"[Computer] Detected failure to protect mission asset.")
         VS.IOmessage (0,"defend",self.mplay,"[Computer] Mission failed!")
@@ -91,7 +92,7 @@ class defend (Director.Mission):
             VS.setObjective(self.objective,"Destroy the %s"%unit.getUnitFullName(un))
             self.ship_check_count=0
         return 0
-        
+
     def GenerateEnemies (self,jp,you):
         VS.IOmessage (0,"escort mission",self.mplay,"You must protect %s." % unit.getUnitFullName(jp,True))
         count=0
@@ -99,7 +100,7 @@ class defend (Director.Mission):
         VS.addObjective ("Protect %s from the %s" % (unit.getUnitFullName(jp),self.faction.capitalize().replace("_"," ")))
         self.objective = VS.addObjective ("Destroy All %s Hostiles" % self.faction)
         VS.setCompleteness(self.objective,0.0)
-        print "quantity "+str(self.quantity)
+        debug.debug("quantity "+str(self.quantity))
         while (count<self.quantity):
             L = launch.Launch()
             L.fg="Shadow";L.dynfg=self.dynatkfg;
@@ -115,8 +116,8 @@ class defend (Director.Mission):
                 pass
             L.faction=self.faction
             launched=L.launch(you)
-            if (count==0):              
-                self.you.SetTarget(launched)            
+            if (count==0):
+                self.you.SetTarget(launched)
             if (self.defend):
                 launched.SetTarget (jp)
             else:
@@ -138,11 +139,11 @@ class defend (Director.Mission):
             VS.IOmessage (0,"defend",self.mplay,"#ff0000You were unable to arrive in time to help. Mission failed.")
             self.SetVarValue(-1)
             VS.terminateMission(0)
-            return   
+            return
 
         global running_defend_missions
         if running_defend_missions[self.key]!=self.run_def_mis:
-            print "ABORTING DEFEND MISSION WITH PARAMS "+self.key+" because another is running "
+            debug.debug("ABORTING DEFEND MISSION WITH PARAMS "+self.key+" because another is running ")
             VS.terminateMission(1)
             return
         running_defend_missions[self.key]+=1
@@ -193,14 +194,14 @@ class defend (Director.Mission):
                     else:
                         self.SuccessMission()
     def initbriefing(self):
-        print "ending briefing"                
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"        
-                
+        debug.debug("ending briefing")
+
 def initrandom(factionname,numsysaway,minenquant,maxenquant,credperen,defendit,defend_base,p_faction='',jumps=(),var_to_set=''):
     enq=minenquant
-    enq=vsrandom.uniform(minenquant,maxenquant) 
+    enq=vsrandom.uniform(minenquant,maxenquant)
     return defend(factionname,numsysaway,enq,8000.0,100000.0,enq*credperen,defendit,defend_base,p_faction,jumps,var_to_set)

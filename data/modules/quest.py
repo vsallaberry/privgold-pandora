@@ -1,4 +1,5 @@
 import Director
+import debug
 def getQuestLength(playernum,questname):
     return Director.getSaveDataLength(int(playernum),str(questname))
 def findQuest (playernum,questname,value=1):
@@ -23,15 +24,15 @@ def checkSaveValue(playernum,questname,value=1):
         return 1
     return 0
 def persistentQuest (playernum,questname):
-    print "finding quest"
-    print questname
+    debug.debug("finding quest")
+    debug.debug(repr(questname))
     return findQuest (playernum,questname,-1)
 def notLoadedQuest(playernum,questname):
-    print 'finding nonloaded quest'
-    print questname
+    debug.debug('finding nonloaded quest')
+    debug.debug(repr(questname))
     return not persistentQuest(playernum,questname) and not findQuest (playernum,questname)
 def removeQuest (playernum,questname,value=1):
-    print "removing quest"
+    debug.debug("removing quest")
     mylen=Director.getSaveDataLength(int(playernum),str(questname))
     if (mylen>0):
         Director.putSaveData(int(playernum),str(questname),0,float(value))
@@ -54,7 +55,7 @@ class quest:
     def isPersistent (self):
         return persistentQuest (self.playernum,self.name)
     def Execute(self):
-        print "default"
+        debug.debug("default")
         return 1
 class quest_factory:
     def __init__(self,questname,remove_quest_on_run=0):
@@ -68,7 +69,7 @@ class quest_factory:
         return 1
     def persistent_factory(self,playernum):
         if (persistentQuest(playernum,self.name)):
-            print "persistent_factory"
+            debug.debug("persistent_factory")
             return self.private_create(playernum)
         return
     def private_create (self,playernum):
@@ -80,7 +81,7 @@ class quest_factory:
     def factory (self,playernum):
         if (self.precondition(playernum)):
             if (notLoadedQuest (playernum,self.name)):
-                print "nonpfact"
+                debug.debug("nonpfact")
                 return self.private_create(playernum)
         return
 
@@ -88,7 +89,7 @@ class test_quest (quest):
     def __init__ (self):
         self.i=0
     def Execute (self):
-        print self.i
+        debug.debug(repr(self.i))
         self.i+=1
         if (self.i>100):
             self.removeQuest()

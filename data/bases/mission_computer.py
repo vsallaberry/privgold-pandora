@@ -1,9 +1,10 @@
 import Base
 import VS
 import guilds
+import debug
 
 def MakeMissionComputer(concourse,timeofdayignored="_day",bkg=[('background1', 'bases/mission_computer/background.spr', 0.582, -0.2716),('yellowblink', 'bases/mission_computer/yellow_blink.spr', -0.582, 0.8924)],logon_bkg=None):
-	print "Making mission computer"
+	debug.debug("Making mission computer",debug.INFO)
 
 	template = "Available missions: #NUM_MISSIONS#\n" \
 		+    "Current mission: #MISSION_NUMBER#\n" \
@@ -39,6 +40,10 @@ def MakeMissionComputer(concourse,timeofdayignored="_day",bkg=[('background1', '
 		+    "Mission Machine\n"
 
 
+	# Custom Font
+	global _missioncomputer_font
+	Base.SetTextBoxFont(-1, '', _missioncomputer_font)
+
 	#logged-on computer room
 	room = Base.Room ('Mission_Computer')
 	if bkg and type(bkg)==list and len(bkg)>1:
@@ -47,7 +52,7 @@ def MakeMissionComputer(concourse,timeofdayignored="_day",bkg=[('background1', '
 				Base.Texture (room, spr[0], spr[1], spr[2], spr[3])
 	else:
 		#WARN!
-		print "No background specified for mission computer!\n"
+		debug.warning("No background specified for mission computer!")
 	Base.Link(room,'to_concourse',-1, -1, 2, 0.15,'Return_To_Concourse',concourse)
 
 	if not logon_bkg:
@@ -61,7 +66,7 @@ def MakeMissionComputer(concourse,timeofdayignored="_day",bkg=[('background1', '
 				Base.Texture (logon, spr[0], spr[1], spr[2], spr[3])
 	else:
 		#WARN!
-		print "No background specified for mission computer logon screen!\n"
+		debug.warning("No background specified for mission computer logon screen!")
 	Base.TextBox (logon, 'logontext'  , logon_message, -0.618375, 0.6499, (0.303125, -0.44135, 1), (0,0,0), 0, (221.0/255.0,4.0/255.0,0.0))
 	Base.Link(logon,'log_on',0.1875,-0.8,0.4375,0.3,'Activate_Computer',room)
 	Base.Link(logon,'to_concourse',-1, -1, 2, 0.15,'Return_To_Concourse',concourse)
@@ -86,5 +91,13 @@ def MakeMissionComputer(concourse,timeofdayignored="_day",bkg=[('background1', '
 	guildroom.AddTextBox('miscompbox');
 	guilds.CreateGuild(guildroom)
 
-	print "Made mission computer"
+	Base.SetTextBoxFont(-1, '', '')
+	debug.debug("Made mission computer",debug.INFO)
 	return logon
+
+try:
+	global _missioncomputer_font
+	_missioncomputer_font = VS.getVariable("graphics/privateer", "missioncomputer_font", "")
+except:
+	_missioncomputer_font = ''
+

@@ -14,9 +14,13 @@
     #include <GL/gl.h>
 #endif
 //#include "cmd/unit.h"
+#include "log.h"
+
 #define SINX 1
 #define SINY 2
 #define SINZ 4
+
+#define GFX_LOG(lvl, ...) VS_LOG("gfx", lvl, __VA_ARGS__)
 
 unsigned int NumStarsInGalaxy () {
 	unsigned int count=0;
@@ -206,8 +210,8 @@ static GFXColorVertex * AllocVerticesForSystem(std::string our_system_name, floa
     if (mindistance<0) mindistance=0;
     maxdistance = sqrt(maxdistance);
     mindistance = sqrt(mindistance);
-	VSFileSystem::vs_fprintf (stderr,"Min (%f, %f, %f) Max(%f, %f, %f) MinLumin %f, MaxLumin %f",
-			 starmin.i,starmin.j,starmin.k,starmax.i,starmax.j,starmax.k,minlumin,maxlumin);
+	GFX_LOG(logvs::NOTICE, "Min (%f, %f, %f) Max(%f, %f, %f) MinLumin %f, MaxLumin %f",
+			starmin.i,starmin.j,starmin.k,starmax.i,starmax.j,starmax.k,minlumin,maxlumin);
 
 	for (int y=0;y<*num;++y) {
 		
@@ -282,9 +286,9 @@ static GFXColorVertex * AllocVerticesForSystem(std::string our_system_name, floa
 		}
 		j+=incj;
 	}
-	VSFileSystem::vs_fprintf (stderr,"Read In Star Count %d used: %d\n",starcount,j/2);
-        *num=j;
-        return tmpvertex;
+	GFX_LOG(logvs::NOTICE, "Read In Star Count %d used: %d",starcount,j/2);
+    *num=j;
+    return tmpvertex;
 }
 PointStarVlist::PointStarVlist (int num ,float spread,const std::string &sysnam):StarVlist(spread) {
     smoothstreak=0;

@@ -35,7 +35,7 @@ def moveOutOfPlayerPath(un):
         if vel[0]==0 and vel[1]==0 and vel[2]==0:
            vel=(1,0,0)
         dir=Vector.Scale(Vector.ScaledCross(ex,vel),min_distance)
-        print "offsetting you a few meters to the "+str(dir)
+        debug.debug("offsetting you a few meters to the "+str(dir))
         un.SetPosition(Vector.Add(playa.Position(),dir))
     import faction_ships
     playa=VS.getPlayer()
@@ -45,7 +45,7 @@ def moveOutOfPlayerPath(un):
        min_distance=faction_ships.min_distance
        min_forward_distance=faction_ships.min_forward_distance
     except:
-       print "badness no faction_ships.min_distance"
+       debug.debug("badness no faction_ships.min_distance")
     dis=un.getDistance(playa)
     import Vector
     vel=playa.GetVelocity()
@@ -61,10 +61,10 @@ def getUnitFullName(un,inenglish=False):
     snumber=str(un.getFgSubnumber())
     fg=un.getFlightgroupName()#.replace("_"," ")
     if un.isPlanet():
-	thename=un.getName()
+        thename=un.getName()
     elif fg=='Base':
         if un.getFullname().capitalize()==un.getName().capitalize():
-             thename=thename+" "+snumber        
+             thename=thename+" "+snumber
     elif fg!='Shadow' and fg!='':
         if inenglish:
            thename=un.getFactionName().replace("_"," ")+" "+thename+ " "+snumber +' in the '+fg+' flightgroup'
@@ -110,7 +110,7 @@ def getPlanet (whichsignificant, sig):
     if sig:
         i.advanceNSignificant(whichsignificant)
     else:
-        i.advanceNPlanet(whichshignificant)   
+        i.advanceNPlanet(whichshignificant)
     if i.isDone():
         return VS.Unit()
     else:
@@ -129,7 +129,7 @@ def getPlanetList (sig):
         if sig:
             i.advanceSignificant()
         else:
-            i.advancePlanet()   
+            i.advancePlanet()
     return res
 
 def getJumpPoint(whichsignificant):

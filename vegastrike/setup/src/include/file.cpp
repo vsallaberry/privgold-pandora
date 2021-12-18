@@ -122,11 +122,13 @@ void LoadConfig(void) {
 	C_CURRENT = &CATS;
 
 	if (useGameConfig() || (fp = fopen(CONFIG.config_file, "r")) == NULL) {
-		origconfig=true;
-		if ((fp = fopen(mangle_config(CONFIG.config_file).c_str(), "r")) == NULL) {
+        std::string orig_configfile = mangle_config(CONFIG.config_file);
+        origconfig=true;
+		if ((fp = fopen(orig_configfile.c_str(), "r")) == NULL) {
 			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
 			exit(-1);
 		}
+        fprintf(stderr, "using game config %s\n", orig_configfile.c_str());
 	}
 	while ((p = fgets(line, MAX_READ, fp)) != NULL) {
 		parm = line;
@@ -317,7 +319,7 @@ void Modconfig(int setting, char *name, char *group) {
 		}
 	}
 	while ((p = fgets(line, MAX_READ, rp)) != NULL) {
-		fprintf(wp, line);
+		fputs(line, wp);
 	}
 	fclose(rp);
 	fclose(wp);

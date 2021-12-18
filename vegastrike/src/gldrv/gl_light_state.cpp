@@ -259,6 +259,9 @@ void gfx_light::TrashFromGLLights () {
   assert (target>=0);
   assert ((GLLights[target].options&OpenGLL::GLL_ON)==0);//better be disabled so we know it's not in the table, etc
   assert ((&(*_llights)[GLLights[target].index])==this);
+#ifdef VS_GL_LIGHTS_FROM_FUTURE // imported update from privgold svn 2012 rev 297
+  removelightfromnewpick(GLLights[target].index);
+#endif
   GLLights[target].index = -1;
   GLLights[target].options= OpenGLL::GLL_LOCAL;
   target = -1;

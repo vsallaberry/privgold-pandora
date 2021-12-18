@@ -84,9 +84,9 @@ namespace Audio {
     class CorruptStreamException : public Exception {
         bool fatal;
     public:
-        CorruptStreamException(const CorruptStreamException &other) : Exception(other) {}
+        CorruptStreamException(const CorruptStreamException &other) : Exception(other),fatal(false) {}
         explicit CorruptStreamException(bool _fatal) 
-            : Exception(fatal ? "Fatal corruption on stream" : "Recoverable corruption on stream"),
+            : Exception(_fatal ? "Fatal corruption on stream" : "Recoverable corruption on stream"),
               fatal(_fatal) 
         {}
         

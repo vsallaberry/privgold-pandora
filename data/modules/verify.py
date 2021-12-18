@@ -5,7 +5,7 @@ campaigns.loadAll(0)
 global traverser
 traverser=[]
 def isType(a,typ):
-    return a.__init__.im_func==typ.__init__.im_func
+	return a.__init__.im_func==typ.__init__.im_func
 exnonescript=None
 
 class MyCondition:

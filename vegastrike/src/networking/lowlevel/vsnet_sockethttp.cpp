@@ -81,7 +81,7 @@ static void hostFromURI(const std::string& uri, std::string &host, std::string &
 static AddressIP remoteIPFromURI(const std::string& uri) {
 	std::string dummy1, dummy2;
 	unsigned short port;
-	
+
 	std::string host;
 	hostFromURI(uri, host, dummy1, dummy2, port);
 	if (!port)
@@ -152,7 +152,7 @@ bool VsnetHTTPSocket::recvstr(std::string &data) {
                   data = dataToReceive;
                   dataToReceive = std::string();
                   _incompleteheader=std::string();
-                  _header.clear();      
+                  _header.clear();
                   return true;
 		}
 	}
@@ -165,7 +165,7 @@ std::ostream& operator<<( std::ostream& ostr, const VsnetHTTPSocket& s )
   s.dump( ostr );
     return ostr;
 }
-void VsnetHTTPSocket::lower_clean_sendbuf( ) { 
+void VsnetHTTPSocket::lower_clean_sendbuf( ) {
 	if ( waitingToReceive.empty() && this->_fd == -1 ) {
 		reopenConnection();
 	}
@@ -175,7 +175,7 @@ int VsnetHTTPSocket::lower_sendbuf(  )
 {
         if (!waitingToReceive.empty())
 		return 0;
-	
+
 	if ( this->_fd == -1 ) {
 		printf("reopening from lower_sendbuf...\n");
 		reopenConnection();
@@ -194,9 +194,9 @@ int VsnetHTTPSocket::lower_sendbuf(  )
 	std::string data = dataToSend.front();
 	char endHeaderLen[50];
 	std::string httpData;
-	
+
 	// Have to regenerate this in case the request was forwarded (301).
-	sprintf(endHeaderLen, "Content-Length: %d\r\n\r\n", data.length() );
+	sprintf(endHeaderLen, "Content-Length: %zu\r\n\r\n", data.length() );
 	httpData = "POST " + this->_path + " HTTP/1.1\r\n"
 		"Host: " + this->_hostheader + "\r\n"
 		"User-Agent: Vsnet/1.0\r\n"
@@ -231,7 +231,7 @@ int VsnetHTTPSocket::lower_sendbuf(  )
 				reopenConnection();
 				if (NONBLOCKING_CONNECT) {
 					sendDataPos=0;
-			
+
 					return 0;
 				}
 			} else {
@@ -297,7 +297,7 @@ bool VsnetHTTPSocket::parseHeaderByte( char rcvchr )
 	}
 	if (rcvchr=='\r' && _incompleteheadersection!=1 && _incompleteheadersection>2)
 		return false;
-	
+
 	_incompleteheader += (rcvchr);
 	return false;
 }
@@ -326,7 +326,7 @@ void VsnetHTTPSocket::resendData() {
     ischunked=false;
     _send_more_data=false;
     chunkedlen=0;
-    _incompleteheadersection=0;							
+    _incompleteheadersection=0;
     chunkedchar='\0';
 }
 bool VsnetHTTPSocket::lower_selected( int datalen )
@@ -396,15 +396,15 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 						_content_length = -1;
                                                 ischunked=false;
 						_send_more_data = true;
-	
+
 						iter = _header.find("Status");
-						
+
 						if (iter == _header.end()) {
 							COUT<<"Missing status, resending\n";
 							resendData();
 							return false;
 						}
-						if((*iter).second.find("100")!=std::string::npos) {                                                  
+						if((*iter).second.find("100")!=std::string::npos) {
 							_content_length=0;
 							_header.clear();
 							printf ("100 found in header at marker %d... rest of string looks like:%s\n",bufpos,rcvbuf+bufpos);
@@ -426,14 +426,14 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 									resendData();
 									return false;
 								}
-								
+
 							} else {
 								COUT << "Received HTTP error: status is "+ (*iter).second << std::endl;
 								resendData();
 								return false;
 							}
 						}
-	
+
 						iter = _header.find("Content-Length");
 						if (iter != _header.end()) {
 							_content_length = atoi((*iter).second.c_str());
@@ -441,7 +441,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 								_content_length = -1;
 						}
 
-						
+
 						  // Don't need to check content-type any more.
 						iter = _header.find("Content-Type");
 						if (iter != _header.end()) {
@@ -449,7 +449,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 								COUT << "content type " << (*iter).second << std::endl;
 							}
 						}
-						
+
 						iter = _header.find("Connection");
 						if (iter != _header.end()) {
 							if ((*iter).second == "close") {
@@ -463,7 +463,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 						if (iter != _header.end()) {
 							if ((*iter).second == "chunked") {
 								ischunked = true;
-                                                                
+
 							}
 						} else {
 							// assume no more data allowed.
@@ -481,7 +481,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
 				}
 			}
                         while(bufpos<ret) {
-                          for (;bufpos<ret&&readingchunked;bufpos++) {            
+                          for (;bufpos<ret&&readingchunked;bufpos++) {
                             char rcvchr=rcvbuf[bufpos];
                             if (rcvchr=='\n'&&chunkedchar!='\0'/*make sure that it had read something of interest*/) {
                               readingchunked=false;
@@ -498,7 +498,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
                                 chunkedlen*=16;
                                 chunkedlen+=rcvchr-'A'+10;
                                 chunkedchar=rcvchr;
-                              }   
+                              }
                               else if (rcvchr>='a'&&rcvchr<='f') {
                                 chunkedlen*=16;
                                 chunkedlen+=rcvchr-'a'+10;
@@ -509,7 +509,7 @@ bool VsnetHTTPSocket::lower_selected( int datalen )
                             if (rcvchr==';') chunkedchar=';';// this means extension follow and we shouldn't add numbers
                           }
                           if (readingchunked==false&&_content_length!=0&&bufpos<ret) {
-                            
+
                             // Now, the socket *should* contain message/x-vsnet-packet data.
                             int delta=ret-bufpos;
                             if (delta>chunkedlen&&ischunked)

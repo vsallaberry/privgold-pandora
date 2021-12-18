@@ -3,6 +3,10 @@
 #include "collide_map.h"
 #include "unit_generic.h"
 #include "bolt.h"
+#include "log.h"
+
+#define COLLIDE_LOG(lvl, ...) VS_LOG("unit", lvl, __VA_ARGS__)
+
 volatile bool apart_return=true;
 void CollideArray::erase(iterator target) {
   count-=1;
@@ -138,8 +142,8 @@ void CollideArray::flatten () {
 			  oo++;
 		  }
 	  }
-	  printf ("sorted list %d is %d long with %d elements out of order\n",
-			  location_index,(unsigned int)sorted.size(),oo);
+	  COLLIDE_LOG(logvs::NOTICE, "sorted list %d is %d long with %d elements out of order",
+                  location_index,(unsigned int)sorted.size(),oo);
   }
   std::sort(sorted.begin(),sorted.end());
   unsorted=sorted;
@@ -196,7 +200,7 @@ void CollideArray::flatten (CollideArray &hint) {
 				tmpcount+=(hint.sorted[ii].radius>0?1:0);
 			}
 			if (count!=tmpcount)
-				printf ("Actual count is %d, local count is %d\n",count,tmpcount);
+				COLLIDE_LOG(logvs::NOTICE, "Actual count is %d, local count is %zu",count,tmpcount);
 		}
 		for_each(toflattenhints.begin(),toflattenhints.end(),resizezero());
 		toflattenhints.resize(count+1);
@@ -212,7 +216,7 @@ void CollideArray::flatten (CollideArray &hint) {
 			}*/
 		//unsorted=sorted;
 	}else {
-		printf ("Trying to use flatten hint on a array with both bolts and units\n");
+		COLLIDE_LOG(logvs::NOTICE, "Trying to use flatten hint on a array with both bolts and units");
 		flatten();
 	}
 }

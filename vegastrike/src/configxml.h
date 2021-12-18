@@ -68,7 +68,6 @@ class VegaConfig {
   int hatswitch_axis[MAX_HATSWITCHES];
   int hatswitch_joystick[MAX_HATSWITCHES];
 
-
   VegaConfig(const char *configfile);
   virtual ~VegaConfig();
 
@@ -90,6 +89,8 @@ class VegaConfig {
   easyDomNode *Variables() { return variables; };
   virtual void bindKeys() {}
 
+  const easyDomNode * Bindings() const { return bindings; }
+    
  protected:
   string getVariable(configNode *section,string name,string defaultval);
 

@@ -13,6 +13,15 @@ extern GFXBOOL GFXLIGHTING;
 //#define GFX_LIGHT_POS 16
 #define GFX_LIGHT_ENABLED 32
 #define GFX_LOCAL_LIGHT 64
+
+// imported update from privgold svn 2012 rev 297
+//#define VS_GL_LIGHTS_FROM_FUTURE
+#if defined(VS_GL_LIGHTS_FROM_FUTURE)
+# define GFXLIGHT_FAILURE_LVL (logvs::WARN)
+#else
+# define GFXLIGHT_FAILURE_LVL (logvs::WARN)
+#endif
+
 const unsigned int lighthuge=20*20*20;
 /**
  * This stores the state of a given GL Light in its fullness
@@ -108,6 +117,9 @@ struct OpenGLLights {
 void light_rekey_frame();
 ///picks doubtless changed position
 void unpicklights();
+#ifdef VS_GL_LIGHTS_FROM_FUTURE
+void removelightfromnewpick(int whichlight);
+#endif
 ///The curren tlight context
 extern int _currentContext;
 ///The light data _llights points to one of these

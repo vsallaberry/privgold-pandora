@@ -112,7 +112,7 @@
 		<edge index="12"/>
 		<edge index="13"/>
 		<edge index="14"/>
-	</node>	
+	</node>
 	<node text="Your death is my living, buddy." relationship="-.0625"><!-- node 19 (taunt)-->
 	<sound file="communications/kroiz/male/13.wav" sex="0"/>
 		<edge index="12"/>
@@ -120,7 +120,7 @@
 		<edge index="14"/>
 	</node>
 
-<!-- Built-in Conversations --> 
+<!-- Built-in Conversations -->
 	<node text="Docking operation complete. You're free of the docking clamps." relationship="0.01">
 		<edge index="4"/>
 		<edge index="5"/>
@@ -138,31 +138,31 @@
 		<edge index="9"/>
 		<edge index="10"/>
 		<edge index="11"/>
-	</node>		
+	</node>
 	<node text="Docking denied. Do not land here!" relationship="0">
 		<edge index="8"/>
 		<edge index="9"/>
 		<edge index="10"/>
 		<edge index="11"/>
-	</node>		
+	</node>
 	<node text="Docking agreement reached: move to docking port in green indicators." relationship="0">
 		<edge index="8"/>
 		<edge index="9"/>
 		<edge index="10"/>
 		<edge index="11"/>
-	</node>		
+	</node>
 	<node text="Not gonna comply, privateer. I don't work for chump change" relationship="0">
 		<edge index="8"/>
 		<edge index="9"/>
 		<edge index="10"/>
 		<edge index="11"/>
-	</node>		
+	</node>
 	<node text="Affirmative, this kroiz agrees to do what you say, for the price you listed." relationship="0">
 		<edge index="4"/>
 		<edge index="5"/>
 		<edge index="6"/>
 		<edge index="7"/>
-	</node>		
+	</node>
 	<node text="My mission is to search you; hold still." relationship="0"> <!-- maintain speed and course -->
 		<edge index="8"/>
 		<edge index="9"/>
@@ -182,13 +182,13 @@
 		<edge index="8"/>
 		<edge index="9"/>
 		<edge index="10"/>
-	</node>	
-	<node text="Request Clearance To Land." relationship="0"> 
+	</node>
+	<node text="Request Clearance To Land." relationship="0">
 		<edge index="8"/>
 		<edge index="9"/>
 		<edge index="10"/>
-	</node>	
-	<node text="One more for the resume." text1="Another day, another kill" relationship="-.0625"><!-- node 17 kill-->
+	</node>
+	<node text="One more for the resumé." text1="Another day, another kill" relationship="-.0625"><!-- node 17 kill-->
 	<sound file="communications/kroiz/male/15.wav" sex="0"/>
 	<sound file="communications/kroiz/male/14.wav" sex="0"/>
 		<edge index="12"/>
@@ -217,5 +217,5 @@
 		<edge index="15"/>
 	</node>
 
-<!-- End of Built-in Conversations --> 
+<!-- End of Built-in Conversations -->
 </comm>

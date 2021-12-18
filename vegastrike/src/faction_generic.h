@@ -139,7 +139,7 @@ namespace FactionUtil {
 		void LoadFactionPlaylists();
 		/** Still in faction_xml.cpp because createUnit **/
 		void LoadContrabandLists();
-};
+}
 
 extern  std::vector <Faction *> factions; //the factions
 

@@ -12,6 +12,10 @@
 #endif
 #include "vsfilesystem.h"
 #include "cmd/container.h"
+#include "log.h"
+
+#define PYMISSION_LOG(lvl, ...) VS_LOG("pyMission", lvl, __VA_ARGS__)
+
 PythonMissionBaseClass::PythonMissionBaseClass () {
 }
 void PythonMissionBaseClass::Destructor () {
@@ -23,7 +27,8 @@ PythonMissionBaseClass::~PythonMissionBaseClass(){
 		delete relevant_units[i];
 	}
 	relevant_units.clear();
-	VSFileSystem::vs_fprintf (stderr,"BASE Destruct called. If called from C++ this is death %ld (0x%x)",(unsigned long)(size_t)this,(unsigned int)(size_t)this);
+	PYMISSION_LOG(logvs::INFO, "BaseClass Destruct called. If called from C++ this is death %ld (0x%x)",
+                  (unsigned long)(size_t)this,(unsigned int)(size_t)this);
 }
 
 void PythonMissionBaseClass::Execute () {

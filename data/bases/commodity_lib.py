@@ -3,16 +3,23 @@ import Base
 import VS
 import methodtype
 import universe
+import debug
 
-from XGUIDebug import trace
-_trace_level = 3
+from XGUIDebug import trace, TRACE_VERBOSE
+_trace_level = TRACE_VERBOSE
+
 PURCHASE_MAX = 10
 
 def MakeCommodity(room_from,time_of_day='_day'):
+	# Custom Font
+	global _commodity_font
+	Base.SetTextBoxFont(-1,'',_commodity_font)
+	
 	# create the commodity exchange
 	room_id = Base.Room ('Commodity_Exchange')
 	comp = CommodityComputer(room_id)
 
+	Base.SetTextBoxFont(-1,'','')
 	Base.Link (room_id, 'exit', -1, -1, 2, 0.2513, 'Exit', room_from)
 	return room_id
 
@@ -54,7 +61,7 @@ class CommodityComputerAnimation:
 		# undraw the animation, so that when reset is called, it runs from the beginning
 		# NOTE: using hide() here doesn't work, as of the current version of GUI.py
 		self.computer.undraw()
-		
+
 	def reset(self):
 		room_start = self.guiroom.getIndex()
 		room_next  = self.room_next
@@ -71,7 +78,7 @@ Base.EraseObj(%s,"redirect")
 import GUI
 GUI.GUIRootSingleton.rooms[%s].owner.computer.undraw()
 """ %(room_next, room_start, room_start), 2.0)
-	
+
 def mode_click(self,params):
 	GUI.GUIRadioButton.onClick(self,params)
 	if self.isEnabled():
@@ -88,9 +95,9 @@ def prev_click(self,params):
 def select_click(self,params):
 	GUI.GUIButton.onClick(self,params)
 	# temp until shift-click (or ctrl-click, or alt-click) gets fixed
-	print "::: CommodityComputer select_click params = "
-	import pprint
-	pprint.pprint(params)
+	if debug.debug("::: CommodityComputer select_click", debug.VERBOSE) > 0:
+		debug.dprint('params=')
+		debug.pprint(params,None,debug.VERBOSE)
 	if ('shift' in params):
 		self.room.owner.select(params['shift'])
 	else:
@@ -107,7 +114,7 @@ class CommodityComputer:
 		4) the actual workings of the commodity computer; buy/sell mode, current item
 		5) buttons, text, images needed to accomplish #4
 	"""
-	
+
 	def __init__(self,room_id):
 		self.room_id  = room_id
 
@@ -134,7 +141,7 @@ class CommodityComputer:
 #		sell_sprite = ('interfaces/commodity/sell.spr', GUI.GUINPOTRect(0, 0, 320, 200, 320, 200))
 		# pixel coordinates fractional because art is 1024x1024 and screen is at 320x200
 		buy_sprite  = ('interfaces/commodity/buy_hi.spr' , GUI.GUIRect(71.5625, 79.4921875, 25.3125, 8.984375))
-		sell_sprite = ('interfaces/commodity/sell_hi.spr', GUI.GUIRect(26.8750, 79.4921875, 25.3125, 9.1796875)) 
+		sell_sprite = ('interfaces/commodity/sell_hi.spr', GUI.GUIRect(26.8750, 79.4921875, 25.3125, 9.1796875))
 		buy_sprset  = { 'checked': buy_sprite, 'unchecked': None, 'hot': buy_sprite }
 		sell_sprset = { 'checked': sell_sprite, 'unchecked': None, 'hot': sell_sprite }
 		prev_sprset = {'enabled':None, 'disabled':None }
@@ -150,7 +157,7 @@ class CommodityComputer:
 			GUI.GUIRootSingleton.broadcastRoomMessage(guiroom.index,'check',{'index':'btn_buy'})
 		elif (self.state == "sell"):
 			GUI.GUIRootSingleton.broadcastRoomMessage(guiroom.index,'check',{'index':'btn_sell'})
-	
+
 		# add the text labels
 		txt_color = GUI.GUIColor(0.7,0.7,0.7)
 		txt_warning_color = GUI.GUIColor(0.7,0,0)
@@ -194,7 +201,7 @@ class CommodityComputer:
 		self.state = "buy"
 		self.current_item = 0
 		GUI.GUIRootSingleton.broadcastRoomMessage(self.guiroom.index,'check',{'index':'btn_buy'})
-		
+
 		# calculate cargo hold volume, and number of items for sale
 		self.update_player_manifest()
 
@@ -203,7 +210,7 @@ class CommodityComputer:
 		self.guiroom.redrawIfNeeded()
 
 	def draw(self,message=None):
-		
+
 		if self.state == "buy":
 			if len(self.exports) > 0:
 				# get the current item from the export list
@@ -350,7 +357,7 @@ class CommodityComputer:
 						# otherwise, player has room and credits for at least 1 item
 						if (quantity > 0):
 							# commodity exchange has items to sell - item shouldn't be displayed if quantity is 0 anyway
-							
+
 							# calculate maximum player is able to buy; that is limited by:
 							# 		quantity for sale
 							#		player's available storage
@@ -395,7 +402,7 @@ class CommodityComputer:
 
 							# remove credits from players account
 							player.addCredits(-1 * transfer_count * price)
-							
+
 							# remove sprite from exports list if necessary
 							quantity = self.exports[self.current_item][1]
 							if quantity <= 0:
@@ -425,7 +432,7 @@ class CommodityComputer:
 							count = PURCHASE_MAX
 					else:
 						count = 1
-						
+
 					if ((quantity > 0) and (count <= quantity)):
 
 						#
@@ -435,7 +442,7 @@ class CommodityComputer:
 
 						# update the players imports list
 						self.imports[self.current_item][1] = quantity - transfer_count
-	
+
 						# update the commodity exchanges exports list
 						export_index = -1
 						for i in range(len(self.exports)):
@@ -445,10 +452,10 @@ class CommodityComputer:
 							self.exports.append([category,transfer_count])
 						else:
 							self.exports[export_index][1] = self.exports[export_index][1] + transfer_count
-	
+
 						# add credits to players account
 						player.addCredits(transfer_count * price)
-	
+
 						# clean up if necessary
 						quantity = self.imports[self.current_item][1]
 						if quantity <= 0:
@@ -471,8 +478,8 @@ class CommodityComputer:
 				self.state = "sell"
 				self.current_item = 0
 				self.draw()
-		
-	
+
+
 """
 	returns the price list for the present base_type/faction
 """
@@ -492,7 +499,7 @@ def get_commodity_lists(current_base):
 
 		# local variables
 		variability = {}	# price fluctuations
-	
+
 		# getImports etc return a list of 5 items:
 		#	category
 		#	price scale (i.e. 1.0 normal price, 1.3 30% increase
@@ -501,7 +508,7 @@ def get_commodity_lists(current_base):
 		#	quantity std deviation
 		local_list  = trading.getImports(base_type, faction)
 		master_list = VS.GetMasterPartList()
-		
+
 		for i in range(len(local_list)):
 			cargo = local_list[i]
 			category = cargo[0]
@@ -512,23 +519,23 @@ def get_commodity_lists(current_base):
 			if quantity > 0:
 				# if there is a quantity available, add it to the export list
 				exports.append([category, quantity])
-		
+
 		for i in range(master_list.numCargo()):
 			cargo = master_list.GetCargoIndex(i)
 			category = cargo.GetCategory()
-		
+
 			# move along if this item isn't a commodity
 			if category == '': continue
 			if category[:8] == 'upgrades': continue
 			if category[:9] == 'starships': continue
-		
+
 			# get the price for this commodity
 			baseprice = cargo.GetPrice()
 			try:
 				tmp = variability[category]
 				variation = vsrandom.gauss(tmp[0], tmp[1])
 				if (variation > 0.2):
-					# don't use very low or negative variations 
+					# don't use very low or negative variations
 					price = int( baseprice * variation )
 				else:
 					price = int( baseprice )
@@ -547,22 +554,22 @@ def get_commodity_lists(current_base):
 		if name == '': continue
 		if category[:8] == 'upgrades': continue
 		if category[:9] == 'starships': continue
-		
+
 		try:
 			price  = int( cargo.GetPrice() )
 		except:
 			price  = -1
 
-		# at this point, if it isn't handled already by current_base, 
+		# at this point, if it isn't handled already by current_base,
 		# the price of contraband items on certain bases should be set to -1
 
 		if (price > 0):
 			prices[name] = price
-			
+
 		if (quantity > 0):
 			exports.append([name, quantity])
-			
-			
+
+
 	trace(_trace_level, "::: exports (%s %s %s)" %(current_base.getName(), current_base.getFullname(), current_base.getFactionName()))
 	trace(_trace_level, repr( exports ))
 	trace(_trace_level, "::: prices (%s %s %s)" %(current_base.getName(), current_base.getFullname(), current_base.getFactionName()))
@@ -574,7 +581,7 @@ def get_player_manifest(prices):
 	imports = []
 	not_for_sale = []
 	player = VS.getPlayer()
-	
+
 	count_not_for_sale = 0
 	for i in range(player.numCargo()):
 		cargo    = player.GetCargoIndex(i)
@@ -616,14 +623,14 @@ def transfer_cargo(from_unit, to_unit, name, price, count, max_capacity=-1, curr
 	if (max_capacity > 0):
 		trace(_trace_level, "::: max capacity = %s" %(max_capacity))
 		# only player ships should have a max_capacity; bases & planets can accept lots of cargo
-		if (current_capacity >= max_capacity): 
+		if (current_capacity >= max_capacity):
 			# unit is full (or overloaded) already
 			return 0
 
 		if (count > (max_capacity - current_capacity)):
 			# if adding requested amount would overfill capacity, reduce it to an OK level
 			count = max_capacity - current_capacity
-		
+
 	if (from_unit.hasCargo(name)):
 		trace(_trace_level, "::: from_unit has cargo" )
 		# make sure that from_unit actually has the cargo we're transferring
@@ -639,8 +646,8 @@ def transfer_cargo(from_unit, to_unit, name, price, count, max_capacity=-1, curr
 		from_unit.removeCargo(name,count,True)	# the last param is erasezero, meaning erase from cargo list if zero?
 	else:
 		trace(_trace_level, "::: from_unit DOESN'T have cargo" )
-		return 0		
-	
+		return 0
+
 	# lastly, add [count] cargo to new unit
 	#    create a new Cargo object and add it to unit
 	#    VS.Cargo __init__ appears to use: Content, Category, Price, Quantity, Mass, Volume
@@ -665,7 +672,7 @@ def get_sprite_info():
 		'Tobacco':				'interfaces/commodity/cargo/tobacco.spr',
 		'Ultimate':				'interfaces/commodity/cargo/ultimate.spr',
 		'Construction':			'interfaces/commodity/cargo/construction.spr',
-		'Factory_Equipment':	'interfaces/commodity/cargo/factory-equipment.spr',		
+		'Factory_Equipment':	'interfaces/commodity/cargo/factory-equipment.spr',
 		'Food_Dispensers':		'interfaces/commodity/cargo/food-dispensers.spr',
 		'Furs':					'interfaces/commodity/cargo/furs.spr',
 		'Games':				'interfaces/commodity/cargo/games.spr',
@@ -697,10 +704,16 @@ def get_sprite_info():
 		'Wood':					'interfaces/commodity/cargo/wood.spr'
 		}
 	return info
-	
+
 def get_display_name(name):
 	if (name == 'Contraband/Pilot'):
 		return 'Slaves (pilot)'
 	elif (name[0:10] == 'Contraband'):
 		return name[11:]
 	return name.replace('_', ' ')
+
+try:
+	global _commodity_font
+	_commodity_font = VS.getVariable("graphics/privateer", "shipdealer_font", "")
+except:
+	_commodity_font = ''

@@ -2,6 +2,10 @@ import Base
 import VS
 from XGUIDebug import *
 
+import debug
+import UserString
+
+
 GUIRootSingleton = None
 _doWhiteHack = 1
 _GUITraceLevel = TRACE_VERBOSE
@@ -27,9 +31,27 @@ class GUIRoot:
 		self.setScreenMargins(marginX,marginY)
 		self.needRedraw = {}
 		self.modalElement = None
-		self.keyTarget = None
-		Base.GlobalKeyPython('#\nfrom GUI import GUIRoot\nGUIRootSingleton.keyEvent()\n')
-
+		self._keyTarget = None
+		
+	@property
+	def keyTarget(self):
+		return self._keyTarget
+	#@keyTarget.setter ## The setter does not work if GUIRoot is a classic class (not object)
+	#def keyTarget(self,keyTarget):
+	#	self.setKeyTarget(self, keyTarget)
+	
+	def getKeyTarget(self):
+		return self._keyTarget
+		
+	def setKeyTarget(self, keyTarget):
+		debug.debug("set keyTarget: "+str(keyTarget), debug.DEBUG)
+		if keyTarget != self._keyTarget:
+			self._keyTarget = keyTarget
+			if keyTarget is not None:
+				Base.GlobalKeyPython('#\nfrom GUI import GUIRoot\nGUIRootSingleton.keyEvent()\n')
+			else:
+				Base.GlobalKeyPython('')
+		
 	def setScreenDimensions(self,screenX,screenY):
 		self.screenX=screenX
 		self.screenY=screenY
@@ -72,11 +94,19 @@ class GUIRoot:
 
 	def keyEvent(self):
 		eventdata = Base.GetEventData();
-		if self.keyTarget is not None:
-			if eventdata['type'] == 'keyup' and 'keyUp' in dir(self.keyTarget):
-				self.keyTarget.keyUp(eventdata['key'])
-			if eventdata['type'] == 'keydown' and 'keyDown' in dir(self.keyTarget):
-				self.keyTarget.keyDown(eventdata['key'])
+		if self._keyTarget is not None:
+			handler=None
+			if eventdata['type'] == 'keyup' and 'keyUp' in dir(self._keyTarget):
+				handler = self._keyTarget.keyUp
+			if eventdata['type'] == 'keydown' and 'keyDown' in dir(self._keyTarget):
+				handler = self._keyTarget.keyDown
+			if handler is not None:
+				handler(eventdata['key'],
+						eventdata['char'] if 'char' in eventdata else '',
+						eventdata['shift'] if 'shift' in eventdata else False,
+						eventdata['alt'] if 'alt' in eventdata else False,
+						eventdata['ctrl'] if 'ctrl' in eventdata else False,
+						eventdata['modifiers'] if 'modifiers' in eventdata else 0)
 
 	def registerRoom(self,room):
 		self.rooms[room.getIndex()] = room
@@ -158,10 +188,10 @@ class GUIRect:
 				y = 1 - 2*yi/screenY
 			"""
 			return ( (2.0 * self.x / screenX - 1.0)*(1.0-marginX) ,  \
-                           (-2.0 * self.y / screenY + 1.0)*(1.0-marginY) , \
-                           (2.0 * self.w / screenX * (1.0-marginX)) ,      \
-                           (2.0 * self.h / screenY * (1.0-marginY))        \
-                          )
+					(-2.0 * self.y / screenY + 1.0)*(1.0-marginY) , \
+					(2.0 * self.w / screenX * (1.0-marginX)) ,      \
+					(2.0 * self.h / screenY * (1.0-marginY))        \
+					)
 		elif (self.mode=='normalized_biased_scaled'):
 			""" direct coordinates: top-left = (-1,+1), bottom-right = (+1,-1) - margins WILL NOT be applied """
 			return (self.x,self.y,self.w,self.h)
@@ -471,9 +501,9 @@ class GUIElement:
 
 	def focus(self,dofocus):
 		if dofocus:
-			GUIRootSingleton.keyTarget=self
-		elif GUIRootSingleton.keyTarget==self:
-			GUIRootSingleton.keyTarget=None
+			GUIRootSingleton.setKeyTarget(self)
+		elif GUIRootSingleton.getKeyTarget()==self:
+			GUIRootSingleton.setKeyTarget(None)
 
 	def setModal(self,modal):
 		if modal:
@@ -614,7 +644,8 @@ class GUIStaticText(GUIElement):
 		else:
 			self.bgcolor = GUIColor.clear()
 		self.fontsize = fontsize
-		self.text = text
+		self.text = UserString.UserString(text, 'utf-8')
+		self.font = Base.GetTextBoxFont(-1, '')
 
 	def draw(self):
 		""" Creates the element """
@@ -623,6 +654,7 @@ class GUIStaticText(GUIElement):
 			# the dimensions for Base.TextBox are all screwed up.  the (width height multiplier) value is actually (x2, y2, unused)
 			# and the text is always the same size, regardless of how the height or multiplier values get set
 			Base.TextBox(self.room.getIndex(), str(self.index), str(self.text), x, y, (x + w, y - h, self.fontsize), self.bgcolor.getRGB(), self.bgcolor.getAlpha(), self.color.getRGB())
+			Base.SetTextBoxFont(self.room.getIndex(), str(self.index), self.font)
 			if _doWhiteHack != 0:
 				""" ugly hack, needed to counter a stupid bug """
 				Base.TextBox(self.room.getIndex(),str(self.index)+"_white_hack","", -100.0, -100.0, (0.01, 0.01, 1), (0,0,0), 0, GUIColor.white().getRGB())
@@ -640,6 +672,10 @@ class GUIStaticText(GUIElement):
 		self.text = newtext
 		if self.textstate==1:
 			Base.SetTextBoxText(self.room.getIndex(),str(self.index),str(self.text))
+
+	def setFont(self,fontname):
+		if self.textstate==1:
+			Base.SetTextBoxFont(self.room.getIndex(),str(self.index),str(fontname))
 
 	def setColor(self,newcolor):
 		self.color = newcolor
@@ -663,7 +699,7 @@ class GUIStaticText(GUIElement):
 class GUILineEdit(GUIGroup):
 
 	def focus_text(self,button,params):
-		print 'focusing',self.index
+		debug.debug('focusing'+str(self.index),debug.INFO)
 		self.focus(True)
 	def __init__(self,action,room,index,text,location,color,fontsize=1.0,bgcolor=None,focusbutton=None,**kwarg):
 		GUIGroup.__init__(self,room,**kwarg)
@@ -677,26 +713,29 @@ class GUILineEdit(GUIGroup):
 		(uw,uh) = GUIRect(0,0,10,10).getNormalWH()
 		self.index=index
 		Base.TextBox(room.getIndex(), str(self.index)+'line1', '---', x, y, (x+w, y+uh, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					 color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line2', '!', x, y, (x-uw, y+h, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					 color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line3', '---', x, y-h, (x+w, y+uh, 1), 
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					 color.getRGB(), color.getAlpha(), color.getRGB())
 		Base.TextBox(room.getIndex(), str(self.index)+'line4', '!', x+w, y, (x+uw, y+h, 1),
-			     color.getRGB(), color.getAlpha(), color.getRGB())
+					 color.getRGB(), color.getAlpha(), color.getRGB())
 		if _doWhiteHack != 0:
 			""" ugly hack, needed to counter a stupid bug """
 			Base.TextBox(self.room.getIndex(),str(self.index)+"_white_hack","", -100.0, -100.0, (0.01, 0.01, 1), (0,0,0), 0, GUIColor.white().getRGB())
 		self.action=action
 		self.draw()
 		self.canceled = False
-		self.cursor = '_'
+		self.cursor = UserString.UserString('#_', 'utf-8')
 
 	def getText(self):
-		return self.text.getText()[1:-1]
+		return self.text.getText()[1:-len(self.cursor)]
 
 	def setText(self,text):
-		self.text.setText(' ' + text + self.cursor)
+		self.text.setText(UserString.UserString(' ', 'utf-8') + text + self.cursor)
+
+	def setFont(self,fontname):
+		self.text.setFont(fontname)
 
 	def undraw(self):
 		Base.EraseObj(self.room.getIndex(),str(self.index)+"line1")
@@ -707,20 +746,33 @@ class GUILineEdit(GUIGroup):
 			Base.EraseObj(self.room.getIndex(),self.index+"_white_hack")
 		GUIGroup.undraw(self)
 
-	def keyDown(self,key):
-		print "got key: %i" % key 
+	def keyDown(self,key,char='',shift=False,alt=False,ctrl=False,mods=0):
+		debug.debug("got key: %i" % key, debug.VERBOSE) 
 		if key == 13 or key == 10: #should be some kind of return
 			self.action(self)
 		elif key == 27: #escape is always 27, isn't it?
 			self.canceled = True
 			self.action(self)		
 		elif key == 127 or key == 8: #avoid specifying the platform by treating del and backspace alike
-			self.setText(self.getText()[:-1])
+			text=str(self.getText())
+			if len(text) > 0:
+				if len(text) > 1 and (text[-2:] == '##' or text[-2:] == '#_'):
+					text=str(text[:-1])
+				num=1   ### UTF-8 handling (if 10xxxxxx, wait for 11xxxxxx or 0xxxxxxx)
+				while num < len(text) and ord(text[-num]) >= 128 and ord(text[-num]) < 192:
+					num = num + 1
+				self.setText(text[:-num])
 		elif key<127 and key>0:
 			try:
-				self.setText(self.getText() + ('%c' % key));
+				self.setText(self.getText() + ('#' if chr(key)=='#' or chr(key)=='_' else '') + ('%c' % key));
 			except:
-				print "Character value too high "+str(key)
+				debug.warn("Character value too high "+str(key))
+		else: # all(c in string.printable for c in :
+			try:
+				if char is not '':
+					self.setText(self.getText() + (u'%c' % key).encode('utf-8'))
+			except:
+				debug.warn("Character value too high "+str(key))
 		#self.notifyNeedRedraw()
 
 """------------------------------------------------------------------"""
@@ -807,13 +859,13 @@ class GUIButton(GUIStaticImage):
 		self.setState(initialstate)
 
 		self.pythonstr = \
-                  "# <-- this disables precompiled python objects\n" \
-                 +"from GUI import GUIRootSingleton\n" \
-		     +"evData = Base.GetEventData()\n" \
-		     +"typeToMessage = {'click':'click','up':'up','down':'down','move':'move','enter':'enter','leave':'leave'}\n" \
-		     +"if ('type' in evData) and (evData['type'] in typeToMessage):\n" \
-                 +"\tGUIRootSingleton.dispatchMessage("+str(self.id)+",typeToMessage[evData['type']],evData)\n" \
-                 +"\tGUIRootSingleton.redrawIfNeeded()\n"
+			"# <-- this disables precompiled python objects\n" \
+			+"from GUI import GUIRootSingleton\n" \
+			+"evData = Base.GetEventData()\n" \
+			+"typeToMessage = {'click':'click','up':'up','down':'down','move':'move','enter':'enter','leave':'leave'}\n" \
+			+"if ('type' in evData) and (evData['type'] in typeToMessage):\n" \
+				+"\tGUIRootSingleton.dispatchMessage("+str(self.id)+",typeToMessage[evData['type']],evData)\n" \
+				+"\tGUIRootSingleton.redrawIfNeeded()\n"
 
 	def _getStateSprite(self,state):
 		if self.sprites:
@@ -922,6 +974,10 @@ class GUIButton(GUIStaticImage):
 				self.textOverlay.notifyNeedRedraw()
 		else:
 			self.textOverlay.hide()
+
+	def setFont(self, fontname):
+		self.textOverlay.setFont(str(fontname))
+		self.textOverlay.notifyNeedRedraw()
 
 
 	def setState(self,newstate):
@@ -1103,9 +1159,9 @@ class GUICheckButton(GUIButton):
 	def onMessage(self,message,params):
 		""" Intercept group reset """
 		if (    (message=='setcheck' or message=='check' or message=='uncheck') \
-		    and (not ('group' in params) or (self.group == params['group'])) \
-		    and (not ('exclude' in params) or (self.id != params['exclude'])) \
-		    and (not ('index' in params) or (self.index == params['index']))   ):
+			and (not ('group' in params) or (self.group == params['group'])) \
+			and (not ('exclude' in params) or (self.id != params['exclude'])) \
+			and (not ('index' in params) or (self.index == params['index']))   ):
 			if (message=='setcheck'):
 				if ('state' in params):
 					self.setChecked(params['state'])
@@ -1259,7 +1315,7 @@ class GUISimpleListPicker(GUIElement):
 		
 	@staticmethod
 	def _notifySelectionChange(group,newval,caller):
-		print "New selection: %s" % newval
+		debug.debug("New selection: %s" % newval,debug.INFO)
 		caller.owner.selection = newval + caller.owner.firstVisible
 		
 	def _radiogroup(self):
@@ -1313,6 +1369,17 @@ class GUISimpleListPicker(GUIElement):
 			self._listitems[i].setEnable((self.firstVisible + i) < len(self.items))
 			self._listitems[i].notifyNeedRedraw()
 		self._needTextUpdate = False
+
+	def setListItemFont(self, fontname, i=-1):
+		if i == -1:
+			rng = range(len(self._listitems));
+		elif i in range(len((self._listitems))):
+			rng = range(i,i+1)
+		else:
+			return False
+		for i in rng:
+			self._listitems[i].setFont(fontname)
+		return True
 
 	"""
 		NOTE: every time the room is redrawn, the each list item is undrawn and redrawn multiple times. 

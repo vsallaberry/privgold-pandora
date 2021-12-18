@@ -52,6 +52,7 @@ using VSFileSystem::SaveFile;
 #include "gfx/aux_texture.h"
 #include "gamemenu.h" // network menu.
 #include "audiolib.h"
+#include "log.h"
 
 //for directory thing
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -3037,6 +3038,7 @@ bool BaseComputer::newsPickerChangedSelection(const EventCommandId& command, Con
 //	}
     return true;
 }
+
 static std::string GarnerInfoFromSaveGame(const string &filename)
 {
 	return UniverseUtil::getSaveInfo(filename,true);
@@ -3055,7 +3057,7 @@ bool BaseComputer::loadSavePickerChangedSelection(const EventCommandId& command,
         // No selection.  Clear desc.  (Not sure how this can happen, but it's easy to cover.)
         desc->setText("");
     } else {
-      desc->setText(GarnerInfoFromSaveGame(cell->text()));
+      desc->setText(GarnerInfoFromSaveGame(UniverseUtil::getGuiLabelWithoutEscapes(cell->text())));
       if (inputbox!=NULL)
         inputbox->setText(cell->text());
 
@@ -3166,7 +3168,7 @@ void BaseComputer::loadLoadSaveControls(void) {
 		std::string savedir = VSFileSystem::homedir+"/save/";
 		int ret = scandir (savedir.c_str(),&dirlist,nodirs,(scancompare)&datesort);
 		while( ret-->0) {
-			picker->addCell(new SimplePickerCell(dirlist[ret]->d_name));
+			picker->addCell(new SimplePickerCell(UniverseUtil::getEscapedGuiLabel(std::string(dirlist[ret]->d_name))));
 		}
 	}
 
@@ -5680,7 +5682,7 @@ void showUnitStats(Unit * playerUnit,string &text,int subunitlevel, int mode, Ca
 		//handle SubUnits
 		Unit *sub;
 		int i = 1;
-		for(un_iter ki = playerUnit->getSubUnits();sub = *ki;++ki,++i){
+		for(un_iter ki = playerUnit->getSubUnits();(sub = *ki)!=NULL;++ki,++i){
 			if (i==1) text+="#n##n##c0:1:.5#"+prefix+"[SUB UNITS]#-c";
 			PRETTY_ADD("#n#"+prefix+"#c0:1:.2#[#-csub unit ",i,0);
 			text+="#c0:1:.2#]#-c#n#";
@@ -5862,7 +5864,7 @@ bool BaseComputer::actionConfirmedSaveGame() {
 	}
 	StaticDisplay* desc = static_cast<StaticDisplay*>( window()->findControlById("InputText") );
 	if (desc) {
-		std::string tmp = desc->text();
+		std::string tmp = UniverseUtil::getGuiLabelWithoutEscapes(desc->text());
 		VSFileSystem::VSFile fp;
 		VSFileSystem::VSError err = fp.OpenCreateWrite(tmp,SaveFile);
 		if (err>Ok) {
@@ -5894,7 +5896,7 @@ bool BaseComputer::actionSaveGame(const EventCommandId& command, Control* contro
 	bool ok=true;
 	std::string tmp;
 	if (desc) {
-		tmp = desc->text();
+		tmp = UniverseUtil::getGuiLabelWithoutEscapes(desc->text());
 		if (tmp.length()<=0) {
 			ok=false;
 		}
@@ -5928,7 +5930,7 @@ bool BaseComputer::actionConfirmedLoadGame() {
 	Unit* player = m_player.GetUnit();
 	StaticDisplay* desc = static_cast<StaticDisplay*>( window()->findControlById("InputText") );
 	if (desc) {
-		std::string tmp = desc->text();
+		std::string tmp = UniverseUtil::getGuiLabelWithoutEscapes(desc->text());
 		if (tmp.length()>0) {
 			Cockpit* cockpit = player?_Universe->isPlayerStarship(player):0;
 			if(player && cockpit) {
@@ -5960,7 +5962,7 @@ bool BaseComputer::actionLoadGame(const EventCommandId& command, Control* contro
 		Unit* player = m_player.GetUnit();
 		StaticDisplay* desc = static_cast<StaticDisplay*>( window()->findControlById("InputText") );
 		if (desc) {
-			std::string tmp = desc->text();
+			std::string tmp = UniverseUtil::getGuiLabelWithoutEscapes(desc->text());
 			if (tmp.length()>0) {
 				if(player) {
 					Cockpit* cockpit = _Universe->isPlayerStarship(player);

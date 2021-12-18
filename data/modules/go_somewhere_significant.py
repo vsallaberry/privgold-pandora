@@ -6,9 +6,10 @@ import vsrandom
 import launch
 import Briefing
 import launch_recycle
+import debug
 def moveUnitTo(un,place,radius):
     where=place.LocalPosition()
-    print "moving "+un.getName() +" to "+place.getName()
+    debug.debug("moving "+un.getName() +" to "+place.getName())
     prsize=place.rSize();
     prp = VS.getPlanetRadiusPercent()
     if (place.isPlanet()):
@@ -24,10 +25,10 @@ class go_somewhere_significant:
 
     def SignificantUnit(self):
         return self.significantun
-    
+
     def getSignificantFullName(self):
         return unit.getUnitFullName(self.significantun,False)
-    
+
     def __init__ (self,you, landable_only, distance_away_to_trigger,base_only=0,capshipfaction="", dyn_fg="", showObjective=1, forcestarship=0):
         self.obj=0
         self.showObjective=showObjective
@@ -46,7 +47,7 @@ class go_somewhere_significant:
                 lim=10
             for i in range(lim):
                 significant = unit.getSignificant (randint,landable_only,base_only)
-                
+
                 if significant.isPlanet():
                     break
                 else:
@@ -60,7 +61,7 @@ class go_somewhere_significant:
                     significant=you
                 self.orbitee="%s" % (significant.getName())
                 self.capship=1
-                print "orbitee %s " % self.orbitee
+                debug.debug("orbitee %s " % self.orbitee)
                 if (dyn_fg==""):
                     newship=faction_ships.getRandomCapitol(capshipfaction)
                     found=False
@@ -104,7 +105,7 @@ class go_somewhere_significant:
         else:
             significant = universe.getRandomJumppoint ()
         if (significant.isNull()):
-            print "ERROR: no significants found in starsystem %s" % (self.sysfil)
+            debug.warning("ERROR: no significants found in starsystem %s" % (self.sysfil))
             self.significantun=VS.getPlayer()
         else:
             self.significantun=significant

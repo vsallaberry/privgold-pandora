@@ -1,4 +1,4 @@
-fp = open ('factions.xml','w')
+fp = open ('generated_factions.xml','w')
 from faction_ships import factions
 import faction_ships
 

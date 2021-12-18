@@ -27,8 +27,8 @@ void FindMissions(char *path) {
 
 void LoadMission(char *filename) {
 	char *file, *name;
-	easyDomFactory<missionNode> *domf= new easyDomFactory<missionNode>();
-	missionNode *top=domf->LoadXML(filename);
+    easyDomFactory<missionNode> domf;
+	missionNode *top=domf.LoadXML(filename);
 	easyDomNode *read;
 	string scan_name;
 //	vector<easyDomNode *>::const_iterator siter;

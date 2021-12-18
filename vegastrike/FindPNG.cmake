@@ -12,14 +12,15 @@ if (PNG_LIBRARIES AND PNG_INCLUDE_DIRS)
 else (PNG_LIBRARIES AND PNG_INCLUDE_DIRS)
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
-  include(FindPkgConfig)
-  
+  #include(FindPkgConfig)
+  find_package(PkgConfig)
+
   pkg_check_modules(LIBPNG REQUIRED libpng)
   SET(_FFMPEGIncDir ${ffmpeg1_INCLUDE_DIRS})
   SET(_FFMPEGLinkDir ${ffmpeg1_LIBRARY_DIRS})
   SET(_FFMPEGLinkFlags ${ffmpeg1_LDFLAGS})
   SET(_FFMPEGCflags ${ffmpeg1_CFLAGS})
-  
+
 
   set(FFMPEG_DEFINITIONS ${LIBPNG_CFLAGS})
 

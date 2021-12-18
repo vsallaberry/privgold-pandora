@@ -6,6 +6,7 @@ import Briefing
 import universe
 import unit
 import Director
+import debug
 class total_jump:
     def __init__(self):
         VS.SetDifficulty(.1)
@@ -21,21 +22,21 @@ class total_jump:
                     cursys=VS.GetAdjacentSystem(currentsystem,vsrandom.randrange(0,numadj))
                 else:
                     cursys = 'enigma_sector/heavens_gate'
-                print "TJ: jumping to "+cursys
+                debug.debug("TJ: jumping to "+cursys)
                 un.JumpTo(cursys)
             else:
-                print "TJ: jumping to [ERROR: you are null]"
+                debug.debug("TJ: jumping to [ERROR: you are null]")
             return
         else:
             siglist=universe.significantUnits()
             if len(siglist)==0:
-                print "TJ: siglist empty"
+                debug.debug("TJ: siglist empty")
                 return
             sig=siglist[vsrandom.randrange(0,len(siglist))]
             if (not sig):
-                print "TJ: sig null"
+                debug.debug("TJ: sig null")
                 return
-            print "TJ: autopiloting to "+sig.getName()
+            debug.debug("TJ: autopiloting to "+sig.getName())
             un.AutoPilotTo(sig,True)
             un.SetTarget(sig)
 
@@ -66,9 +67,9 @@ class total_jump:
             self.waittime=vsrandom.randrange(10.0,30.0)
             self.lasttime=time
     def initbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")
     def loopbriefing(self):
-        print "loop briefing"
+        debug.debug("loop briefing")
         Briefing.terminate();
     def endbriefing(self):
-        print "ending briefing"
+        debug.debug("ending briefing")

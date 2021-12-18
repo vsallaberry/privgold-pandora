@@ -62,12 +62,12 @@ rooms_quine = computer_lib.MakePersonalComputer(room_menu, room_menu,
 	1) # and return room map, rather than only root room
 rooms_quine['computer'].setMode('load')
 
-# Link to Quine "Load Game" screen
-sprite_loc = GUI.GUIRect(272,697,241,47,"pixel",(1024,768))
+# Quit game
+sprite_loc = GUI.GUIRect(753,697,241,47,"pixel",(1024,768))
 sprite = {
 	'*':None,
-	'down' : ( 'interfaces/main_menu/load_button_pressed.spr', sprite_loc ) }
-GUI.GUIRoomButton(guiroom, rooms_quine['load'], 'XXXLoad Game','Load_Game',sprite,sprite_loc)
+	'down' : ( 'interfaces/main_menu/quit_button_pressed.spr', sprite_loc ) }
+btn = GUI.GUIButton(guiroom, 'XXXQuit Game','Quit_Game',sprite,sprite_loc,'enabled',QuitGame)
 
 # Link to Credits or Network Setup
 sprite_loc = GUI.GUIRect(513,697,241,47,"pixel",(1024,768))
@@ -77,6 +77,13 @@ sprite = {
 #GUI.GUICompButton(guiroom,'Network','XXXPlay Network','Network_Game',sprite,sprite_loc)		# network game setup
 GUI.GUIRoomButton(guiroom, credits_guiroom, 'XXXShow Credits','Show_Credits',sprite,sprite_loc,clickHandler=enterCredits)	# credits screen
 
+# Link to Quine "Load Game" screen
+sprite_loc = GUI.GUIRect(272,697,241,47,"pixel",(1024,768))
+sprite = {
+	'*':None,
+	'down' : ( 'interfaces/main_menu/load_button_pressed.spr', sprite_loc ) }
+GUI.GUIRoomButton(guiroom, rooms_quine['load'], 'XXXLoad Game','Load_Game',sprite,sprite_loc)
+
 # New game
 sprite_loc = GUI.GUIRect(31,697,241,47,"pixel",(1024,768))
 sprite = {
@@ -84,12 +91,6 @@ sprite = {
 	'down' : ( 'interfaces/main_menu/new_button_pressed.spr', sprite_loc ) }
 btn = GUI.GUIButton(guiroom, 'XXXNew Game','New_Game',sprite,sprite_loc,'enabled',StartNewGame)
 
-# Quit game
-sprite_loc = GUI.GUIRect(753,697,241,47,"pixel",(1024,768))
-sprite = {
-	'*':None,
-	'down' : ( 'interfaces/main_menu/quit_button_pressed.spr', sprite_loc ) }
-btn = GUI.GUIButton(guiroom, 'XXXQuit Game','Quit_Game',sprite,sprite_loc,'enabled',QuitGame)
 
 # Draw everything
 GUI.GUIRootSingleton.broadcastMessage('draw',None)

@@ -106,6 +106,9 @@ namespace UniverseUtil
 		}
 		VSServer->sendCustom(cp, cmd, args, id);
 	}
+
+    void enableKeyRepeat() {}
+    bool restoreKeyRepeat() { return true; }
 }
 
 

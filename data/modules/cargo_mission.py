@@ -9,6 +9,7 @@ import universe
 import unit
 import Director
 import quest
+import debug
 class cargo_mission (Director.Mission):
     def initbriefing(self):
         VS.IOmessage (0,"cargo mission","briefing","Your mission for today will be to run some %s cargo" % self.cargoname)
@@ -54,7 +55,7 @@ class cargo_mission (Director.Mission):
             carg = VS.getRandCargo(self.quantity,"") #oh no... could be starships...
             i=0
             while i<50 and carg.GetCategory()[:10]=="Contraband":
-                print "contraband==bad"
+                debug.debug("contraband==bad")
                 carg = VS.getRandCargo(self.quantity,"")
                 i+=1
         tempquantity=self.quantity
@@ -110,16 +111,16 @@ class cargo_mission (Director.Mission):
         self.base.setCombatRole(self.role)
         if (remove):
             removenum=you.removeCargo(self.cargoname,self.quantity,1)
-            print "removed %d" % removenum
+            debug.debug("removed %d %s" % (removenum,str(self.cargoname)))
             mpart=VS.GetMasterPartList()
             newcarg=mpart.GetCargo(self.cargoname)
             newcarg.SetQuantity(removenum)
             #self.base.addCargo(newcarg)
             has=self.you.hasCargo(self.cargoname)
-            print "has cargo "+str(has)
             if (has):
+                debug.debug("has cargo "+str(self.cargoname)+" : "+str(has),debug.INFO)
                 has=self.you.removeCargo(self.cargoname,has,1)
-                print "removedagain %d"%has
+                debug.debug("removed again %d %s"%(has,self.cargoname),debug.NOTICE)
                 newcarg.SetMissionFlag(0)
                 newcarg.SetQuantity(has)
                 self.you.addCargo(newcarg) #It seems that removing and then adding it again is the only way...
@@ -128,6 +129,7 @@ class cargo_mission (Director.Mission):
             VS.IOmessage (0,"cargo mission",self.mplay,"#00ff00You have been rewarded for your effort as agreed.")
             VS.IOmessage (0,"cargo mission",self.mplay,"#00ff00Your excellent work will be remembered.")
             you.addCredits(self.cred)
+            debug.debug("cargo mission success, "+str(self.cred)+" credits")
             VS.AdjustRelation(you.getFactionName(),self.faction,.01*self.difficulty,1)
             self.SetVar(1)
             VS.terminateMission(1)
@@ -139,8 +141,10 @@ class cargo_mission (Director.Mission):
                 VS.IOmessage (0,"cargo mission",self.mplay,"#ff0000And we will consider if we will accept you on future missions.")
                 addcred=(float(removenum)/(float(self.quantity*(1+self.difficulty))))*self.cred
                 you.addCredits(addcred)
+                debug.debug("cargo mission partial success, "+str(addcred)+" credits")
             else:
                 VS.IOmessage (0,"cargo mission",self.mplay,"#ff0000You will not be paid!")
+                debug.debug("cargo mission failure")
                 universe.punish(self.you,self.faction,self.difficulty)
             self.SetVar(-1)
             VS.terminateMission(0)
@@ -169,6 +173,7 @@ class cargo_mission (Director.Mission):
         if (self.you.isNull() or (self.arrived and self.base.isNull())):
             VS.IOmessage (0,"cargo mission",self.mplay,"#ff0000You were unable to deliver cargo. Mission failed.")
             self.SetVar(-1)
+            debug.debug("cargo mission failure 2")
             VS.terminateMission(0)
             return
         if (not self.adjsys.Execute() and not (self.arrived and self.base and self.base.isDocked(self.you))):

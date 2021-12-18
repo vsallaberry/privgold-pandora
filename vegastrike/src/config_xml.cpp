@@ -45,11 +45,15 @@
 //#include "vs_globals.h"
 //#include "vegastrike.h"
 #include "gfx/screenshot.h"
+#include "log.h"
 using std::cout;
 using std::endl;
 using std::cerr;
 /* *********************************************************** */
 
+#define CONFIG_LOG(_lvl, ...) VS_LOG("config", _lvl, __VA_ARGS__)
+
+/* *********************************************************** */
 GameVegaConfig::GameVegaConfig(const char *configfile): VegaConfig( configfile)
 {
 	/*
@@ -286,7 +290,7 @@ void GameVegaConfig::doBindings(configNode *node){
       doAxis(cnode);
     }
     else{
-      cout << "Unknown tag: " << (cnode)->Name() << endl;
+      CONFIG_LOG(logvs::NOTICE, "bindings: Unknown tag: %s", (cnode)->Name().c_str());
     }
   }
 }
@@ -302,7 +306,7 @@ void GameVegaConfig::doAxis(configNode *node){
   string mouse_str=node->attr_value("mouse");
 
   if(name.empty() || (mouse_str.empty()&&myjoystick.empty()) || axis.empty()){
-    cout << "no correct axis desription given " << endl;
+    CONFIG_LOG(logvs::NOTICE, "joystick: no correct axis desription given");
     return;
   }
 
@@ -345,7 +349,7 @@ void GameVegaConfig::doAxis(configNode *node){
     string margin_str=node->attr_value("margin");
 
     if(nr_str.empty() || margin_str.empty()){
-      cout << "you have to assign a number and a margin to the hatswitch" << endl;
+      CONFIG_LOG(logvs::NOTICE, "joystick: you have to assign a number and a margin to the hatswitch");
       return;
     }
     int nr=atoi(nr_str.c_str());
@@ -365,7 +369,7 @@ void GameVegaConfig::doAxis(configNode *node){
     }
   }
   else{
-    cout << "unknown axis " << name << endl;
+    CONFIG_LOG(logvs::NOTICE, "joystick: unknown axis %s", name.c_str());
     return;
   }
 
@@ -375,7 +379,7 @@ void GameVegaConfig::doAxis(configNode *node){
 
 void GameVegaConfig::checkHatswitch(int nr,configNode *node){
   if(node->Name()!="hatswitch"){
-    cout << "not a hatswitch node " << endl;
+    CONFIG_LOG(logvs::NOTICE, "not a hatswitch node");
     return;
   }
 
@@ -384,13 +388,13 @@ void GameVegaConfig::checkHatswitch(int nr,configNode *node){
   float val=atof(strval.c_str());
 
   if(val>1.0 || val<-1.0){
-    cout << "only hatswitch values from -1.0 to 1.0 allowed" << endl;
+    CONFIG_LOG(logvs::NOTICE, "only hatswitch values from -1.0 to 1.0 allowed");
     return;
   }
 
   hatswitch[nr][hs_value_index]=val;
 
-  cout << "setting hatswitch nr " << nr << " " << hs_value_index << " = " << val << endl;
+  CONFIG_LOG(logvs::NOTICE, "setting hatswitch nr %d %d = %f", nr, hs_value_index, val);
 
   hs_value_index++;
 }
@@ -398,8 +402,9 @@ void GameVegaConfig::checkHatswitch(int nr,configNode *node){
 /* *********************************************************** */
 
 void GameVegaConfig::checkBind(configNode *node){
+  node->setValid(false);
   if(node->Name()!="bind"){
-    cout << "not a bind node " << endl;
+    CONFIG_LOG(logvs::NOTICE, "bindings: not a bind node");
     return;
   }
   std::string tmp=node->attr_value("modifier");
@@ -412,7 +417,7 @@ void GameVegaConfig::checkBind(configNode *node){
   KBHandler handler=commandMap[cmdstr];
   
   if(handler==NULL){
-    cout << "No such command: " << cmdstr << endl;
+    CONFIG_LOG(logvs::NOTICE, "bindings: No such command: %s", cmdstr.c_str());
     return;
   }
   string player_str=node->attr_value("player");
@@ -444,8 +449,8 @@ void GameVegaConfig::checkBind(configNode *node){
     else{
       int glut_key=key_map[keystr];
       if(glut_key==0){
-	cout << "No such special key: " << keystr << endl;
-	return;
+          CONFIG_LOG(logvs::NOTICE, "bindings: No such special key: %s", keystr.c_str());
+          return;
       }
       BindKey(glut_key,modifier,XMLSupport::parse_int(player_bound),handler,KBData(additional_data));
     }
@@ -458,95 +463,98 @@ void GameVegaConfig::checkBind(configNode *node){
       int button_nr=atoi(buttonstr.c_str());
 
       if(joy_str.empty()&&mouse_str.empty()){
-	// it has to be the analogue hatswitch
-	if(hat_str.empty()){
-	  cout << "you got to give a analogue hatswitch number" << endl ;
-	  return;
-	}
+    	  // it has to be the analogue hatswitch
+    	  if(hat_str.empty()){
+    		  CONFIG_LOG(logvs::NOTICE, "bindings: you got to give a analogue hatswitch number");
+    		  return;
+    	  }
 
-	int hatswitch_nr=atoi(hat_str.c_str());
+    	  int hatswitch_nr=atoi(hat_str.c_str());
 
-	BindHatswitchKey(hatswitch_nr,button_nr,handler,KBData(additional_data));
+    	  BindHatswitchKey(hatswitch_nr,button_nr,handler,KBData(additional_data));
 	
-	//	cout << "Bound hatswitch nr " << hatswitch_nr << " button: " << button_nr << " to " << cmdstr << endl;
+    	  //	cout << "Bound hatswitch nr " << hatswitch_nr << " button: " << button_nr << " to " << cmdstr << endl;
       }
       else{
-	// joystick button
-	int joystick_nr;
-	if (mouse_str.empty())
-	  joystick_nr=atoi(joy_str.c_str());
-	else
-	  joystick_nr=(MOUSE_JOYSTICK);
-	if(joystick[joystick_nr]->isAvailable()){
-	  // now map the command to a callback function and bind it
+		// joystick button
+		int joystick_nr;
+		if (mouse_str.empty())
+		  joystick_nr=atoi(joy_str.c_str());
+		else
+		  joystick_nr=(MOUSE_JOYSTICK);
 
-	  // yet to check for correct buttons/joy-nr
+		// now map the command to a callback function and bind it
+		// yet to check for correct buttons/joy-nr
+		BindJoyKey(joystick_nr,button_nr,handler,KBData(additional_data));
 
+		//cout << "Bound joy= " << joystick_nr << " button= " << button_nr << "to " << cmdstr << endl;
 
-	  BindJoyKey(joystick_nr,button_nr,handler,KBData(additional_data));
-
-	//cout << "Bound joy= " << joystick_nr << " button= " << button_nr << "to " << cmdstr << endl;
-	}
-	else{
-          static bool first=true;
-          if (first) {
-            cout << "\nrefusing to bind command to joystick (joy-nr too high)" << endl;
-            first=false;
-          }
-	}
+		if(!joystick[joystick_nr]->isAvailable()){
+			static bool first[MAX_JOYSTICKS], init = false;
+			if (!init) { memset(first,0xff,sizeof(first)); init=true; }
+			if (first[joystick_nr]) {
+				CONFIG_LOG(logvs::NOTICE, "bindings: warning, joystick #%d is not yet plugged!", joystick_nr);
+				first[joystick_nr]=false;
+			}
+		}
       }
     }
     else if(!(dighswitch.empty() || direction.empty() || (mouse_str.empty()&&joy_str.empty()))){
       // digital hatswitch or ...
 
       if(dighswitch.empty() || direction.empty() || (mouse_str.empty()&&joy_str.empty())){
-	cout << "you have to specify joystick,digital-hatswitch,direction" << endl;
-	return;
+        CONFIG_LOG(logvs::NOTICE, "bindings: you have to specify joystick,digital-hatswitch,direction");
+        return;
       }
 
       int hsw_nr=atoi(dighswitch.c_str());
 
       int joy_nr;
       if (mouse_str.empty()) {
-	joy_nr=atoi(joy_str.c_str());
+    	  joy_nr=atoi(joy_str.c_str());
       } else {
-	joy_nr=MOUSE_JOYSTICK;
+    	  joy_nr=MOUSE_JOYSTICK;
       }
-      if(!(joystick[joy_nr]->isAvailable() && hsw_nr<joystick[joy_nr]->nr_of_hats)){
-	cout << "refusing to bind digital hatswitch: no such hatswitch" << endl;
-	return;
+      if(joystick[joy_nr]->isAvailable()) {
+    	  if(hsw_nr >= joystick[joy_nr]->nr_of_hats) {
+    		  CONFIG_LOG(logvs::NOTICE, "bindings: joystick #%d: refusing to bind digital hatswitch %d: no such hatswitch", joy_nr, hsw_nr);
+    		  return;
+    	  }
+      } else {
+    	  CONFIG_LOG(logvs::NOTICE, "bindings: warning: bind digital hatswitch %d: joystick #%d not plugged!", hsw_nr, joy_nr);
       }
       int dir_index;
 
       if(direction=="center"){
-	dir_index=VS_HAT_CENTERED;
+    	  dir_index=VS_HAT_CENTERED;
       }
       else if(direction=="up"){
-	dir_index=VS_HAT_UP;
+    	  dir_index=VS_HAT_UP;
       }
       else if(direction=="right"){
-	dir_index=VS_HAT_RIGHT;
+    	  dir_index=VS_HAT_RIGHT;
       }      else if(direction=="left"){
-	dir_index=VS_HAT_LEFT;
+    	  dir_index=VS_HAT_LEFT;
       }      else if(direction=="down"){
-	dir_index=VS_HAT_DOWN;
+    	  dir_index=VS_HAT_DOWN;
       }      else if(direction=="rightup"){
-	dir_index=VS_HAT_RIGHTUP;
+    	  dir_index=VS_HAT_RIGHTUP;
       }      else if(direction=="rightdown"){
-	dir_index=VS_HAT_RIGHTDOWN;
+    	  dir_index=VS_HAT_RIGHTDOWN;
       }      else if(direction=="leftup"){
-	dir_index=VS_HAT_LEFTUP;
+    	  dir_index=VS_HAT_LEFTUP;
       }      else if(direction=="leftdown"){
-	dir_index=VS_HAT_LEFTDOWN;
+    	  dir_index=VS_HAT_LEFTDOWN;
       }
       else{
-	cout << "no valid direction string" << endl;
-	return;
+        CONFIG_LOG(logvs::NOTICE, "bindings: no valid direction string %s", direction.c_str());
+        return;
       }
 
       BindDigitalHatswitchKey(joy_nr,hsw_nr,dir_index,handler,KBData(additional_data));
 
-      cout << "Bound joy " << joy_nr << " hatswitch " << hsw_nr << " dir_index " << dir_index << " to command " << cmdstr << endl;
+      CONFIG_LOG(logvs::NOTICE, "Bound joy %d hatswitch %d dir_index %d to command %s",
+                 joy_nr, hsw_nr, dir_index, cmdstr.c_str());
 
     }
 #if 1
@@ -554,6 +562,7 @@ void GameVegaConfig::checkBind(configNode *node){
     return;
   }
 #endif
+  node->setValid(true);
 }
 
 /* *********************************************************** */
@@ -780,7 +789,10 @@ CommandMap initGlobalCommandMap() {
  commandMap["Cockpit::Behind"]=CockpitKeys::Behind;
  commandMap["Cockpit::Pan"]=CockpitKeys::Pan;
  commandMap["Cockpit::SkipMusicTrack"]=CockpitKeys::SkipMusicTrack;
-
+ commandMap["Cockpit::ToggleFPS"]=CockpitKeys::toggleFPS;
+ commandMap["Cockpit::ToggleHelp"]=CockpitKeys::toggleHelp;
+ commandMap["Cockpit::ToggleMsgCenterLog"]=CockpitKeys::toggleMsgCenterLog;
+    
  commandMap["Cockpit::Quit"]=CockpitKeys::Quit;
 
  commandMap["Joystick::Mode::InertialXY"]      =FlyByKeyboard::JoyInertialXYPulsorKey;

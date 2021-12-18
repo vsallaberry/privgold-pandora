@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <sstream>
 #include "faction_generic.h"
 #include "vsfilesystem.h"
 #include "universe_generic.h"
@@ -28,8 +29,11 @@ const char *FactionUtil::GetFaction (int i) {
 }
 
 static int GetFactionLookup (const char * factionname) {
-#ifdef _WIN32
-  #define strcasecmp stricmp
+#if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
 #endif
  for (unsigned int i=0;i<factions.size();i++) {
     if (strcasecmp (factionname, factions[i]->factionname)==0) {
@@ -129,17 +133,19 @@ void FactionUtil::SerializeFaction(FILE * fp) {
   }
 }
 string FactionUtil::SerializeFaction() {
-  char temp[8192];
-  string ret("");
+  std::ostringstream ret_oss;
+  ret_oss.unsetf(std::ostringstream::floatfield); // equivalent to %g
   for (unsigned int i=0;i<factions.size();i++) {
     for (unsigned int j=0;j<factions[i]->faction.size();j++) {
-      sprintf (temp,"%g ",factions[i]->faction[j].relationship);
-	  ret += string( temp);
+      ///*sprintf-version*/ sprintf (temp,"%g ",factions[i]->faction[j].relationship);
+      ///*sprintf-version*/ ret += string( temp);
+      ret_oss << (float)factions[i]->faction[j].relationship << " ";
     }
-    sprintf(temp,"\n");
-	ret += string( temp);
+    ///*sprintf-version*/ sprintf(temp,"\n");
+	///*sprintf-version*/ ret += string( temp);
+    ret_oss << "\n";
   }
-  return ret;
+  return ret_oss.str();
 }
 int FactionUtil::numnums (const char * str) {
   int count=0;
@@ -160,7 +166,7 @@ void FactionUtil::LoadSerializedFaction(FILE * fp) {
     }
     for (unsigned int j=0;j<factions[i]->faction.size();j++) {
       if (1!=sscanf (tmp2,"%f ",&factions[i]->faction[j].relationship)) {
-	printf ("err");
+    	  VS_LOG("game", logvs::WARN, "LoadSerializedFaction scanf(%%f ) error");
       }
       int k=0;
       bool founddig=false;

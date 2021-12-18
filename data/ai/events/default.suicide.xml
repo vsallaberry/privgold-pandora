@@ -68,6 +68,6 @@
 <meterdistance max="1200" script="face perpendicular fast" priority="5" timetointerrupt="20" time="20">
     <rand max=".33" script="afterburn turn away" time="10" timetointerrupt="8" priority="5"/>
 </meterdistance>
-<meterdistance max="1200" script="turn towards itts" priority="4" time="8">
+<meterdistance max="1200" script="turn towards itts" priority="4" time="8"/>
 
 </AggressiveAI>

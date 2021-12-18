@@ -1,8 +1,9 @@
 .DS_Store
 /vegastrike*/build
-/vegastrike*/build-*
 /engine*/build
-/engine*/build-*
+/engine*/build/build-sh_config-cache
+/engine*/build-*/build-sh_config-cache
+
 /tmp
 **/.svn
 **/.git
@@ -12,7 +13,18 @@
 **/.\#*
 **/*.pyc
 
-logs/log
+/logs/log
+/build
+
+/deps*/**/*.tar.[gx]z
+/deps*/**/*.tar.bz2
+/deps*/**/*.tbz2
+/deps*/**/*.t[gx]z
+/deps*/build
+
+/tools/macos_bundle/checkModifierKeys/*.o
+/tools/macos_bundle/checkModifierKeys/checkKeys
+/tools/macos_bundle/checkModifierKeys/checkModifierKeys
 
 /vegastrike*/INSTALL
 /vegastrike*/configure
@@ -40,4 +52,14 @@ logs/log
 /engine*/depcomp
 /engine*/install-sh
 /engine*/missing
+
+/eclipse/.metadata/
+#/eclipse/.metadata/.*.log
+#/eclipse/.metadata/.plugins/org.eclipse.cdt.core/*.pdom
+#/eclipse/.metadata/.plugins/com.python.pydev.analysis
+#/eclipse/.metadata/.plugins/org.python.pydev/*/modulesKeys
+#/eclipse/.metadata/.plugins/org.eclipse.cdt.ui/*.log
+#/eclipse/.metadata/.plugins/org.eclipse.core.resources/.history
+#/eclipse/.metadata/.plugins/org.eclipse.core.resources/.projects/*/.indexes
+#/eclipse/.metadata/.plugins/org.python.pydev/*/shell
 

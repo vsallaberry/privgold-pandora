@@ -1,6 +1,7 @@
 
 import VS
 import faction_ships
+import debug
 
 campaign_name={}
 
@@ -47,7 +48,7 @@ def verifyMission(name,args,campaign=None):
     elif name=='ambush_scan':
         mission=AmbushScan(args)
     if mission is None:
-        print 'Unsupported mission type'
+        debug.warn('Unsupported mission type %s' % (str(name)))
         return False
     else:
         return mission.isValid()
@@ -96,7 +97,7 @@ class Argument:
 
     def printwarnings(self):
         for warning in self.warnings:
-            print "\'%s\' Argument Warning: "%self.NAME + warning
+            debug.debug("\'%s\' Argument Warning: %s"%(self.NAME, warning))
 
 class PositiveInt(Argument):
 
@@ -181,9 +182,11 @@ class System(Argument):
     NAME="System"
 
     def checkValidity(self):
-        v = ( VS.universe.has_key(self.value) )
-        if not v:
-            self.warn("System %s does not exist in universe"%self.value)
+        #v = ( VS.universe.has_key(self.value) )
+        #if not v:
+        v = VS.GetNumAdjacentSystems(self.value)
+        if v == 0:
+            self.warn("System %s does not exist in universe"%str(self.value))
             return False
         return True
 
@@ -193,9 +196,11 @@ class SystemTuple(Argument):
 
     def checkValidity(self):
         for sys in self.value:
-            v = ( VS.universe.has_key(sys) )
-            if not v:
-                self.warn("System %s does not exist in universe"%sys)
+            #v = ( VS.universe.has_key(sys) )
+            #if not v:
+            v = VS.GetNumAdjacentSystems(sys)
+            if v == 0:
+                self.warn("System %s does not exist in universe"%str(sys))
                 return False
         return True
 
@@ -230,7 +235,8 @@ class Faction(Argument):
     NAME="Faction"
 
     def checkValidity(self):
-        if self.value not in VS._factions:
+        #if self.value not in VS._factions:
+        if VS.GetFactionIndex(self.value) < 0:
             self.warn("'%s' is not a valid faction"%self.value)
             return False
         return True
@@ -286,7 +292,8 @@ class FactionList(Argument):
         if type(self.value)==type(""):
             self.value=[self.value]
         for val in self.value:
-            if val not in VS._factions:
+            #if val not in VS._factions:
+            if VS.GetFactionIndex(val) < 0:
                 self.warn("%s is not a valid faction"%val)
                 return False
         return True
@@ -389,20 +396,25 @@ class MissionVerifier:
         except:
             pass
         if len(newargs) > len(self.args):
-            raise RuntimeError("More arguments given than this object supports")
+            #raise RuntimeError("More arguments given than this object supports")
+            self.warn("More arguments given than this object supports (given:" 
+                      + str(newargs) + " supported:" + str(self.args) + ")")
         if givenargs:
             for i in range(len(newargs)):
-                self.args[i].set(newargs[i])
+                try:
+                    self.args[i].set(newargs[i])
+                except:
+                    self.warn("Cannot set arg #%d (%s)"%(i, str(newargs[i])))
 
     def isValid(self):
         for a in self.args:
             if not a.isValid():
-                print self.origargs
+                debug.debug(repr(self.origargs))
                 return False
         return True
 
     def warn(self, text):
-        print "Mission Warning: " + text
+        debug.debug("Mission Warning: " + text)
 
 class AmbushVerifier(MissionVerifier):
     MISSION_ARGS=[SaveVar(),SystemTuple(System()),PositiveNumber(),FactionList(),PositiveInt(PositiveIntList()),ShipType(ShipTypeList(Empty()),Default()),DynFG(None,Default()),TextList(None,Default()),SystemTuple(None,Default()),Destination(None,Default()),Boolean(None,Default())]
