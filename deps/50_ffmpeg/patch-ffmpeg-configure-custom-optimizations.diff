@@ -1,0 +1,118 @@
+--- configure.orig	2021-10-08 00:34:59.000000000 +0200
++++ configure	2021-10-08 00:48:54.000000000 +0200
+@@ -1245,6 +1245,8 @@
+ 
+ symver_if_any="symver_asm_label symver_gnu_asm"
+ 
++speed_cflags=""
++
+ # subsystems
+ dct_select="rdft"
+ mdct_select="fft"
+@@ -1807,6 +1809,8 @@
+     ;;
+     --enable-debug=*) debuglevel="$optval"
+     ;;
++    --enable-optimizations=*) speed_cflags="$optval"
++    ;;
+     --disable-everything)
+     map 'eval unset \${$(toupper ${v%s})_LIST}' $COMPONENT_LIST
+     ;;
+@@ -1952,7 +1956,7 @@
+     cc_ident="llvm-gcc $($cc -dumpversion) $gcc_extra_ver"
+     CC_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+     AS_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+-    speed_cflags='-O3'
++    test -z "${speed_cflags}" && speed_cflags='-O3'
+     size_cflags='-Os'
+ elif $cc -v 2>&1 | grep -qi ^gcc; then
+     cc_type=gcc
+@@ -1966,7 +1970,7 @@
+         CC_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+         AS_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+     fi
+-    speed_cflags='-O3'
++    test -z "${speed_cflags}" && speed_cflags='-O3'
+     size_cflags='-Os'
+ elif $cc --version 2>/dev/null | grep -q Intel; then
+     cc_type=icc
+@@ -1975,14 +1979,14 @@
+     icc_version=$($cc -dumpversion)
+     CC_DEPFLAGS='-MMD'
+     AS_DEPFLAGS='-MMD'
+-    speed_cflags='-O3'
++    test -z "${speed_cflags}" && speed_cflags='-O3'
+     size_cflags='-Os'
+     noopt_cflags='-O1'
+ elif $cc -v 2>&1 | grep -q xlc; then
+     cc_type=xlc
+     cc_version="AV_STRINGIFY(__IBMC__)"
+     cc_ident=$($cc -qversion 2>/dev/null | head -n1)
+-    speed_cflags='-O5'
++    test -z "${speed_cflags}" && speed_cflags='-O5'
+     size_cflags='-O5 -qcompact'
+ elif $cc -V 2>/dev/null | grep -q Compaq; then
+     cc_type=ccc
+@@ -1991,7 +1995,7 @@
+     DEPFLAGS='$(CPPFLAGS) $(CFLAGS) -M'
+     debuglevel=3
+     add_ldflags -Wl,-z,now # calls to libots crash without this
+-    speed_cflags='-fast'
++    test -z "${speed_cflags}" && speed_cflags='-fast'
+     size_cflags='-O1'
+ elif $cc --vsn 2>/dev/null | grep -q "ARM C/C++ Compiler"; then
+     test -d "$sysroot" || die "No valid sysroot specified."
+@@ -2009,7 +2013,7 @@
+     as_default="${cross_prefix}gcc"
+     CC_DEPFLAGS='-MMD'
+     AS_DEPFLAGS='-MMD'
+-    speed_cflags='-O3'
++    test -z "${speed_cflags}" && speed_cflags='-O3'
+     size_cflags='-Os'
+     filter_asflags="filter_out -W${armcc_opt}*"
+ elif $cc -version 2>/dev/null | grep -q TMS470; then
+@@ -2025,7 +2029,7 @@
+     add_cflags -D__gnuc_va_list=va_list -D__USER_LABEL_PREFIX__=
+     CC_DEPFLAGS='-ppa -ppd=$(@:.o=.d)'
+     AS_DEPFLAGS='-MMD'
+-    speed_cflags='-O3 -mf=5'
++    test -z "${speed_cflags}" && speed_cflags='-O3 -mf=5'
+     size_cflags='-O3 -mf=2'
+     filter_cflags=tms470_flags
+     tms470_flags(){
+@@ -2059,7 +2063,7 @@
+     cc_ident=$($cc --version | head -n1)
+     CC_DEPFLAGS='-MMD'
+     AS_DEPFLAGS='-MMD'
+-    speed_cflags='-O3'
++    test -z "${speed_cflags}" && speed_cflags='-O3'
+     size_cflags='-Os'
+ elif $cc -V 2>&1 | grep -q Sun; then
+     cc_type=suncc
+@@ -2067,7 +2071,7 @@
+     cc_ident=$($cc -V 2>&1 | head -n1 | cut -d' ' -f 2-)
+     DEPEND_CMD='$(DEPCC) $(DEPFLAGS) $< | sed -e "1s,^.*: ,$@: ," -e "\$$!s,\$$, \\\," -e "1!s,^.*: , ," > $(@:.o=.d)'
+     DEPFLAGS='$(CPPFLAGS) $(CFLAGS) -xM1'
+-    speed_cflags='-O5'
++    test -z "${speed_cflags}" && speed_cflags='-O5'
+     size_cflags='-O5 -xspace'
+     filter_cflags=suncc_flags
+     suncc_flags(){
+@@ -2109,7 +2113,7 @@
+     cc_ident=$($cc -v 2>&1 | head -n1 | tr -d :)
+     CC_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+     AS_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+-    speed_cflags='-O2'
++    test -z "${speed_cflags}" && speed_cflags='-O2'
+     size_cflags='-Os'
+     filter_cflags='filter_out -Wdisabled-optimization'
+ elif $cc -v 2>&1 | grep -q Open64; then
+@@ -2118,7 +2122,7 @@
+     cc_ident=$($cc -v 2>&1 | head -n1 | tr -d :)
+     CC_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+     AS_DEPFLAGS='-MMD -MF $(@:.o=.d) -MT $@'
+-    speed_cflags='-O2'
++    test -z "${speed_cflags}" && speed_cflags='-O2'
+     size_cflags='-Os'
+     filter_cflags='filter_out -Wdisabled-optimization|-Wtype-limits|-fno-signed-zeros'
+ fi

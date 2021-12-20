@@ -1,0 +1,58 @@
+--- demos/gtk-demo/Makefile.am.orig	2021-10-07 23:08:04.000000000 +0200
++++ demos/gtk-demo/Makefile.am	2021-10-08 00:12:16.000000000 +0200
+@@ -1,7 +1,12 @@
+ ## Makefile.am for gtk+/demos
+ include $(top_srcdir)/Makefile.decl
+ 
++if USE_QUARTZ
++democodedir=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
++main.o: CFLAGS += -xobjective-c
++else
+ democodedir=$(datadir)/gtk-2.0/demo
++endif
+ 
+ ## These should be in the order you want them to appear in the
+ ## demo app, which means alphabetized by demo title, not filename
+--- demos/gtk-demo/main.c.orig	2021-10-07 23:09:05.000000000 +0200
++++ demos/gtk-demo/main.c	2021-10-08 00:26:34.000000000 +0200
+@@ -53,6 +53,40 @@
+ 
+ #define DEMOCODEDIR get_democodedir ()
+ 
++#elif defined(__APPLE__) && (defined GDK_WINDOWING_QUARTZ && defined QUARTZ_RELOCATION)
++# import <Cocoa/Cocoa.h>
++# import <Foundation/NSBundle.h>
++
++static char *
++get_democodedir (void)
++{
++    static char * path = NULL;
++
++    if (path == NULL)
++    {
++        NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
++        gchar *resource_path = g_strdup ([[[NSBundle mainBundle] resourcePath] UTF8String]);
++        gchar *base;
++        [pool drain];
++
++        base = g_path_get_basename (resource_path);
++        if (strcmp (base, "bin") == 0)
++            path = g_path_get_dirname (resource_path);
++        else
++            path = strdup (resource_path);
++        g_free (resource_path);
++        g_free (base);
++
++        if (path == NULL)
++            path = "unknown-location";
++
++        path = g_strconcat (path, DEMOCODEDIR, NULL);
++    }
++
++    return path;
++}
++# undef DEMOCODEDIR
++# define DEMOCODEDIR get_democodedir ()
+ #endif
+ 
+ /**

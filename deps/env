@@ -1,0 +1,1189 @@
+#!/bin/bash
+##############################################################################
+# Copyright (C) 2021 Vincent Sallaberry
+# vegastrike/PrivateerGold
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+##############################################################################
+# Many credits and thanks to macports (https://www.macports.org) for hints and patches
+##############################################################################
+test -x "$0" -a "$0" != "/bin/bash" -a "$0" != "/bin/sh" \
+    && { sourcing=; exit=exit; my0="$0"; } \
+    || { sourcing=yes; exit=return; my0="${BASH_SOURCE[0]}"; }
+test -z "$my0" && my0=$0
+echo "[sourcing:$sourcing my0:$my0 0:$0]"
+
+pushd "`dirname "${my0}"`" > /dev/null \
+&& { mydir="`pwd`"; mypath="${mydir}/`basename "${my0}"`"; popd > /dev/null; } \
+|| { mydir="`dirname "${my0}"`"; mypath="${my0}"; }
+
+## Configuring and Installing
+prefix=/usr/local/vega05
+
+## contains build dependencies eg cmake,meson,autoreconf,xsltproc,nasm,yasm,ninja,pod2man,...
+buildtools_prefix=${CUSTOM_BUILDTOOLS_PREFIX:-/opt/local}
+
+prefix=${CUSTOM_PREFIX:-/usr/local/vega05}
+resources=$(cd "`dirname "$my0"`"; pwd)
+test -L "${resources}" && resources=$(cd "$(readlink "${resources}")"; pwd)
+mergelibs="${resources}/mergelibs.sh"
+export PATH=${prefix}/bin:${prefix}/sbin${MORE_PREFIXES:+:${MORE_PREFIXES}/bin:${MORE_PREFIXES}/sbin}:/usr/bin:/usr/sbin:/bin:/sbin
+export PKG_CONFIG_PATH=${prefix}/lib/pkgconfig${MORE_PREFIXES:+:${MORE_PREFIXES}/lib/pkgconfig}
+compiler=${CC:-clang}
+macos_sdk=
+
+baseoptflags="-pipe -O3 -fstack-protector -mmacosx-version-min=10.7"
+arch=all
+#arch=x86_64
+test "$arch" = "all" && optflags="${baseoptflags} -arch x86_64 -arch i386" \
+                     || optflags="${baseoptflags} -arch ${arch}"
+
+################### FIND COMPILER and SDK
+cc_flags=""
+objc_flags=""
+gcc_cc_flags=""
+gcc_objc_flags=""
+clang_cc_flags=""
+cxx_flags=""
+cxx_ldflags=""
+gcc_cxx_flags=""
+gcc_objc_flags=""
+clang_cxx_flags="-stdlib=libc++"
+clang_cxx_ldflags="-stdlib=libc++"
+gcc_cxx_ldflags=""
+
+! tmp_compiler=$(which "${compiler}") \
+|| ! test -x "${tmp_compiler}" \
+&& { echo "error: compiler '${compiler}' not found."; exit 2; }
+
+############### FIND SDK
+#### FIND SDK
+get_archs() {
+    while test -n "$1"; do
+        case "$1" in -arch) shift; echo "$1";; esac
+    shift; done | sort | uniq | tr '\n' ' '
+}
+if test -n "${macos_sdk}"; then
+    macos_sdk_fwk=${macos_sdk}
+else
+    _test_sdk=$(${compiler} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
+    sysver=$(uname -r)
+    if test ${sysver%%.*} -gt 15; then # 15 is capitan
+        # sierra or later
+        if test -n "${_test_sdk}"; then
+            macos_sdk_fwk=${_test_sdk}
+        else
+            _archs=$(eval get_archs ${optflags})
+            macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+            if test -n "${_archs}"; then
+                # try to find a SDK supporting requested archs
+                for sdk in /Library/Developer/CommandLineTools/SDKs/MacOSX*.sdk; do
+                    if eval lipo $(find "${sdk}/usr/lib" -name '*.o' -o -name '*.a' | head -n1) -verify_arch ${_archs}; then
+                        macos_sdk_fwk=${sdk}
+                        break
+                    fi
+                done
+            fi
+        fi
+        macos_sdk=${macos_sdk_fwk}
+        #tmpdir=$(cd "${macos_sdk}/../.."; pwd)
+        #if case "${tmp_compiler}" in /usr/bin/clang*) true;; *) false;; esac; then
+        #    test -x "${tmpdir}/usr/bin/clang" && tmp_compiler="${tmpdir}/usr/bin/clang"
+        #fi
+    else
+        # capitan or earlier
+        #macos_sdk_fwk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
+        macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        macos_sdk=""
+    fi
+fi
+
+compiler=${tmp_compiler}
+
+case "$(basename "${compiler}")" in
+    clang*) spec_cc_flags="${clang_cc_flags}"; spec_cxx_flags="${clang_cxx_flags}"; spec_cxx_ldflags="${clang_cxx_ldflags}"; spec_objc_flags="${clang_objc_flags}"
+            ;;
+    *) spec_cc_flags="${gcc_cc_flags}"; spec_cxx_flags="${gcc_cxx_flags}"; spec_cxx_ldflags="${gcc_cxx_ldflags}"; spec_objc_flags="${gcc_objc_flags}"
+            ;;
+esac
+cc_dir=$(dirname "${compiler}")
+compiler=$(basename "${compiler}")
+cc_pref=${compiler%%-*}
+cc_suff=${compiler#${cc_pref}}
+
+case "${cc_pref}" in
+    [cg]"++"|cc|gcc) cc_pref=gcc; cxx_pref=g++;;
+    *) cc_pref=${cc_pref%++}; cxx_pref=${cc_pref}++;;
+esac
+
+export CC="${cc_dir}/${cc_pref}${cc_suff}"
+export CXX="${cc_dir}/${cxx_pref}${cc_suff}"
+export CPP="${CC} -E"
+export OBJC="${CC}"
+#export CXXCPP="${CXX} -E"
+export OBJCPP="${OBJC} -E"
+test -x "${cc_dir}/ar"      && export AR="${cc_dir}/ar"
+test -x "${cc_dir}/ranlib"  && export RANLIB="${cc_dir}/ranlib"
+test -x "${cc_dir}/nmedit"  && export NMEDIT="${cc_dir}/nmedit"
+test -x "${cc_dir}/nm"      && export NM="${cc_dir}/nm"
+test -x "${cc_dir}/objdump" && export OBJDUMP="${cc_dir}/objdump"
+
+cc_flags="${spec_cc_flags}${spec_cc_flags:+ }${cc_flags}"
+cxx_flags="${spec_cxx_flags}${spec_cxx_flags:+ }${cxx_flags}"
+cxx_ldflags="${spec_cxx_ldflags}${spec_cxx_ldflags:+ }${cxx_ldflags}"
+objc_flags="${spec_objc_flags}${spec_objc_flags:+ }${objc_flags}"
+
+build_flags() {
+    local optflags=$1
+    export CPPFLAGS="-I${prefix}/include${MORE_PREFIXES:+ -I${MORE_PREFIXES}}"
+    export CPATH=${prefix}/include
+    export LIBRARY_PATH=${prefix}/lib
+    export CFLAGS="${cc_flags}${cc_flags:+ }${optflags}"
+    export CXXFLAGS="${cxx_flags}${cxx_flags:+ }${optflags}"
+    export OBJCFLAGS="${objc_flags}${objc_flags:+ }${optflags}"
+    export LDFLAGS="${optflags} -L${prefix}/lib${MORE_PREFIXES:+ -L${MORE_PREFIXES}/lib}"
+    export CXXLDFLAGS="${cxx_ldflags} ${LDFLAGS}"
+}
+build_flags "${optflags}"
+
+export BISON=/usr/bin/bison
+export  YACC=/usr/bin/bison
+export  FLEX=/usr/bin/flex
+export   LEX=/usr/bin/flex
+#export BISON=${buildtools_prefix}/bin/bison
+#export  YACC=${buildtools_prefix}/bin/bison
+#export  FLEX=${buildtools_prefix}/bin/flex
+#export   LEX=${buildtools_prefix}/bin/flex
+#export BISON="${prefix}/bin/bison"
+#export  YACC=${BISON}
+#export  FLEX="${prefix}/bin/flex"
+#export   LEX=${FLEX}
+
+export CMAKE="${buildtools_prefix}/bin/cmake"
+
+
+archive=
+
+print_variables() {
+    echo "CC          $CC"
+    echo "CFLAGS      $CFLAGS"
+    echo "SDK         ${macos_sdk}"
+    echo "SDK(fwk)    ${macos_sdk_fwk}"
+    echo "PATH        ${PATH}"
+    echo "PKGCONFIG   ${PKG_CONFIG}: ${PKG_CONFIG_PATH}"
+    echo "PREFIX      ${prefix}"
+    echo "resources   $resources"
+    echo
+}
+print_variables
+
+dosha() {
+    for f in `find "${resources}" "${resources}/../deps-gtk" -iname '*.tar.xz'`; do
+        test -f "${f}.sha" || { echo "+ sha-ing '$f'..."; shasum -a256 "${f}" > "${f}.sha"; }
+    done
+}
+
+doconfigure() { (
+    . /usr/local/etc/sh/vutil.sh || {
+        VUTIL_read_n1=wr_read
+        wr_read() {
+            if test -n "${ZSH_VERSION}"; then
+                test -t 0 && read -k 1 "$@" 2> /dev/null || read -u 0 -k 1 "$@"
+            elif test -n "${BASH_VERSION}"; then
+                read -n 1 "$@"
+            else
+                read "$@"; fi
+        }
+        vtab_add() {
+            _tabn=$1; shift; eval "_i=\${#${_tabn}[@]}";
+            for _arg in "$@"; do
+                _i=$((_i+1)); eval "${_tabn}[${_i}]=\${_arg}"; done; }
+        vtab_del() {
+            _tabn=$1; shift; _i=1; eval "_n=\${#${_tabn}[@]}";
+            while test $_i -le $_n; do eval "_elt=\${${_tabn}[${_i}]}";
+                for _arg in "$@"; do
+                    if eval "case \${_elt} in ${_arg}) true;; *) false;; esac"; then
+                        test -n "${ZSH_VERSION}" && eval "${_tabn}[${_i}]=()" \
+                        || eval "unset \"${_tabn}[${_i}]\""
+                    _i=$((_i-1)); _n=$((_n-1)); break ; fi; done; _i=$((_i+1)); done; }
+    }
+    . "${mypath}"
+    while test -n "$arch"; do
+
+        configure_fun "$@"
+
+        ret=$?; test $ret -ne 0 && break
+        case "${arch}" in all) break;; esac
+    done
+
+    return $ret
+) }
+
+yesno() {
+    local _c _ret=1
+    while true; do
+        test -n "$1" && { printf -- "%s " "$@"; }
+        ${VUTIL_read_n1} _c || return 1
+        printf -- '\n'
+        case "${_c}" in
+            y|Y) _ret=0; break ;;
+            n|N) _ret=1; break;;
+        esac
+    done
+    return ${_ret}
+}
+
+configure_fun() {
+
+    umask 0022
+
+    local args; unset args; declare -a args
+    add_args() { vtab_add args "$@"; }
+    del_args() { vtab_del args "$@"; }
+
+    local buildargs; unset buildargs; declare -a buildargs
+    add_buildargs() { vtab_add buildargs "$@"; }
+    del_buildargs() { vtab_del buildargs "$@"; }
+
+    local installargs; unset installargs; declare -a installargs
+    add_installargs() { vtab_add installargs "$@"; }
+    del_installargs() { vtab_del installargs "$@"; }
+
+    local destrootargs; unset destrootargs; declare -a destrootargs
+    add_destrootargs() { vtab_add destrootargs "$@"; }
+    del_destrootargs() { vtab_del destrootargs "$@"; }
+
+    do_postconfigure()  { true; }
+    do_postinstall()    { true; }
+    do_preinstall()     { true; }
+    finish() {
+        local res=$1; shift
+        test -n "$1" && printf -- "$@"
+        popd >/dev/null
+        test -d "${rootdir}" && popd > /dev/null
+        return ${res}
+    }
+
+    local silent= do_install= do_clean=
+    for _arg in "$@"; do
+        case "$_arg" in
+            -HELP|-h|--help) echo "Usage: [-h,--help,-HELP] [-SILENT] [-CLEAN] [-ARCH=arch] [-INSTALL=<pkg>(pkg found in deps/XX_<pkg>)]"; return 1;;
+            -SILENT)  silent=yes; shift;;
+            -FINAL_INSTALL) do_install=yes; shift;;
+            -ARCH=*)  arch=${_arg#-ARCH=}; optflags="-arch ${arch} ${baseoptflags}"; build_flags "${optflags}"; shift;;
+            -CLEAN)   do_clean=yes; shift ;;
+            -INSTALL=*) shift; if test -z "${archive}"; then
+                archive=${_arg#-INSTALL=}; _pkgdir=
+                for f in $(find "${resources}" "${resources}/../deps-gtk" -type f -and -iwholename "*/[0-9][0-9]_${archive}/*.tar.*" \
+                                    -and \( -iname '*.tar.bz2' -or -iname '*.tar.gz' -or -iname '*.tar.xz' \) ); do
+                    { test -n "${silent}" && true; } || { yesno "'$f' : this one ?"; } && {
+                        test -L "${mydir}/build" || mkdir -p "${mydir}/build" && cd "${mydir}/build"  \
+                        && _pkgdir=$(tar tJf "$f" | grep -Ev '^\.' | head -n1) && _pkgdir=${_pkgdir%%/*} \
+                        && test -z "${do_clean}" || { echo "+ deleting ${_pkgdir}..."; rm -Rf "${_pkgdir}" && echo "+ ${_pkgdir} deleted"; } \
+                        && { echo "+ extracting '$f'..."; tar xJf "$f"; } \
+                        && cd "${_pkgdir}" \
+                        || { finish 1; return 1; }
+                        break;
+                    };
+                done \
+                && test -n "${_pkgdir}" || { echo "!! no switable archive found for '${archive}' in ${resources}{,/../deps-gtk}/xx_<$archive>"; return 1; }
+                fi;;
+            *) echo "+ now giving args to configure starting with '$_arg'"; break;;
+        esac
+    done
+    test -z "${silent}" && printf "INTERACTIVE mode enabled, use option '-SILENT' to disable it\n"
+
+    local prog=${configure_prog:-}
+    local base prog_version rootdir=
+
+    if test -z "${prog}"; then
+        base=`pwd`
+        prog_version=${base##*/}
+        base=${base%%-[0-9._]*}
+        #prog_version=${prog_version%%/*}
+        #base=${base%%-[0-9._]*}
+        #rootdir="${base}-${prog_version}"
+        rootdir=$(pwd)
+        prog=${base##*/}
+        prog_version=${prog_version##${prog}-}
+        echo "PROG GUESS = '${prog}' (${prog_version}), root=${rootdir}, can be overriden with configure_prog=-|configure_prog=<something>"
+        test -d "${rootdir}" && pushd "${rootdir}" > /dev/null
+    fi
+
+    local configure="${rootdir}/configure"
+    local builddir=build
+    while test -d "${builddir}" -a \! -f "${builddir}/.vsa-build-sh"; do builddir="${builddir}_"; done
+
+    # BUILD, default make
+    local buildcmd="make"
+    ncpu=$(sysctl hw.ncpu 2> /dev/null | awk '{ print $2 }'); test -z "$ncpu" && ncpu=1;
+    add_buildargs "-j$((ncpu+1))"
+
+    # Final install, cp or rsync (rsync prefered because it erases link if dest is link and src is not)
+    local destroot_all="`pwd`/destroot-all"
+    local destroot="${destroot_all}"
+    local destrootcmd
+    local _rsync=$(which rsync)
+    if test -x "${_rsync}"; then
+        destrootcmd=${_rsync}; add_destrootargs "-ah" "--progress"
+    else
+        destrootcmd=cp; add_destrootargs "-av"
+    fi
+    add_destrootargs "${destroot}/${prefix}" "$(dirname "${prefix}")"
+
+    # install in a temporary destroot
+    local installcmd="make"
+    add_installargs "install"
+    # called when temp. destroot changes (on arch switching)
+    update_destroot() {
+        del_installargs "DESTDIR=*"
+        if test "$configure" = "$MESON"; then
+           export DESTDIR=${destroot}
+        else
+           add_installargs "DESTDIR=${destroot}"
+        fi
+    }
+    update_destroot
+
+    # call this if you need to build one arch at a time
+    build_one_arch() {
+        test "$arch" = "all" && arch=i386
+        case "$arch" in
+            i386)   optflags="${baseoptflags} -arch i386";;
+            x86_64) optflags="${baseoptflags} -arch x86_64";;
+        esac
+        build_flags "${optflags}"
+        echo "** CONFIGURING FOR ARCH $arch..."
+        builddir="build_${arch}"
+        destroot="`pwd`/build_${arch}/destroot"
+        update_destroot
+    }
+    # call this to re-generate configure
+    do_autocmd() {
+        test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS INSTALL README; PATH="$PATH:${buildtools_prefix}/bin"; "$@" && touch .vs_autoreconf_done)
+    }
+    do_autoreconf() {
+        do_autocmd "autoreconf" "$@" -fiv
+    }
+    build_meson() {
+        del_args "*"
+        add_args ${rootdir} "--prefix" "${prefix}" \
+            --cmake-prefix-path "${prefix} ${MORE_PREFIXES} ${prefix}/Library/Frameworks ${MORE_PREFIXES}/Library/Frameworks ${_macos_sdk}/usr" \
+            --build.cmake-prefix-path "${prefix} ${MORE_PREFIXES} ${prefix}/Library/Frameworks ${MORE_PREFIXES}/Library/Frameworks ${_macos_sdk}/usr"
+
+        export PATH="$PATH:${buildtools_prefix}/bin"
+        export PYTHON="${prefix}/bin/python3.9"
+        export PYTHOHOME="${prefix}/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9"
+        unset PYTHONPATH
+        export CMAKE="${buildtools_prefix}/bin/cmake" # -DCMAKE_OSX_SYSROOT=${macos_sdk}"
+        if false && test -x "${prefix}/bin/meson"; then
+            export MESON=meson_fun
+            meson_fun() {
+                PYTHONPATH="${prefix}/lib/python3.9/site-packages/" "${prefix}/bin/meson" "$@"
+            }
+        else
+            export MESON="${buildtools_prefix}/bin/meson"
+        fi
+        export NINJA=${buildtools_prefix}/bin/ninja
+        configure="$MESON"
+        export PERL_PATH=/usr/bin/perl
+        more_pkg=$(cd "${resources}/../deps-gtk"/[0-9][0-9]_"${prog}/pkgconfig"; pwd)
+        #export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${more_pkg}"
+        #  echo "$PKG_CONFIG_PATH"
+        #pkg-config --cflags --libs zlib
+        tmp_IPATH="${prefix}/include:${MORE_PREFIXES}/include:${macos_sdk}/usr/include"
+        export IPATH="${tmp_IPATH}"
+        export CPATH="${tmp_IPATH}"
+        export INCLUDE_PATH="${tmp_IPATH}"
+        export LIBRARY_PATH="${prefix}/lib:${MORE_PREFIXES}/lib:/usr/lib:${macos_sdk}/usr/lib"
+        #export LD_LIBRARY_PATH="${prefix}/lib:${MORE_PREFIXES}/lib:/usr/lib:${macos_sdk}/usr/lib:${buildtools_prefix}/lib"
+        #xport DYLD_LIBRARY_PATH="${prefix}/lib:${MORE_PREFIXES}/lib:/usr/lib:${macos_sdk}/usr/lib:${buildtools_prefix}/lib"
+        if test -n "${macos_sdk}"; then
+            export SDKROOT="${macos_sdk}"
+            export SDK_ROOT="${macos_sdk}"
+            export CMAKE_OSX_SYSROOT="${macos_sdk}"
+            export CPPFLAGS="-isysroot $macos_sdk $CPPFLAGS"
+        fi
+        tmp_flags="--sysroot=$macos_sdk"
+        export CFLAGS="$CFLAGS ${tmp_flags}"
+        export CXXFLAGS="$CXXFLAGS ${tmp_flags}"
+        export OBJCFLAGS="$OBJCFLAGS ${tmp_flags}"
+        #export LDFLAGS="-L/usr/lib -F/System/Library/Frameworks -L${macos_sdk}/usr/lib -F${macos_sdk}/System/Library/Frameworks $LDFLAGS --sysroot=$macos_sdk"
+        export LDFLAGS="-L${prefix}/lib -L${MORE_PREFIXES}/lib -L/usr/lib --sysroot=${macos_sdk} $LDFLAGS"
+        #export CC=${buildtools_prefix}/bin/clang-mp-9.0; export CXX=${buildtools_prefix}/bin/clang++-mp-9.0
+        del_buildargs "*"; buildcmd="$MESON"; add_buildargs "compile" "--verbose"
+        export DESTDIR="$destroot"
+        del_installargs "*"; installcmd="$MESON"; add_installargs "install" # "--destdir" "$destroot"
+    }
+    build_cmake() {
+        # "-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"-DEXAMPLES=OFF
+        configure=${CMAKE}
+        del_args "*"
+        add_args "${rootdir}" \
+                 -DCMAKE_INSTALL_PREFIX="${prefix}" \
+                 -DCMAKE_PREFIX_PATH="${prefix}${MORE_PREFIXES:+;${MORE_PREFIXES}}" \
+                 -DCMAKE_FIND_FRAMEWORK=LAST \
+                 -DCMAKE_C_COMPILER="${CC}" \
+                 -DCMAKE_CXX_COMPILER="${CXX}" \
+                 -DCMAKE_BUILD_TYPE=Release \
+                 -DCMAKE_VERBOSE_MAKEFILE=ON \
+                 -DCMAKE_INSTALL_NAME_DIR="${prefix}/lib" -DCMAKE_INSTALL_RPATH="${prefix}/lib" -DCMAKE_BUILD_NAME_DIR="${prefix}/lib" -DCMAKE_BUILD_RPATH="${prefix}/lib"
+                 #-DCMAKE_SKIP_INSTALL_RPATH=1
+                 #-DCMAKE_MACOSX_RPATH=OFF
+                 #-DCMAKE_INSTALL_REMOVE_ENVIRONMENT_RPATH
+                 #-DCMAKE_SKIP_RPATH=ON
+        add_buildargs VERBOSE=1
+        #-DCMAKE_FIND_ROOT_PATH="${prefix}" -DCMAKE_INSTALL_PREFIX="${prefix}" \
+                 #-DCMAKE_BUILD_TYPE=Release
+                 #-DCMAKE_INSTALL_NAME_DIR="${prefix}/lib" -DCMAKE_INSTALL_RPATH="${prefix}/lib"
+                 #-DCOMPILE_FLAGS="${CFLAGS}" -DLINK_FLAGS="${LDFLAGS}"
+
+        test -n "${macos_sdk}" && add_args -DCMAKE_OSX_SYSROOT="${macos_sdk}"
+    }
+
+    build_optimize_size() {
+        _sedpat="s/[[:space:]]-O[0-9][[:space:]][[:space:]]*/ -Os /g"
+        export CFLAGS=$(echo " ${CFLAGS} " | sed -e "${_sedpat}")
+        export CXXFLAGS=$(echo " ${CXXFLAGS} " | sed -e "${_sedpat}")
+        export OBJCFLAGS=$(echo " ${OBJCFLAGS} " | sed -e "${_sedpat}")
+        export LDFLAGS=$(echo " ${LDFLAGS} " | sed -e "${_sedpat}")
+    }
+
+    add_args --prefix="${prefix}" --disable-silent-rules
+
+    ## PER PROJECT SPECFIC CONFIGURE OPTIONS
+    case "${prog}" in
+        bzip2) builddir=.; configure="make"; del_args "*"; export LDFLAGS="${optflags}"
+               add_args CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
+               add_buildargs CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
+               del_installargs "*"; add_installargs install "PREFIX=${destroot}/${prefix}"
+               for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+               compat_version=${prog_version#*.*.}; compat_version=${prog_version%%.${compat_version}}
+               sed -e "s|__MacPorts_Version__|${prog_version}|g" \
+                   -e "s|__MacPorts_Compatibility_Version__|${compat_version}|g" \
+                   Makefile > Makefile.vs.tmp && mv Makefile.vs.tmp Makefile
+               do_postinstall() {
+                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.${compat_version}.dylib
+                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.${compat_version%%.*}.dylib
+                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.dylib
+               }
+               ;;
+        zlib) del_args --disable-silent-rules;;
+        expat)
+            build_one_arch
+            add_args --without-docbook;;
+        pkg-config)
+            export PKGCONFIG="`which -a pkg-config ${buildtools_prefix}/bin/pkg-config pkg-config | head -n1`"
+            export PKG_CONFIG=${PKGCONFIG}
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            add_args --with-internal-glib --with-pc-path=${prefix}/lib/pkgconfig;;
+        Python)
+            case "${prog_version}" in
+                2.*)
+                    for f in "${resources}/"[0-9][0-9]_"python/patch-27-"*.diff; do patch -N -p0 < "$f"; done
+                    #--enable-ipv6
+                    #--enable-universalsdk="${macos_sdk}" \
+                    add_args \
+                        --with-system-expat \
+                        --with-system-ffi \
+                        --enable-ipv6 \
+                        --enable-framework="${prefix}/Library/Frameworks"
+                        #--enable-shared
+                        ;;
+                3.*)
+                    ###
+                    ### Here is the only thing working at the moment, after patch below, and in a new shell
+                    # PKG_CONFIG_PATH="/usr/local/gtk2/lib/pkgconfig:/usr/local/vega05/lib/pkgconfig:$PKG_CONFIG_PATH" CFLAGS="-O3 -pipe -arch i386 -arch x86_64 -fstack-protector" CXXFLAGS="-O3 -pipe -arch i386 -arch x86_64 -fstack-protector" LDFLAGS="-O3 -pipe -arch i386 -arch x86_64 -fstack-protector" ../configure --prefix=/usr/local/gtk2 --ensurepip=no --enable-framework="/usr/local/gtk2/Library/Frameworks" && ed pyconfig.h < "../../resgtk/"[0-9][0-9]_"python3/pyconfig.h-universal.ed" && make -j9 && sudo make install
+                    unset PYTHONHOME
+                    unset PYTHONPATH
+                    unset PYTHON
+                    unset CPATH IPATH INCLUDE_PATH
+                    unset LIBRARY_PATH
+                    unset PYTHON_HOME
+                    export CFLAGS="$(echo "${CFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    export OBJCFLAGS="$(echo "${OBJCFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    export CPPFLAGS="$(echo "${CPPFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    export CXXFLAGS="$(echo "${CXXFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    export CXXLDFLAGS="$(echo "${CXXLDFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    export LDFLAGS="$(echo "${LDFLAGS}" | sed -e 's/-L[^[:space:]]*//g')"
+                    #export PYTHON=${buildtools_prefix}/bin/python3.9
+                    export PATH="${PATH}:${buildtools_prefix}/bin"
+                    for f in "${resources}/../deps-gtk/"[0-9][0-9]_"python3/patch-"*.diff; do patch -N -p0 < "$f"; done
+                    applications_dir="${prefix}/Library/Applications"
+                    for f in Lib/cgi.py Lib/ctypes/macholib/dyld.py; do sed -e "s|@@PREFIX@@|${prefix}|g" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+                    for f in Makefile.pre.in; do sed -e "s|/setup.py|/setup.py --no-user-cfg|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+                    for f in configure; do sed -e "s|@@APPLICATIONS_DIR@@|${applications_dir}|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+                    do_postconfigure() {
+                        ed - "${builddir}/pyconfig.h" < "${resources}/../deps-gtk/"[0-9][0-9]_"python3/pyconfig.h-universal.ed"
+                    }
+                    #export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+                    chmod +x "${configure}"
+                    add_args \
+                        --with-ensurepip=no \
+                        --enable-framework="${prefix}/Library/Frameworks"
+                    #--enable-ipv6 --with-computed-gotos
+                    #--enable-loadable-sqlite-extensions
+                    #--with-system-expat --with-system-ffi
+                    ;;
+            esac
+            ;;
+        SDL|sdl)
+            add_args \
+                --without-x --enable-joystick --enable-audio
+            do_postconfigure() {
+                (cd "${builddir}/include" && ed - ./SDL_config.h < "${resources}/"[0-9][0-9]_"libsdl/include_SDL_config.h.ed")
+            }
+            ;;
+        SDL_mixer)
+            add_args \
+                --disable-sdltest \
+                --disable-smpegtest \
+                --disable-music-fluidsynth-midi \
+                --enable-music-mod \
+                --disable-music-mod-shared \
+                --disable-music-ogg-shared \
+                --disable-music-flac-shared \
+                --disable-music-mp3-shared
+            ;;
+        SDL2|sdl2)
+            #build_one_arch
+            #optflags=$(echo "${optflags}" | sed -e 's/min=10\.7/min=10.11/')
+            #optflags=$(echo "${optflags}" | sed -e 's/-mmacosx-version-min=[0-9.]*//')
+            #build_flags "${optflags}"
+            #--enable-joystick --enable-audio
+            for f in "${resources}/"[0-9][0-9]_"libsdl2/patch"*.diff; do patch -N -p0 < "$f"; done
+            add_args \
+                --without-x --enable-joystick --enable-audio \
+                --disable-video-metal --disable-render-metal
+            add_buildargs V=1
+            ;;
+        dialog)
+            do_postconfigure() {
+                for f in "${resources}/"[0-9][0-9]_"libdialog/patch"*.diff; do patch -N -p0 < "$f"; done
+            }
+            del_installargs "install"
+            add_installargs "install-full"
+            do_postinstall() {
+                for l in ${destroot}/${prefix}/lib/*.dylib.*; do
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.dylib
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.1.3.dylib
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.dylib.1.3
+                done
+            }
+            add_args --with-shared --without-x
+            #--with-ncursesw
+            ;;
+        SDL2_mixer)
+            add_args \
+                --disable-sdltest \
+                --disable-music-midi-fluidsynth \
+                --disable-music-mp3-mpg123-shared \
+                --disable-music-mod-modplug-shared \
+                --disable-music-ogg-shared \
+                --disable-music-flac-shared \
+                --disable-music-opus-shared
+            ;;
+        ffmpeg)
+            build_one_arch
+            ###build_optimize_size; add_args --enable-small
+            build_optimize_size; add_args --enable-optimizations=-Os
+            test -x "${buildtools_prefix}/bin/pod2man" && export POD2MAN=${buildtools_prefix}/bin/pod2man
+            add_buildargs POD2MAN="${POD2MAN}"
+            PATH=$PATH:${buildtools_prefix}/bin #for nasm,yasm
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            #        --disable-filter=noise
+            del_args "--disable-silent-rules"
+            add_buildargs "V=1"
+            #add_args "--x86asmexe=${buildtools_prefix}/bin/nasm" --cxx="$CXX" --objcc="$CC" --optflags="${optflags}" --enable-sdl \
+            add_args --cc="$CC" \
+                --disable-nonfree \
+                --enable-gpl \
+                --enable-shared --enable-pthreads --arch=$arch \
+                --disable-debug \
+                --enable-ffplay --enable-sdl --disable-outdev=sdl \
+                --enable-libvorbis
+                #--disable-ffplay --disable-sdl --disable-outdev=sdl \
+            ;;
+        smpeg)
+            #CFLAGS="${CFLAGS} --sysroot=${macos_sdk}"
+            CXXFLAGS="${CXXFLAGS} -std=c++98 -stdlib=libc++"
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            rm acinclude.m4
+            add_args \
+                 --without-x \
+                    --disable-gtktest \
+                    --disable-gtk-player \
+                    --enable-static \
+                    --enable-shared \
+                    --disable-sdltest \
+                    --mandir=${prefix}/share/man
+             test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf --include=`pwd`/m4 -fiv && touch .vs_autoreconf_done)
+            ;;
+        flac)
+            PATH=$PATH:${buildtools_prefix}/bin
+            build_one_arch
+            case "$arch" in i386) add_args --disable-asm-optimizations;; esac
+            add_buildargs "OBJ_FORMAT=macho"
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
+            ;;
+        openssl)
+            build_one_arch
+            case "$arch" in
+                i386)   sslarch="darwin-i386-cc";;
+                x86_64) sslarch="darwin64-x86_64-cc";;
+            esac
+            add_args "${sslarch}"
+            del_args "--disable-silent-rules"
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;; #
+        opusfile)
+            #LDFLAGS="${LDFLAGS} -L/usr/lib"
+            #for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
+            ;;
+        libmodplug)
+            PATH="${PATH}:${buildtools_prefix}/bin"
+            do_autoreconf || return 1
+            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        mpg123)
+            build_one_arch
+            case "$arch" in
+                i386)   add_args "--with-cpu=sse";;
+                x86_64) add_args "--with-cpu=x86-64";;
+            esac
+            ;;
+        gdb)
+            binpref="/Library/Developer/CommandLineTools/usr/bin"
+            export OBJDUMP="${binpref}/objdump"
+            export AR="${binpref}/ar"
+            export AS="${binpref}/as"
+            export RANLIB="${binpref}/ranlib"
+            export LD="${binpref}/ld"
+            export STRIP="${binpref}/strip"
+            export NM="${binpref}/nm"
+            export LIPO="${binpref}/lipo"
+            add_args \
+                --datarootdir="${prefix}/share" --datadir="${prefix}/share" \
+                --enable-nls --enable-libada \
+                --with-system-zlib --with-gmp="${prefix}" --with-mpfr="${prefix}" --with-mpc="${prefix}" \
+                --with-isl="${prefix}"
+            add_buildargs "V=1"
+            case "${prog_version}" in
+                7.*)
+                    export DATAROOTDIR="${prefix}/share/gdb7"
+                    export DATADIR="${DATAROOTDIR}"
+                    export LOCALEDIR="${DATADIR}/locale"
+                    export GNULOCALEDIR="${LOCALEDIR}"
+                    destroot="`pwd`/${builddir}/destroot"
+                    do_preinstall() {
+                        printf -- "+ preinstall\n"
+                        local new base ext name dir
+                        "${buildcmd}" -C "${builddir}" install DESTDIR="${destroot}" \
+                        && mv -v "${destroot}/${prefix}/share/locale" "${destroot}/${prefix}/share/gdb7" \
+                        && for f in `find ${destroot}/${prefix}/{bin,share/info,share/man} -type f`; do
+                            name="`basename "${f}"`"
+                            dir="`dirname "${f}"`"
+                            base="${name%.*}"
+                            test "${base}" = "${name}" && ext= || ext=".${name##*.}"
+                            new="${dir}/${base}7${ext}"
+                            mv -v "${f}" "${new}" || return 1
+                        done \
+                        && yesno "+ preinstall done, INSTALL ?"
+                    }
+                    installcmd="cp"
+                    del_installargs "*"
+                    add_installargs "-av" "${destroot}/${prefix}" "${prefix}/.."
+                    del_args "--datarootdir=*" "--datadir=*"
+                    add_args --enable-libjava \
+                        --datarootdir="${prefix}/share/gdb7" --datadir="${prefix}/share/gdb7" \
+                        --includedir="${prefix}/include/gdb7" --localedir="${prefix}/share/gd7/locale" \
+                        --mandir="${prefix}/share/man" --infodir="${prefix}/share/info" \
+                        --libdir="${prefix}/lib/gdb7" \
+                        LOCALEDIR="${LOCALEDIR}" GNULOCALEDIR="${GNULOCALEDIR}" DATADIR="${DATADIR}" DATAROOTDIR="${DATAROOTDIR}" \
+                        build_configargs="--datarootdir=${prefix}/share/gdb7 --datadir=${prefix}/share/gdb7 \
+                            --includedir=${prefix}/include/gdb7 --localedir=${prefix}/share/gd7/locale \
+                            --mandir=${prefix}/share/man --infodir=${prefix}/share/info --libdir=${prefix}/lib/gdb7 \
+                            LOCALEDIR=${LOCALEDIR} GNULOCALEDIR=${GNULOCALEDIR} DATADIR=${DATADIR} DATAROOTDIR=${DATAROOTDIR}"
+                    #--bindir=DIR            user executables [EPREFIX/bin]
+                    #--sbindir=DIR           system admin executables [EPREFIX/sbin]
+                    #--libexecdir=DIR        program executables [EPREFIX/libexec]
+                    #--sysconfdir=DIR        read-only single-machine data [PREFIX/etc]
+                    #--sharedstatedir=DIR    modifiable architecture-independent data [PREFIX/com]
+                    #--localstatedir=DIR     modifiable single-machine data [PREFIX/var]
+                    #--libdir=DIR            object code libraries [EPREFIX/lib]
+                    #--includedir=DIR        C header files [PREFIX/include]
+                    #--oldincludedir=DIR     C header files for non-gcc [/usr/include]
+                    #--datarootdir=DIR       read-only arch.-independent data root [PREFIX/share]
+                    #--datadir=DIR           read-only architecture-independent data [DATAROOTDIR]
+                    #--infodir=DIR           info documentation [DATAROOTDIR/info]
+                    #--localedir=DIR         locale-dependent data [DATAROOTDIR/locale]
+                    #--mandir=DIR            man documentation [DATAROOTDIR/man]
+                    #--docdir=DIR            documentation root [DATAROOTDIR/doc/PACKAGE]
+                    #--htmldir=DIR           html documentation [DOCDIR]
+                    #--dvidir=DIR            dvi documentation [DOCDIR]
+                    #--pdfdir=DIR            pdf documentation [DOCDIR]
+                    #--psdir=DIR             ps documentation [DOCDIR]
+                    ;;
+            esac
+            ;;
+        ncurses) # --with-manpage-format=normal --disable-mixed-case --disable-lib-suffixes \
+            nc_ada=
+            nc_cxx=ncurses++
+            do_postinstall() {
+                check_w_suffix() {
+                    local _lib _f=$1
+                    local _ext=${_f##*.}
+                    _f=${_f%.*}
+                    local _basef=$(basename "${_f}")
+                    test "${_f}" = "${_ext}" && _ext= || case "$1" in *.dylib) _ext=.${nc_ver}.${_ext};; *) _ext=.${_ext};; esac
+                    echo "** ${_f} (${_ext})"
+                    if test -f "${_f}w${_ext}" -a \! \( -f "${_f}${_ext}" -o -L "${_f}${_ext}" \); then
+                        rm -f "${_f}${_ext}"
+                        mv -v "${_f}w${_ext}" "${_f}${_ext}"
+                        case "${_ext}" in *.dylib)
+                            install_name_tool -id "${_f#${destroot}/}${_ext}" "${_f}${_ext}"
+                            for _lib in `otool -L "${_f}${_ext}" | awk '{ print $1 }'`; do
+                                echo "  + ${_lib}"
+                                case "${_lib}" in
+                                    "${prefix}/lib/"lib*w.*.dylib)
+                                        install_name_tool -change "${_lib}" "${_lib%w.*.dylib}.${nc_ver}.dylib" "${_f}${_ext}";;
+                                esac
+                            done
+                        esac
+                    fi
+                    if test -f "${_f}${_ext}" -a \( \! -f "${_f}w${_ext}" -o -L "${_f}w${_ext}" \); then
+                        rm -f "${_f}w${_ext}"
+                        ln -sf "${_basef}${_ext}" "${_f}w${_ext}"
+                        local _ver=.${nc_ver}
+                        while case "$1" in *.dylib) true;; *) false;; esac; do
+                            case "${_ver}" in .*) _ver=${_ver%.*};; *) _ver=;; esac
+                            ln -sfv "${_basef}${_ext}" "${_f}${_ver}.dylib"
+                            ln -sfv "${_basef}${_ext}" "${_f}w${_ver}.dylib"
+                            test -z "${_ver}" && break ;
+                        done
+                    fi
+                }
+                echo "!! need to do links to ncurses*w in lib and lib/pkgconfig !!"
+                for f in form menu ncurses ${nc_cxx} panel; do
+                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.dylib"
+                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.a"
+                    check_w_suffix "${destroot}/${prefix}/lib/pkgconfig/${f}.pc"
+                done
+                ln -sfv "libncurses.dylib" "${destroot}/${prefix}/lib/libtermcap.dylib"
+                f="${destroot}/${prefix}/bin/ncurses"
+                for s in ${nc_ver} ""; do
+                    if test -f "${f}w${s}-config" -a \! -L "${f}w${s}-config"; then
+                        mv -v "${f}w${s}-config" "${f}${s}-config"
+                        ln -sv "$(basename "${f}${s}-config")" "${f}w${s}-config"
+                        ln -sv "$(basename "${f}${s}-config")" "${f}-config"
+                    fi
+                done
+                test -z "$nc_ada" || ln -sfv "../../${libAdaCursesSO}" "${destroot}/${prefix}/lib/ada/adalib/${libAdaCursesSO}"
+                echo "and install_name_tool -id ${prefix}/lib/${libAdaCursesSO} ${destroot}/${prefix}/lib/${libAdaCursesSO}"
+                test -z "$nc_ada" || install_name_tool -id "${prefix}/lib/${libAdaCursesSO}" "${destroot}/${prefix}/lib/${libAdaCursesSO}"
+            }
+            do_postconfigure() {
+                printf "+ postconfigure\n"
+                case "${prog_version}" in
+                    6.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses-post-configure-patch-curses-head.diff";;
+                    5.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses5-post-configure-patch-curses-head.diff";;
+                esac
+            }
+            export LDFLAGS="${optflags} "
+            export CXXLDFLAGS="${cxx_ldflags} ${optflags} "
+            export CPPFLAGS=
+            echo $CXXLDFLAGS
+            libAdaCursesSO="libAdaCurses.dylib"
+            patch -N -p0 < "${resources}/"[0-9][0-9]_"ncurses/patch-ncurses-cxxldflags.diff"
+            #export TERMINFO_DIRS="/usr/share/terminfo:${prefix}/share/terminfo:/usr/local/share/terminfo"
+            add_args \
+                --disable-mixed-case \
+                --disable-lib-suffixes \
+                --enable-widec \
+                --enable-overwrite \
+                --with-shared \
+                --with-cxx-shared \
+                --without-debug  \
+                --with-pkg-config-libdir="${prefix}/lib/pkgconfig" \
+                --enable-pc-files \
+                --with-terminfo-dirs="/usr/share/terminfo:${prefix}/share/terminfo:/usr/local/share/terminfo" \
+                #--with-shlib-version=rel #rel | abi
+                #--with-default-terminfo-dir="/usr/share/terminfo"
+            test -n "${ada}" && add_args --with-ada --with-ada-sharedlib="${libAdaCursesSO}"
+            case "${prog_version}" in
+                5.*) nc_ver=5.4; add_args --with-abi-version=5.4 --with-abi-version=${nc_ver} --without-cxx-binding; nc_cxx=;;
+                *) nc_ver=${prog_version%%.*};;
+            esac
+            ;;
+
+        libffi) build_one_arch;;
+        glib) build_one_arch
+              build_meson
+              for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+              for f in meson.build; do sed -e "s|@PYTHON@|${PYTHON}|" "$f" > "$f".tmp && mv "$f".tmp "$f"; done
+              for f in gio/gdbusprivate.c gio/xdgmime/xdgmime.c glib/gi18n-lib.h glib/gi18n.h gio/gdbusaddress.c; do sed -e "s|@PREFIX@|${prefix}|g" "$f" > "$f".tmp && mv -v "$f".tmp "$f"; done
+              for f in glib/gutils.c; do sed -e "s|data_dirs = \"/usr|data_dirs = \"${prefix}/share:/usr|g" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+              for f in glib/gutils.c glib/gspawn.c; do sed -e "s|path = \"/bin|path = \"${prefix}/bin:/bin|g" "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+              do_postconfigure() {
+                  grep -E -q "G_VA_COPY_AS_ARRAY" "${builddir}/config.h" || echo "#define G_VA_COPY_AS_ARRAY 1" >> "${builddir}/config.h"
+                  (cd "${builddir}" && ed - ./config.h < "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/config.h.ed")
+              }
+              tmp_flags="--sysroot=$macos_sdk -fstrict-aliasing"
+              export CFLAGS="$CFLAGS ${tmp_flags}"
+              export CXXFLAGS="$CXXFLAGS ${tmp_flags}"
+              export OBJCFLAGS="$OBJCFLAGS ${tmp_flags}"
+              build_optimize_size
+              add_args \
+                       -Ddefault_library=both \
+                       -Dbuildtype=release \
+                       -Ddtrace=false \
+                       -Dappinfo_backend=native #-Dstrip=true
+              ;;
+        atk)
+            build_one_arch
+            build_meson
+            add_args -Dintrospection=false -Ddefault_library=both -Dbuildtype=release #-Dstrip=true
+            build_optimize_size
+            ;;
+        libjpeg-turbo)
+            build_one_arch
+            build_cmake
+            add_args "-DWITH_JPEG8=1"
+            export ASM_NASM=${buildtools_prefix}/bin/nasm
+            ;;
+        jasper)
+            build_cmake
+            add_args -DJAS_ENABLE_AUTOMATIC_DEPENDENCIES=false \
+                     -DGLUT_glut_LIBRARY=/System/Library/Frameworks/GLUT.framework \
+                     -DJAS_ENABLE_DOC=false
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        gdk-pixbuf)
+            build_one_arch
+            build_meson
+            export CFLAGS="-std=c99 ${CFLAGS}"
+            export XSLTPROC=${buildtools_prefix}/bin/xsltproc
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            add_args -Ddefault_library=both \
+                     -Dbuildtype=release \
+                     -Dintrospection=disabled \
+                     -Ddocs=false \
+                     -Dgtk_doc=false \
+                     -Dx11=false \
+                     -Djasper=true \
+                     -Drelocatable=true \
+                     -Dbuiltin_loaders=all #-Dstrip=true
+                # + 'builtin_loaders=all': Without this, image loaders are in $prefix/lib/gdk-pixbuf-2.0/2.10.0/loaders
+                #   and references in lib/gdk-pixbuf-2.0/2.10.0/loaders.cache
+                # + 'relocatable=true': not sure it is needed when builtin_loaders=all
+                #-Dgio_sniffing=false
+            build_optimize_size
+            do_postinstall() {
+                if test -d "${destroot}/${prefix}/lib/gdk-pixbuf-2.0/2.10.0/loaders"; then
+                    echo "+ gdk-pixbuf-query-loaders..."
+                    DYLD_FALLBACK_LIBRARY_PATH="${destroot}/${prefix}/lib:${destroot}/${prefix}/gdk-pixbuf-2.0/2.10.0/loaders" \
+                        "${destroot}/${prefix}/bin/gdk-pixbuf-query-loaders" > "${destroot}/${prefix}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+                fi
+            }
+            ;;
+        zstd) builddir=.; configure="make"; del_args "*"; #export LDFLAGS="${optflags}"
+              add_args "-j$((ncpu+1))" V=1 #CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
+              export PREFIX=${prefix}
+              add_buildargs "-j$((ncpu+1))" #CC="$CC" CFLAGS="$CFLAGS"  PREFIX="${prefix}" #LDFLAGS="$LDFLAGS"
+              #del_installargs "*"; add_installargs install "PREFIX=${destroot}/${prefix}"
+              #for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+              ;;
+        tiff) add_args \
+                --with-x=no \
+                --with-docdir=${prefix}/share/doc/tiff \
+                --with-jpeg-include-dir=${MORE_PREFIXES}/include \
+                --with-jpeg-lib-dir=${MORE_PREFIXES}/lib \
+                --with-lzma-include-dir=${MORE_PREFIXES}/include \
+                --with-lzma-lib-dir=${MORE_PREFIXES}/lib \
+                --with-zlib-include-dir=${macos_sdk}/usr/include \
+                --with-zlib-lib-dir=${macos_sdk}/lib \
+                --with-zstd-include-dir=${prefix}/include \
+                --with-zstd-lib-dir=${prefix}/lib
+            mv -v "${rootdir}/VERSION" "${rootdir}/VERSION.txt"
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        cairo)
+            add_args \
+                ac_cv_lib_lzo2_lzo2a_decompress=no \
+                ac_cv_prog_GS="" \
+                --disable-gl \
+                --enable-quartz \
+                --enable-quartz-font \
+                --enable-quartz-image \
+                --disable-silent-rules \
+                --disable-symbol-lookup \
+                --disable-xlib \
+                --disable-xlib-xcb \
+                --disable-xcb \
+                --disable-xcb-shm \
+                --without-x \
+                --enable-ft \
+                --enable-pdf \
+                --enable-png \
+                --enable-ps \
+                --enable-script \
+                --enable-svg \
+                --enable-tee \
+                --enable-xml
+            build_optimize_size
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        harfbuzz)
+            add_args \
+                --disable-silent-rules \
+                ac_cv_prog_AWK=/usr/bin/awk
+            build_optimize_size
+            ;;
+        fribidi)
+            export CC_FOR_BUILD=${CC}
+            export CPP_FOR_BUILD=${CPP}
+            add_args \
+                --enable-static \
+                --disable-silent-rules
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_autoreconf
+            ;;
+        pango)
+            add_args \
+                --with-coretext \
+                --enable-static \
+                --disable-silent-rules \
+                --without-xft \
+                --enable-gtk-doc-html=no \
+                --enable-introspection=no
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        freetype)
+            add_args \
+                --without-brotli \
+                --with-bzip2 \
+                --with-png \
+                --with-zlib \
+                --without-harfbuzz \
+                ac_cv_prog_AWK=/usr/bin/awk
+            ;;
+        fontconfig)
+            add_args \
+                --disable-silent-rules \
+                --enable-iconv \
+                --enable-shared \
+                --enable-static \
+                --with-expat=${MORE_PREFIXES} \
+                --with-libiconv=${MORE_PREFIXES} \
+                --with-libiconv-prefix=${MORE_PREFIXES} \
+                --with-libintl-prefix=${MORE_PREFIXES} \
+                HASDOCBOOK=no \
+                ac_cv_func_mkostemp=no \
+                --with-add-fonts="/Library/Fonts,/Network/Library/Fonts,/System/Library/Fonts"
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            ;;
+        pixman)
+            add_args \
+                ac_cv_prog_AWK=/usr/bin/awk \
+                ac_cv_path_GREP=/usr/bin/grep \
+                lt_cv_path_SED=/usr/bin/sed \
+                --disable-gtk \
+                --disable-libpng \
+                --disable-mmx
+            add_buildargs V=1
+            ;;
+        shared-mime-info)
+            build_one_arch
+            build_meson
+            add_args -Ddefault_library=both -Dbuildtype=release #-Dstrip=true
+            ;;
+        gtk+)
+            build_one_arch
+            #PATH=$PATH:${buildtools_prefix}/bin
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"gtk2/patch"*.diff; do patch -N -p0 < "$f"; done
+            rm -v "${rootdir}"/{gdk/gdkalias.h,gdk/gdkaliasdef.c,gtk/gtkalias.h,gtk/gtkaliasdef.c}
+            do_autoreconf
+            add_args \
+                --enable-static \
+                --enable-shared \
+                --disable-debug \
+                --disable-glibtest \
+                gio_can_sniff=yes \
+                --without-x \
+                --with-gdktarget=quartz \
+                --enable-quartz-relocation \
+                --disable-modules       #  disable dynamic module loading
+            do_postinstall() {
+                if test -d "${destroot}/${prefix}/lib/gtk-2.0/2.10.0/immodules"; then
+                    DYLD_LIBRARY_PATH=${destroot}/${prefix}/lib \
+                        ${destroot}/${prefix}/bin/gtk-query-immodules-2.0 \
+                        ${destroot}/${prefix}/lib/gtk-2.0/2.10.0/immodules/*.so \
+                        >${destroot}/${prefix}/etc/gtk-2.0/gtk.immodules
+                    sed -e "s|${destroot}|/|" ${destroot}/${prefix}/etc/gtk-2.0/gtk.immodules \
+                        > gtkmods.tmp && mv -v gtkmods.tmp ${destroot}/${prefix}/etc/gtk-2.0/gtk.immodules
+                fi
+            }
+            export CPPFLAGS="${CPPFLAGS} -DX_LOCALE -D_IPP_PRIVATE_STRUCTURES=1"
+            export CFLAGS="${CFLAGS} -fstrict-aliasing"
+            build_optimize_size
+            ;;
+        meson)
+            configure="${buildtools_prefix}/bin/python3.9"
+            buildcmd=true
+            del_args "*"; add_args "${rootdir}/setup.py" "build"
+            builddir=${rootdir}/build
+            install_fun() { cd "${rootdir}" && "${configure}" "$@"; }
+            del_installargs "*"; installcmd="install_fun"
+            add_installargs "${rootdir}/setup.py" "install" --prefix "${prefix}" --root "${destroot}"
+            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            for f in data/shell-completions/bash/meson mesonbuild/coredata.py; do sed -e "s|@@PREFIX@@|${prefix}|g" "$f" > "$f".tmp && mv -v "$f".tmp "$f"; done
+            do_postconfigure() { true; }
+            do_postinstall() {
+                #tmp_python_prefix=${frameworks_dir}/Python.framework/Versions/3.9
+                #ln -s  ${tmp_python_prefix}/bin/meson ${destroot}/${prefix}/bin/meson
+                #ln -s  ${tmp_python_prefix}/share/man/man1/meson.1 ${destroot}/${prefix}/share/man/man1
+                # install MacPorts cross files
+                mkdir -p ${destroot}/${prefix}/share/meson/
+                cp -R "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/cross" ${destroot}/${prefix}/share/meson/
+                for f in ${destroot}/${prefix}/share/meson/cross/*; do
+                    test -f "${f}" \
+                    && sed -e "s|@@PREFIX@@|${prefix}|g" "$f" > "$f".tmp && mv -v "$f".tmp "$f"
+                done
+            }
+            ;;
+        gobject-introspection) #build_one_arch
+              PATH=$PATH:${buildtools_prefix}/bin
+              for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+              for f in configure.ac; do sed -e "s|libcairo-gobject.2.dylib|${prefix}/lib/libcairo-gobject.2.dylib|g" "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+              for f in giscanner/shlibs.py; do sed -e "s|@MP_LIB@|${prefix}/lib/|g"  "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+              #add_args --enable-introspection=no
+              do_autoreconf
+              #myautogen() { ( export PATH="${PATH}:${buildtools_prefix}/bin"; "${rootdir}/autogen.sh"; ); }
+              #configure=myautogen
+              add_buildargs "V=1"
+              export LIBTOOL=${buildtools_prefix}/bin/glibtool
+              export PYTHON=${prefix}/bin/python3.9
+              export PYTHOHOME="${prefix}/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9"
+              unset PYTHONPATH
+
+              export DYLD_FALLBACK_LIBRARY_PATH="${PYTHONHOME}/lib:${DYLD_FALLBACK_LIBRARY_PATH}"
+              ;;
+
+        *)
+            echo "+ configure: using GENERIC configuration for '$prog'" > /dev/stderr ;;
+    esac
+
+    # Go to builddir
+    echo
+    echo "+ BUILDING in ${builddir}"
+    test -n "${do_clean}" && test -d "${builddir}" \
+        && { rm -Rf "${builddir}" && echo "+ builddir deleted ($builddir)" && do_clean=; }
+    mkdir -p "${builddir}" && pushd "${builddir}" > /dev/null
+    builddir=$(pwd)
+    touch "${builddir}/.vsa-build-sh"
+    print_variables
+
+    # Handle INSTALL mode
+    if test -n "${do_install}"; then
+        echo "+ ${destrootcmd} ${destrootargs[@]}"
+        "${destrootcmd}" "${destrootargs[@]}"
+        ret=$?
+        chown -Rh root:wheel "${prefix}"
+        arch=
+        return $ret
+    fi
+
+    #
+    ### CONFIGURE
+    #
+    add_args "$@"
+    echo "** CONFIGURE **"
+    printf -- "$configure \\ \n"
+    printf -- "  %s \\ \n" "${args[@]}"
+    printf -- '\n'
+    if test -n "${silent}" || yesno "+ configure ?"; then
+        eval configure=${configure}
+        "$configure" "${args[@]}" && do_postconfigure "${args[@]}" \
+                && printf "+ configure OK, " \
+                || { finish $?; return $?; }
+    else printf "+ configure skipped, "; fi
+
+    #
+    ### BUILD
+    #
+    if test -n "${silent}" || yesno "build (${buildcmd} ${buildargs[@]}) ?"; then
+        eval buildcmd=${buildcmd}
+        echo "+ ${buildcmd} ${buildargs[@]}"
+        "${buildcmd}" "${buildargs[@]}" && printf "+ build OK, " \
+        || { finish $?; return $?; }
+    else printf "+ build skipped, "; fi
+
+    #
+    ### INSTALL in destroot
+    #
+    create_pkginfo() {
+        pushd "${destroot}" >/dev/null 2>&1 && {
+            mkdir -p "./${prefix}/var/vpkg" && {
+                find . > "./${prefix}/var/vpkg/${prog}.list"
+                tar cJ --exclude "./${prefix}/var/vpkg/${prog}.tar.xz" -f "./${prefix}/var/vpkg/${prog}.tar.xz" .; }
+            popd >/dev/null 2>&1; }
+    }
+    if test -n "${silent}" || yesno "install in destroot (${installcmd} ${installargs[@]}) ?"; then
+        eval installcmd=${installcmd}
+        echo "+ ${installcmd} ${installargs[@]}"
+        do_preinstall "${args[@]}" || { finish $?; return $?; }
+        "$installcmd" "${installargs[@]}" && printf "+ install_destroot OK, " \
+        || { finish $?; return $?; }
+        do_postinstall || { finish $?; return $?; }
+        create_pkginfo
+    else printf "+ install_destroot skipped, "; fi
+
+    #
+    ### FINAL INSTALL
+    #
+    # Leave builddir
+    popd > /dev/null
+
+    case "${arch}" in
+        all)arch=;;
+        x86_64)
+            if test -n "${silent}" || yesno "install done on last arch, merge ?"; then
+                destroot=${destroot_all}
+                $mergelibs -N build_i386 build_x86_64 "${destroot}" || { finish $?; return $?; }
+                create_pkginfo
+            fi
+            arch=;;
+        i386)
+            arch=x86_64
+            rm -f "${rootdir}/.vs_autoreconf_done"
+            return 0;;
+    esac
+
+    if test -n "${silent}" || yesno "FINAL INSTALL?"; then
+        #__suxdo bash -c "\". ${mypath}; doconfigure -FINAL_INSTALL\""
+        for ((_i=0; i<3; i=i+1)); do
+            su adm -c "sudo su root -c \"export CUSTOM_PREFIX='${prefix}'; export MORE_PREFIXES='${MORE_PREFIXES}'; . ${mypath}; doconfigure -FINAL_INSTALL\"" && break
+            yesno "retry?" || { finish $?; return $?; }
+        done \
+        || { finish $?; return $?; }
+    fi
+
+    ## END
+    finish $?; return $?
+}
+
+

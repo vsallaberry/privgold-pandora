@@ -1,0 +1,40 @@
+--- gtk/Makefile.am.orig	2021-10-04 22:51:10.000000000 +0200
++++ gtk/Makefile.am	2021-10-04 22:51:12.000000000 +0200
+@@ -16,8 +16,8 @@
+ GTK_PRINT_PREVIEW_COMMAND="evince --unlink-tempfile --preview --print-settings %s %f"
+ endif
+ 
+-SUBDIRS = theme-bits . tests
+-DIST_SUBDIRS=theme-bits tests
++SUBDIRS = theme-bits . #tests
++DIST_SUBDIRS=theme-bits #tests
+ 
+ if HAVE_PAPI_CUPS
+ GTK_PRINT_BACKENDS=file,papi,cups
+@@ -851,7 +851,7 @@
+ 	$(GLIB_GENMARSHAL) --prefix=_gtk_marshal $(srcdir)/gtkmarshalers.list --header >> xgen-gmlh \
+ 	&& (cmp -s xgen-gmlh gtkmarshalers.h || cp xgen-gmlh gtkmarshalers.h) \
+ 	&& rm -f xgen-gmlh \
+-	&& echo timestamp > $(@F)	
++	&& echo timestamp > $(@F)
+ gtkmarshalers.c: @REBUILD@ gtkmarshalers.list
+ 	(echo "#include \"gtkmarshalers.h\""; \
+ 	 echo "#include \"gtkalias.h\""; \
+@@ -935,7 +935,7 @@
+ endif
+ EXTRA_LTLIBRARIES = libgtk-x11-2.0.la libgtk-win32-2.0.la libgtk-quartz-2.0.la libgtk-directfb-2.0.la
+ 
+-install-exec-hook: 
++install-exec-hook:
+ if DISABLE_EXPLICIT_DEPS
+ 	$(SHELL) $(top_srcdir)/sanitize-la.sh $(DESTDIR)$(libdir)/$(gtktargetlib)
+ endif
+@@ -1136,7 +1136,7 @@
+ 
+ gtk_update_icon_cache_DEPENDENCIES = $(GTK_UPDATE_ICON_CACHE_MANIFEST_OBJECT)
+ gtk_update_icon_cache_LDADD = $(GDK_PIXBUF_LIBS) $(GTK_UPDATE_ICON_CACHE_MANIFEST_OBJECT)
+-gtk_update_icon_cache_SOURCES = updateiconcache.c 
++gtk_update_icon_cache_SOURCES = updateiconcache.c
+ 
+ .PHONY: files test test-debug
+ 

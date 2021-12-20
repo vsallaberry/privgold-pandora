@@ -1,0 +1,14 @@
+--- include/curses.head.orig	2020-01-31 14:42:01.000000000 +0100
++++ include/curses.head	2020-01-31 14:47:01.000000000 +0100
+@@ -220,7 +220,11 @@
+ #undef FALSE
+ #define FALSE   0
+ 
++#if defined(__LP64__) || !defined(__POWERPC__)
+ typedef unsigned char NCURSES_BOOL;
++#else
++typedef unsigned int NCURSES_BOOL;
++#endif
+ 
+ #if defined(__cplusplus)	/* __cplusplus, etc. */
+ 

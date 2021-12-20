@@ -1,0 +1,44 @@
+--- configure.orig	2021-10-07 19:49:29.000000000 +0200
++++ configure	2021-10-07 20:01:16.000000000 +0200
+@@ -158,6 +158,7 @@
+   --list-filters           show all available filters
+ 
+ External library support:
++  --enable-sdl             enable sdl [autodetect]
+   --enable-avisynth        enable reading of AVISynth script files [no]
+   --enable-bzlib           enable bzlib [autodetect]
+   --enable-libcelt         enable CELT/Opus decoding via libcelt [no]
+@@ -966,6 +967,7 @@
+     rdft
+     rtpdec
+     runtime_cpudetect
++    sdl
+     shared
+     sinewin
+     small
+@@ -2960,6 +2962,7 @@
+ enabled libxvid    && require  libxvid xvid.h xvid_global -lxvidcore
+ enabled mlib       && require  mediaLib mlib_types.h mlib_VectorSub_S16_U8_Mod -lmlib
+ 
++if enabled sdl; then
+ SDL_CONFIG="${cross_prefix}sdl-config"
+ if check_pkg_config sdl SDL_version.h SDL_Linked_Version; then
+     check_cpp_condition SDL.h "(SDL_MAJOR_VERSION<<16 | SDL_MINOR_VERSION<<8 | SDL_PATCHLEVEL) >= 0x010201" $sdl_cflags &&
+@@ -2975,7 +2978,8 @@
+     check_struct SDL.h SDL_VideoInfo current_w $sdl_cflags && enable sdl_video_size
+   fi
+ fi
+-enabled sdl && add_cflags $sdl_cflags && add_extralibs $sdl_libs
++enabled sdl && enabled sdl_outdev && add_cflags $sdl_cflags && add_extralibs $sdl_libs
++fi
+ 
+ texi2html -version > /dev/null 2>&1 && enable texi2html || disable texi2html
+ 
+@@ -3261,6 +3265,7 @@
+ echo "libxvid enabled           ${libxvid-no}"
+ echo "zlib enabled              ${zlib-no}"
+ echo "bzlib enabled             ${bzlib-no}"
++echo "sdl enabled               ${sdl-no}"
+ echo
+ 
+ for type in decoder encoder hwaccel parser demuxer muxer protocol filter bsf indev outdev; do

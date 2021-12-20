@@ -1,0 +1,53 @@
+--- makefile.orig	2021-09-17 16:20:20.000000000 +0200
++++ makefile	2021-09-17 16:30:53.000000000 +0200
+@@ -131,6 +131,8 @@
+ ACTUAL_PROG	= `echo $(PACKAGE) |sed s,x,x,`
+ LIB_CONFIG	= $(CFG_ROOTNAME)-config
+ 
++LIB2=$(LIB_PREFIX)$(LIB_ROOTNAME).a
++
+ # The library name $(LIB) is set at configure/make time, since it is used as a
+ # makefile target.  Ditto for $(PROG).
+ LIB		= ${LIB_ABI_NAME}
+@@ -190,7 +192,7 @@
+ 	dlg_config.h \
+ 	dlg_keys.h
+ 
+-ALL		= $(LIB) $(PROG)
++ALL		= $(LIB) $(LIB2) $(PROG)
+ 
+ BIN_DIRS	= $(BINDIR) $(MAN1DIR)
+ LIB_DIRS	= $(LIBDIR) $(INCLUDEDIR)
+@@ -204,14 +206,18 @@
+ 
+ # :
+ #	@echo "Building GNU gettext library..."
+-#	@cd intl && $(MAKE) 
++#	@cd intl && $(MAKE)
+ 
+ dialog$o \
+ $(OBJECTS) : $(srcdir)/dialog.h $(srcdir)/dlg_keys.h dlg_config.h VERSION
+ 
+-$(PROG)$x : $(LIB) dialog$o # 
++$(PROG)$x : $(LIB) dialog$o #
+ 	$(LINK) -o $@ dialog$o -L. -ldialog $(CFLAGS) $(LDFLAGS) $(LIBS)
+ 
++$(LIB2): $(OBJECTS)
++	#$(AR) cru $(LIB2) $(OBJECTS)
++	libtool -static -o $(LIB2) $(OBJECTS) #$(RANLIB) $(LIB2)
++
+ clean	\
+ distclean \
+ install \
+@@ -276,9 +282,10 @@
+ 	@ echo "** installing config script in $(BINDIR)"
+ 	@ $(INSTALL_SCRIPT) dialog-config $(BINDIR)/$(LIB_CONFIG)
+ 
+-install-lib :: $(LIB_DIRS) $(LIB) headers.sed
++install-lib :: $(LIB_DIRS) $(LIB) $(LIB2) headers.sed
+ 	@ echo "** installing library in $(LIBDIR)"
+ 	@ $(LIBTOOL_INSTALL) $(INSTALL_DATA) $(LIB) $(LIBDIR)
++	@ $(LIBTOOL_INSTALL) $(INSTALL_DATA) $(LIB2) $(LIBDIR)
+ 	@ echo "** installing headers in $(INCLUDEDIR)"
+ 	@ $(SHELL) headers-sh $(INSTALL_DATA) $(INCLUDEDIR) $(srcdir) dialog.h
+ 	@ $(SHELL) headers-sh $(INSTALL_DATA) $(INCLUDEDIR) $(srcdir) dlg_colors.h
