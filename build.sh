@@ -192,7 +192,14 @@ yesno() {
 # make jobs according to cpu number
 #
 make_jobs=$(sysctl hw.ncpu | awk '{ print $2 }')
-test -n "${make_jobs}" && make_jobs=$((make_jobs-1)) || make_jobs=2
+if test -n "${make_jobs}"; then
+    make_jobs=$((make_jobs))
+    test ${make_jobs} -lt 4 \
+        && make_jobs=$((make_jobs+1)) \
+        || make_jobs=$((make_jobs-1))
+else
+    make_jobs=2
+fi
 
 #
 # args array helpers
