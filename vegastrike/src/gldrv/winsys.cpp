@@ -1464,7 +1464,6 @@ void winsys_process_events()
         				|| joystick[index] == NULL || !joystick[index]->isAvailable())
         			break ;
         		last_joystick_ms[index] = ticks;
-        		if (index >= GetNumJoysticks() || joystick[index] == NULL || !joystick[index]->isAvailable()) break ;
         		float x, y, z;
         		int buttons;
         		joystick[index]->GetJoyStick(x, y, z, buttons);
