@@ -173,10 +173,10 @@ static size_t convert_one(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l
 	++it;
 	return n8;
 }
-enum { PRIV_FF, PRIV_SS, PRIV_FG, PRIV_FTO, PRIV_FRL, PRIV_NEWS, PRIV_DNEWS, PRIV_LAST=PRIV_DNEWS,
+enum { PRIV_FF=0, PRIV_SS, PRIV_FG, PRIV_FTO, PRIV_FRL, PRIV_NEWS, PRIV_DNEWS, PRIV_LAST=PRIV_DNEWS,
 	   PRIV_UNKNOWN };
 static const char * s_privateer_kw[] = {
-	NULL, "FF:", "SS:", "FG:", "FactionTookOver", "FactionRefList", "news", "dynamic_news", NULL
+	"FF:", "SS:", "FG:", "FactionTookOver", "FactionRefList", "news", "dynamic_news", NULL
 };
 static unsigned int get_privsave_linetype(conv_ctx_t * g, conv_line_ctx_t * l) {
 	if ((g->flags & (FLG_PRIVSAVE | FLG_AUTOFMT)) == 0) return PRIV_UNKNOWN;
