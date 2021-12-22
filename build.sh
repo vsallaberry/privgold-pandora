@@ -776,7 +776,7 @@ do_delivery_fun() {
     # Update Version in bundle
     priv_version="1.2.0"
     git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
-    git_status=$(git --git-dir="${target}/../.git" status "${target}/.." --untracked-files=no --ignore-submodules=untracked --short --porcelain)
+    git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
     test -n "${git_status}" && git_rev="${git_rev}-dirty"
     vega_version=$(sed -n -e 's/^[[:space:]]*#[[:space:]]*define[[:space:]][[:space:]]*VERSION[[:space:]][[:space:]]*"\([^"]*\).*/\1/p' \
                    ${mainbuilddir}/config.h)
