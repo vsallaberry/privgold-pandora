@@ -8,14 +8,14 @@ def MakeMercenaryGuild(concourse,timeofdayignored="_day"):
 	# Custom Font
 	global _missioncomputer_font
 	Base.SetTextBoxFont(-1, '', _missioncomputer_font)
-	
+
 	# create the initial mercenary guild screen
 	room0 = Base.Room ('Mercenary_Guild')
 	Base.Texture (room0, 'background', 'bases/merchant_guild/mercernaryguild.spr', 0, 0)
 	Base.Texture (room0, 'myg', 'bases/merchant_guild/myg.spr', 0.12125, 0.0388)
 	Base.Texture (room0, 'psm', 'bases/merchant_guild/psm.spr', -0.7093125, 0.10185)
-	
-	template = "#MISSION_TYPE# MISSION:                                            (#MISSION_NUMBER# of #NUM_MISSIONS#)\n" \
+
+	template = "#MISSION_TYPE# MISSION:                                      (#MISSION_NUMBER# of #NUM_MISSIONS#)\n" \
 		+    "#DESCRIPTION#"
 
 	#initial_message = "\n\n\n\n" \
@@ -64,7 +64,7 @@ def MakeMercenaryGuild(concourse,timeofdayignored="_day"):
 	guildroom.AddTextBox('mercenarybox');
 	guilds.CreateGuild(guildroom)
 	Base.SetTextBoxFont(-1, '', '')
-	
+
 	return room0
 
 try:

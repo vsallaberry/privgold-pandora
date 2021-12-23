@@ -8,13 +8,13 @@ def MakeMerchantGuild(concourse,timeofdayignored="_day"):
 	# Custom Font
 	global _missioncomputer_font
 	Base.SetTextBoxFont(-1, '', _missioncomputer_font)
-	
+
 	# create the initial merchant guild screen
 	room0 = Base.Room ('Merchant_Guild')
 	Base.Texture (room0, 'background', 'bases/merchant_guild/merchantguild.spr', 0, 0)
 	Base.Texture (room0, 'mtg', 'bases/merchant_guild/mtg.spr', -0.0303125, -0.0097)
 
-	template = "#MISSION_TYPE# MISSION:                                            (#MISSION_NUMBER# of #NUM_MISSIONS#)\n" \
+	template = "#MISSION_TYPE# MISSION:                                      (#MISSION_NUMBER# of #NUM_MISSIONS#)\n" \
 		+    "#DESCRIPTION#"
 
 	#initial_message = "\n\n\n\n" \
@@ -64,7 +64,7 @@ def MakeMerchantGuild(concourse,timeofdayignored="_day"):
 	guildroom.AddTextBox('merchantbox');
 	guilds.CreateGuild(guildroom)
 	Base.SetTextBoxFont(-1, '', '')
-	
+
 	return room0
 
 try:

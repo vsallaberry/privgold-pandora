@@ -764,6 +764,7 @@ do_delivery_fun() {
             | "${builddir}/tools/${subdir}unicode-conv" -B - "${builddir}/New_Game.tmp" \
             && diff -ru "${priv_data}/New_Game" "${builddir}/New_Game.tmp" || exit $?
 
+        gfx=$(printf -- "${gfx}" | tr "[:lower:]" "[:upper:]")
         cp -v "${builddir}/vegastrike" "${bundle_bindir}/vegastrike.${gfx}" || exit $?
 
     done
