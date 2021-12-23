@@ -18,11 +18,13 @@
 #include "central.h"
 
 #ifdef _WIN32
+#define PATH_SEP "\\"
 //#include <process.h>
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
 #else
+#define PATH_SEP "/"
 #include <unistd.h>
 #endif
 
@@ -106,38 +108,48 @@ void ShowReadme() {
     static const char * searchs[] = {
 #if defined(_WIN32) || defined(__APPLE__)
         "Manual.pdf",
-        "documentation\\readme.txt",
+        "documentation" PATH_SEP "readme.txt",
 #endif
-        "documentation/readme.txt",
+        "documentation" PATH_SEP "readme.txt",
         "readme.txt",
         NULL
     };
-    const char * curpath = ".";
+    char curpath[65525] = { 0, };
+    getcwd(curpath, sizeof(curpath));
+#ifndef _WIN32
+    pid_t pid = fork();
+    if (pid > 0) return;
+#endif
     for (unsigned int i=0; i < 2; ++i) {
         for (const char ** search = searchs; *search; ++search) {
             FILE * fp;
             int err;
-            printf("readme: trying %s/%s\n", curpath, *search);
-            if ((fp = fopen(*search, "r")) != NULL) {
+            char arg[65535];
+            snprintf(arg, sizeof(arg), "%s%s%s", curpath, PATH_SEP, *search);
+            printf("readme: trying %s\n", arg);
+            if ((fp = fopen(arg, "r")) != NULL) {
                 fclose(fp);
 #if defined (_WIN32)
-                err = (int)ShellExecute(NULL,"open",*search,"","",1);
+                err = (int)ShellExecute(NULL,"open",arg,"","",1);
 #elif defined (__APPLE__)
-                err = execlp("open", "open",*search, NULL); //Will this work on MacOS?
+                char * script = (char*)malloc(sizeof(arg));
+                snprintf(script, sizeof(arg), "tell application \"Preview.app\" to open \"%s\"", arg);
+                err = execlp("osascript", "osascript", "-e", script, NULL); //Will this work on MacOS?
+                //err = execlp("open", "open", arg, NULL);
 #else
-                err = execlp("less", "less",*search, NULL); //Will this work in Linux?
+                err = execlp("less", "less",arg, NULL); //Will this work in Linux?
 #endif
-                if (err == 0) {
+                //if (err == 0) {
                     i = (unsigned int)-1;
                     break ;
-                }
+                //}
             }
         }
         if (i == 0) {
             if (chdir(origpath) != 0) {
                 break ;
             }
-            curpath = origpath;
+            strcpy(curpath, origpath);
         }
     }
 }

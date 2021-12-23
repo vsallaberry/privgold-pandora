@@ -878,7 +878,7 @@ do_delivery_fun() {
     test -z "${interactive}" || yesno "? Create DMG (${dmg_name}) ?" || exit 1
     echo "+ creating DMG (${dmg_name})"
     rm -f "${dmg_name}" || exit $?
-    hdiutil create -format UDBZ -volname "PrivateerGold" \
+    hdiutil create -fs "HFS+" -format "UDBZ" -volname "PrivateerGold" \
         -srcfolder "${deliverydir}/bundle" "${dmg_name}" || exit $?
     du -sh "${dmg_name}"
 
