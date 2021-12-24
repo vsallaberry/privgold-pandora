@@ -1,8 +1,9 @@
 
-## Vegastrike for Privateer Gemini Gold / Privateer Gemini Gold v 1.03+
+## Privateer Gold Pandora / Vegastrike for Privateer Gemini Gold
 ------------------
 
 * [Introduction](#introduction)
+* [Installation](#installation)
 * [Source Control Management](#source-control-management)
 * [About Licenses](#about-licenses)
 * [Updates Overview](#updates-overview)
@@ -28,9 +29,25 @@ See [source-control](#source-control-management)
 and [licenses](#about-licenses) for more details.
 
 
+## Installation
+
+[macOS binaries]:<https://github.com/vsallaberry/privgold-pandora/tree/master/release/macos>  
+In a Terminal, type:  
+    $ cat PrivateerGold.dmg.part* > PrivateerGold.dmg  
+    $ open PrivateerGold.dmg  
+Sorry but github forbids files greater than 100MB.  
+  
+Tested on:  
+* el capitan
+* mojave
+* catalina
+
+Open the APP with alt (option) key pressed in order to run SETUP.
+
+
 ## Source Control Management
 
-* updates are done based on following version:
+* updates are done based on following version:  
     $ svn info
     URL: https://svn.code.sf.net/p/privateer/code
     Relative URL: ^/
