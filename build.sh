@@ -303,9 +303,9 @@ cxx_standard_autoconf="gnu++${cxx_standard}"
 #
 #### FIND SDK
 #
-if test -n "${macos_sdk}"; then
-    macos_sdk_fwk=${macos_sdk}
-else
+find_macos_sdk() {
+    local _cxxflags
+    test -z "$1" && _cxxflags=${CXXFLAGS} || _cxxflags=$1
     _test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
     sysver=$(uname -r)
     if test ${sysver%%.*} -gt 15; then # 15 is capitan
@@ -313,7 +313,7 @@ else
         if test -n "${_test_sdk}"; then
             macos_sdk_fwk=${_test_sdk}
         else
-            archs=$(get_archs ${CXXFLAGS})
+            archs=$(get_archs ${_cxxflags})
             macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
             if test -n "${archs}"; then
                 # try to find a SDK supporting requested archs
@@ -332,6 +332,11 @@ else
         macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
         macos_sdk=""
     fi
+}
+if test -n "${macos_sdk}"; then
+    macos_sdk_fwk=${macos_sdk}
+else
+    find_macos_sdk
 fi
 
 do_build_fun() {
@@ -731,18 +736,28 @@ do_delivery_fun() {
     bundle_bindir="${bundledir}/Contents/MacOS"
     bundle_resdir="${bundledir}/Contents/Resources"
 
+    this_bundle="${deliverydir}/bundle/PrivateerGold.this.app"
+    other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs.app"
+    other_bundle_ref="${mydir}/${buildpool}/PrivateerGold.more-archs.app"
+
     xcopy() {
         rsync -ah -t --exclude '.DS_Store' --exclude '*~' --exclude '.*.sw?' --exclude '**/.git' --exclude '**/.svn' "$@"
     }
 
     gfxs="sdl2 glut sdl1"
     mainbuilddir=
-    cxxf="-arch x86_64 -arch i386"
+    build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
+    if test "${build_sysmajor}" -lt 19; then
+        cxxf="-arch x86_64 -arch i386"
+    else
+        cxxf="-arch x86_64 -arch arm64"
+    fi
+    find_macos_sdk "${cxxf}"
     test -z "${interactive}" || yesno "? Build engines <$gfxs> with flags '$cxxf' ?" \
     && {
         # clean bundle dir
         echo "+ creating bundle..."
-        rm -Rf "${bundledir}"
+        rm -Rf "${bundledir}" "${deliverydir}/bundle/destroot" "${this_bundle}" "${other_bundle}"
         # copy bundle template
         mkdir -p "${bundledir}" || exit $?
         xcopy "${bundle_src}"/ "${bundledir}" || exit $?
@@ -769,13 +784,14 @@ do_delivery_fun() {
 
     done
 
-    cp -v "${mainbuilddir}/setup/${mainsubdir}vssetup" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg" \
-            "${bundle_bindir}" || exit $?
+    for f in "${mainbuilddir}/setup/${mainsubdir}vssetup" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg"; do
+        cp -v "$f" "${bundle_bindir}"
+    done
 
     test -z "${interactive}" || { yesno "? Finalize bundle (update libs, version, tools, ...) ?" || exit 1; }
 
     # Update Version in bundle
-    priv_version="1.2.0"
+    priv_version="1.2.1"
     git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
     git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
     test -n "${git_status}" && git_rev="${git_rev}-dirty"
@@ -791,18 +807,22 @@ do_delivery_fun() {
     done
 
     # build checkModifierKeys tool and copy it to bundle bin dir
-    "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" || exit $?
+    test -n "${macos_sdk}" && checkmod_archs="-isysroot${macos_sdk} " || checkmod_archs=
+    "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
     xcopy "${checkkeys_dir}/checkModifierKeys" "${bundle_bindir}" || exit $?
 
     # handle executables rpaths: vegastrike* and vssetup_dlg
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L../Resources/lib \
-        "${bundle_bindir}"/vegastrike.* \
-        "${bundle_bindir}/vssetup_dlg" || exit $?
+        "${bundle_bindir}"/vegastrike.* || exit $?
+
+    # handle executables rpaths: vssetup_dlg
+    "${mydir}/tools/rpath.sh" -X'/opt/local' -L../Resources/lib \
+        "${bundle_bindir}/vssetup_dlg" || { printf -- '!! warning: vssetup_dlg (terminal) is not included in this delivery !!'; }
 
     # handle executables rpaths: vssetup(gtk)
     "${mydir}/tools/rpath.sh" -X'/opt/local' \
         -L../Resources/lib/gtk -R../Resources/lib \
-        "${bundle_bindir}/vssetup" || exit $?
+        "${bundle_bindir}/vssetup" || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
 
     # handle optional vegastrike tools executables rpaths: tools, objconv, vegaserver, test
     if true; then
@@ -841,6 +861,22 @@ do_delivery_fun() {
         && "${mydir}/tools/rpath.sh" -X'/opt/local' \
             -L../lib/gtk -R../lib \
             "${bundle_resdir}/bin/gtk-demo" "${bundle_resdir}/lib/gtk/${gdk_loaders}"/* || exit $?
+    fi
+
+    #fix perms
+    find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod -hv 'u+w'
+
+    # Merge the generated bundle with the ARM64 one if present
+    if test -d "${other_bundle_ref}"; then
+        echo "+ Merging architectures of PrivateerGold.app and ${other_bundle_ref}..."
+        test -d "${other_bundle_ref}/destroot" && exit 1
+        cp -a "${other_bundle_ref}" "${deliverydir}/bundle/destroot" \
+            && mkdir -p "${other_bundle}" && mv "${deliverydir}/bundle/destroot" "${other_bundle}" || exit $?
+        rm -f "${other_bundle}/destroot/Contents/Resources/data"
+        mv "${bundledir}" "${deliverydir}/bundle/destroot" && mkdir -p "${this_bundle}" && mv "${deliverydir}/bundle/destroot" "${this_bundle}" || exit $?
+        "${mydir}/deps/mergelibs.sh" -N -U "${this_bundle}" "${other_bundle}" "${bundledir}" || exit $?
+        rm -Rf "${other_bundle}" "${this_bundle}"
+        echo
     fi
 
     # Display list of libs

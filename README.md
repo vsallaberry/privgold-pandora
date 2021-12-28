@@ -8,7 +8,7 @@
 * [About Licenses](#about-licenses)
 * [Updates Overview](#updates-overview)
 * [Updates Detail](#updates-detail)
-
+* [About](#about)
 
 ## Introduction
 
@@ -31,17 +31,15 @@ and [licenses](#about-licenses) for more details.
 
 ## Installation
 
-[macOS binaries]:<https://github.com/vsallaberry/privgold-pandora/tree/master/release/macos>  
-In a Terminal, type:  
-    $ cat PrivateerGold.dmg.part* > PrivateerGold.dmg  
-    $ open PrivateerGold.dmg  
-Sorry but github forbids files greater than 100MB.  
-  
+[macOS binaries]:<https://github.com/vsallaberry/privgold-pandora/releases>
+ 
 Tested on:  
 * el capitan
 * mojave
 * catalina
-
+  
+* Experimental non-tested build for macOS BigSur or later with arm64 (apple M1).  
+  
 Open the APP with alt (option) key pressed in order to run SETUP.
 
 
@@ -137,6 +135,7 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
 * BaseInterface Links&Objects lookup optimization and improvement of memory leaks 
 * BaseInterface: Links navigation with keyboard or joystick
 * joystick: now joystick handling is event-based, and plug&play with SDL2.
+* 1.2.1: experimental build for macOS BigSur and Apple M1 (arm64)
 
 ## Updates Detail
 
@@ -284,4 +283,12 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
   + Generation of the C++ Python API files (empty functions) in order
     to be used in an IDE Completion System
   + Detection of Space/Tabs usage in python files
+
+## About
+
+Privateer Gold Pandora (Vincent Sallaberry, 2021) is a fork of
+Privateer Gemini Gold 1.03, 2009. It includes builds for recent
+MacOS systems, and updates/new features.  
+
+https://github.com/vsallaberry/privgold-pandora
 

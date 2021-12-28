@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-           Privateer Gemini Gold v1.03 -- 12/12/2009 -- Changes
+     Privateer Gemini Gold Pandora v1.2.1 -- 2021/12/29 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
@@ -9,6 +9,82 @@ Privateer Gemini Gold versions.
                                  CHANGE HISTORY
 -----------------------------------------------------------------------------
 
+  -------------------------------------------------------------------------
+        Privateer Gemini Gold Pandora v1.2.1 -- 2021/12/29 -- Changes
+  -------------------------------------------------------------------------
+  7. CHANGES FROM 1.2.0 TO 1.2.1
+
+    Vegastrike 0.4.4.2
+
+    A. macOS BigSur and arm64 (apple M1) experimental build
+
+        - I have neither an apple M1 nor BigSur, then I could not have it
+          tested.
+
+          Currently only the terminal setup program (vssetup_dlg)
+          is available for arm64.
+
+          Now supported architectures are:
+            i386, x86_64, arm64. (x86_64 is the most tested one :))
+
+        - No Update regarding the game
+
+  -------------------------------------------------------------------------
+        Privateer Gemini Gold Pandora v1.2.0 -- 2021/12/24 -- Changes
+  -------------------------------------------------------------------------
+  6. CHANGES FROM 1.03 TO 1.2.0
+
+    Privateer Gold Pandora - Vincent Sallaberry, 2021.
+    https://github.com/vsallaberry/privgold-pandora
+
+    Vegastrike 0.4.4.1
+
+    A. Builds available for recent macOS systems.
+
+       - Tested on El Capitan (10.11), Mojave (10.14), Catalina (10.15)
+         Available architectures: i386, x86_64 (universal build)
+
+    B. Unicode (UTF8)
+
+    C. SDL2
+
+    D. more choices for fonts (hud,base,oldcomputer)
+
+    E. optional display of FPS/loop rate, key bindings
+
+    F. optional override of a config variable via command-line
+
+    G. uniformization of logging messages
+
+    H. message center alternative to handle fixers messages during campaign battles
+
+    I. bug fixes since 1.03:
+
+        - Oxford Matterson library message was not delivered to the right room
+        - in addition to the oxford fix, now sounds are also played in the right room
+        - QUINE was not displaying all on-going missions
+        - probably fixed: a random crash in gl light engine when jumping
+
+    J. the cockpit is no more shown during game loading before to show the base
+
+    K. Navigation Screen margins computation improvement on 16/9 resolutions
+
+    L. keyboard repeat is enabled for gui text input sequences
+
+    M. BaseInterface Links&Objects lookup optimization and improvement of memory leaks
+
+    N. BaseInterface: Links navigation with keyboard or joystick
+
+    O. joystick: now joystick handling is event-based, and plug&play with SDL2.
+
+    P. Contreband available again on pirate bases.
+
+    Z. see git for more details
+
+
+  -------------------------------------------------------------------------
+           Privateer Gemini Gold v1.03 -- 12/12/2009 -- Changes
+  -------------------------------------------------------------------------
   5. CHANGES FROM 1.02a TO 1.03
 
 	A. Righteous Fire campaign voiceovers
@@ -59,7 +135,7 @@ Privateer Gemini Gold versions.
 
 		- positive militia responses take longer than negative
 
-		- cargo space calculation is wrong when using cargo expansion  
+		- cargo space calculation is wrong when using cargo expansion
 
 		- hit autopilot while communicating in a centurion changes MFDs position
 
@@ -103,7 +179,7 @@ Privateer Gemini Gold versions.
 
 	E. new autopilot info screen
 
-	F. new planet textures	
+	F. new planet textures
 
 	G. new explosion animations
 
@@ -143,7 +219,7 @@ Privateer Gemini Gold versions.
 
 		- graphic errors: Tarsus energy/shield bar, beer sign
 
-		- npc's afterburner usage in regular flight 
+		- npc's afterburner usage in regular flight
 
 		- music for dead eden planet
 
@@ -173,7 +249,7 @@ Privateer Gemini Gold versions.
 
 	G. a few campaign bosses got special shipnames and are displayed in com
 
-	H. bases and planets have an automatic landing zone 
+	H. bases and planets have an automatic landing zone
 
 	I. adds jump activation sound
 
@@ -231,4 +307,4 @@ Privateer Gemini Gold versions.
 
 		- minor fixes
 
-	
+

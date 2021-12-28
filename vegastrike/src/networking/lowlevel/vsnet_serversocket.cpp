@@ -11,6 +11,10 @@ using std::hex;
 
 #include "vsnet_headers.h"
 
+#ifdef __APPLE__
+# include <AvailabilityMacros.h>
+#endif
+
 std::ostream& operator<<( std::ostream& ostr, const ServerSocket& s )
 {
     ostr << "( s=" << s.get_fd() << " l=" << s._srv_ip << " )";
@@ -42,10 +46,10 @@ bool ServerSocketTCP::lower_selected( int datalen )
          << endl;
 
     struct sockaddr_in remote_ip;
-#if defined (_WIN32) || defined(MAC_OS_X_VERSION_10_3) || defined(MAC_OS_X_VERSION_10_2) || defined(MAC_OS_X_VERSION_10_1) 
+#if defined (_WIN32) || (defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
     int
 #else
-    socklen_t          
+    socklen_t
 #endif
     len = sizeof( struct sockaddr_in );
     int sock = ::accept( get_fd(), (sockaddr *)&remote_ip, &len );

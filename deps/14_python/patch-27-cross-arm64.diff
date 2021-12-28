@@ -1,0 +1,28 @@
+--- configure.vv.orig	2021-12-28 00:10:05.000000000 +0100
++++ configure	2021-12-28 00:11:27.000000000 +0100
+@@ -3287,6 +3287,9 @@
+ 	*-*-cygwin*)
+ 		ac_sys_system=Cygwin
+ 		;;
++    *-*-darwin*)
++		ac_sys_system=Darwin
++		;;
+ 	*)
+ 		# for now, limit cross builds to known configurations
+ 		MACHDEP="unknown"
+@@ -3330,6 +3333,15 @@
+ 			_host_cpu=$host_cpu
+ 		esac
+ 		;;
++    *-*-darwin*)
++		case "$host_cpu" in
++		arm*|aarch64)
++			_host_cpu=arm64
++			;;
++		*)
++			_host_cpu=$host_cpu
++		esac
++		;;
+ 	*-*-cygwin*)
+ 		_host_cpu=
+ 		;;

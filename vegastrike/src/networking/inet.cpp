@@ -20,11 +20,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef __APPLE__
+# include <AvailabilityMacros.h>
+#endif
+
 bool INET_BytesToRead (int socket) {
 #ifdef _WIN32
 	unsigned long datato;
 	if (0==ioctlsocket(socket,FIONREAD,&datato)) {
-	  
+
 		return (datato>0);
 	}
 #else
@@ -42,7 +46,7 @@ bool INET_BytesToRead (int socket) {
    }
 #endif
 	return false;
-       
+
 }
 void INET_close (int socket) {
 #ifdef _WIN32
@@ -79,7 +83,7 @@ int INET_Write (int socket,int bytestowrite,const char *data) {
 void INET_startup() {
 #ifdef _WIN32
   WORD wVersionRequested = MAKEWORD( 1, 1 );
-  WSADATA wsaData; 
+  WSADATA wsaData;
   WSAStartup(wVersionRequested,&wsaData);
 #endif
 }
@@ -119,7 +123,7 @@ int INET_listen (unsigned short port, const char * hostname) {
   int listenqueue=5;
   int hServerSocket; // so signal can be caught;
   struct sockaddr_in Address; //Internet socket address stuct
-#if defined (_WIN32) || defined(__CYGWIN__) || defined(MAC_OS_X_VERSION_10_3) || defined(MAC_OS_X_VERSION_10_2) || defined(MAC_OS_X_VERSION_10_1)
+#if defined (_WIN32) || defined(__CYGWIN__) || (defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
   int
 #else
   socklen_t
@@ -141,7 +145,7 @@ int INET_listen (unsigned short port, const char * hostname) {
   INET_getHostByName (hostname,port,Address);
   Address.sin_addr.s_addr = INADDR_ANY;
   Address.sin_family=AF_INET;
-  if(bind(hServerSocket,(struct sockaddr*)&Address,sizeof(Address)) 
+  if(bind(hServerSocket,(struct sockaddr*)&Address,sizeof(Address))
                         == SOCKET_ERROR) {
         printf("\nCould not connect to host\n");
 	printf ("%d Error ",errno);
@@ -153,12 +157,12 @@ int INET_listen (unsigned short port, const char * hostname) {
         return -1;
   }
   return hServerSocket;
-  // get the connected socket 
+  // get the connected socket
 }
 int INET_Accept (int hServerSocket) {
   sockaddr_in Address;
-#if defined (_WIN32) || defined (__CYGWIN__) || defined(MAC_OS_X_VERSION_10_3) || defined(MAC_OS_X_VERSION_10_2) || defined(MAC_OS_X_VERSION_10_1)
-  int 
+#if defined (_WIN32) || defined (__CYGWIN__) || (defined(__APPLE__) && MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
+  int
 #else
     socklen_t
 #endif

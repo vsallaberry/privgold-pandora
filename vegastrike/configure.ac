@@ -1,4 +1,4 @@
-AC_INIT(vegastrike, 0.4.4.1)
+AC_INIT(vegastrike, 0.4.4.2)
 config_flags="$@"
 AC_DEFINE_UNQUOTED([VEGASTRIKE_VERSION],[VERSION],[VEGASTRIKE_VERSION])
 
@@ -212,7 +212,7 @@ AC_CHECK_FUNCS([atexit bzero fesetround floor getcwd gethostbyname gettimeofday 
 
 
 dnl Check for non-standard floating point functions and headers
-AC_CHECK_FUNCS([finite _finite isnan _isnan])
+AC_CHECK_FUNCS([finite _finite isfinite isnan _isnan])
 
 PKG_PROG_PKG_CONFIG
 

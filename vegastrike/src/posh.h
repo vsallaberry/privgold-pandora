@@ -63,7 +63,7 @@ DJGPP:
 
 Cray's C compiler:
    - _ADDR64: if 64-bit pointers
-   - _UNICOS: 
+   - _UNICOS:
    - __unix:
 
 SGI's CC compiler predefines the following (and more) with -ansi:
@@ -474,7 +474,7 @@ Metrowerks:
 
 /* ------------------------------------------------------------------
 ** MIPS (various, including SGI and Sony PS2)
-** ------------------------------------------------------------------ 
+** ------------------------------------------------------------------
 */
 #if defined mips || defined __mips__ || defined __MIPS__ || defined _MIPS || defined FORCE_DOXYGEN
 #  define POSH_CPU_MIPS /**<if defined, target CPU is MIPS variant */
@@ -515,6 +515,22 @@ Metrowerks:
 #endif
 
 /* ------------------------------------------------------------------
+** Apple ARM64
+** ------------------------------------------------------------------
+*/
+#if defined __arm64__ || defined FORCE_DOXYGEN
+#  define POSH_CPU_ARM64 /**<if defined, target CPU is arm64 */
+#  if !defined FORCE_DOXYGEN
+#    if defined(__APPLE__)
+#      define POSH_CPU_STRING "apple-arm64"
+#    else
+#      define POSH_CPU_STRING "arm64"
+#    endif
+#  endif
+#endif
+
+
+/* ------------------------------------------------------------------
 ** DEC/Compaq Alpha
 ** ------------------------------------------------------------------
 */
@@ -543,12 +559,12 @@ Metrowerks:
 #endif
 
 /* Attempt to autodetect building for embedded on Sony PS2 */
-#if ( !defined POSH_OS_STRING ) || defined FORCE_DOXYGEN 
+#if ( !defined POSH_OS_STRING ) || defined FORCE_DOXYGEN
 #  define POSH_OS_EMBEDDED /**<if defined, target OS is embedded or non-existent such as Sony PS2.  @ingroup OSSymbols */
 #  if !defined FORCE_DOXYGEN
 #     if defined _R5900
 #        define POSH_OS_STRING "Sony PS2(embedded)"
-#     elif !defined 
+#     elif !defined
 #        define POSH_OS_STRING "Embedded/Unknown"
 #     endif
 #  endif
@@ -564,7 +580,7 @@ Metrowerks:
 Specifies that a function should use the C calling convention.  The cdecl
 convention passes parameters on the stack, with the caller responsible for
 cleaning up the stack (which in turn allows for variable argument lists).
-It's marginally slower than the other calling conventions, and is the 
+It's marginally slower than the other calling conventions, and is the
 default calling convention for the C language.
 
 <code><pre>
@@ -611,16 +627,16 @@ extern void POSH_FASTCALL someFunction( int x, int y, int z );
 #  define POSH_STDCALL  __stdcall
 #  define POSH_FASTCALL __fastcall
 #else
-#  define POSH_CDECL    
-#  define POSH_STDCALL  
-#  define POSH_FASTCALL 
+#  define POSH_CDECL
+#  define POSH_STDCALL
+#  define POSH_FASTCALL
 #endif
 
 /* ---------------------------------------------------------------------------
 ** Define POSH_IMPORTEXPORT signature based on POSH_DLL and POSH_BUILDING_LIB
 ** ---------------------------------------------------------------------------
 */
-/** 
+/**
  @def POSH_DLL
 
 define this if your library is being built or used as a DLL
@@ -643,11 +659,11 @@ it own constants:
 
 An application using your library should <i>never</i> be required to
 explicitly set <code><b>POSH_DLL</b></code>.  Instead, it should be
-responsible for setting your library's own appropriate DLL constant 
+responsible for setting your library's own appropriate DLL constant
 which is then used to set <code><b>POSH_DLL</b></code> as necessary.
 */
 
-/** 
+/**
 @def POSH_BUILDING_LIB
 
 define this when actually building a library (as opposed to building an app).
@@ -670,7 +686,7 @@ posh.h in your library's source files.
 
 #if defined POSH_DLL
 #   if defined POSH_OS_WIN32
-#      if defined _MSC_VER 
+#      if defined _MSC_VER
 #         if ( _MSC_VER >= 800 )
 #            if defined POSH_BUILDING_LIB
 #               define POSH_IMPORTEXPORT __declspec( dllexport )
@@ -681,13 +697,13 @@ posh.h in your library's source files.
 #            if defined POSH_BUILDING_LIB
 #               define POSH_IMPORTEXPORT __export
 #            else
-#               define POSH_IMPORTEXPORT 
+#               define POSH_IMPORTEXPORT
 #            endif
 #         endif
 #      endif  /* defined _MSC_VER */
 #      if defined __BORLANDC__
 #         if ( __BORLANDC__ >= 0x500 )
-#            if defined POSH_BUILDING_LIB 
+#            if defined POSH_BUILDING_LIB
 #               define POSH_IMPORTEXPORT __declspec( dllexport )
 #            else
 #               define POSH_IMPORTEXPORT __declspec( dllimport )
@@ -696,7 +712,7 @@ posh.h in your library's source files.
 #            if defined POSH_BUILDING_LIB
 #               define POSH_IMPORTEXPORT __export
 #            else
-#               define POSH_IMPORTEXPORT 
+#               define POSH_IMPORTEXPORT
 #            endif
 #         endif
 #      endif /* defined __BORLANDC__ */
@@ -725,7 +741,7 @@ posh.h in your library's source files.
 #endif
 
 /* ----------------------------------------------------------------------------
-** (Re)define POSH_PUBLIC_API export signature 
+** (Re)define POSH_PUBLIC_API export signature
 ** ----------------------------------------------------------------------------
 */
 #ifdef POSH_PUBLIC_API
@@ -733,7 +749,7 @@ posh.h in your library's source files.
 #endif
 
 #if ( ( defined _MSC_VER ) && ( _MSC_VER < 800 ) ) || ( defined __BORLANDC__ && ( __BORLANDC__ < 0x500 ) )
-#  define POSH_PUBLIC_API(rtype) extern rtype POSH_IMPORTEXPORT 
+#  define POSH_PUBLIC_API(rtype) extern rtype POSH_IMPORTEXPORT
 #else
 #  define POSH_PUBLIC_API(rtype) extern POSH_IMPORTEXPORT rtype
 #endif
@@ -743,7 +759,7 @@ posh.h in your library's source files.
     @ingroup ExportedSymbols
     <code><b>POSH_PUBLIC_API</code></b> should be used as a wrapper
     around any data or function return type values that are exported
-    from a DLL.  This macro ensures proper linkage irrespective of 
+    from a DLL.  This macro ensures proper linkage irrespective of
     compiler.
 
     Example usage:
@@ -759,7 +775,7 @@ posh.h in your library's source files.
 ** Try to infer endianess.  Basically we just go through the CPUs we know are
 ** little endian, and assume anything that isn't one of those is big endian.
 ** As a sanity check, we also do this with operating systems we know are
-** little endian, such as Windows.  Some processors are bi-endian, such as 
+** little endian, such as Windows.  Some processors are bi-endian, such as
 ** the MIPS series, so we have to be careful about those.
 ** ----------------------------------------------------------------------------
 */
@@ -822,7 +838,7 @@ posh.h in your library's source files.
 #  define POSH_U64( x )
 #elif defined ( __LP64__ ) || defined ( __powerpc64__ ) || defined POSH_CPU_SPARC64
 #  define POSH_64BIT_INTEGER 1
-   typedef long posh_i64_t; 
+   typedef long posh_i64_t;
    typedef long posh_s64_t;
    typedef unsigned long posh_u64_t;
 #  define POSH_S64( x ) ((posh_s64_t)x)
@@ -847,14 +863,14 @@ posh.h in your library's source files.
     Macro to make a constant signed 64-bit value
     @ingroup SixtyFourBit
     This is a compiler specific type definition for a 64-bit constant
-    value.  You can test for the presence of this macro 
+    value.  You can test for the presence of this macro
     by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER" is defined.
 */
 /** @def POSH_U64
     Macro to make a constant unsigned 64-bit value
     @ingroup SixtyFourBit
     This is a compiler specific type definition for a 64-bit constant
-    value.  You can test for the presence of this macro 
+    value.  You can test for the presence of this macro
     by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER" is defined.
 */
 
@@ -862,11 +878,11 @@ posh.h in your library's source files.
     indicates presence of compiler supported 64-bit integer types.
     @ingroup SixtyFourBitSupport
     POSH defines this symbol if the underlying compiler supports 64-bit
-    integer types.  However, it <i>does not</i> indicate whether the 
-    actual hardware supports 64-bit integer operations natively, so 
+    integer types.  However, it <i>does not</i> indicate whether the
+    actual hardware supports 64-bit integer operations natively, so
     this should not be used as a performance hint.
 */
-/** @typedef posh_i64_t 
+/** @typedef posh_i64_t
     signed 64-bit integer
     @ingroup SixtyFourBitSupport
     This is a compiler specific type definition for a 64-bit signed integer
@@ -874,7 +890,7 @@ posh.h in your library's source files.
     in some cases, nothing at all.  You can test for the presence of this type
     by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER" is defined.
 */
-/** @typedef posh_s64_t 
+/** @typedef posh_s64_t
     signed 64-bit integer
     @ingroup SixtyFourBitSupport
     This is a compiler specific type definition for a 64-bit signed integer
@@ -882,13 +898,13 @@ posh.h in your library's source files.
     in some cases, nothing at all.  You can test for the presence of this type
     by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER" is defined.
 */
-/** @typedef posh_u64_t 
+/** @typedef posh_u64_t
     unsigned 64-bit integer
     @ingroup SixtyFourBitSupport
     This is a compiler specific type definition for a 64-bit unsigned integer
-    type.  On some platforms this may map to <code>unsigned long, unsigned long 
-    long, unsigned __int64</code> or, in some cases, nothing at all.  You can 
-    test for the presence of this type by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER" 
+    type.  On some platforms this may map to <code>unsigned long, unsigned long
+    long, unsigned __int64</code> or, in some cases, nothing at all.  You can
+    test for the presence of this type by seeing if @ref POSH_64BIT_INTEGER "POSH_64BIT_INTEGER"
     is defined.
 */
 
@@ -938,7 +954,7 @@ typedef long           posh_s32_t;         /**< signed 32-bit integer */
 /** @def POSH_NO_FLOAT
     define this if you want to disable floating point support
     @ingroup ImportedSymbols
-    <code><b>POSH_NO_FLOAT</b></code> should be defined by the user if they would like 
+    <code><b>POSH_NO_FLOAT</b></code> should be defined by the user if they would like
     to disable floating point support in POSH.  This removes some (optional)
     functionality, but allows POSH to operate safely on a slightly wider variety
     of platforms such as Cray and the MIPS R5900 (Sony PS2).
@@ -976,7 +992,7 @@ POSH_COMPILE_TIME_ASSERT(posh_i32_t, sizeof(posh_i32_t) == 4);
 /* ----------------------------------------------------------------------------
 ** 64-bit pointer support
 **
-** NOTE: Just because a pointer is 64-bits does NOT mean that you have a 
+** NOTE: Just because a pointer is 64-bits does NOT mean that you have a
 ** a 64-bit address space.  In practice on most platforms this may be true,
 ** but on some platforms, such as the Cray vector processors, this is not
 ** the case.  Similarly, 32-bit pointers do not necessarily mean 32-bit
@@ -1016,7 +1032,7 @@ POSH_COMPILE_TIME_ASSERT(posh_i32_t, sizeof(posh_i32_t) == 4);
    triggering this assertion to make sure you're aware of the situation,
    so feel free to just delete the following line.
 
-   If this assertion is triggered on a known 32 or 64-bit architecture, 
+   If this assertion is triggered on a known 32 or 64-bit architecture,
    please let us know (poshlib@poshlib.org) */
    POSH_COMPILE_TIME_ASSERT( posh_32bit_pointer, sizeof( void * ) == 4 );
 #endif
@@ -1026,7 +1042,7 @@ POSH_COMPILE_TIME_ASSERT(posh_i32_t, sizeof(posh_i32_t) == 4);
 **
 ** These are optional POSH utility functions that are not required if you don't
 ** need anything except static checking of your host and target environment.
-** 
+**
 ** These functions are NOT wrapped with POSH_PUBLIC_API because I didn't want
 ** to enforce their export if your own library is only using them internally.
 ** ----------------------------------------------------------------------------
@@ -1042,7 +1058,7 @@ extern const char *POSH_GetArchString( void );
     Unavailable if @ref POSH_NO_FLOAT "POSH_NO_FLOAT" is defined.  By
     default floating point support is enabled, but if you find that
     this causes problems or is inconvenient and you're not using
-    the support, you can define <code><b>POSH_NO_FLOAT</code></b> to disable 
+    the support, you can define <code><b>POSH_NO_FLOAT</code></b> to disable
     POSH's use of any floating point types or operations.
 
     Here are some code examples:
@@ -1068,7 +1084,7 @@ void WriteFloat( FILE *fp, float f )
    posh_u32_t u32;
 
    u32 = POSH_LittleFloatBits( f );
-   
+
    fwrite( &u32, sizeof( u32 ), 1, fp );
 }
 
@@ -1099,7 +1115,7 @@ extern double      POSH_ReadDoubleFromBig( const void *src );
 
 /** @} */
 
-/** @defgroup ByteSwapFunctions Byte Swapping Functions 
+/** @defgroup ByteSwapFunctions Byte Swapping Functions
     These functions perform byte swapping of 16 and 32-bit values.
     The 64-bit versions of these functions are documented under
     @ref SixtyFourBit
@@ -1132,8 +1148,8 @@ Here's an example usage that serializes a struct into a big-endian buffer:
 
 @verbatim
 
-struct mystruct 
-{ 
+struct mystruct
+{
    posh_u16_t u16;
    posh_s32_t s32;
 };

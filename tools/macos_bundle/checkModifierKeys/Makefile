@@ -12,10 +12,11 @@ OSX_VERSION_MIN=
 OSX_VERSION_MIN_ARG= -mmacosx-version-min=$(OSX_VERSION_MIN)
 OSX_VERSION_MIN_ARG$(OSX_VERSION_MIN)=
 
-CFLAGS 		= -arch i386 -arch x86_64 $(OSX_VERSION_MIN_ARG)
+ARCHS		= -arch i386 -arch x86_64
+CFLAGS 		= $(ARCHS) $(OSX_VERSION_MIN_ARG)
 OBJCFLAGS 	= $(CFLAGS)
 CXXCFLAGS 	= $(CFLAGS)
-LDFLAGS 	= -arch i386 -arch x86_64 -framework Carbon -framework ApplicationServices $(OSX_VERSION_MIN_ARG)
+LDFLAGS 	= $(ARCHS) -framework Carbon -framework ApplicationServices $(OSX_VERSION_MIN_ARG)
 CC 		= clang
 CXX		= clang++
 OBJC 		= clang

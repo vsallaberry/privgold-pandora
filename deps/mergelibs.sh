@@ -19,10 +19,12 @@
 ##############################################################################
 
 usage() {
-    echo "$0 [-NY] <32b_dev_dir> <64b_dev_dir> <dst_root_dir>"
+    echo "$0 [-NYU] <arch1_dev_dir> ... <archN_dev_dir> <dst_root_dir>"
     echo "   use make install DESTDIR=<tmpdesroot> for each target then merge archs into dst_root_dir."
-    echo "   -N: skip dev32 and dev64 install"
-    echo "   -Y: skip dev32 and dev64 copy in destroot, just merging libs in destroot"
+    echo "   -N: skip archs_dev_die installs"
+    echo "   -Y: skip archs_dev_dirs copy in destroot, just merging libs in destroot"
+    echo "   -U: pick up all architectures in each file"
+    echo "   the first <arch_dev_dir> has allways priority."
     exit $1
 }
 
@@ -30,84 +32,127 @@ test -z "$1" && usage 1
 
 do_install=yes
 do_destroot=yes
+take_all=
+
+declare -a builddirs
 
 while test -n "$1"; do
     case "$1" in
         -N) do_install=;;
         -Y) do_destroot=;;
+        -U) take_all=yes;;
         -*) ;;
-        *) break ;;
+        *) test -z "$2" && destroot="$1" || builddirs[${#builddirs[@]}]="$1";;
     esac
     shift
 done
 
-dev32=$1
-dev64=$2
-destroot=$3
+test -n "$destroot" || { echo "!! no destroot specified"; usage 1; }
 
-test -d "$dev32" -a -d "$dev64" -a -n "$destroot" || { echo "!! wrong input"; usage 1; }
+for d in "${builddirs[@]}"; do
+    test -d "$d" || { echo "!! wrong builddir '$d'"; usage 1; }
+done
 
 umask 022
 
-mkdir -p "$dev32/destroot" "$dev64/destroot" "$destroot" || { echo "!! cannot create destroots"; usage 2; }
+for d in "${builddirs[@]}"; do
+    mkdir -p "${d}/destroot" || { echo "!! cannot create '${d}/destroot"; usage 2; }
+done
 
-pushd >/dev/null 2>&1 "$dev32" && dev32=`pwd` && popd >/dev/null 2>&1 \
-&& pushd >/dev/null 2>&1 "$dev64" && dev64=`pwd` && popd >/dev/null 2>&1 \
-&& pushd >/dev/null 2>&1 "$destroot" && destroot=`pwd` && popd >/dev/null 2>&1 \
-|| { echo "!! bad directories"; usage 3; }
+mkdir -p "$destroot" || { echo "!! cannot create destroot '${destroot}'"; usage 2; }
 
-test "$dev32" = "$dev64" -o "$dev32/destroot" = "$destroot" && { echo "!! folders must be distinct"; usage 4; }
+pushd >/dev/null 2>&1 "$destroot" && destroot=`pwd` && popd >/dev/null 2>&1 \
+|| { echo "!! bad destroot directory '$destroot'"; usage 3; }
+
+declare -a build_destroot
+for ((i=0; i < ${#builddirs[@]}; i=i+1)); do
+    pushd >/dev/null 2>&1 "${builddirs[$i]}" && builddirs[$i]=`pwd` && popd >/dev/null 2>&1 \
+    || { echo "!! bad directories"; usage 3; }
+    test "${builddirs[$i]}" = "${destroot}" && { echo "!! folders must be distinct"; usage 4; }
+    build_destroot[${#build_destroot[@]}]="${builddirs[$i]}/destroot"
+done
 
 if test -n "$do_install"; then
-    for d in "$dev32" $dev64; do
+    for d in "${builddirs[@]}"; do
         echo "+ installing '$d'"
         make -C "$d" install DESTDIR="${d}/destroot" || exit 5
     done
 fi
 
-echo "+ $dev32 and $dev64 installed. copying into $destroot..."
+echo "+ ${builddirs[@]} installed. copying into $destroot..."
+echo
 
-diff -qru "${dev32}/destroot" "${dev64}/destroot"
+diff -qru "${build_destroot[@]}"
+echo
 
 if test -n "${do_destroot}"; then
-    cp -a "$dev32/destroot/" "$destroot"
-    cp -a "$dev64/destroot/" "$destroot"
+    first=
+    for d in "${builddirs[@]}"; do
+        test -z "${first}" && { first="${d}/destroot/"; continue; }
+        cp -a "${d}/destroot/" "$destroot"
+    done
+    test -n "${first}" && { echo "+ Finally copying main_arch: '${first}'"; cp -a "${first}" "$destroot"; }
 fi
 
 echo "+ $destroot created, Merging libs..."
 
-files=`find "$dev64/destroot" "$dev32/destroot" \
+declare -a patterns
+for b in "${builddirs[@]}"; do
+    patterns[${#patterns[@]}]="-e"; patterns[${#patterns[@]}]="s|^${b}/destroot/||"
+done
+files=`find "${build_destroot[@]}" \
             -not -type l \
             -and \( -iname '*.dylib' -o -iname '*.a' -o -iname '*.so' -o -iname '*.dll' \
                     -o -iname '*.dylib.[0-9]*' -o -iname '*.so.[0-9]*' \
                     -o \( -not -type d -and -perm '+u=x' \) \
                  \) \
-        | sed -e "s|^${dev32}/destroot/||" -e "s|^${dev64}/destroot/||" | sort | uniq`
+                 | sed "${patterns[@]}" | sort | uniq`
 
-printf "FILES:\n$files\n"
+printf "FILES:\n$files\n\n"
 
 for f in $files; do
-    file32="${dev32}/destroot/$f"
-    file64="${dev64}/destroot/$f"
     filedst="${destroot}/$f"
+    ref_archs=
 
-    test -e "$file32" -a -e "$file64" || { echo "!! 32 or 64 file not found for $f"; continue; }
-    lipo -info "$file32" >/dev/null 2>&1 && lipo -info "$file64" >/dev/null 2>&1 || { echo "!! $f: not a valid binary"; continue; }
-    lipo "$file32" -verify_arch i386 >/dev/null 2>&1 && lipo "$file64" -verify_arch x86_64 >/dev/null 2>&1 || { echo "!! one of 32/64 file has not requested arch"; exit 6; }
+    unset lipo_args; declare -a lipo_args
+    add_lipo() { for a in "$@"; do lipo_args[${#lipo_args[@]}]="$a"; done }
 
-    mkdir -p "`dirname "${filedst}"`" || { echo "!! cannot create dir for $filedst"; exit 7; }
+    for b in "${builddirs[@]}"; do
+        filesrc="${b}/destroot/${f}"
+        test -e "${filesrc}" || { echo "!! ${f} not found in build $(basename "`dirname "${b}"`")/$(basename "${b}")"; continue; }
+        arch=$(lipo -archs "${filesrc}")
+        test -n "${arch}" || { echo "!! $f: not a valid binary"; continue; }
+        #lipo "$file32" -verify_arch i386 >/dev/null 2>&1 && lipo "$file64" -verify_arch x86_64 >/dev/null 2>&1 || { echo "!! one of 32/64 file has not requested arch"; exit 6; }
 
-    lipo -extract i386   "$file32" -output "${filedst}.32" >/dev/null 2>&1 || cp -a "$file32" "${filedst}.32"
-    lipo -extract x86_64 "$file64" -output "${filedst}.64" >/dev/null 2>&1 || cp -a "$file64" "${filedst}.64"
+        mkdir -p "`dirname "${filedst}"`" || { echo "!! cannot create dir for $filedst"; exit 7; }
+
+        if test -n "${take_all}" -a -z "${ref_archs}"; then
+            ref_archs=${arch}; arch=all
+            cp -a "${filesrc}" "${filedst}.tmp.${arch}"
+        else
+            if test -n "${ref_archs}"; then
+                curarch=${arch}; arch=
+                for a in ${curarch}; do
+                    case " ${ref_archs} " in *" ${a} "*) ;; *) arch="${arch:+ }${a}";; esac
+                done
+                test -z "${arch}" && continue
+            fi
+            lipo -extract "${arch}" "${filesrc}" -output "${filedst}.tmp.${arch}" >/dev/null 2>&1 || cp -a "${filesrc}" "${filedst}.tmp.${arch}"
+        fi
+        test -n "${take_all}" && add_lipo "${filedst}.tmp.${arch}" \
+        || add_lipo "-arch" "${arch}" "${filedst}.tmp.${arch}"
+    done
+
+    test "${#lipo_args[@]}" -eq 0 && continue
 
     #if test -e "${filedst}"; then
     #    i=0; suf=; while test -e "${filedst}$suf"; do suf=".$i"; i=$((i+1)); done
     #    cp -a "$filedst" "${filedst}$suf"
     #fi
 
-    lipo -arch x86_64 "${filedst}.64" -arch i386 "${filedst}.32" -create -output "${filedst}" \
-    && echo "+ ${filedst}" && rm -f "${filedst}.64" "${filedst}.32" \
-    || { echo "!! lipo could not create '${filedst}'"; exit 8; }
+    lipo "${lipo_args[@]}" -create -output "${filedst}" \
+        && { printf -- "+ ${filedst#${destroot}}: "; lipo -archs "${filedst}"; } && rm -f "${filedst}.tmp."*  \
+        || { echo "!! lipo could not create '${filedst}'"; exit 8; }
 
 done
 

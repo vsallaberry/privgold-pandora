@@ -44,11 +44,26 @@ export PKG_CONFIG_PATH=${prefix}/lib/pkgconfig${MORE_PREFIXES:+:${MORE_PREFIXES}
 compiler=${CC:-clang}
 macos_sdk=
 
-baseoptflags="-pipe -O3 -fstack-protector -mmacosx-version-min=10.7"
-arch=all
-#arch=x86_64
-test "$arch" = "all" && optflags="${baseoptflags} -arch x86_64 -arch i386" \
-                     || optflags="${baseoptflags} -arch ${arch}"
+#baseoptflags="-pipe -O3 -fstack-protector -isysroot/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr -isystem/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/include -L//Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/lib" # -mmacosx-version-min=10.7"
+#baseoptflags="-pipe -O3 -fstack-protector -isysroot/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk" # -mmacosx-version-min=10.7"
+baseoptflags="-pipe -O3 -fstack-protector"
+arch=${CUSTOM_BUILD_ARCH:-all}
+main_arch="$(uname -m)"
+all_archs=${main_arch}
+build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
+build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
+
+optflags="${baseoptflags}"
+if test "${build_sysname}" = "darwin"; then
+    if test ${build_sysmajor} -lt 19; then all_archs="i386 ${all_archs}"
+    else all_archs="arm64 ${all_archs}"; fi
+    for a in `echo ${all_archs}`; do
+        optflags="${optflags} -arch ${a}"
+    done
+else
+    optflags="${optflags} -arch ${main_arch}"
+    true #TODO
+fi
 
 ################### FIND COMPILER and SDK
 cc_flags=""
@@ -77,7 +92,7 @@ get_archs() {
 }
 if test -n "${macos_sdk}"; then
     macos_sdk_fwk=${macos_sdk}
-else
+elif test "${build_sysname}" = "darwin"; then
     _test_sdk=$(${compiler} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
     sysver=$(uname -r)
     if test ${sysver%%.*} -gt 15; then # 15 is capitan
@@ -147,6 +162,11 @@ objc_flags="${spec_objc_flags}${spec_objc_flags:+ }${objc_flags}"
 
 build_flags() {
     local optflags=$1
+    if test "${build_sysname}" = "darwin"; then
+        test \( ${build_sysmajor} -le 19 -a "${arch}" != "arm64" \) \
+            && optflags="${optflags} -mmacosx-version-min=10.7" \
+            || optflags="${optflags} -mmacosx-version-min=11.0"
+    fi
     export CPPFLAGS="-I${prefix}/include${MORE_PREFIXES:+ -I${MORE_PREFIXES}}"
     export CPATH=${prefix}/include
     export LIBRARY_PATH=${prefix}/lib
@@ -155,6 +175,16 @@ build_flags() {
     export OBJCFLAGS="${objc_flags}${objc_flags:+ }${optflags}"
     export LDFLAGS="${optflags} -L${prefix}/lib${MORE_PREFIXES:+ -L${MORE_PREFIXES}/lib}"
     export CXXLDFLAGS="${cxx_ldflags} ${LDFLAGS}"
+    if test "${arch}" = "arm64" -o \( "${build_sysname}" = "darwin" -a "${build_sysmajor}" -eq 19 -a "${arch}" = "all" \); then
+        export CPATH="${CPATH}:${macos_sdk}/usr/include"
+        export LIBRARY_PATH="${LIBRARY_PATH}:${macos_sdk}/usr/lib"
+        export SDKROOT="${macos_sdk}"
+        #CFLAGS="$CFLAGS -isysroot${macos_sdk}"
+        #CXXFLAGS="$CXXFLAGS -isysroot${macos_sdk}"
+        #OBJCFLAGS="$OBJCFLAGS -isysroot${macos_sdk}"
+        LDFLAGS="-L${prefix}/lib${MORE_PREFIXES:+ -L${MORE_PREFIXES}/lib} $LDFLAGS -isysroot${macos_sdk} --sysroot=${macos_sdk}"
+        CXXLDFLAGS="-L${prefix}/lib${MORE_PREFIXES:+ -L${MORE_PREFIXES}/lib}${CXXLDFLAGS} -isysroot${macos_sdk} --sysroot=${macos_sdk}"
+    fi
 }
 build_flags "${optflags}"
 
@@ -177,6 +207,7 @@ export CMAKE="${buildtools_prefix}/bin/cmake"
 archive=
 
 print_variables() {
+    echo "ARCH        $arch"
     echo "CC          $CC"
     echo "CFLAGS      $CFLAGS"
     echo "SDK         ${macos_sdk}"
@@ -220,12 +251,15 @@ doconfigure() { (
                     _i=$((_i-1)); _n=$((_n-1)); break ; fi; done; _i=$((_i+1)); done; }
     }
     . "${mypath}"
-    while test -n "$arch"; do
+
+    archs=${arch}
+    while test -n "${archs}"; do
+        arch=${archs%% *}
 
         configure_fun "$@"
 
-        ret=$?; test $ret -ne 0 && break
-        case "${arch}" in all) break;; esac
+        ret=$?; test $ret -ne 0 -o "${archs}" = "${arch}" && break
+        archs=${archs#* }
     done
 
     return $ret
@@ -282,7 +316,7 @@ configure_fun() {
             -HELP|-h|--help) echo "Usage: [-h,--help,-HELP] [-SILENT] [-CLEAN] [-ARCH=arch] [-INSTALL=<pkg>(pkg found in deps/XX_<pkg>)]"; return 1;;
             -SILENT)  silent=yes; shift;;
             -FINAL_INSTALL) do_install=yes; shift;;
-            -ARCH=*)  arch=${_arg#-ARCH=}; optflags="-arch ${arch} ${baseoptflags}"; build_flags "${optflags}"; shift;;
+            -ARCH=*)  archs=${_arg#-ARCH=}; arch=${archs%% *}; optflags="-arch ${arch} ${baseoptflags}"; build_flags "${optflags}"; shift;;
             -CLEAN)   do_clean=yes; shift ;;
             -INSTALL=*) shift; if test -z "${archive}"; then
                 archive=${_arg#-INSTALL=}; _pkgdir=
@@ -359,13 +393,17 @@ configure_fun() {
 
     # call this if you need to build one arch at a time
     build_one_arch() {
-        test "$arch" = "all" && arch=i386
+        test "${archs}" = "all" && archs=${all_archs}
+        arch=${archs%% *}
         case "$arch" in
+            arm64)   optflags="${baseoptflags} -arch arm64"
+                     test "${build_sysname}" = "darwin" -a ${build_sysmajor} -lt 20 \
+                         && add_args "--build=x86_64-apple-darwin${build_sysmajor}" "--host=aarch64-apple-darwin";;
             i386)   optflags="${baseoptflags} -arch i386";;
             x86_64) optflags="${baseoptflags} -arch x86_64";;
         esac
         build_flags "${optflags}"
-        echo "** CONFIGURING FOR ARCH $arch..."
+        printf --  "\n** CONFIGURING FOR ARCH $arch...\n-----------------------\n"
         builddir="build_${arch}"
         destroot="`pwd`/build_${arch}/destroot"
         update_destroot
@@ -461,6 +499,13 @@ configure_fun() {
         export LDFLAGS=$(echo " ${LDFLAGS} " | sed -e "${_sedpat}")
     }
 
+    if test "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 -a "${prog}" != "Python"; then
+        #build_one_arch
+
+        export CFLAGS="${CFLAGS} -idirafter${macos_sdk}/usr/include"
+
+    fi
+
     add_args --prefix="${prefix}" --disable-silent-rules
 
     ## PER PROJECT SPECFIC CONFIGURE OPTIONS
@@ -501,7 +546,20 @@ configure_fun() {
                         --enable-ipv6 \
                         --enable-framework="${prefix}/Library/Frameworks"
                         #--enable-shared
-                        ;;
+                    arch=all; archs=all
+                    del_args "--build=*" "--host=*"
+
+                    if test \( "${arch}" = "arm64" -a "$(uname -m)" != "arm64" \) \
+                    -o \( "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 \); then
+                        for f in "${resources}/"[0-9][0-9]_"python/patch-27-"*.diff.arm64; do patch -N -p0 < "$f"; done
+                        del_args "--with-system-ffi"; add_args --with-system-ffi="${macos_sdk}/usr/include/ffi"
+                        export CPATH="${CPATH}:${macos_sdk}/usr/include:${macos_sdk}/usr/include/ffi"
+                        #export CFLAGS="${CFLAGS} -D__arm64__ -idirafter${macos_sdk}/usr/include"
+                        export CFLAGS="${CFLAGS} -idirafter${macos_sdk}/usr/include"
+                        #CFLAGS="$CFLAGS -arch x86_64 -arch x86_64"
+                        #add_args ac_cv_file__dev_ptmx=yes ac_cv_file__dev_ptc=yes
+                    fi
+                    ;;
                 3.*)
                     ###
                     ### Here is the only thing working at the moment, after patch below, and in a new shell
@@ -597,6 +655,8 @@ configure_fun() {
             ;;
         ffmpeg)
             build_one_arch
+            del_args "--build=*" "--host=*"
+            test "$arch" = "arm64" && add_args "--enable-cross-compile" "--target-os=darwin" "--disable-asm"
             ###build_optimize_size; add_args --enable-small
             build_optimize_size; add_args --enable-optimizations=-Os
             test -x "${buildtools_prefix}/bin/pod2man" && export POD2MAN=${buildtools_prefix}/bin/pod2man
@@ -630,6 +690,8 @@ configure_fun() {
                     --disable-sdltest \
                     --mandir=${prefix}/share/man
              test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf --include=`pwd`/m4 -fiv && touch .vs_autoreconf_done)
+             #do_autoreconf --include=`pwd`/m4
+             #do_autocmd ./autogen.sh --include=./m4
             ;;
         flac)
             PATH=$PATH:${buildtools_prefix}/bin
@@ -644,6 +706,7 @@ configure_fun() {
             case "$arch" in
                 i386)   sslarch="darwin-i386-cc";;
                 x86_64) sslarch="darwin64-x86_64-cc";;
+                arm64)  sslarch="darwin64-arm64-cc"; del_args "--build=*" "--host=*";;
             esac
             add_args "${sslarch}"
             del_args "--disable-silent-rules"
@@ -654,6 +717,9 @@ configure_fun() {
             #for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
             test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
             ;;
+        opus)
+            test "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 && build_one_arch
+            ;;
         libmodplug)
             PATH="${PATH}:${buildtools_prefix}/bin"
             do_autoreconf || return 1
@@ -661,9 +727,11 @@ configure_fun() {
             ;;
         mpg123)
             build_one_arch
+            add_args --with-audio=coreaudio
             case "$arch" in
                 i386)   add_args "--with-cpu=sse";;
                 x86_64) add_args "--with-cpu=x86-64";;
+                arm64)  add_args "--with-cpu=aarch64";;
             esac
             ;;
         gdb)
@@ -802,6 +870,7 @@ configure_fun() {
                     6.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses-post-configure-patch-curses-head.diff";;
                     5.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses5-post-configure-patch-curses-head.diff";;
                 esac
+                test $? -eq 0 -o "${arch}" = "arm64"
             }
             export LDFLAGS="${optflags} "
             export CXXLDFLAGS="${cxx_ldflags} ${optflags} "
@@ -1103,7 +1172,7 @@ configure_fun() {
         "${destrootcmd}" "${destrootargs[@]}"
         ret=$?
         chown -Rh root:wheel "${prefix}"
-        arch=
+        archs=
         return $ret
     fi
 
@@ -1158,20 +1227,22 @@ configure_fun() {
     # Leave builddir
     popd > /dev/null
 
-    case "${arch}" in
-        all)arch=;;
-        x86_64)
+    if test "${arch}" != "all"; then
+        if test "${archs}" = "${arch}"; then ## last one
             if test -n "${silent}" || yesno "install done on last arch, merge ?"; then
                 destroot=${destroot_all}
-                $mergelibs -N build_i386 build_x86_64 "${destroot}" || { finish $?; return $?; }
+                unset builddirs; declare -a builddirs
+                vtab_add builddirs "build_${main_arch}"
+                for a in `echo ${all_archs}`; do
+                    test "${a}" = "${main_arch}" && continue; vtab_add builddirs "build_${a}"; done
+                $mergelibs -N "${builddirs[@]}" "${destroot}" || { finish $?; return $?; }
                 create_pkginfo
             fi
-            arch=;;
-        i386)
-            arch=x86_64
+        else
             rm -f "${rootdir}/.vs_autoreconf_done"
-            return 0;;
-    esac
+            return 0
+        fi
+    fi
 
     if test -n "${silent}" || yesno "FINAL INSTALL?"; then
         #__suxdo bash -c "\". ${mypath}; doconfigure -FINAL_INSTALL\""
