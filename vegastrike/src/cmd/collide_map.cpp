@@ -1,5 +1,11 @@
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include <algorithm>
 #include <assert.h>
+#ifdef HAVE_STDDEF_H
+# include <stddef.h>
+#endif
 #include "collide_map.h"
 #include "unit_generic.h"
 #include "bolt.h"

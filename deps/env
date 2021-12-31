@@ -41,7 +41,7 @@ test -L "${resources}" && resources=$(cd "$(readlink "${resources}")"; pwd)
 mergelibs="${resources}/mergelibs.sh"
 export PATH=${prefix}/bin:${prefix}/sbin${MORE_PREFIXES:+:${MORE_PREFIXES}/bin:${MORE_PREFIXES}/sbin}:/usr/bin:/usr/sbin:/bin:/sbin
 export PKG_CONFIG_PATH=${prefix}/lib/pkgconfig${MORE_PREFIXES:+:${MORE_PREFIXES}/lib/pkgconfig}
-compiler=${CC:-clang}
+compiler=${CC:-$(which -a clang gcc 2> /dev/null | head -n1)}
 macos_sdk=
 
 #baseoptflags="-pipe -O3 -fstack-protector -isysroot/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr -isystem/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/include -L//Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/lib" # -mmacosx-version-min=10.7"
@@ -61,7 +61,7 @@ if test "${build_sysname}" = "darwin"; then
         optflags="${optflags} -arch ${a}"
     done
 else
-    optflags="${optflags} -arch ${main_arch}"
+    #optflags="${optflags} -arch ${main_arch}"
     true #TODO
 fi
 
@@ -75,8 +75,12 @@ cxx_flags=""
 cxx_ldflags=""
 gcc_cxx_flags=""
 gcc_objc_flags=""
-clang_cxx_flags="-stdlib=libc++"
-clang_cxx_ldflags="-stdlib=libc++"
+case "${build_sysname}" in
+    "darwin"*) clang_cxx_flags="-stdlib=libc++"
+               clang_cxx_ldflags="-stdlib=libc++";;
+    *)         clang_cxx_flags=""
+               clang_cxx_ldflags="";;
+esac
 gcc_cxx_ldflags=""
 
 ! tmp_compiler=$(which "${compiler}") \
@@ -201,7 +205,7 @@ export   LEX=/usr/bin/flex
 #export  FLEX="${prefix}/bin/flex"
 #export   LEX=${FLEX}
 
-export CMAKE="${buildtools_prefix}/bin/cmake"
+export CMAKE="$(which -a ${buildtools_prefix}/bin/cmake cmake | head -n1)"
 
 
 archive=
@@ -246,8 +250,10 @@ doconfigure() { (
             while test $_i -le $_n; do eval "_elt=\${${_tabn}[${_i}]}";
                 for _arg in "$@"; do
                     if eval "case \${_elt} in ${_arg}) true;; *) false;; esac"; then
-                        test -n "${ZSH_VERSION}" && eval "${_tabn}[${_i}]=()" \
-                        || eval "unset \"${_tabn}[${_i}]\""
+                        _j=${_i}; while test $_j -le ${_n}; do
+                            eval "${_tabn}[${_j}]=\${${_tabn}[$((_j+1))]}"; _j=$((_j+1)); done
+                        test -n "${ZSH_VERSION}" && eval "${_tabn}[${_n}]=()" \
+                        || eval "unset \"${_tabn}[${_n}]\""
                     _i=$((_i-1)); _n=$((_n-1)); break ; fi; done; _i=$((_i+1)); done; }
     }
     . "${mypath}"
@@ -362,7 +368,11 @@ configure_fun() {
 
     # BUILD, default make
     local buildcmd="make"
-    ncpu=$(sysctl hw.ncpu 2> /dev/null | awk '{ print $2 }'); test -z "$ncpu" && ncpu=1;
+    case "${build_sysname}" in
+        linux) ncpu=$(grep -E '^processor[[:space:]]*:' /proc/cpuinfo | wc -l);;
+        *) ncpu=$(sysctl hw.ncpu 2> /dev/null | awk '{ print $2 }');;
+    esac
+    test -z "$ncpu" && ncpu=1
     add_buildargs "-j$((ncpu+1))"
 
     # Final install, cp or rsync (rsync prefered because it erases link if dest is link and src is not)
@@ -393,6 +403,7 @@ configure_fun() {
 
     # call this if you need to build one arch at a time
     build_one_arch() {
+        test "${build_sysname}" = "linux" && return 0
         test "${archs}" = "all" && archs=${all_archs}
         arch=${archs%% *}
         case "$arch" in
@@ -413,7 +424,7 @@ configure_fun() {
         test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS INSTALL README; PATH="$PATH:${buildtools_prefix}/bin"; "$@" && touch .vs_autoreconf_done)
     }
     do_autoreconf() {
-        do_autocmd "autoreconf" "$@" -fiv
+        do_autocmd "autoreconf" --include="${prefix}/share/aclocal" ${MORE_PREFIXES:+"--include=${MORE_PREFIXES}/share/aclocal"} "$@" -fiv
     }
     build_meson() {
         del_args "*"
@@ -533,19 +544,27 @@ configure_fun() {
             export PKGCONFIG="`which -a pkg-config ${buildtools_prefix}/bin/pkg-config pkg-config | head -n1`"
             export PKG_CONFIG=${PKGCONFIG}
             for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
-            add_args --with-internal-glib --with-pc-path=${prefix}/lib/pkgconfig;;
+            add_args --with-internal-glib --with-pc-path=${prefix}/lib/pkgconfig
+            case "${build_sysname}" in
+                "linux") add_args --with-libiconv=gnu;;
+            esac
+            ;;
+        libpng) do_autocmd ./autogen.sh;;
         Python)
             case "${prog_version}" in
                 2.*)
+                    test "${build_sysname}" = "darwin" && \
                     for f in "${resources}/"[0-9][0-9]_"python/patch-27-"*.diff; do patch -N -p0 < "$f"; done
                     #--enable-ipv6
                     #--enable-universalsdk="${macos_sdk}" \
                     add_args \
                         --with-system-expat \
                         --with-system-ffi \
-                        --enable-ipv6 \
-                        --enable-framework="${prefix}/Library/Frameworks"
-                        #--enable-shared
+                        --enable-ipv6
+                    case "${build_sysname}" in
+                        darwin*) add_args --enable-framework="${prefix}/Library/Frameworks";;
+                        linux) add_args --enable-shared;;
+                    esac
                     arch=all; archs=all
                     del_args "--build=*" "--host=*"
 
@@ -598,8 +617,9 @@ configure_fun() {
             esac
             ;;
         SDL|sdl)
+            case "${build_sysname}" in darwin*) add_args --without-x;; esac
             add_args \
-                --without-x --enable-joystick --enable-audio
+                --enable-joystick --enable-audio
             do_postconfigure() {
                 (cd "${builddir}/include" && ed - ./SDL_config.h < "${resources}/"[0-9][0-9]_"libsdl/include_SDL_config.h.ed")
             }
@@ -622,22 +642,30 @@ configure_fun() {
             #build_flags "${optflags}"
             #--enable-joystick --enable-audio
             for f in "${resources}/"[0-9][0-9]_"libsdl2/patch"*.diff; do patch -N -p0 < "$f"; done
+            case "${build_sysname}" in darwin*) add_args --without-x;; esac
             add_args \
-                --without-x --enable-joystick --enable-audio \
+                --enable-joystick --enable-audio \
                 --disable-video-metal --disable-render-metal
             add_buildargs V=1
             ;;
         dialog)
             do_postconfigure() {
-                for f in "${resources}/"[0-9][0-9]_"libdialog/patch"*.diff; do patch -N -p0 < "$f"; done
+                case "${build_sysname}" in darwin*)
+                    for f in "${resources}/"[0-9][0-9]_"libdialog/patch"*.diff; do patch -N -p0 < "$f"; done;;
+                esac
             }
+            echo "INSTALL ${installargs[@]}"
             del_installargs "install"
             add_installargs "install-full"
+            echo "INSTALL ${installargs[@]}"
             do_postinstall() {
-                for l in ${destroot}/${prefix}/lib/*.dylib.*; do
-                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.dylib
-                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.1.3.dylib
-                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.dylib.1.3
+                case "${build_sysname}" in darwin*) dllext=dylib;; *) dllext=so;; esac
+                test -f "${destroot}/${prefix}/lib/libdialog.${dllext}.15.0.0" || ln -sv "libdialog.so" "${destroot}/${prefix}/lib/libdialog.${dllext}.15.0.0"
+                for l in ${destroot}/${prefix}/lib/*.${dllext}.*; do
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${dllext}
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.1.3.${dllext}
+                    test "$(basename "${l}")" = "libdialog.${dllext}.1.3" || ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${dllext}.1.3
+                    break
                 done
             }
             add_args --with-shared --without-x
@@ -655,6 +683,7 @@ configure_fun() {
             ;;
         ffmpeg)
             build_one_arch
+            test "$arch" = "all" && _arch=$(uname -m) || _arch=$arch
             del_args "--build=*" "--host=*"
             test "$arch" = "arm64" && add_args "--enable-cross-compile" "--target-os=darwin" "--disable-asm"
             ###build_optimize_size; add_args --enable-small
@@ -670,15 +699,17 @@ configure_fun() {
             add_args --cc="$CC" \
                 --disable-nonfree \
                 --enable-gpl \
-                --enable-shared --enable-pthreads --arch=$arch \
+                --enable-shared --enable-pthreads --arch=$_arch \
                 --disable-debug \
                 --enable-ffplay --enable-sdl --disable-outdev=sdl \
                 --enable-libvorbis
-                #--disable-ffplay --disable-sdl --disable-outdev=sdl \
+                #--disable-ffplay --disable-sdl --disable-outdev=sdl
+            case "${build_sysname}" in linux) add_args --enable-pic;; esac
             ;;
         smpeg)
             #CFLAGS="${CFLAGS} --sysroot=${macos_sdk}"
-            CXXFLAGS="${CXXFLAGS} -std=c++98 -stdlib=libc++"
+            CXXFLAGS="${CXXFLAGS} -std=c++98"
+            case "${build_sysname}" in darwin*) CXXFLAGS="${CXXFLAGS} -stdlib=libc++";; esac
             for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
             rm acinclude.m4
             add_args \
@@ -689,7 +720,9 @@ configure_fun() {
                     --enable-shared \
                     --disable-sdltest \
                     --mandir=${prefix}/share/man
-             test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf --include=`pwd`/m4 -fiv && touch .vs_autoreconf_done)
+
+            test -f .vs_autoreconf_done || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin
+             autoreconf --include=`pwd`/m4 --include="${prefix}/share/aclocal" -fiv && touch .vs_autoreconf_done)
              #do_autoreconf --include=`pwd`/m4
              #do_autocmd ./autogen.sh --include=./m4
             ;;
@@ -703,11 +736,22 @@ configure_fun() {
             ;;
         openssl)
             build_one_arch
-            case "$arch" in
-                i386)   sslarch="darwin-i386-cc";;
-                x86_64) sslarch="darwin64-x86_64-cc";;
-                arm64)  sslarch="darwin64-arm64-cc"; del_args "--build=*" "--host=*";;
+            case "${build_sysname}" in
+                darwin*)
+                    case "${arch}" in
+                        i386)   sslarch="darwin-i386-cc";;
+                        x86_64) sslarch="darwin64-x86_64-cc";;
+                        arm64)  sslarch="darwin64-arm64-cc"; del_args "--build=*" "--host=*";;
+                    esac ;;
+                linux)
+                    test "${arch}" = "all" && _arch=$(uname -m) || _arch=${arch}
+                    case "${_arch}" in
+                        i386|x86)   sslarch="linux-x86";;
+                        x86_64) sslarch="linux-x86_64";;
+                        arm64)  sslarch="linux-arm64"; del_args "--build=*" "--host=*";;
+                    esac;;
             esac
+            configure="`pwd`/Configure"
             add_args "${sslarch}"
             del_args "--disable-silent-rules"
             for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
@@ -725,11 +769,15 @@ configure_fun() {
             do_autoreconf || return 1
             for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
             ;;
+        openal-soft)
+            build_cmake
+            ;;
         mpg123)
             build_one_arch
-            add_args --with-audio=coreaudio
-            case "$arch" in
-                i386)   add_args "--with-cpu=sse";;
+            case "${build_sysname}" in darwin*) add_args --with-audio=coreaudio;; esac
+            test "$arch" = "all" && _arch=$(uname -m) || _arch=$arch
+            case "${_arch}" in
+                i386|x86)   add_args "--with-cpu=sse";;
                 x86_64) add_args "--with-cpu=x86-64";;
                 arm64)  add_args "--with-cpu=aarch64";;
             esac
@@ -817,7 +865,8 @@ configure_fun() {
                     local _ext=${_f##*.}
                     _f=${_f%.*}
                     local _basef=$(basename "${_f}")
-                    test "${_f}" = "${_ext}" && _ext= || case "$1" in *.dylib) _ext=.${nc_ver}.${_ext};; *) _ext=.${_ext};; esac
+                    test "${_f}" = "${_ext}" && _ext= || case "$1" in
+                        *.dylib) _ext=.${nc_ver}.${_ext};; *.so) _ext=.${_ext}.${nc_ver};; *) _ext=.${_ext};; esac
                     echo "** ${_f} (${_ext})"
                     if test -f "${_f}w${_ext}" -a \! \( -f "${_f}${_ext}" -o -L "${_f}${_ext}" \); then
                         rm -f "${_f}${_ext}"
@@ -835,7 +884,7 @@ configure_fun() {
                     fi
                     if test -f "${_f}${_ext}" -a \( \! -f "${_f}w${_ext}" -o -L "${_f}w${_ext}" \); then
                         rm -f "${_f}w${_ext}"
-                        ln -sf "${_basef}${_ext}" "${_f}w${_ext}"
+                        ln -sfv "${_basef}${_ext}" "${_f}w${_ext}"
                         local _ver=.${nc_ver}
                         while case "$1" in *.dylib) true;; *) false;; esac; do
                             case "${_ver}" in .*) _ver=${_ver%.*};; *) _ver=;; esac
@@ -843,15 +892,23 @@ configure_fun() {
                             ln -sfv "${_basef}${_ext}" "${_f}w${_ver}.dylib"
                             test -z "${_ver}" && break ;
                         done
+                        _ver=.${nc_ver}
+                        while case "$1" in *.so) true;; *) false;; esac; do
+                            case "${_ver}" in .*) _ver=${_ver%.*};; *) _ver=;; esac
+                            ln -sfv "${_basef}${_ext}" "${_f}.so${_ver}"
+                            ln -sfv "${_basef}${_ext}" "${_f}w.so${_ver}"
+                            test -z "${_ver}" && break ;
+                        done
                     fi
                 }
                 echo "!! need to do links to ncurses*w in lib and lib/pkgconfig !!"
+                case "${build_sysname}" in darwin*) dllext=dylib;; *) dllext=so;; esac
                 for f in form menu ncurses ${nc_cxx} panel; do
-                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.dylib"
+                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.${dllext}"
                     check_w_suffix "${destroot}/${prefix}/lib/lib${f}.a"
                     check_w_suffix "${destroot}/${prefix}/lib/pkgconfig/${f}.pc"
                 done
-                ln -sfv "libncurses.dylib" "${destroot}/${prefix}/lib/libtermcap.dylib"
+                ln -sfv "libncurses.${dllext}" "${destroot}/${prefix}/lib/libtermcap.${dllext}"
                 f="${destroot}/${prefix}/bin/ncurses"
                 for s in ${nc_ver} ""; do
                     if test -f "${f}w${s}-config" -a \! -L "${f}w${s}-config"; then
@@ -870,7 +927,7 @@ configure_fun() {
                     6.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses-post-configure-patch-curses-head.diff";;
                     5.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses5-post-configure-patch-curses-head.diff";;
                 esac
-                test $? -eq 0 -o "${arch}" = "arm64"
+                test $? -eq 0 -o "${arch}" = "arm64" -o "${build_sysname}" = "linux"
             }
             export LDFLAGS="${optflags} "
             export CXXLDFLAGS="${cxx_ldflags} ${optflags} "
@@ -886,6 +943,7 @@ configure_fun() {
                 --enable-overwrite \
                 --with-shared \
                 --with-cxx-shared \
+                --without-ada \
                 --without-debug  \
                 --with-pkg-config-libdir="${prefix}/lib/pkgconfig" \
                 --enable-pc-files \
@@ -895,7 +953,10 @@ configure_fun() {
             test -n "${ada}" && add_args --with-ada --with-ada-sharedlib="${libAdaCursesSO}"
             case "${prog_version}" in
                 5.*) nc_ver=5.4; add_args --with-abi-version=5.4 --with-abi-version=${nc_ver} --without-cxx-binding; nc_cxx=;;
-                *) nc_ver=${prog_version%%.*};;
+                *) case "${build_sysname}" in
+                     linux) nc_ver=$(echo ${prog_version} | sed -e 's/^\([^.]*.[^.]*\).*/\1/');;
+                     *) nc_ver=${prog_version%%.*};;
+                   esac;;
             esac
             ;;
 
@@ -932,7 +993,7 @@ configure_fun() {
             build_one_arch
             build_cmake
             add_args "-DWITH_JPEG8=1"
-            export ASM_NASM=${buildtools_prefix}/bin/nasm
+            export ASM_NASM=$(which -a ${buildtools_prefix}/bin/nasm nasm | head -n1)
             ;;
         jasper)
             build_cmake
@@ -1004,7 +1065,6 @@ configure_fun() {
                 --disable-xlib-xcb \
                 --disable-xcb \
                 --disable-xcb-shm \
-                --without-x \
                 --enable-ft \
                 --enable-pdf \
                 --enable-png \
@@ -1013,6 +1073,7 @@ configure_fun() {
                 --enable-svg \
                 --enable-tee \
                 --enable-xml
+            case "${build_sysname}" in darwin*) add_args --without-x;; esac
             build_optimize_size
             for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
             ;;
@@ -1092,10 +1153,10 @@ configure_fun() {
                 --disable-debug \
                 --disable-glibtest \
                 gio_can_sniff=yes \
-                --without-x \
                 --with-gdktarget=quartz \
                 --enable-quartz-relocation \
                 --disable-modules       #  disable dynamic module loading
+            case "${build_sysname}" in darwin*) add_args --without-x;; esac
             do_postinstall() {
                 if test -d "${destroot}/${prefix}/lib/gtk-2.0/2.10.0/immodules"; then
                     DYLD_LIBRARY_PATH=${destroot}/${prefix}/lib \
@@ -1171,7 +1232,8 @@ configure_fun() {
         echo "+ ${destrootcmd} ${destrootargs[@]}"
         "${destrootcmd}" "${destrootargs[@]}"
         ret=$?
-        chown -Rh root:wheel "${prefix}"
+        group=$(id -gn root)
+        chown -Rh "root:${group}" "${prefix}"
         archs=
         return $ret
     fi
@@ -1247,7 +1309,11 @@ configure_fun() {
     if test -n "${silent}" || yesno "FINAL INSTALL?"; then
         #__suxdo bash -c "\". ${mypath}; doconfigure -FINAL_INSTALL\""
         for ((_i=0; i<3; i=i+1)); do
-            su adm -c "sudo su root -c \"export CUSTOM_PREFIX='${prefix}'; export MORE_PREFIXES='${MORE_PREFIXES}'; . ${mypath}; doconfigure -FINAL_INSTALL\"" && break
+            if test "${build_sysname}" = "darwin"; then
+                su adm -c "sudo su root -c \"export CUSTOM_PREFIX='${prefix}'; export MORE_PREFIXES='${MORE_PREFIXES}'; . ${mypath}; doconfigure -FINAL_INSTALL\"" && break
+            else
+                su -c "export CUSTOM_PREFIX='${prefix}'; export MORE_PREFIXES='${MORE_PREFIXES}'; . ${mypath}; doconfigure -FINAL_INSTALL" && break
+            fi
             yesno "retry?" || { finish $?; return $?; }
         done \
         || { finish $?; return $?; }

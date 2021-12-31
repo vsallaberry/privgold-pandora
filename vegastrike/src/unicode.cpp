@@ -52,6 +52,8 @@
 # define iswprint(c) isprint(c)
 #endif
 
+#include <iostream>
+
 #include "log.h"
 
 // -----------------------------
@@ -170,7 +172,7 @@ void unicodeInitLocale() {
             for (const char ** cod = cods; *cod; cod++) {
                 snprintf(loc, sizeof(loc), "%s.%s", *lang, *cod);
                 if (setlocale(LC_CTYPE, loc) != NULL) {
-                    while (*(++lang)) /* loop */;
+                    while (*(lang+1)) ++lang;
                     break ;
                 }
             }

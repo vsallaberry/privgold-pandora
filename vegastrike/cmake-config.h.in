@@ -36,6 +36,7 @@
 #cmakedefine HAVE__FINITE 1
 #cmakedefine HAVE_GETTIMEOFDAY 1
 #cmakedefine HAVE_INTMAX_T 1
+#cmakedefine HAVE_PTRDIFF_T 1
 #cmakedefine HAVE_STAT_H 1
 #cmakedefine HAVE_LSTAT 1
 #cmakedefine HAVE_PYTHON 1

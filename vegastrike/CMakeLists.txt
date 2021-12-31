@@ -927,7 +927,10 @@ CHECK_SYMBOL_EXISTS(strnicmp "string.h;stdlib.h;stdio.h;windows.h" HAVE_STRNICMP
 include (CheckTypeSize)
 check_type_size(intmax_t INTMAX_T)
 check_type_size(uintmax_t UINTMAX_T)
+check_type_size(ptrdiff_t PTRDIFF_T)
 ## ! VSA
+
+find_library(PTHREAD_LIBRARY NAMES pthread)
 
 CONFIGURE_FILE(${vsUTCS_SOURCE_DIR}/cmake-config.h.in ${vsUTCS_BINARY_DIR}/config.h)
 
@@ -939,9 +942,15 @@ SET(TST_LIBS engine_com OPcollide netgeneric netlowlevel ${TST_LIBS})
 SET(TST_SERVER_LIBS netgeneric engine_com netlowlevel OPcollide ${TST_LIBS})
 include_directories(${TST_INCLUDES})
 
+if (PTHREAD_LIBRARY)
+    SET(PTHREAD_LDFLAGS " -lpthread")
+else()
+    UNSET(PTHREAD_LDFLAGS)
+endif()
+
 IF(NOT DISABLE_CLIENT)
 	target_link_libraries(vegastrike ${TST_LIBS})
-    set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}")
+    set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}")
 ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file
@@ -957,7 +966,7 @@ add_subdirectory(tests)
 
 
 target_link_libraries(vegaserver ${TST_SERVER_LIBS})
-set_target_properties(vegaserver PROPERTIES LINK_FLAGS "-L/usr/lib -L${vsUTCS_BINARY_DIR}")
+set_target_properties(vegaserver PROPERTIES LINK_FLAGS "-L/usr/lib -L${vsUTCS_BINARY_DIR}${PTHREAD_LDFLAGS}")
 add_dependencies(vegaserver mesh_tool)
 if (GTK2_FOUND)
     add_dependencies(vegaserver vssetup)

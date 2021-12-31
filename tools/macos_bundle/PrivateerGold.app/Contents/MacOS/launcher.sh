@@ -14,11 +14,21 @@ tr=tr
 mkdir="mkdir -p"
 cp="cp -v"
 diff="diff -u -q"
+os=$(uname -s | tr "[:upper:]" "[:lower:]")
+do_setup=
+
+while test -n "$1"; do
+    case "$1" in
+        --setup) do_setup=yes;;
+    esac
+    shift
+done
 
 #
 # Go in Data directory
 #
 data_dir="${mydir}/../Resources/data"
+test -d "${data_dir}" || data_dir="${mydir}/../data"
 cd "${data_dir}"
 
 #
@@ -51,7 +61,7 @@ test -d "${vega_home}/save" || ${mkdir} "${vega_home}/save"
 test -d "${vega_home}/serialized_xml/New_Game" || ${mkdir} "${vega_home}/serialized_xml/New_Game"
 ${diff} "Version.txt" "${vega_home}/Version.txt" >/dev/null 2>&1 || ${cp} Version.txt "${vega_home}"
 ${diff} "${setup_config_file}" "${vega_home}/${setup_config_file}" >/dev/null 2>&1 || ${cp} "${setup_config_file}" "${vega_home}"
-${diff} "New_game" "${vega_home}/save/New_Game" >/dev/null 2>&1 || ${cp} New_Game "${vega_home}/save"
+${diff} "New_Game" "${vega_home}/save/New_Game" >/dev/null 2>&1 || ${cp} New_Game "${vega_home}/save"
 ${diff} "${vega_name}/serialized_xml/New_Game/tarsus.begin.csv" \
         "${vega_home}/serialized_xml/New_Game/tarsus.begin.csv"  >/dev/null 2>&1 \
     || ${cp} "${vega_name}/serialized_xml/New_Game/tarsus.begin.csv" \
@@ -104,6 +114,7 @@ export XAUTHORITY=~/.Xauthority 2>/dev/null
 echo
 echo "-----------------------------------------------------"
 echo "Vegastrike launcher"
+echo "  os        ${os}"
 echo "  home      ${vega_home}"
 echo "  config    ${config}"
 echo "  gfx       ${engine}"
@@ -115,7 +126,10 @@ echo
 #
 # run setup if ALT key is pressed
 #
-if test "$("${mydir}/checkModifierKeys" option 2>/dev/null)" = "1"; then
+case "${os}" in
+    linux*) export LD_LIBRARY_PATH="${mydir}/../lib:${mydir}/../lib/gtk";;
+esac
+if test -n "${do_setup}" -o "$("${mydir}/checkModifierKeys" option 2>/dev/null)" = "1"; then
 
     # Run SETUP
     cd "${data_dir}"
@@ -125,17 +139,24 @@ if test "$("${mydir}/checkModifierKeys" option 2>/dev/null)" = "1"; then
         if test "${setup}" = "vssetup_dlg"; then
             #This is not pretty but this bypasses sandboxing issues when launching another app
             #open -a Terminal.app -n "${mydir}/${setup}" && break
-            for f in /System/Applications/Utilities /Applications/Utilities /System/Applications /Applications; do
-                if test -x "${f}/Terminal.app/Contents/MacOS/Terminal"; then
-                    "${f}/Terminal.app/Contents/MacOS/Terminal" "${mydir}/${setup}" & termpid=$! || continue
-                    sleep 3
-                    setuppid=$(pgrep -u$(id -u) -a "${setup}")
-                    echo "Term pid=$termpid, Setup pid=$setuppid"
-                    while ps -p${setuppid} >/dev/null 2>&1; do sleep 1; done
-                    kill $termpid
-                    break
-                fi
-            done
+            case "${os}" in
+                darwin*)
+                    for f in /System/Applications/Utilities /Applications/Utilities /System/Applications /Applications; do
+                        if test -x "${f}/Terminal.app/Contents/MacOS/Terminal"; then
+                            "${f}/Terminal.app/Contents/MacOS/Terminal" "${mydir}/${setup}" & termpid=$! || continue
+                            sleep 3
+                            setuppid=$(pgrep -u$(id -u) -a "${setup}")
+                            echo "Term pid=$termpid, Setup pid=$setuppid"
+                            while ps -p${setuppid} >/dev/null 2>&1; do sleep 1; done
+                            kill $termpid
+                            break
+                        fi
+                    done
+                    ;;
+                linux*)
+                    xterm -e "\"${mydir}/${setup}\"; echo \"press enter...\"; read"
+                    ;;
+            esac
         else
             "${mydir}/${setup}" > "${setuplog_file}" 2>&1
         fi && break

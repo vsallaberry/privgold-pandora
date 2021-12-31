@@ -47,11 +47,15 @@ buildpool=build
 # prefix with bin/lib/share/... containing vega build dependencies
 VEGA_PREFIX=/usr/local/vega05
 
+# SYSTEM
+build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
+build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
+
 # Compiler settings
 unset CFLAGS CXXFLAGS LDFLAGS CPPFLAGS OBJCFLAGS OBJCPPFLAGS IPATH CPATH INCLUDE_PATH LIBRARY_PATH
 #compiler=/usr/local/gcc/gcc-6.5.0_ada/bin/gcc
 #compiler=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
-compiler=clang
+compiler=${CC:-clang}
 cxx_standard=11
 cc_flags=""
 gcc_cc_flags=""
@@ -59,7 +63,12 @@ clang_cc_flags=""
 #cxx_flags="-fpermissive -Wno-deprecated-declarations -Wno-unused-local-typedefs -Wno-strict-aliasing"
 cxx_flags="-Wno-deprecated-declarations" # -Wno-strict-aliasing"
 gcc_cxx_flags="-Wno-unused-local-typedefs"
-clang_cxx_flags="-stdlib=libc++ -Wno-unused-local-typedef -Wno-deprecated-register"
+clang_cxx_flags="-Wno-unused-local-typedef -Wno-deprecated-register"
+case "${build_sysname}" in
+    darwin*) clang_cxx_flags="-stdlib=libc++${clang_cxx_flags:+ }${clang_cxx_flags}"
+             build_dllext="dylib";;
+    *)       build_dllext="so";;
+esac
 cxx_ldflags=
 
 py_version=2.7
@@ -73,9 +82,16 @@ if false; then
 else
     # EMBEDED PYTHON
     export PYTHON="${VEGA_PREFIX}/bin/python${py_version}"
-    export PYTHONPATH="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
-    export PYTHON_LIBRARY=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/lib/libpython${py_version}.dylib
-    export PYTHON_INCLUDE_DIR=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version}
+    case "${build_sysname}" in
+        darwin*)
+            export PYTHONPATH="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
+            export PYTHON_LIBRARY=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/lib/libpython${py_version}.dylib
+            export PYTHON_INCLUDE_DIR=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version};;
+        *)
+            export PYTHONPATH="${VEGA_PREFIX}/lib/python${py_version}"
+            export PYTHON_LIBRARY="${VEGA_PREFIX}/lib/libpython${py_version}.so"
+            export PYTHON_INCLUDE_DIR="${VEGA_PREFIX}/include/python${py_version}";;
+    esac
 fi
 export PYTHONHOME="${PYTHONPATH}"
 
@@ -191,7 +207,10 @@ yesno() {
 #
 # make jobs according to cpu number
 #
-make_jobs=$(sysctl hw.ncpu | awk '{ print $2 }')
+case "${build_sysname}" in
+    linux) make_jobs=$(grep -E '^processor[[:space:]]*:' /proc/cpuinfo | wc -l);;
+    *) make_jobs=$(sysctl hw.ncpu 2> /dev/null | awk '{ print $2 }');;
+esac
 if test -n "${make_jobs}"; then
     make_jobs=$((make_jobs))
     test ${make_jobs} -lt 4 \
@@ -444,20 +463,8 @@ do_build_fun() {
                 -DCMAKE_C_COMPILER="${CC}" \
                 -DCMAKE_VERBOSE_MAKEFILE=ON \
                 -DCMAKE_FIND_FRAMEWORK=LAST \
-                -DZLIB_INCLUDE_DIR=${macos_sdk}/usr/include -DZLIB_LIBRARY=/usr/lib/libz.dylib \
-                -DBZ2_INCLUDE_DIR=${macos_sdk}/usr/include -DBZ2_LIBRARY=/usr/lib/libbz2.dylib  \
-                -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}" \
                 -DBOOST_ROOT=/usr/local/specific/boost150 \
                 -DBOOST_INTERNAL=1_50 \
-                -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.dylib \
-                -DJPEG_INCLUDE_DIR=${VEGA_PREFIX}/include -DJPEG_LIBRARY=${VEGA_PREFIX}/lib/libjpeg.dylib \
-                -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
-                -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.dylib;${VEGA_PREFIX}/lib/libvorbis.dylib;${VEGA_PREFIX}/lib/libogg.dylib" \
-                -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
-                -DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
-                -DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
-                -DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
-                -DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers" \
                 -D_GNU_SOURCE=1 \
                 -DHAVE_TR1_UNORDERED_MAP=0 \
                 -DCMAKE_BUILD_TYPE="${build_type}" \
@@ -467,24 +474,54 @@ do_build_fun() {
                 -DCMAKE_CXX_STANDARD="${cxx_standard}" \
                 -DVS_STATIC_LIBS=0 \
                 -DVS_OPTIMIZE="${optim_level}" \
-                -DVS_DEBUG_LEVEL="-g3"
+                -DVS_DEBUG_LEVEL="-g3" \
+                -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}"
+
+                case "${build_sysname}" in
+                    darwin*)
+                        add_config_args \
+                            -DZLIB_INCLUDE_DIR=${macos_sdk}/usr/include -DZLIB_LIBRARY=/usr/lib/libz.${build_dllext} \
+                            -DBZ2_INCLUDE_DIR=${macos_sdk}/usr/include -DBZ2_LIBRARY=/usr/lib/libbz2.${build_dllext}  \
+                            -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.dylib \
+                            -DJPEG_INCLUDE_DIR=${VEGA_PREFIX}/include -DJPEG_LIBRARY=${VEGA_PREFIX}/lib/libjpeg.dylib \
+                            -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
+                            -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.dylib;${VEGA_PREFIX}/lib/libvorbis.dylib;${VEGA_PREFIX}/lib/libogg.dylib" \
+                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
+                            -DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
+                            -DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
+                            -DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
+                            -DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers"
+                        ;;
+                    *)
+                        add_config_args \
+                            -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.so \
+                            -DJPEG_INCLUDE_DIR=${VEGA_PREFIX}/include -DJPEG_LIBRARY=${VEGA_PREFIX}/lib/libjpeg.so \
+                            -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
+                            -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.so;${VEGA_PREFIX}/lib/libvorbis.so;${VEGA_PREFIX}/lib/libogg.so" \
+                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
+                            -DOPENAL_INCLUDE_DIR="${VEGA_PREFIX}/include" -DOPENAL_LIBRARY="${VEGA_PREFIX}/lib/libopenal.so"
+                            #-DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
+                            #-DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
+                        ;;
+                esac
+
                 #-DCMAKE_CXX_FLAGS="${CXXFLAGS}"
-                #;${VEGA_PREFIX}/lib/libvorbisenc.dylib
+                #;${VEGA_PREFIX}/lib/libvorbisenc.${build_dllext}
                 case "${gfx}" in
                     glut1) export SDLDIR=${VEGA_PREFIX}
                           add_config_args "-DSDL_WINDOWING_DISABLE=1";;
                     glut) export SDLDIR=${VEGA_PREFIX}
                           add_config_args "-DSDL_WINDOWING_DISABLE=1" \
                                           -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL2" \
-                                          -DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDL2.dylib";;
+                                          -DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDL2.${build_dllext}";;
                     sdl1) export SDLDIR=${VEGA_PREFIX}
                           add_config_args "-DSDL_WINDOWING_DISABLE=0" \
                                           -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL";;
-                                          #-DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDLmain.a;${VEGA_PREFIX}/lib/libSDL.dylib";;
+                                          #-DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDLmain.a;${VEGA_PREFIX}/lib/libSDL.${build_dllext}";;
                     sdl2) export SDLDIR=${VEGA_PREFIX}
                           add_config_args -DSDL_WINDOWING_DISABLE=0 \
                                           -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL2" \
-                                          -DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDL2main.a;${VEGA_PREFIX}/lib/libSDL2.dylib";;
+                                          -DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDL2main.a;${VEGA_PREFIX}/lib/libSDL2.${build_dllext}";;
                     *) echo "!! unknown gfx '${gfx}'"; exit 1;;
                esac
                add_config_args \
@@ -533,7 +570,6 @@ do_build_fun() {
             #--disable-unordered-map
             if test ${#config_args[@]} -eq 0; then
                 add_config_args \
-                --with-macos-sdk="${macos_sdk_fwk}" \
                 --with-png-inc="${VEGA_PREFIX}/include" --with-png-libs="${VEGA_PREFIX}/lib" \
                 --with-ffmpeg-inc="${VEGA_PREFIX}/include" --with-ffmpeg-libs="${VEGA_PREFIX}/lib" \
                 --with-jpeg-inc="${VEGA_PREFIX}/include" --with-jpeg-libs="${VEGA_PREFIX}/lib" \
@@ -545,6 +581,7 @@ do_build_fun() {
                 --with-boost=1.50 \
                 --with-cxx-std="${cxx_standard_autoconf}" \
                 ${debug_config_args}
+
                 case "${gfx}" in
                     glut) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl2-config"
                           add_config_args "--disable-sdl-windowing" --with-sdl=2.0.0 --with-sdl-inc="${VEGA_PREFIX}/include/SDL2" \
@@ -557,9 +594,20 @@ do_build_fun() {
                                                                    --with-sdl-libs="-L${VEGA_PREFIX}/lib -lSDL2main -lSDL2";;
                     *) echo "!! unknown gfx '${gfx}'"; exit 1;;
                 esac
+
+                case "${build_sysname}" in
+                    darwin*)
+                        add_config_args \
+                            --with-macos-sdk="${macos_sdk_fwk}" \
+                            --enable-macosx-bundle
+                        ;;
+                    *)
+                        add_config_args --with-al-inc="${VEGA_PREFIX}/include" --with-openal-libs="${VEGA_PREFIX}/lib"
+                        ;;
+                esac
+
                 add_config_args \
-                --enable-macosx-bundle \
-                "${spec_config_args[@]}"
+                    "${spec_config_args[@]}"
             fi
 
             test -f Makefile || echo '--Makefile' >> ${build_config_cache}
@@ -608,6 +656,10 @@ do_run_fun() {
         ln -s "${log}" "${mydir}/logs/log"
 
         echo "BUILD $build DATA $data ARGS ${run_args[@]}"
+
+        case "${build_sysname}" in
+            linux*) export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib";;
+        esac
 
         # important the chdir to have music and avoid crash when loading universe
         pushd "${data}" || exit 1
@@ -746,7 +798,6 @@ do_delivery_fun() {
 
     gfxs="sdl2 glut sdl1"
     mainbuilddir=
-    build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
     if test "${build_sysmajor}" -lt 19; then
         cxxf="-arch x86_64 -arch i386"
     else

@@ -42,6 +42,7 @@ class Matrix;
 
 using std::vector;
 
+#include <stdlib.h>
 #include "gfx/vec.h"
 #include "gfxlib_struct.h"
 
