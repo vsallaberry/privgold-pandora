@@ -22,6 +22,7 @@ mydirname=$(basename "${mydir}")
 mypwd=$(pwd)
 
 # project settings
+priv_version="1.2.2"
 priv_data="${mydir}/data"
 target="${mydir}/vegastrike"
 build_preferred="cmake configure"
@@ -842,7 +843,6 @@ do_delivery_fun() {
     test -z "${interactive}" || { yesno "? Finalize bundle (update libs, version, tools, ...) ?" || exit 1; }
 
     # Update Version in bundle
-    priv_version="1.2.1"
     git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
     git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
     test -n "${git_status}" && git_rev="${git_rev}-dirty"

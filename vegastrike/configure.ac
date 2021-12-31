@@ -1,4 +1,4 @@
-AC_INIT(vegastrike, 0.4.4.2)
+AC_INIT(vegastrike, 0.4.4.3)
 config_flags="$@"
 AC_DEFINE_UNQUOTED([VEGASTRIKE_VERSION],[VERSION],[VEGASTRIKE_VERSION])
 

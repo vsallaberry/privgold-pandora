@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 2.4)
 
 project (vsUTCS)
-set(VERSION "0.4.4.2")
+set(VERSION "0.4.4.3")
 
 #SET(CMAKE_CXX_STANDARD_REQUIRED 1) ## ERROR instead of DECAYING value if not supported
 if(NOT CMAKE_CXX_STANDARD)
