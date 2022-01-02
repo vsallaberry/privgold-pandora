@@ -509,7 +509,7 @@ void winsys_init( int *argc, char **argv, char *window_title,
     sdl_flags = SDL_WINDOW_OPENGL;
 
     if (gl_options.fullscreen) {
-        sdl_flags |= SDL_WINDOW_FULLSCREEN;
+        sdl_flags |= SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS;
     } else {
         sdl_flags |= SDL_WINDOW_RESIZABLE;
     }
@@ -1077,7 +1077,7 @@ static void setup_sdl_video_mode()
     int width, height;
 
     if ( gl_options.fullscreen ) {
-	video_flags |= SDL_FULLSCREEN;
+	video_flags |= SDL_FULLSCREEN | SDL_NOFRAME;
     } else {
 #ifndef _WIN32
 	video_flags |= SDL_RESIZABLE;

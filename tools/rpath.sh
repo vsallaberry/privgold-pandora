@@ -25,6 +25,9 @@ exe_rpath=@executable_path
 rpaths[0]=${libs_path}
 dostrip=
 
+build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
+build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
+
 ##################################################################################
 show_help() {
     echo "`basename $0` file [-L<libs-rel-path>] [-X<exclude-lib-path>] [-R<more-rpath] [-S] [bin [bin [...]]]"
@@ -57,12 +60,25 @@ esac
 
 rpaths[0]=${libs_path}
 
+case "${build_sysname}" in
+    linux*)
+        install_name_tool() { true; }
+        get_libs() { ldd "$@" | awk '/[^:]$/ { print $3 }'; }
+        export LD_LIBRARY_PATH="/usr/local/vega05/lib"
+        ;;
+    darwin*)
+        get_libs() { otool -L "$@" | awk '/[^:]$/ { print $1 }'; }
+        ;;
+esac
+
 ##################################################################################
 unset errors; declare -a errors
 unset warnings; declare -a warnings
 i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     echo "+ target [${target}]"
     target_name=$(basename "${target}")
+
+    test -f "${target}" || { echo "!! target '${target_name}' not found"; errors[${#errors[@]}]="[${target_name}] file not found!"; continue ; }
 
     if test -z "${target_libdir}"; then
         target_dir=$(dirname "${target}")
@@ -71,7 +87,7 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     fi
 
     case "${target}" in
-        *.dylib|*.so|*/Frameworks/*)
+        *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|/Frameworks/*)
             ;;
         *)
             for rpath in "${rpaths[@]}"; do
@@ -84,13 +100,14 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
             ;;
     esac
 
-    for lib in `otool -L "${target}" | awk '/[^:]$/ { print $1 }'`; do
+    for lib in `get_libs "${target}"`; do
         #echo "** ${lib}"
         lib_name=$(basename "${lib}")
 
         case "${lib}" in
             /usr/lib/*) ;;
             /System/Library/*) ;;
+            /lib/*|/lib64/*|/lib32/*) ;;
             @*) install_name_tool -change "${lib}" "@rpath/${lib_name}" "${target}" \
                     || errors[${#errors[@]}]="[${target_name}] nametool change @ (${lib_name})";;
             *)  copy=yes; for x in "${excludes[@]}"; do

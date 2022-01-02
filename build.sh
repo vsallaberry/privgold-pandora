@@ -500,9 +500,10 @@ do_build_fun() {
                             -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
                             -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.so;${VEGA_PREFIX}/lib/libvorbis.so;${VEGA_PREFIX}/lib/libogg.so" \
                             -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
-                            -DOPENAL_INCLUDE_DIR="${VEGA_PREFIX}/include" -DOPENAL_LIBRARY="${VEGA_PREFIX}/lib/libopenal.so"
-                            #-DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
-                            #-DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
+                            -DOPENAL_INCLUDE_DIR="${VEGA_PREFIX}/include" -DOPENAL_LIBRARY="${VEGA_PREFIX}/lib/libopenal.so" \
+                            -DGLUT_INCLUDE_DIR="${VEGA_PREFIX}/include" -DGLUT_LIBRARIES="${VEGA_PREFIX}/lib/libglut.so" \
+                            -DZLIB_INCLUDE_DIR="${VEGA_PREFIX}/include" -DZLIB_LIBRARIES="${VEGA_PREFIX}/lib/libz.so" \
+                            -DBZ2_INCLUDE_DIR="${VEGA_PREFIX}/include" -DBZ2_LIBRARIES="${VEGA_PREFIX}/lib/libbz2.so"
                         ;;
                 esac
 
@@ -603,7 +604,9 @@ do_build_fun() {
                             --enable-macosx-bundle
                         ;;
                     *)
-                        add_config_args --with-al-inc="${VEGA_PREFIX}/include" --with-openal-libs="${VEGA_PREFIX}/lib"
+                        add_config_args \
+                            --with-al-inc="${VEGA_PREFIX}/include" --with-openal-libs="${VEGA_PREFIX}/lib" \
+                            --with-glut-inc="${VEGA_PREFIX}/include" --with-glut-libs="${VEGA_PREFIX}/lib"
                         ;;
                 esac
 
@@ -799,12 +802,25 @@ do_delivery_fun() {
 
     gfxs="sdl2 glut sdl1"
     mainbuilddir=
-    if test "${build_sysmajor}" -lt 19; then
-        cxxf="-arch x86_64 -arch i386"
-    else
-        cxxf="-arch x86_64 -arch arm64"
-    fi
-    find_macos_sdk "${cxxf}"
+    cxxf=
+
+    case "${build_sysname}" in
+        darwin*)
+            if test "${build_sysmajor}" -lt 19; then
+                cxxf="-arch x86_64 -arch i386"
+            else
+                cxxf="-arch x86_64 -arch arm64"
+            fi
+            find_macos_sdk "${cxxf}"
+            chmod_args='-hv'
+            ;;
+        *bsd*)
+            chmod_args='-hv'
+            ;;
+        *)  chmod_args='-v'
+            ;;
+    esac
+
     test -z "${interactive}" || yesno "? Build engines <$gfxs> with flags '$cxxf' ?" \
     && {
         # clean bundle dir
@@ -858,9 +874,13 @@ do_delivery_fun() {
     done
 
     # build checkModifierKeys tool and copy it to bundle bin dir
-    test -n "${macos_sdk}" && checkmod_archs="-isysroot${macos_sdk} " || checkmod_archs=
-    "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
-    xcopy "${checkkeys_dir}/checkModifierKeys" "${bundle_bindir}" || exit $?
+    case "${build_sysname}" in
+        darwin*)
+            test -n "${macos_sdk}" && checkmod_archs="-isysroot${macos_sdk} " || checkmod_archs=
+            "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
+            xcopy "${checkkeys_dir}/checkModifierKeys" "${bundle_bindir}" || exit $?
+            ;;
+    esac
 
     # handle executables rpaths: vegastrike* and vssetup_dlg
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L../Resources/lib \
@@ -915,7 +935,7 @@ do_delivery_fun() {
     fi
 
     #fix perms
-    find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod -hv 'u+w'
+    find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod ${chmod_args} 'u+w'
 
     # Merge the generated bundle with the ARM64 one if present
     if test -d "${other_bundle_ref}"; then
@@ -954,10 +974,10 @@ do_delivery_fun() {
     fi
 
     # fix permissions
-    find "${deliverydir}/bundle" -perm '+o=w' -print0 | xargs -0 chmod -hv 'g-w,o-w'
-    find "${deliverydir}/bundle" -perm '+g=w' -print0 | xargs -0 chmod -hv 'g-w,o-w'
-    find "${deliverydir}/bundle" -perm '+u=x' -print0 | xargs -0 chmod -hv 'g+x,o+x'
-    find "${deliverydir}/bundle" -perm '+u=r' -print0 | xargs -0 chmod -hv 'g+r,o+r'
+    find "${deliverydir}/bundle" -perm '+o=w' -print0 | xargs -0 chmod ${chmod_args} 'g-w,o-w'
+    find "${deliverydir}/bundle" -perm '+g=w' -print0 | xargs -0 chmod ${chmod_args} 'g-w,o-w'
+    find "${deliverydir}/bundle" -perm '+u=x' -print0 | xargs -0 chmod ${chmod_args} 'g+x,o+x'
+    find "${deliverydir}/bundle" -perm '+u=r' -print0 | xargs -0 chmod ${chmod_args} 'g+r,o+r'
 
     # Create DMG
     #formats UDBZ(bz2,10.4) UDCO ULFO(lzfe,10.11) # -fs HFS+ # -type UDIF|SPARSE|SPARSEBUNDLE

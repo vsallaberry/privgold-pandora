@@ -514,7 +514,11 @@ bool AUDLoadSoundFile(const char *s, struct AUDSoundProperties *info, bool use_f
 int AUDBufferSound(const struct AUDSoundProperties *info, bool music) {
 	ALuint wavbuf=0;
 	alGenBuffers (1,&wavbuf);
-	if (!wavbuf) printf("OpenAL Error in alGenBuffers: %d\n", alGetError());
+	if (!wavbuf) {
+        ALenum err = alGetError();
+        const char * errstr = alGetString(err);
+        VS_LOG("audio", logvs::WARN, "OpenAL Error in alGenBuffers: %d - %s", err, errstr ? errstr : "(null)");
+    }
 	alBufferData( wavbuf, info->format, info->wave, info->size, info->freq );
 	return LoadSound(wavbuf, info->looping, music);
 }

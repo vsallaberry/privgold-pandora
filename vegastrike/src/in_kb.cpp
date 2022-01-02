@@ -87,16 +87,11 @@ bool HasKeyBinding(unsigned int key, unsigned int modifiers)
     return (keyBindings[internal_mod][key].function != defaultHandler.function);
 }
 
-#ifdef SDL_WINDOWING
-# if !SDL_VERSION_ATLEAST(2,0,0)
-#  define SDL2_WINDOWING
-# endif
-#endif
-#if (!defined(__APPLE__) && !defined(SDL2_WINDOWING))
-# define QWERTY_US_SHIFT_TRANSLATE
-#else
-# undef QWERTY_US_SHIFT_TRANSLATE
-#endif
+// The SDL KB unicode driver can identify the right shifted keys
+// according to user keyboard layout. A trick is needed on SDL1,
+// but it goes well with SDL2.
+//#define QWERTY_US_SHIFT_TRANSLATE
+#undef QWERTY_US_SHIFT_TRANSLATE
 
 #ifdef QWERTY_US_SHIFT_TRANSLATE // does not work on azerty or non-us qwerty
 static const char _lomap[] = "0123456789-=\';/.,`\\";

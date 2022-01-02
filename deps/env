@@ -19,6 +19,13 @@
 ##############################################################################
 # Many credits and thanks to macports (https://www.macports.org) for hints and patches
 ##############################################################################
+# REQUIREMENTS
+# * macOS :
+#   + macports or other with autoconf/auttomake/...,, meson
+#   + Xcode and commandline tools
+# * linux:
+#   + apt-get install mesa-common-dev meson nasm ...
+##############################################################################
 test -x "$0" -a "$0" != "/bin/bash" -a "$0" != "/bin/sh" \
     && { sourcing=; exit=exit; my0="$0"; } \
     || { sourcing=yes; exit=return; my0="${BASH_SOURCE[0]}"; }
@@ -52,6 +59,10 @@ main_arch="$(uname -m)"
 all_archs=${main_arch}
 build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
 build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
+case "${build_sysname}" in
+    darwin*) build_dllext=dylib;;
+    *)       build_dllext=so;;
+esac
 
 optflags="${baseoptflags}"
 if test "${build_sysname}" = "darwin"; then
@@ -226,7 +237,7 @@ print_variables
 
 dosha() {
     for f in `find "${resources}" "${resources}/../deps-gtk" -iname '*.tar.xz'`; do
-        test -f "${f}.sha" || { echo "+ sha-ing '$f'..."; shasum -a256 "${f}" > "${f}.sha"; }
+        test -f "${f}.sha" || { echo "+ sha-ing '$f'..."; xz -c -d "${f}" | shasum -a256 | sed -e "s|-\$|$(basename "${f%.xz}")|" > "${f}.sha"; }
     done
 }
 
@@ -326,7 +337,7 @@ configure_fun() {
             -CLEAN)   do_clean=yes; shift ;;
             -INSTALL=*) shift; if test -z "${archive}"; then
                 archive=${_arg#-INSTALL=}; _pkgdir=
-                for f in $(find "${resources}" "${resources}/../deps-gtk" -type f -and -iwholename "*/[0-9][0-9]_${archive}/*.tar.*" \
+                for f in $(find "${resources}" "${resources}/../deps-gtk" -type f -and -iwholename "*/[0-9][0-9]*_${archive}/*.tar.*" \
                                     -and \( -iname '*.tar.bz2' -or -iname '*.tar.gz' -or -iname '*.tar.xz' \) ); do
                     { test -n "${silent}" && true; } || { yesno "'$f' : this one ?"; } && {
                         test -L "${mydir}/build" || mkdir -p "${mydir}/build" && cd "${mydir}/build"  \
@@ -448,7 +459,7 @@ configure_fun() {
         export NINJA=${buildtools_prefix}/bin/ninja
         configure="$MESON"
         export PERL_PATH=/usr/bin/perl
-        more_pkg=$(cd "${resources}/../deps-gtk"/[0-9][0-9]_"${prog}/pkgconfig"; pwd)
+        more_pkg=$(cd "${resources}/../deps-gtk"/[0-9][0-9]*_"${prog}/pkgconfig"; pwd)
         #export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${more_pkg}"
         #  echo "$PKG_CONFIG_PATH"
         #pkg-config --cflags --libs zlib
@@ -480,6 +491,10 @@ configure_fun() {
         # "-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON"-DEXAMPLES=OFF
         configure=${CMAKE}
         del_args "*"
+        local _arg
+        for _arg in "$@"; do
+           add_args "${_arg}"
+        done
         add_args "${rootdir}" \
                  -DCMAKE_INSTALL_PREFIX="${prefix}" \
                  -DCMAKE_PREFIX_PATH="${prefix}${MORE_PREFIXES:+;${MORE_PREFIXES}}" \
@@ -510,6 +525,20 @@ configure_fun() {
         export LDFLAGS=$(echo " ${LDFLAGS} " | sed -e "${_sedpat}")
     }
 
+    do_patch() {
+        local _prog=${prog} _res=${resources} _patt=patch _f _i=0
+        for _f in "$@"; do _i=$((_i+1)); case ${_i} in
+            1) test -n "${_f}" && { _prog=${_f}; } ;;
+            2) test -n "${_f}" && { _res=${_f};  } ;;
+            3) test -n "${_f}" && { _patt=${_f}; } ;;
+        esac; done
+        find "${_res}" -type f -and \( -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}-*.diff" \
+                                       -or -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}_${build_sysname}-*.diff" \) | while read _f; do
+            echo "+ patch '${_f}'..."
+            patch -N -p0 < "${_f}"
+        done
+    }
+
     if test "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 -a "${prog}" != "Python"; then
         #build_one_arch
 
@@ -522,18 +551,24 @@ configure_fun() {
     ## PER PROJECT SPECFIC CONFIGURE OPTIONS
     case "${prog}" in
         bzip2) builddir=.; configure="make"; del_args "*"; export LDFLAGS="${optflags}"
-               add_args CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
-               add_buildargs CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
-               del_installargs "*"; add_installargs install "PREFIX=${destroot}/${prefix}"
-               for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+               do_patch "${prog}"
                compat_version=${prog_version#*.*.}; compat_version=${prog_version%%.${compat_version}}
                sed -e "s|__MacPorts_Version__|${prog_version}|g" \
                    -e "s|__MacPorts_Compatibility_Version__|${compat_version}|g" \
+                   -e "s|\.dylib|.${build_dllext}|g" \
                    Makefile > Makefile.vs.tmp && mv Makefile.vs.tmp Makefile
+               case "${build_sysname}" in
+                   linux*) CFLAGS="${CFLAGS} -fPIC"
+                           sed -e "s|-dynamiclib|-shared|g" \
+                               Makefile > Makefile.vs.tmp && mv Makefile.vs.tmp Makefile;;
+               esac
+               add_args CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
+               add_buildargs CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" PREFIX="${prefix}"
+               del_installargs "*"; add_installargs install "PREFIX=${destroot}/${prefix}"
                do_postinstall() {
-                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.${compat_version}.dylib
-                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.${compat_version%%.*}.dylib
-                 ln -s libbz2.${prog_version}.dylib ${destroot}/${prefix}/lib/libbz2.dylib
+                 ln -s libbz2.${prog_version}.${build_dllext} ${destroot}/${prefix}/lib/libbz2.${compat_version}.${build_dllext}
+                 ln -s libbz2.${prog_version}.${build_dllext} ${destroot}/${prefix}/lib/libbz2.${compat_version%%.*}.${build_dllext}
+                 ln -s libbz2.${prog_version}.${build_dllext} ${destroot}/${prefix}/lib/libbz2.${build_dllext}
                }
                ;;
         zlib) del_args --disable-silent-rules;;
@@ -543,7 +578,7 @@ configure_fun() {
         pkg-config)
             export PKGCONFIG="`which -a pkg-config ${buildtools_prefix}/bin/pkg-config pkg-config | head -n1`"
             export PKG_CONFIG=${PKGCONFIG}
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
             add_args --with-internal-glib --with-pc-path=${prefix}/lib/pkgconfig
             case "${build_sysname}" in
                 "linux") add_args --with-libiconv=gnu;;
@@ -554,7 +589,7 @@ configure_fun() {
             case "${prog_version}" in
                 2.*)
                     test "${build_sysname}" = "darwin" && \
-                    for f in "${resources}/"[0-9][0-9]_"python/patch-27-"*.diff; do patch -N -p0 < "$f"; done
+                    for f in "${resources}/"[0-9][0-9]*_"python/patch-27-"*.diff; do patch -N -p0 < "$f"; done
                     #--enable-ipv6
                     #--enable-universalsdk="${macos_sdk}" \
                     add_args \
@@ -570,7 +605,7 @@ configure_fun() {
 
                     if test \( "${arch}" = "arm64" -a "$(uname -m)" != "arm64" \) \
                     -o \( "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 \); then
-                        for f in "${resources}/"[0-9][0-9]_"python/patch-27-"*.diff.arm64; do patch -N -p0 < "$f"; done
+                        for f in "${resources}/"[0-9][0-9]*_"python/patch-27-"*.diff.arm64; do patch -N -p0 < "$f"; done
                         del_args "--with-system-ffi"; add_args --with-system-ffi="${macos_sdk}/usr/include/ffi"
                         export CPATH="${CPATH}:${macos_sdk}/usr/include:${macos_sdk}/usr/include/ffi"
                         #export CFLAGS="${CFLAGS} -D__arm64__ -idirafter${macos_sdk}/usr/include"
@@ -597,13 +632,13 @@ configure_fun() {
                     export LDFLAGS="$(echo "${LDFLAGS}" | sed -e 's/-L[^[:space:]]*//g')"
                     #export PYTHON=${buildtools_prefix}/bin/python3.9
                     export PATH="${PATH}:${buildtools_prefix}/bin"
-                    for f in "${resources}/../deps-gtk/"[0-9][0-9]_"python3/patch-"*.diff; do patch -N -p0 < "$f"; done
+                    for f in "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/patch-"*.diff; do patch -N -p0 < "$f"; done
                     applications_dir="${prefix}/Library/Applications"
                     for f in Lib/cgi.py Lib/ctypes/macholib/dyld.py; do sed -e "s|@@PREFIX@@|${prefix}|g" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     for f in Makefile.pre.in; do sed -e "s|/setup.py|/setup.py --no-user-cfg|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     for f in configure; do sed -e "s|@@APPLICATIONS_DIR@@|${applications_dir}|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     do_postconfigure() {
-                        ed - "${builddir}/pyconfig.h" < "${resources}/../deps-gtk/"[0-9][0-9]_"python3/pyconfig.h-universal.ed"
+                        ed - "${builddir}/pyconfig.h" < "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/pyconfig.h-universal.ed"
                     }
                     #export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
                     chmod +x "${configure}"
@@ -617,11 +652,14 @@ configure_fun() {
             esac
             ;;
         SDL|sdl)
-            case "${build_sysname}" in darwin*) add_args --without-x;; esac
+            case "${build_sysname}" in
+                darwin*) add_args --without-x;;
+                linux*)  add_args --with-x;;
+            esac
             add_args \
                 --enable-joystick --enable-audio
             do_postconfigure() {
-                (cd "${builddir}/include" && ed - ./SDL_config.h < "${resources}/"[0-9][0-9]_"libsdl/include_SDL_config.h.ed")
+                (cd "${builddir}/include" && ed - ./SDL_config.h < "${resources}/"[0-9][0-9]*_"libsdl/include_SDL_config.h.ed")
             }
             ;;
         SDL_mixer)
@@ -641,7 +679,7 @@ configure_fun() {
             #optflags=$(echo "${optflags}" | sed -e 's/-mmacosx-version-min=[0-9.]*//')
             #build_flags "${optflags}"
             #--enable-joystick --enable-audio
-            for f in "${resources}/"[0-9][0-9]_"libsdl2/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch "libsdl2"
             case "${build_sysname}" in darwin*) add_args --without-x;; esac
             add_args \
                 --enable-joystick --enable-audio \
@@ -651,7 +689,7 @@ configure_fun() {
         dialog)
             do_postconfigure() {
                 case "${build_sysname}" in darwin*)
-                    for f in "${resources}/"[0-9][0-9]_"libdialog/patch"*.diff; do patch -N -p0 < "$f"; done;;
+                    do_patch "libdialog";;
                 esac
             }
             echo "INSTALL ${installargs[@]}"
@@ -659,12 +697,11 @@ configure_fun() {
             add_installargs "install-full"
             echo "INSTALL ${installargs[@]}"
             do_postinstall() {
-                case "${build_sysname}" in darwin*) dllext=dylib;; *) dllext=so;; esac
-                test -f "${destroot}/${prefix}/lib/libdialog.${dllext}.15.0.0" || ln -sv "libdialog.so" "${destroot}/${prefix}/lib/libdialog.${dllext}.15.0.0"
-                for l in ${destroot}/${prefix}/lib/*.${dllext}.*; do
-                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${dllext}
-                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.1.3.${dllext}
-                    test "$(basename "${l}")" = "libdialog.${dllext}.1.3" || ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${dllext}.1.3
+                test -f "${destroot}/${prefix}/lib/libdialog.${build_dllext}.15.0.0" || ln -sv "libdialog.so" "${destroot}/${prefix}/lib/libdialog.${build_dllext}.15.0.0"
+                for l in ${destroot}/${prefix}/lib/*.${build_dllext}.*; do
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${build_dllext}
+                    ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.1.3.${build_dllext}
+                    test "$(basename "${l}")" = "libdialog.${build_dllext}.1.3" || ln -sv "$(basename "${l}")" "$(dirname "${l}")"/libdialog.${build_dllext}.1.3
                     break
                 done
             }
@@ -691,7 +728,7 @@ configure_fun() {
             test -x "${buildtools_prefix}/bin/pod2man" && export POD2MAN=${buildtools_prefix}/bin/pod2man
             add_buildargs POD2MAN="${POD2MAN}"
             PATH=$PATH:${buildtools_prefix}/bin #for nasm,yasm
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
             #        --disable-filter=noise
             del_args "--disable-silent-rules"
             add_buildargs "V=1"
@@ -710,7 +747,7 @@ configure_fun() {
             #CFLAGS="${CFLAGS} --sysroot=${macos_sdk}"
             CXXFLAGS="${CXXFLAGS} -std=c++98"
             case "${build_sysname}" in darwin*) CXXFLAGS="${CXXFLAGS} -stdlib=libc++";; esac
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
             rm acinclude.m4
             add_args \
                  --without-x \
@@ -731,7 +768,7 @@ configure_fun() {
             build_one_arch
             case "$arch" in i386) add_args --disable-asm-optimizations;; esac
             add_buildargs "OBJ_FORMAT=macho"
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
             test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
             ;;
         openssl)
@@ -754,11 +791,11 @@ configure_fun() {
             configure="`pwd`/Configure"
             add_args "${sslarch}"
             del_args "--disable-silent-rules"
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
             ;; #
         opusfile)
             #LDFLAGS="${LDFLAGS} -L/usr/lib"
-            #for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            #do_patch
             test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
             ;;
         opus)
@@ -767,11 +804,21 @@ configure_fun() {
         libmodplug)
             PATH="${PATH}:${buildtools_prefix}/bin"
             do_autoreconf || return 1
-            for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch
+            ;;
+        freeglut)
+            case "${build_sysname}" in
+                linux*) CC=$(which gcc "${CC}" 2> /dev/null | head -n1);;
+            esac
+            build_cmake
+            del_args "-DCMAKE*RPATH*" "-DCMAKE*NAME_DIR*"
+            add_args "-DFREEGLUT_WAYLAND=OFF" "-DFREEGLUT_BUILD_DEMOS=OFF" "-DFREEGLUT_BUILD_STATIC_LIBS=ON" "-DFREEGLUT_BUILD_SHARED_LIBS=ON" "-DFREEGLUT_GLES=OFF"
             ;;
         openal-soft)
-            build_cmake
+            build_cmake ALSOFT_REQUIRE_SDL2=OFF
             ;;
+        alsa-utils)
+            add_args "--disable-nls";;
         mpg123)
             build_one_arch
             case "${build_sysname}" in darwin*) add_args --with-audio=coreaudio;; esac
@@ -902,13 +949,12 @@ configure_fun() {
                     fi
                 }
                 echo "!! need to do links to ncurses*w in lib and lib/pkgconfig !!"
-                case "${build_sysname}" in darwin*) dllext=dylib;; *) dllext=so;; esac
                 for f in form menu ncurses ${nc_cxx} panel; do
-                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.${dllext}"
+                    check_w_suffix "${destroot}/${prefix}/lib/lib${f}.${build_dllext}"
                     check_w_suffix "${destroot}/${prefix}/lib/lib${f}.a"
                     check_w_suffix "${destroot}/${prefix}/lib/pkgconfig/${f}.pc"
                 done
-                ln -sfv "libncurses.${dllext}" "${destroot}/${prefix}/lib/libtermcap.${dllext}"
+                ln -sfv "libncurses.${build_dllext}" "${destroot}/${prefix}/lib/libtermcap.${build_dllext}"
                 f="${destroot}/${prefix}/bin/ncurses"
                 for s in ${nc_ver} ""; do
                     if test -f "${f}w${s}-config" -a \! -L "${f}w${s}-config"; then
@@ -924,8 +970,8 @@ configure_fun() {
             do_postconfigure() {
                 printf "+ postconfigure\n"
                 case "${prog_version}" in
-                    6.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses-post-configure-patch-curses-head.diff";;
-                    5.*) patch -p0 < "${resources}/"[0-9][0-9]_"ncurses/ncurses5-post-configure-patch-curses-head.diff";;
+                    6.*) patch -p0 < "${resources}/"[0-9][0-9]*_"ncurses/ncurses-post-configure-patch-curses-head.diff";;
+                    5.*) patch -p0 < "${resources}/"[0-9][0-9]*_"ncurses/ncurses5-post-configure-patch-curses-head.diff";;
                 esac
                 test $? -eq 0 -o "${arch}" = "arm64" -o "${build_sysname}" = "linux"
             }
@@ -933,8 +979,8 @@ configure_fun() {
             export CXXLDFLAGS="${cxx_ldflags} ${optflags} "
             export CPPFLAGS=
             echo $CXXLDFLAGS
-            libAdaCursesSO="libAdaCurses.dylib"
-            patch -N -p0 < "${resources}/"[0-9][0-9]_"ncurses/patch-ncurses-cxxldflags.diff"
+            libAdaCursesSO="libAdaCurses.${build_dllext}"
+            patch -N -p0 < "${resources}/"[0-9][0-9]*_"ncurses/patch-ncurses-cxxldflags.diff"
             #export TERMINFO_DIRS="/usr/share/terminfo:${prefix}/share/terminfo:/usr/local/share/terminfo"
             add_args \
                 --disable-mixed-case \
@@ -963,7 +1009,7 @@ configure_fun() {
         libffi) build_one_arch;;
         glib) build_one_arch
               build_meson
-              for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+              do_patch '' "${resources}/../deps-gtk"
               for f in meson.build; do sed -e "s|@PYTHON@|${PYTHON}|" "$f" > "$f".tmp && mv "$f".tmp "$f"; done
               for f in gio/gdbusprivate.c gio/xdgmime/xdgmime.c glib/gi18n-lib.h glib/gi18n.h gio/gdbusaddress.c; do sed -e "s|@PREFIX@|${prefix}|g" "$f" > "$f".tmp && mv -v "$f".tmp "$f"; done
               for f in glib/gutils.c; do sed -e "s|data_dirs = \"/usr|data_dirs = \"${prefix}/share:/usr|g" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
@@ -1000,14 +1046,14 @@ configure_fun() {
             add_args -DJAS_ENABLE_AUTOMATIC_DEPENDENCIES=false \
                      -DGLUT_glut_LIBRARY=/System/Library/Frameworks/GLUT.framework \
                      -DJAS_ENABLE_DOC=false
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             ;;
         gdk-pixbuf)
             build_one_arch
             build_meson
             export CFLAGS="-std=c99 ${CFLAGS}"
             export XSLTPROC=${buildtools_prefix}/bin/xsltproc
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             add_args -Ddefault_library=both \
                      -Dbuildtype=release \
                      -Dintrospection=disabled \
@@ -1035,7 +1081,7 @@ configure_fun() {
               export PREFIX=${prefix}
               add_buildargs "-j$((ncpu+1))" #CC="$CC" CFLAGS="$CFLAGS"  PREFIX="${prefix}" #LDFLAGS="$LDFLAGS"
               #del_installargs "*"; add_installargs install "PREFIX=${destroot}/${prefix}"
-              #for f in "${resources}/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+              #do_patch '' "${resources}/../deps-gtk"
               ;;
         tiff) add_args \
                 --with-x=no \
@@ -1049,7 +1095,7 @@ configure_fun() {
                 --with-zstd-include-dir=${prefix}/include \
                 --with-zstd-lib-dir=${prefix}/lib
             mv -v "${rootdir}/VERSION" "${rootdir}/VERSION.txt"
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             ;;
         cairo)
             add_args \
@@ -1075,7 +1121,7 @@ configure_fun() {
                 --enable-xml
             case "${build_sysname}" in darwin*) add_args --without-x;; esac
             build_optimize_size
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             ;;
         harfbuzz)
             add_args \
@@ -1089,7 +1135,7 @@ configure_fun() {
             add_args \
                 --enable-static \
                 --disable-silent-rules
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             do_autoreconf
             ;;
         pango)
@@ -1100,7 +1146,7 @@ configure_fun() {
                 --without-xft \
                 --enable-gtk-doc-html=no \
                 --enable-introspection=no
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             ;;
         freetype)
             add_args \
@@ -1124,7 +1170,7 @@ configure_fun() {
                 HASDOCBOOK=no \
                 ac_cv_func_mkostemp=no \
                 --with-add-fonts="/Library/Fonts,/Network/Library/Fonts,/System/Library/Fonts"
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             ;;
         pixman)
             add_args \
@@ -1144,7 +1190,7 @@ configure_fun() {
         gtk+)
             build_one_arch
             #PATH=$PATH:${buildtools_prefix}/bin
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"gtk2/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch 'gtk2' "${resources}/../deps-gtk"
             rm -v "${rootdir}"/{gdk/gdkalias.h,gdk/gdkaliasdef.c,gtk/gtkalias.h,gtk/gtkaliasdef.c}
             do_autoreconf
             add_args \
@@ -1179,7 +1225,7 @@ configure_fun() {
             install_fun() { cd "${rootdir}" && "${configure}" "$@"; }
             del_installargs "*"; installcmd="install_fun"
             add_installargs "${rootdir}/setup.py" "install" --prefix "${prefix}" --root "${destroot}"
-            for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
+            do_patch '' "${resources}/../deps-gtk"
             for f in data/shell-completions/bash/meson mesonbuild/coredata.py; do sed -e "s|@@PREFIX@@|${prefix}|g" "$f" > "$f".tmp && mv -v "$f".tmp "$f"; done
             do_postconfigure() { true; }
             do_postinstall() {
@@ -1197,8 +1243,8 @@ configure_fun() {
             ;;
         gobject-introspection) #build_one_arch
               PATH=$PATH:${buildtools_prefix}/bin
-              for f in "${resources}/../deps-gtk/"[0-9][0-9]_"${prog}/patch"*.diff; do patch -N -p0 < "$f"; done
-              for f in configure.ac; do sed -e "s|libcairo-gobject.2.dylib|${prefix}/lib/libcairo-gobject.2.dylib|g" "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
+              do_patch '' "${resources}/../deps-gtk"
+              for f in configure.ac; do sed -e "s|libcairo-gobject.2.${build_dllext}|${prefix}/lib/libcairo-gobject.2.${build_dllext}|g" "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
               for f in giscanner/shlibs.py; do sed -e "s|@MP_LIB@|${prefix}/lib/|g"  "$f" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
               #add_args --enable-introspection=no
               do_autoreconf
