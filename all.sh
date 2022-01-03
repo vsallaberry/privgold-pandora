@@ -1,6 +1,8 @@
 #!/bin/bash
 do_clean=
 buildpool=./build
+build_sysname=$(uname -m | tr "[:upper:]" "[:lower:]")
+
 unset buildargs; declare -a buildargs
 for arg in "$@"; do
     case "$arg" in
@@ -22,7 +24,8 @@ for f in $build_list; do
         native) type=NativeRelease;args="--optimize=-O3";
                 newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-ffast-math";gfx=sdl2;;
         auto) tool=configure;;
-        univ) newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-arch i386 -arch x86_64"; args="--optimize=-Os";;
+        univ) case "${build_sysname}" in darwin*) ;; *) continue;; esac
+              newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-arch i386 -arch x86_64"; args="--optimize=-Os";;
         gcc6) mcc=gcc6; args=--cxx-std=98;;
         gcc6dbg) mcc=gcc6; args="--cxx-std=98 --optimize=-O1"; type=RelWithDebInfo;;
         gcc5) mcc=gcc-mp-5; args=--cxx-std=98; tool=configure;;
@@ -31,6 +34,7 @@ for f in $build_list; do
         gcc8) mcc=gcc-mp-8; tool=configure;;
         *) gfx=$f;;
     esac
+    test -z "${mcc}" -o -x "$(which "${mcc}")" || { echo "!! compiler '${mcc}' not available on this system, skipping..."; continue; }
     test -z "${do_clean}" -a -d "${buildpool}/$f" -a -f "${buildpool}/$f/.vs_build-sh_config-cache" && args= \
     || args="--clean --tool=$tool --gfx=$gfx --type=${type} ${mcc:+"--cc=${mcc}"}${args:+ }${args}"
     ./build.sh -b${buildpool}/$f $args "${newbuildargs[@]}" "${buildargs[@]}" || break

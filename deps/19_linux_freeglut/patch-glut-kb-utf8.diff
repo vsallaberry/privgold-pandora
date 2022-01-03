@@ -1,0 +1,37 @@
+diff -ru freeglut-3.2.1/src/wayland/fg_input_devices_wl.c src/wayland/fg_input_devices_wl.c
+--- freeglut-3.2.1/src/wayland/fg_input_devices_wl.c	2017-07-01 01:22:45.000000000 +0200
++++ src/wayland/fg_input_devices_wl.c	2022-01-02 23:19:33.854970806 +0100
+@@ -139,7 +139,9 @@
+     {
+         fgSetWindow( window );
+         xkb_keysym_to_utf8( sym, string, sizeof( string ) );
+-        keyboard_cb( string[0], window->State.MouseX, window->State.MouseY, keyboard_ud );
++        for (unsigned int i = 0; *string && i < sizeof(string); ++i, ++string) {
++            keyboard_cb( string[0], window->State.MouseX, window->State.MouseY, keyboard_ud );
++        }
+     }
+ }
+ 
+Only in src/wayland: .fg_input_devices_wl.c.swp
+diff -ru freeglut-3.2.1/src/x11/fg_main_x11.c src/x11/fg_main_x11.c
+--- freeglut-3.2.1/src/x11/fg_main_x11.c	2018-10-10 07:23:33.000000000 +0200
++++ src/x11/fg_main_x11.c	2022-01-02 23:33:49.522949423 +0100
+@@ -952,10 +952,14 @@
+                     {
+                         fgSetWindow( window );
+                         fgState.Modifiers = fgPlatformGetModifiers( event.xkey.state );
+-                        keyboard_cb( asciiCode[ 0 ],
+-                                     event.xkey.x, event.xkey.y,
+-                                     keyboard_ud
+-                        );
++                        for (unsigned int i = 0; i < len; ++i) {
++                            keyboard_cb( asciiCode[ i ],
++                                         event.xkey.x, event.xkey.y,
++                                         keyboard_ud
++                            );
++                            if (asciiCode[ i ] & 0xC0 != 0xC0)
++                                break ;
++                        }
+                         fgState.Modifiers = INVALID_MODIFIERS;
+                     }
+                 }

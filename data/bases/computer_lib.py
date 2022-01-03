@@ -91,6 +91,13 @@ savefilters = set(["Autosave","New_Game"])
 
 class NewSaveGame: pass
 
+def file_exists(filename):
+	try: 
+		st = os.stat(filename)		
+	except:
+		return False
+	return st is not None
+
 def time_sorted_listdir(dir):
 	import os
 	def time_key(filename):
@@ -471,14 +478,14 @@ class QuineComputer:
 			#savename_esc = str(textbox.getText())
 			#saveitem = GUI.GUISimpleListPicker.listitem(savename_esc, savename)
 			#if saveitem in savelist() and ... # not working
-			if savename == "New_Game":
+			if savename.lower() == "new_game" or savename.lower() == "autosave":
 				self.txt_screen.setText("\n"*7
 						+ "Please use another name for your samegame.\n"
 						+ "\n"*3
 						+ "Then press ENTER")
 				return
-			matchs = [ save for save in savelist() if save.data == savename ]
-			if matchs != [] and savename != str(self.oldSaveName):
+			matchs = [ save for save in savelist() if save.data == savename]
+			if (matchs != [] or file_exists(VS.getSaveDir() + os.sep + savename)) and savename != str(self.oldSaveName):
 				if savename != str(self.lastEnteredSavegameName):
 					self.txt_screen.setText( 
 						"\n"*7

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Vincent Sallaberry
+ * Copyright (C) 2021-2022 Vincent Sallaberry
  * unicode Utf8Iterator class, for vegastrike (GPL) / version PrivateerGold
  *   http://vegastrike.sourceforge.net/, privateer.solsector.net
  *
@@ -26,7 +26,7 @@
  *    unicodeInitLocale();
  *    fprintf(stdout, "forLoopTest: '");
  *    for (Utf8Iterator it = Utf8Iterator::begin(s, 5), itend=it.end(); it != itend; ++it) {
- *      fputwc(*it, stdout);
+ *      fprintf(stdout, "%lc", *it);
  *    }
  *    fprintf(stdout, "'\n\n");
  *    return 0;

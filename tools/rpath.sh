@@ -64,12 +64,15 @@ case "${build_sysname}" in
     linux*)
         install_name_tool() { true; }
         get_libs() { ldd "$@" | awk '/[^:]$/ { print $3 }'; }
-        export LD_LIBRARY_PATH="/usr/local/vega05/lib"
         ;;
     darwin*)
         get_libs() { otool -L "$@" | awk '/[^:]$/ { print $1 }'; }
         ;;
 esac
+
+echo "*"
+echo "* running $0 - libs:${libs_path} rpaths:${rpaths[@]} excludes:${excludes[@]} strip:${dostrip}"
+echo "*"
 
 ##################################################################################
 unset errors; declare -a errors

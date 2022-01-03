@@ -15,11 +15,16 @@ mkdir="mkdir -p"
 cp="cp -v"
 diff="diff -u -q"
 os=$(uname -s | tr "[:upper:]" "[:lower:]")
+arch=$(uname -m)
 do_setup=
+bin_path=
 
 while test -n "$1"; do
     case "$1" in
         --setup) do_setup=yes;;
+        --bin=*) bin_path=${1#--bin=}; shift; break ;;
+        -*) echo "Usage: $(basename "$0") [--help] [--setup] [--bin=<program-to-run> [<options>]]"
+            case "$1" in -h|--help) exit 0;; esac;;
     esac
     shift
 done
@@ -114,7 +119,7 @@ export XAUTHORITY=~/.Xauthority 2>/dev/null
 echo
 echo "-----------------------------------------------------"
 echo "Vegastrike launcher"
-echo "  os        ${os}"
+echo "  os        ${os} ${arch}"
 echo "  home      ${vega_home}"
 echo "  config    ${config}"
 echo "  gfx       ${engine}"
@@ -127,8 +132,14 @@ echo
 # run setup if ALT key is pressed
 #
 case "${os}" in
-    linux*) export LD_LIBRARY_PATH="${mydir}/../lib:${mydir}/../lib/gtk";;
+    darwin*) export TERMINFO_DIRS="${mydir}/../Resources/share/terminfo";;
+    linux*|*bsd*)
+        export LD_LIBRARY_PATH="${mydir}/../lib:${mydir}/../lib/gtk:${mydir}/../lib/misc${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+        export ALSA_CONFIG_DIR="${mydir}/../etc/alsa"
+        export TERMINFO_DIRS="${mydir}/../share/terminfo"
+        ;;
 esac
+
 if test -n "${do_setup}" -o "$("${mydir}/checkModifierKeys" option 2>/dev/null)" = "1"; then
 
     # Run SETUP
@@ -162,8 +173,11 @@ if test -n "${do_setup}" -o "$("${mydir}/checkModifierKeys" option 2>/dev/null)"
         fi && break
     done
 
-else
+elif test -n "${bin_path}"; then
 
+    exec "${bin_path}" "$@"
+
+else
     # Run VEGASTRIKE
     cd "${data_dir}"
 

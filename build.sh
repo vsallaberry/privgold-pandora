@@ -662,7 +662,7 @@ do_run_fun() {
         echo "BUILD $build DATA $data ARGS ${run_args[@]}"
 
         case "${build_sysname}" in
-            linux*) export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib";;
+            linux*) export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib:${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}";;
         esac
 
         # important the chdir to have music and avoid crash when loading universe
@@ -670,6 +670,7 @@ do_run_fun() {
 
         if test -n "${do_setup}"; then
             # SETUP
+            case "${build_sysname}" in linux*) export LD_LIBRARY_PATH="${GTK2_PREFIX}/lib:${LD_LIBRARY_PATH}";; esac
             "${build}/setup/vssetup" "${run_args[@]}" || "${build}/setup/vssetup_dlg" "${run_args[@]}" \
             || "${build}/vssetup" "${run_args[@]}" || "${build}/vssetup_dlg" "${run_args[@]}"; ret=$?
         elif test -n "${do_debug}"; then # -D${data}
@@ -777,20 +778,16 @@ do_delivery_fun() {
              && rm -Rf "${deliverydir}" && mkdir -p "${deliverydir}" || exit 1; }
     fi
 
-    (
+    if case "${do_checkpython}" in no|NO) false;; *) true;; esac; then (
         do_checkpython=bytecode
         do_checkpython_fun || exit $?
-    )
+    ); fi
 
     pushd "${deliverydir}" > /dev/null || exit 1
 
     bundle_tools="${mydir}/tools/macos_bundle"
     bundle_src="${bundle_tools}/PrivateerGold.app"
     checkkeys_dir="${bundle_tools}/checkModifierKeys"
-
-    bundledir="${deliverydir}/bundle/PrivateerGold.app"
-    bundle_bindir="${bundledir}/Contents/MacOS"
-    bundle_resdir="${bundledir}/Contents/Resources"
 
     this_bundle="${deliverydir}/bundle/PrivateerGold.this.app"
     other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs.app"
@@ -803,9 +800,17 @@ do_delivery_fun() {
     gfxs="sdl2 glut sdl1"
     mainbuilddir=
     cxxf=
+    unset bundle_addlibs; declare -a bundle_addlibs
 
     case "${build_sysname}" in
         darwin*)
+            bundledir="${deliverydir}/bundle/PrivateerGold.app"
+            bundle_bindir="${bundledir}/Contents/MacOS"
+            bundle_resdir="${bundledir}/Contents/Resources"
+            bundle_librpath="../Resources/lib"
+            package_name="${deliverydir}/PrivateerGold-${priv_version}_macOS.dmg"
+
+            get_libs() { otool -L "$@"; }
             if test "${build_sysmajor}" -lt 19; then
                 cxxf="-arch x86_64 -arch i386"
             else
@@ -814,10 +819,20 @@ do_delivery_fun() {
             find_macos_sdk "${cxxf}"
             chmod_args='-hv'
             ;;
-        *bsd*)
-            chmod_args='-hv'
+        *bsd*|linux*)
+            bundledir="${deliverydir}/bundle/PrivateerGold"
+            bundle_bindir="${bundledir}/bin"
+            bundle_resdir="${bundledir}"
+            bundle_librpath="../lib"
+            package_name="${deliverydir}/PrivateerGold-${priv_version}_linux64.tar.bz2"
+
+            get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
+            case "${build_sysname}" in *bsd*) chmod_args='-hv';; linux*) chmod_args='-c';; esac
+            bundle_addlibs[${#bundle_addlibs[@]}]="$(readlink -f "${VEGA_PREFIX}/lib/libasound.so")"
+            export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
             ;;
-        *)  chmod_args='-v'
+        *)  chmod_args=''
+            package_name="${deliverydir}/PrivateerGold-{priv_version}.zip"
             ;;
     esac
 
@@ -828,9 +843,23 @@ do_delivery_fun() {
         rm -Rf "${bundledir}" "${deliverydir}/bundle/destroot" "${this_bundle}" "${other_bundle}"
         # copy bundle template
         mkdir -p "${bundledir}" || exit $?
-        xcopy "${bundle_src}"/ "${bundledir}" || exit $?
         mkdir -p "${bundle_bindir}" || exit $?
-        mkdir -p "${bundle_resdir}" || exit $?
+        mkdir -p "${bundle_resdir}/share" || exit $?
+        xcopy "${VEGA_PREFIX}/share/terminfo" "${bundle_resdir}/share" || exit $?
+
+        case "${build_sysname}" in
+            darwin*)
+                xcopy "${bundle_src}"/ "${bundledir}" || exit $?
+                # Applications link in bundle root
+                rm -f "${deliverydir}/bundle/Applications"
+                ln -s /Applications "${deliverydir}/bundle" || exit $?
+                ;;
+            linux*|*bsd*)
+                xcopy "${mydir}/tools/linux_bundle/PrivateerGold/" "${bundledir}" || exit $?
+                xcopy "${bundle_src}/Contents/MacOS/launcher.sh" "${bundle_bindir}" || exit $?
+                mkdir -p "${bundledir}/etc" && cp -a "${VEGA_PREFIX}/share/alsa" "${bundledir}/etc/alsa" || exit $?
+                ;;
+        esac
     } \
     && echo "+ building..." \
     && for gfx in ${gfxs}; do
@@ -882,17 +911,24 @@ do_delivery_fun() {
             ;;
     esac
 
+    mkdir -p "${bundle_bindir}/${bundle_librpath}/"
+    _i=0; while test ${_i} -lt ${#bundle_addlibs[@]}; do
+        cp -av "${bundle_addlibs[${_i}]}" "${bundle_bindir}/${bundle_librpath}/"
+        bundle_addlibs[${_i}]=$(cd "${bundle_bindir}/${bundle_librpath}"; echo "$(pwd)/$(basename "${bundle_addlibs[${_i}]}")")
+        _i=$((_i+1))
+    done
+
     # handle executables rpaths: vegastrike* and vssetup_dlg
-    "${mydir}/tools/rpath.sh" -X'/opt/local' -L../Resources/lib \
-        "${bundle_bindir}"/vegastrike.* || exit $?
+    "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
+        "${bundle_bindir}"/vegastrike.* "${bundle_addlibs[@]}" || exit $?
 
     # handle executables rpaths: vssetup_dlg
-    "${mydir}/tools/rpath.sh" -X'/opt/local' -L../Resources/lib \
+    "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
         "${bundle_bindir}/vssetup_dlg" || { printf -- '!! warning: vssetup_dlg (terminal) is not included in this delivery !!'; }
 
     # handle executables rpaths: vssetup(gtk)
     "${mydir}/tools/rpath.sh" -X'/opt/local' \
-        -L../Resources/lib/gtk -R../Resources/lib \
+        -L${bundle_librpath}/gtk -R${bundle_librpath} \
         "${bundle_bindir}/vssetup" || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
 
     # handle optional vegastrike tools executables rpaths: tools, objconv, vegaserver, test
@@ -951,14 +987,11 @@ do_delivery_fun() {
     fi
 
     # Display list of libs
+    case "${build_sysname}" in linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";; esac
     echo "+ Libraries:"
-    for f in `find "${bundle_bindir}"/{,../Resources/lib} -type f`; do
-        test -f "$f" && otool -L "$f" 2> /dev/null | grep -Ev '^[^[:space:]]'
+    for f in `find "${bundle_bindir}"/{,${bundle_librpath}} -type f`; do
+        test -f "$f" && get_libs "$f" 2> /dev/null | grep -Ev '^[^[:space:]]'
     done | sort | uniq
-
-    # Applications link in bundle root
-    rm -f "${deliverydir}/bundle/Applications"
-    ln -s /Applications "${deliverydir}/bundle" || exit $?
 
     # Put data in bundle
     if test "${do_delivery}" = dev; then
@@ -979,15 +1012,22 @@ do_delivery_fun() {
     find "${deliverydir}/bundle" -perm '+u=x' -print0 | xargs -0 chmod ${chmod_args} 'g+x,o+x'
     find "${deliverydir}/bundle" -perm '+u=r' -print0 | xargs -0 chmod ${chmod_args} 'g+r,o+r'
 
-    # Create DMG
-    #formats UDBZ(bz2,10.4) UDCO ULFO(lzfe,10.11) # -fs HFS+ # -type UDIF|SPARSE|SPARSEBUNDLE
-    dmg_name="${deliverydir}/PrivateerGold.dmg"
-    test -z "${interactive}" || yesno "? Create DMG (${dmg_name}) ?" || exit 1
-    echo "+ creating DMG (${dmg_name})"
-    rm -f "${dmg_name}" || exit $?
-    hdiutil create -fs "HFS+" -format "UDBZ" -volname "PrivateerGold" \
-        -srcfolder "${deliverydir}/bundle" "${dmg_name}" || exit $?
-    du -sh "${dmg_name}"
+    # Create Package
+    test -z "${interactive}" || yesno "? Create Package (${package_name}) ?" || exit 1
+    echo "+ creating Package (${package_name})"
+    rm -f "${package_name}" || exit $?
+    case "${build_sysname}" in
+        darwin*)
+            # Create DMG
+            #formats UDBZ(bz2,10.4) UDCO ULFO(lzfe,10.11) # -fs HFS+ # -type UDIF|SPARSE|SPARSEBUNDLE
+            hdiutil create -fs "HFS+" -format "UDBZ" -volname "PrivateerGold" \
+                -srcfolder "${deliverydir}/bundle" "${package_name}" || exit $?
+            ;;
+        linux*|*bsd*)
+            (cd "${deliverydir}/bundle" && tar cjf "${package_name}" "PrivateerGold" ) || exit 1
+            ;;
+    esac
+    du -sh "${package_name}"
 
     popd >/dev/null
 }

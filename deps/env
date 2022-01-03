@@ -445,18 +445,21 @@ configure_fun() {
 
         export PATH="$PATH:${buildtools_prefix}/bin"
         export PYTHON="${prefix}/bin/python3.9"
-        export PYTHOHOME="${prefix}/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9"
+        case "${build_sysname}" in
+            darwin*) export PYTHOHOME="${prefix}/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9";;
+            *)       export PYTHOHOME="${prefix}/lib/python3.9";;
+        esac
         unset PYTHONPATH
         export CMAKE="${buildtools_prefix}/bin/cmake" # -DCMAKE_OSX_SYSROOT=${macos_sdk}"
         if false && test -x "${prefix}/bin/meson"; then
             export MESON=meson_fun
             meson_fun() {
-                PYTHONPATH="${prefix}/lib/python3.9/site-packages/" "${prefix}/bin/meson" "$@"
+                PYTHONPATH="${prefix}/lib/python3.9/site-packages/:${PYTHONPATH}" "${prefix}/bin/meson" "$@"
             }
         else
-            export MESON="${buildtools_prefix}/bin/meson"
+            export MESON="$(which -a "${buildtools_prefix}/bin/meson" "meson" | head -n1)"
         fi
-        export NINJA=${buildtools_prefix}/bin/ninja
+        export NINJA=$(which -a "${buildtools_prefix}/bin/ninja" "ninja" | head -n1)
         configure="$MESON"
         export PERL_PATH=/usr/bin/perl
         more_pkg=$(cd "${resources}/../deps-gtk"/[0-9][0-9]*_"${prog}/pkgconfig"; pwd)
@@ -643,8 +646,11 @@ configure_fun() {
                     #export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
                     chmod +x "${configure}"
                     add_args \
-                        --with-ensurepip=no \
-                        --enable-framework="${prefix}/Library/Frameworks"
+                        --with-ensurepip=no
+                    case "${build_sysname}" in
+                        darwin*) add_args --enable-framework="${prefix}/Library/Frameworks";;
+                        *)       add_args --with-shared;;
+                    esac
                     #--enable-ipv6 --with-computed-gotos
                     #--enable-loadable-sqlite-extensions
                     #--with-system-expat --with-system-ffi
@@ -680,7 +686,10 @@ configure_fun() {
             #build_flags "${optflags}"
             #--enable-joystick --enable-audio
             do_patch "libsdl2"
-            case "${build_sysname}" in darwin*) add_args --without-x;; esac
+            case "${build_sysname}" in
+                darwin*) add_args --without-x;;
+                linux*)  add_args --with-x;;
+            esac
             add_args \
                 --enable-joystick --enable-audio \
                 --disable-video-metal --disable-render-metal
@@ -767,7 +776,9 @@ configure_fun() {
             PATH=$PATH:${buildtools_prefix}/bin
             build_one_arch
             case "$arch" in i386) add_args --disable-asm-optimizations;; esac
-            add_buildargs "OBJ_FORMAT=macho"
+            case "${build_sysname}" in
+                darwin*) add_buildargs "OBJ_FORMAT=macho";;
+            esac
             do_patch
             test -f NEWS || (touch AUTHORS ChangeLog NEWS; PATH=$PATH:${buildtools_prefix}/bin; autoreconf -fiv || rm NEWS)
             ;;
@@ -810,12 +821,16 @@ configure_fun() {
             case "${build_sysname}" in
                 linux*) CC=$(which gcc "${CC}" 2> /dev/null | head -n1);;
             esac
+            do_patch
             build_cmake
             del_args "-DCMAKE*RPATH*" "-DCMAKE*NAME_DIR*"
             add_args "-DFREEGLUT_WAYLAND=OFF" "-DFREEGLUT_BUILD_DEMOS=OFF" "-DFREEGLUT_BUILD_STATIC_LIBS=ON" "-DFREEGLUT_BUILD_SHARED_LIBS=ON" "-DFREEGLUT_GLES=OFF"
             ;;
         openal-soft)
             build_cmake ALSOFT_REQUIRE_SDL2=OFF
+            ;;
+        alsa-lib)
+            add_args --enable-shared=yes --enable-static=no #--with-libdl=no
             ;;
         alsa-utils)
             add_args "--disable-nls";;
@@ -993,7 +1008,13 @@ configure_fun() {
                 --without-debug  \
                 --with-pkg-config-libdir="${prefix}/lib/pkgconfig" \
                 --enable-pc-files \
-                --with-terminfo-dirs="/usr/share/terminfo:${prefix}/share/terminfo:/usr/local/share/terminfo" \
+                --with-terminfo-dirs="/usr/share/terminfo:${prefix}/share/terminfo:/usr/local/share/terminfo"
+            #case "${build_sysname}" in
+            #    darwin*)      add_args --disable-mixed-case;;
+            #    linux*|*bsd*) add_args --enable-mixed-case;;
+            #    mingw*|cygwin%|win*) add_args --disable-mixed-case;;
+            #esac
+            #--with-default-terminfo-dir="/usr/share/terminfo" --disable-database --enable-termcap
                 #--with-shlib-version=rel #rel | abi
                 #--with-default-terminfo-dir="/usr/share/terminfo"
             test -n "${ada}" && add_args --with-ada --with-ada-sharedlib="${libAdaCursesSO}"
@@ -1007,6 +1028,7 @@ configure_fun() {
             ;;
 
         libffi) build_one_arch;;
+        libxml2) add_args --with-iconv="${MORE_PREFIXES}";;
         glib) build_one_arch
               build_meson
               do_patch '' "${resources}/../deps-gtk"
@@ -1218,7 +1240,7 @@ configure_fun() {
             build_optimize_size
             ;;
         meson)
-            configure="${buildtools_prefix}/bin/python3.9"
+            configure="$(which -a "${prefix}/bin/python3.9" "${buildtools_prefix}/bin/python3.9" python3.9 2> /dev/null | head -n1)"
             buildcmd=true
             del_args "*"; add_args "${rootdir}/setup.py" "build"
             builddir=${rootdir}/build

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-     Privateer Gemini Gold Pandora v1.2.1 -- 2021/12/29 -- Changes
+     Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/05 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
@@ -8,6 +8,27 @@ Privateer Gemini Gold versions.
 -----------------------------------------------------------------------------
                                  CHANGE HISTORY
 -----------------------------------------------------------------------------
+
+  -------------------------------------------------------------------------
+        Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/05 -- Changes
+  -------------------------------------------------------------------------
+  7. CHANGES FROM 1.2.1 TO 1.2.2
+
+    Vegastrike 0.4.4.3
+
+    A. linux x86_64 experimental build
+
+        - not fully tested. Tested on a freshly installed debian9
+          on a x86_64 mac
+
+        - only the terminal setup program (vssetup_dlg) is available.
+
+    B. Privateer/Quine/Save: overwrite detection
+
+        - forbid to override savegame 'Autosave'.
+
+        - handle file overwrite warning on macOS when filesystem
+          is not case-sensitive (default).
 
   -------------------------------------------------------------------------
         Privateer Gemini Gold Pandora v1.2.1 -- 2021/12/29 -- Changes

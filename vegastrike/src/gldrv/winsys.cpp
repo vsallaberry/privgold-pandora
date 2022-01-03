@@ -3,7 +3,7 @@
  * Copyright (C) 1999-2001 Jasmin F. Patry
  *
  * Vegastrike
- * Copyright (C) 2002-2021 The Vegastrike developers
+ * Copyright (C) 2002-2022 The Vegastrike developers
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

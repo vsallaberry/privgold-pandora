@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Vincent Sallaberry
+ * Copyright (C) 2021-2022 Vincent Sallaberry
  * unicode Utf8Iterator class, for vegastrike (GPL) / version PrivateerGold
  *   http://vegastrike.sourceforge.net/
  *
@@ -20,12 +20,13 @@
  * -------------------------------------------------------------------------
  * class Utf8Iterator
  * usage:
+ *  #include <stdio.h>
  *  #include "unicode.h"
  *  int main() {
  *    std::string     s = "Hello World hé hé ·ﬂ∏ ∏ = 3.14•••.";
  *    fprintf(stdout, "forLoopTest: '");
  *    for (Utf8Iterator it = Utf8Iterator::begin(s, 5), itend=it.end(); it != itend; ++it) {
- *      fputwc(*it, stdout);
+ *      fprintf(stdout, "%lc", *it);
  *    }
  *    fprintf(stdout, "'\n\n");
  *    return 0;
@@ -166,12 +167,19 @@ void unicodeInitLocale() {
             myloc[sizeof(myloc) - 1] = 0;
             if ((tmp = strchr(myloc, '.'))) *tmp = 0;
         } else strcpy(myloc, "C");
-        static const char * langs[] = { myloc, "en_US", "en_EN", NULL };
+        static const char * langs[] = { myloc, "en_US", "en_EN", "C", "", NULL };
         static const char * cods[] = { "UTF-8", "UTF8", "utf-8", "utf8", NULL };
         for (const char ** lang = langs; *lang; lang++) {
             for (const char ** cod = cods; *cod; cod++) {
-                snprintf(loc, sizeof(loc), "%s.%s", *lang, *cod);
+                snprintf(loc, sizeof(loc), "%s%s%s", *lang, **lang ? "." : "", *cod);
                 if (setlocale(LC_CTYPE, loc) != NULL) {
+                   #if defined(HAVE_LOCALE) && (!defined(__APPLE__) || (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9) && MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9)
+                    try {
+                        std::cout.imbue(std::locale(std::locale::classic(), loc, std::locale::ctype));
+                    } catch (...) {
+                        VS_LOG("unicode", logvs::WARN, "cannot set std::cout utf8 locale");
+                    }
+                   #endif
                     while (*(lang+1)) ++lang;
                     break ;
                 }
@@ -180,13 +188,6 @@ void unicodeInitLocale() {
     }
     VS_LOG("unicode", logvs::NOTICE, "using locale %s for characters encoding",
            setlocale(LC_CTYPE, NULL));
-#endif
-#if defined(HAVE_LOCALE) && (!defined(__APPLE__) || (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9) && MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9)
-    try {
-        std::cout.imbue(std::locale(std::locale::classic(), "en_US.UTF-8", std::locale::ctype));
-    } catch (...) {
-        VS_LOG("unicode", logvs::WARN, "cannot set cout utf8 locale");
-    }
 #endif
 }
 // END
@@ -231,7 +232,7 @@ static size_t srange(const std::string & s, ssize_t pos) {
     return MAX(0,MIN(pos, s.size()));
 }
 
-static const char * pwc(wchar_t wc) { fputwc(wc, stderr); return ""; }
+static const char * pwc(wchar_t wc, FILE * out = stderr) { fprintf(out, "%lc", wc); return ""; }
 
 template <typename charT>
 static Utf8Iterator find_one(std::basic_ostream<charT> & out, Utf8Iterator::value_type wc, const Utf8Iterator & begin, const Utf8Iterator & end) {
@@ -257,7 +258,7 @@ static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::str
     out << "u8string: '";
     for (Utf8Iterator it = begin; it != end; ++it) {
         //out << (charT) *it;
-        fputwc(*it, stderr);
+        pwc(*it, stderr);
     }
     out << '\'' << std::endl;
 
@@ -282,7 +283,7 @@ static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::str
 
     out << "u8Reversestring: '";
     for (it = end - 1; it != begin; --it) {
-        fputwc(*it, stderr);
+        pwc(*it, stderr);
     }
     out << '\'' << std::endl;
 
@@ -301,7 +302,7 @@ static unsigned int test_ascii_str(std::basic_ostream<charT> & out) { //, const 
     out << "u8string(big operator tests): '";
     for (Utf8Iterator it = begin; it != end; ++it) {
         //out << (charT) *it;
-        fputwc(*it, stderr);
+        pwc(*it, stderr);
     }
     out << '\'' << std::endl;
 
@@ -390,13 +391,13 @@ int utf8_iterator_test() {
 
     fprintf(stderr, "\nforLoopTest: '");
     for (Utf8Iterator it = Utf8Iterator::begin(s), itend=it.end(); it != itend; ++it) {
-        fputwc(*it, stderr);
+        fprintf(stderr, "%lc", *it);
     }
     fprintf(stderr, "'\n\n");
 
     fprintf(stderr, "forLoopTest2: '");
     for (Utf8Iterator it = Utf8Iterator::begin(s); it != it.end(); ++it) {
-        fputwc(*it, stderr);
+        fprintf(stderr, "%lc", *it);
     }
     fprintf(stderr, "'\n\n");
 
