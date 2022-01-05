@@ -18,7 +18,7 @@ this is not an official release of vegastrike or Privateer Gold.
 The first Goal was to have a 64bit MacOS build: this is when the pandora
 box has been openned, implying a lot more updates.
 
-Tested on El Capitan, Mojave and Catalina.
+Tested on macOS El Capitan, Mojave and Catalina, linux debian 9.
 Vegastrike now supports 3 graphical engines for openGL: GLUT, SDL1, SDL2.
 SDL1 is discouraged, SDL2 is recomanded, use GLUT if trouble with SDL2.
 Unicode handling (keyboard and graphics) has been improved.
@@ -31,7 +31,7 @@ and [licenses](#about-licenses) for more details.
 
 ## Installation
 
-[macOS binaries]:<https://github.com/vsallaberry/privgold-pandora/releases>
+Binaries are available [here](https://github.com/vsallaberry/privgold-pandora/releases)  
  
 Tested on:  
 * el capitan
@@ -39,25 +39,26 @@ Tested on:
 * catalina
   
 * Experimental non-tested build for macOS BigSur or later with arm64 (apple M1).  
+* Experimental build for linux-x86_64 (tested on a macbook with debian9)
   
-Open the APP with alt (option) key pressed in order to run SETUP.
+On macOS, open the APP with alt (option) key pressed in order to run SETUP.
 
 
 ## Source Control Management
 
 * updates are done based on following version:  
-    $ svn info
-    URL: https://svn.code.sf.net/p/privateer/code
-    Relative URL: ^/
-    Repository Root: https://svn.code.sf.net/p/privateer/code
-    Repository UUID: f9092690-2135-0410-9f1c-825117feb74d
-    Revision: 258
-    Node Kind: directory
-    Schedule: normal
-    Last Changed Author: johncordell
-    Last Changed Rev: 258
-    Last Changed Date: 2010-01-08 10:05:48 +0100 (Ven, 08 jan 2010)
-
+    $ svn info  
+    URL: https://svn.code.sf.net/p/privateer/code  
+    Relative URL: ^/  
+    Repository Root: https://svn.code.sf.net/p/privateer/code  
+    Repository UUID: f9092690-2135-0410-9f1c-825117feb74d  
+    Revision: 258  
+    Node Kind: directory  
+    Schedule: normal  
+    Last Changed Author: johncordell  
+    Last Changed Rev: 258  
+    Last Changed Date: 2010-01-08 10:05:48 +0100 (Ven, 08 jan 2010)  
+  
 It contains the vegastrike engine: privgold/dependencies/vs_gold_1_03.tar.bz2  
 Privateer Gold Gemini Gold v1.03 (last official version, 2009, dec) 
 is SVN revision 257, the 258 contains one single fix in Privateer data.
@@ -286,7 +287,7 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
 
 ## About
 
-Privateer Gold Pandora (Vincent Sallaberry, 2021) is a fork of
+Privateer Gold Pandora (Vincent Sallaberry, 2021-2022) is a fork of
 Privateer Gemini Gold 1.03, 2009. It includes builds for recent
 MacOS systems, and updates/new features.  
 

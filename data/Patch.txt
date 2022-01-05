@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-     Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/05 -- Changes
+     Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/06 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
@@ -10,7 +10,7 @@ Privateer Gemini Gold versions.
 -----------------------------------------------------------------------------
 
   -------------------------------------------------------------------------
-        Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/05 -- Changes
+        Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/06 -- Changes
   -------------------------------------------------------------------------
   7. CHANGES FROM 1.2.1 TO 1.2.2
 
