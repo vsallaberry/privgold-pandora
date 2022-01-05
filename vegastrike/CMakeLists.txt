@@ -646,7 +646,7 @@ include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
 # Let cmake find our in-tree modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${vsUTCS_SOURCE_DIR})
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${vsUTCS_SOURCE_DIR}/cmake-scripts")
 
 find_package(PythonLibs REQUIRED)
 IF(PYTHONLIBS_FOUND OR PYTHON_LIBRARIES AND PYTHON_INCLUDE_PATH)
@@ -934,6 +934,14 @@ find_library(PTHREAD_LIBRARY NAMES pthread)
 
 CONFIGURE_FILE(${vsUTCS_SOURCE_DIR}/cmake-config.h.in ${vsUTCS_BINARY_DIR}/config.h)
 
+#version.h generation
+add_custom_target(get_scm_revision ALL DEPENDS get_scm_revision_output)
+add_custom_command(OUTPUT get_scm_revision_output # trick so that make considers as PHONY and always run it
+                   COMMAND ${CMAKE_COMMAND} -DGETSCM_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+                                            -DGETSCM_VERSION_FILE="${CMAKE_CURRENT_BINARY_DIR}/version.h"
+                                            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake-scripts/GetSCMrevision.cmake")
+set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+
 #end config.h generation
 #SET(CMAKE_CXX_FLAGS "-include config.h;-pipe;"${CMAKE_CXX_FLAGS})
 
@@ -951,6 +959,8 @@ endif()
 IF(NOT DISABLE_CLIENT)
 	target_link_libraries(vegastrike ${TST_LIBS})
     set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}")
+    #version.h generation
+    add_dependencies(vegastrike get_scm_revision)
 ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file

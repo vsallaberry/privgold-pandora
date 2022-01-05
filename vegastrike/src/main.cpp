@@ -18,6 +18,7 @@
  */
 //#include <fenv.h>
 #include "config.h"
+#include "version.h"
 #include <Python.h>
 
 #if defined(HAVE_SDL)
@@ -113,6 +114,7 @@ enum {
     VPB_CONFIGURE   = 1 << 2,
     VPB_BUILD       = 1 << 3,
     VPB_LIBS        = 1 << 4,
+	VPB_SCM         = 1 << 5,
     VPB_ALL         = 0xffffffff
 };
 static void vs_print_buildinfo(std::ostream & out, int flags);
@@ -271,8 +273,8 @@ int main( int argc, char *argv[] )
 printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 #endif
     /* Print copyright notice */
-	printf("Vega Strike " VERSION " \n"
-		   "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
+	vs_print_buildinfo(std::cout, VPB_VERSION | VPB_SCM);
+	std::cout << "See http://www.gnu.org/copyleft/gpl.html for license details." << std::endl << std::endl;
     /* Seed the random number generator */
 
     if(benchmark<0.0){
@@ -288,7 +290,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     {
       string subdir=ParseCommandLine(argc,argv);
 
-      vs_print_buildinfo(std::cerr, VPB_ALL & (~(VPB_VERSION | VPB_CONFIGURE)));
+      vs_print_buildinfo(std::cerr, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
       std::cerr << std::endl;
         
       cerr<<"GOT SUBDIR ARG = "<<subdir<<endl;
@@ -824,7 +826,9 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
   QVector PlayerLocation;
   for (int i=1;i<argc;i++) {
     if(lpCmdLine[i][0]=='-') {
-		cerr<<"ARG #"<<i<<" = "<<lpCmdLine[i]<<endl;
+		std::cerr << "ARG #" << i <<" = " << lpCmdLine[i] << std::endl;
+		if (i + 1 == argc)
+			std::cerr << std::endl;
       switch(lpCmdLine[i][1]){
     case 'd':
     case 'D':
@@ -923,7 +927,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
           exit(0);
         }
         else if(strcmp(lpCmdLine[i], "--version")==0) {
-          vs_print_buildinfo(std::cout, VPB_ALL & (~VPB_VERSION));
+          vs_print_buildinfo(std::cout, VPB_ALL & (~(VPB_VERSION | VPB_SCM)));
           exit(0);
         }
       }
@@ -968,10 +972,14 @@ static void vs_print_buildinfo(std::ostream & out, int flags) {
         out << "Vegastrike v" << VERSION
         << std::endl;
     }
+    if ((flags & VPB_SCM)) {
+        out << "revision " << SCM_VERSION << " from " << SCM_REMOTE
+        << std::endl;
+    }
     if ((flags & VPB_ARCH)) {
         out << POSH_GetArchString() << std::endl;
     }
-    if (!(flags & (~(VPB_VERSION|VPB_ARCH))))
+    if (!(flags & (~(VPB_VERSION|VPB_ARCH|VPB_SCM))))
         return ;
     out << "configured with:";
     if ((flags & VPB_CONFIGURE)) {

@@ -755,6 +755,16 @@ else
   vegastrike_LDADD = $(vegastrike_LDADD_1)
 endif
 
+.PHONY: get_scm_revision
+get_scm_revision:
+	@scm_rev="$$(cd "$(top_srcdir)" && git --no-pager describe --abbrev=8 --dirty --always 2>/dev/null || printf -- 'unknown')"; \
+	scm_remote="$$(cd "$(top_srcdir)" && git --no-pager remote get-url origin 2>/dev/null || printf -- 'unknown')"; \
+	printf -- "%s\n" "#ifndef _AUTOMAKE_GETSCM_VERSION_H" "# define _AUTOMAKE_GETSCM_VERSION_H" \
+                     "# define SCM_VERSION \"$${scm_rev}\"" \
+					 "# define SCM_REMOTE \"$${scm_remote}\"" \
+					 "#endif" > version.h.txt && diff -q version.h.txt version.h 2>/dev/null || cp version.h.txt version.h
+all: get_scm_revision
+
 vegastrike_DEPENDENCIES = $(noinst_LIBRARIES)
 
 vegaserver_LDADD_1 = $(noinst_LIBRARIES) \
