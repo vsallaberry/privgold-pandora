@@ -801,6 +801,7 @@ do_delivery_fun() {
     mainbuilddir=
     cxxf=
     unset bundle_addlibs; declare -a bundle_addlibs
+    add_bundlelibs() { local _arg; for _arg in "$@"; do bundle_addlibs[${#bundle_addlibs[@]}]="${_arg}"; done; }
 
     case "${build_sysname}" in
         darwin*)
@@ -828,7 +829,9 @@ do_delivery_fun() {
 
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
             case "${build_sysname}" in *bsd*) chmod_args='-hv';; linux*) chmod_args='-c';; esac
-            bundle_addlibs[${#bundle_addlibs[@]}]="$(readlink -f "${VEGA_PREFIX}/lib/libasound.so")"
+            for _lib in "${VEGA_PREFIX}/lib/libasound.so"*; do
+                add_bundlelibs "alsa-lib" "${_lib}"
+            done
             export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
             ;;
         *)  chmod_args=''
@@ -911,16 +914,9 @@ do_delivery_fun() {
             ;;
     esac
 
-    mkdir -p "${bundle_bindir}/${bundle_librpath}/"
-    _i=0; while test ${_i} -lt ${#bundle_addlibs[@]}; do
-        cp -av "${bundle_addlibs[${_i}]}" "${bundle_bindir}/${bundle_librpath}/"
-        bundle_addlibs[${_i}]=$(cd "${bundle_bindir}/${bundle_librpath}"; echo "$(pwd)/$(basename "${bundle_addlibs[${_i}]}")")
-        _i=$((_i+1))
-    done
-
     # handle executables rpaths: vegastrike* and vssetup_dlg
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
-        "${bundle_bindir}"/vegastrike.* "${bundle_addlibs[@]}" || exit $?
+        "${bundle_bindir}"/vegastrike.* || exit $?
 
     # handle executables rpaths: vssetup_dlg
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
@@ -969,6 +965,18 @@ do_delivery_fun() {
             -L../lib/gtk -R../lib \
             "${bundle_resdir}/bin/gtk-demo" "${bundle_resdir}/lib/gtk/${gdk_loaders}"/* || exit $?
     fi
+
+    # Add manually some LIBs
+    _i=0; while test ${_i} -lt ${#bundle_addlibs[@]}; do
+        _dst="${bundle_addlibs[${_i}]}"; _lib=${bundle_addlibs[$((_i+1))]}
+        test -f "${bundle_bindir}/${bundle_librpath}/${_dst}" && continue
+        mkdir -p "${bundle_bindir}/${bundle_librpath}/${_dst}"
+        cp -av "${_lib}" "${bundle_bindir}/${bundle_librpath}/${_dst}"
+        test -L "${bundle_bindir}/${bundle_librpath}/${_dst}/$(basename "${_lib}")" \
+        || "${mydir}/tools/rpath.sh" -X'/opt/local' "-L${bundle_librpath}/${_dst}" -R../lib -R../lib/gtk -R../lib/misc \
+            "${bundle_bindir}/${bundle_librpath}/${_dst}/$(basename "${_lib}")"   || exit $?
+        _i=$((_i+2))
+    done
 
     #fix perms
     find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod ${chmod_args} 'u+w'

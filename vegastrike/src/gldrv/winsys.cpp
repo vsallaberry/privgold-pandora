@@ -509,7 +509,11 @@ void winsys_init( int *argc, char **argv, char *window_title,
     sdl_flags = SDL_WINDOW_OPENGL;
 
     if (gl_options.fullscreen) {
-        sdl_flags |= SDL_WINDOW_FULLSCREEN | SDL_WINDOW_BORDERLESS;
+        sdl_flags |= SDL_WINDOW_FULLSCREEN
+#if !defined(__APPLE__) && !defined(_WIN32)
+                  | SDL_WINDOW_BORDERLESS
+#endif
+        ;
     } else {
         sdl_flags |= SDL_WINDOW_RESIZABLE;
     }
@@ -1077,7 +1081,11 @@ static void setup_sdl_video_mode()
     int width, height;
 
     if ( gl_options.fullscreen ) {
-	video_flags |= SDL_FULLSCREEN | SDL_NOFRAME;
+	    video_flags |= SDL_FULLSCREEN
+#if !defined(__APPLE__) && !defined(_WIN32)
+                       | SDL_NOFRAME
+#endif
+        ;
     } else {
 #ifndef _WIN32
 	video_flags |= SDL_RESIZABLE;

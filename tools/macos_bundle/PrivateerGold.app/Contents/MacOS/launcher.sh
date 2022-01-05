@@ -1,5 +1,6 @@
 #!/bin/sh
 mydir=$(cd `dirname "$0"`; pwd)
+curdir=$(pwd)
 
 version_file=Version.txt
 setup_config_file=setup.config
@@ -21,10 +22,11 @@ bin_path=
 
 while test -n "$1"; do
     case "$1" in
+        --)      shift; break ;;
         --setup) do_setup=yes;;
-        --bin=*) bin_path=${1#--bin=}; shift; break ;;
-        -*) echo "Usage: $(basename "$0") [--help] [--setup] [--bin=<program-to-run> [<options>]]"
-            case "$1" in -h|--help) exit 0;; esac;;
+        --bin=*) bin_path=${1#--bin=};;
+        -*) echo "Usage: $(basename "$0") [--help] [--setup] [--bin=<program-to-run>] [-- [<program-options>]]"
+            case "$1" in -h|--help) exit 0;; *) exit 1; esac;;
     esac
     shift
 done
@@ -116,6 +118,7 @@ export DISPLAY=:0.0 2>/dev/null
 setenv XAUTHORITY ~/.Xauthority 2>/dev/null
 export XAUTHORITY=~/.Xauthority 2>/dev/null
 
+cd "${curdir}"
 echo
 echo "-----------------------------------------------------"
 echo "Vegastrike launcher"
@@ -134,8 +137,15 @@ echo
 case "${os}" in
     darwin*) export TERMINFO_DIRS="${mydir}/../Resources/share/terminfo";;
     linux*|*bsd*)
-        export LD_LIBRARY_PATH="${mydir}/../lib:${mydir}/../lib/gtk:${mydir}/../lib/misc${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
-        export ALSA_CONFIG_DIR="${mydir}/../etc/alsa"
+        #export LD_LIBRARY_PATH="${mydir}/../lib:${mydir}/../lib/gtk:${mydir}/../lib/misc${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+        if ! amixer 2>&1 > /dev/null; then
+            echo "*** using alsa-lib from privateer package"
+            export ALSA_CONFIG_DIR="${mydir}/../etc/alsa"
+            export LD_LIBRARY_PATH="${mydir}/../lib/alsa-lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+        fi
+        export LD_LIBRARY_PATH="${mydir}/../lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+        test -n "${do_setup}" -o -n "${bin_path}" && export LD_LIBRARY_PATH="${mydir}/../lib/gtk${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+        test -n "${bin_path}" && export LD_LIBRARY_PATH="${mydir}/../lib/misc${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
         export TERMINFO_DIRS="${mydir}/../share/terminfo"
         ;;
 esac
@@ -164,12 +174,12 @@ if test -n "${do_setup}" -o "$("${mydir}/checkModifierKeys" option 2>/dev/null)"
                         fi
                     done
                     ;;
-                linux*)
-                    xterm -e "\"${mydir}/${setup}\"; echo \"press enter...\"; read"
+                linux*|*bsd*)
+                    xterm -e "${mydir}/${setup}" "$@"
                     ;;
             esac
         else
-            "${mydir}/${setup}" > "${setuplog_file}" 2>&1
+            "${mydir}/${setup}" "$@" > "${setuplog_file}" 2>&1
         fi && break
     done
 
@@ -181,7 +191,7 @@ else
     # Run VEGASTRIKE
     cd "${data_dir}"
 
-    exec "${mydir}/vegastrike.${engine}" > "${log_file}" 2>&1
+    exec "${mydir}/vegastrike.${engine}" "$@" > "${log_file}" 2>&1
 
 fi
 
