@@ -98,6 +98,12 @@
 /* Define to 1 if you have the <fnmatch.h> header file. */
 #undef HAVE_FNMATCH_H
 
+/* win32_FOLDERID_AppData */
+#undef HAVE_FOLDERID_APPDATA
+
+/* win32_FOLDERID_LocalAppData */
+#undef HAVE_FOLDERID_LOCALAPPDATA
+
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
@@ -239,6 +245,9 @@
    and to 0 otherwise. */
 #undef HAVE_REALLOC
 
+/* Define to 1 if you have the <regex.h> header file. */
+#undef HAVE_REGEX_H
+
 /* Define to 1 if you have the `rint' function. */
 #undef HAVE_RINT
 
@@ -253,6 +262,9 @@
 
 /* Define to 1 if you have the `setenv' function. */
 #undef HAVE_SETENV
+
+/* Define to 1 if you have the `SHGetKnownFolderPath' function. */
+#undef HAVE_SHGETKNOWNFOLDERPATH
 
 /* Define to 1 if you have the `socket' function. */
 #undef HAVE_SOCKET

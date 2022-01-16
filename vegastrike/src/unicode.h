@@ -56,6 +56,15 @@ typedef int wchar_t;
 # define wcrtomb(_str, _wc, _ctx)       vs_wcrtomb_ascii(_str, _wc, _ctx)
 #endif
 
+#include <ctype.h>
+#if defined(HAVE_CWCTYPE)
+# include <cwctype>
+#elif defined(HAVE_WCTYPE_H)
+# include <wctype.h>
+#else
+# define iswprint(x) isprint(x)
+#endif
+
 /*---------------------------------------------
  * For information only: c++ 11 utf8 utlities.
  * For now we use libc wcrtomb and mbrtowc for best compiler coverage. */

@@ -549,6 +549,10 @@ configure_fun() {
 
     fi
 
+    case "${target_sysname}" in
+        mingw*) add_args  --build="$(uname -m)-${build_sysname}" --host=i686-mingw32;;
+    esac
+
     add_args --prefix="${prefix}" --disable-silent-rules
 
     ## PER PROJECT SPECFIC CONFIGURE OPTIONS

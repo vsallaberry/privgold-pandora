@@ -55,6 +55,17 @@
 
 #include <iostream>
 
+#if defined(_WIN32)
+# include <windows.h>
+# include <wincon.h>
+# if (defined(__CYGWIN__) || defined(__MINGW32__))
+#  include <fcntl.h>
+#  include <io.h>
+# else
+#  include <direct.h>
+# endif
+#endif
+
 #include "log.h"
 
 // -----------------------------
@@ -70,8 +81,8 @@ size_t vs_wcrtomb_ascii(char * dst, wchar_t wc, void * ctx) {
 }
 size_t vs_mbrtowc_ascii(wchar_t * wc, const char * buf, size_t len, void * ctx) {
     (void)ctx;
-    if (len > 0) {
-        wc = (*buf & 0xff);
+    if (wc && buf && len > 0) {
+        *wc = (*buf & 0xff);
         return 1;
     } else {
         return (size_t)-1;
@@ -160,32 +171,47 @@ void unicodeInitLocale() {
 #if defined(HAVE_LOCALE_H) || defined(HAVE_CLOCALE)
     char loc[50] = {0, };
     char myloc[50] = {0, };
-    if (setlocale(LC_CTYPE, "UTF-8") == NULL && setlocale(LC_CTYPE, "utf8") == NULL) {
-        char * tmp = setlocale(LC_CTYPE, "");
+    //if (setlocale(LC_CTYPE, "UTF-8") == NULL && setlocale(LC_CTYPE, "utf8") == NULL) {
+    	char * tmp = setlocale(LC_CTYPE, NULL); // current locale
+    	VS_LOG("unicode", logvs::VERBOSE, "current LCCTYPE locale: %s", tmp != NULL ? tmp : "(null)");
+        if (tmp == NULL || !strcmp(tmp, "C")) {
+        	tmp = setlocale(LC_CTYPE, ""); // system default locale
+        	VS_LOG("unicode", logvs::VERBOSE, "system default LCCTYPE locale: %s", tmp != NULL ? tmp : "(null)");
+        }
         if (tmp) {
             strncpy(myloc, tmp, sizeof(myloc)-1);
             myloc[sizeof(myloc) - 1] = 0;
             if ((tmp = strchr(myloc, '.'))) *tmp = 0;
         } else strcpy(myloc, "C");
-        static const char * langs[] = { myloc, "en_US", "en_EN", "C", "", NULL };
+        const char * langs[] = { myloc, "", ".", "en_US", "en_EN", "C", NULL };
         static const char * cods[] = { "UTF-8", "UTF8", "utf-8", "utf8", NULL };
         for (const char ** lang = langs; *lang; lang++) {
             for (const char ** cod = cods; *cod; cod++) {
-                snprintf(loc, sizeof(loc), "%s%s%s", *lang, **lang ? "." : "", *cod);
+                snprintf(loc, sizeof(loc), "%s%s%s", *lang, **lang && **lang != '.' ? "." : "", *cod);
+                VS_LOG("unicode", logvs::VERBOSE, "trying LCCTYPE locale: %s", loc);
                 if (setlocale(LC_CTYPE, loc) != NULL) {
                    #if defined(HAVE_LOCALE) && (!defined(__APPLE__) || (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9) && MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9)
                     try {
                         std::cout.imbue(std::locale(std::locale::classic(), loc, std::locale::ctype));
+                        std::cerr.imbue(std::locale(std::locale::classic(), loc, std::locale::ctype));
                     } catch (...) {
                         VS_LOG("unicode", logvs::WARN, "cannot set std::cout utf8 locale");
                     }
                    #endif
+				   #if defined(_WIN32)
+				   # if 0 && (defined(__CYGWIN__) || defined(__MINGW32__))
+					_setmode(fileno(stdout), _O_U8TEXT);
+					_setmode(fileno(stderr), _O_U8TEXT);
+				   # elif defined(_WIN32)
+					SetConsoleOutputCP(CP_UTF8);
+				   # endif
+				   #endif
                     while (*(lang+1)) ++lang;
                     break ;
                 }
             }
         }
-    }
+    //}
     VS_LOG("unicode", logvs::NOTICE, "using locale %s for characters encoding",
            setlocale(LC_CTYPE, NULL));
 #endif
@@ -377,7 +403,7 @@ int utf8_iterator_test() {
     //std::wostream & out = std::wcout;
     std::ostream & out = std::cerr;
     std::string     s = "Hello World hé hé ·ﬂ∏ ∏ = 3.14•••.";
-    char *          cs = (char*)malloc(s.length() + 1); s.copy(cs, s.length() + 1);
+    char *          cs = (char*)malloc(s.length() + 1); s.copy(cs, s.length()); cs[s.length()] = 0;
     unsigned int    errs = 0;
 
     if (!cs) {

@@ -209,8 +209,8 @@ template <class SuperClass> class PythonClass:public SuperClass {
 	return LastPythonClass();
   }
   virtual ~PythonClass(){
-    VS_LOG("python", logvs::INFO, "PythonClass Destruct called. If called from C++ this is death %ld (0x%lx)",
-           (unsigned long)this,(unsigned long)this);
+    VS_LOG("python", logvs::INFO, "PythonClass Destruct called. If called from C++ this is death %zu (0x%zx)",
+           (size_t)this,(size_t)this);
   }
 };
 template <class SuperClass> class PythonAI: public PythonClass <SuperClass> {

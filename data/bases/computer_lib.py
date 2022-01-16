@@ -93,10 +93,11 @@ class NewSaveGame: pass
 
 def file_exists(filename):
 	try: 
-		st = os.stat(filename)		
+		f = open(filename)
+		f.close()
+		return True		
 	except:
 		return False
-	return st is not None
 
 def time_sorted_listdir(dir):
 	import os
@@ -452,13 +453,20 @@ class QuineComputer:
 					trace(TRACE_INFO, "::: picker_screen NOT visible")
 
 					savename = self.picker_screen.items[self.picker_screen.selection].data
-					VS.saveGame(savename)
-					self.oldSaveName = savename
-
-					# redisplay saved list
-					self.picker_screen.items = [GUI.GUISimpleListPicker.listitem("New Game",NewSaveGame)]+savelist()
-					self.picker_screen.show()
-					self.txt_screen.hide()
+					if not VS.saveGame(savename):
+						self.txt_screen.setText("\n"*7
+							+ "An unknown error occured while saving game '"+savename+"'.\n"
+							+ "\n"*3
+							+ "Press SAVE to try another name.")
+						self.txt_screen.show()
+						button_index = ''
+					else:	
+						self.oldSaveName = savename
+	
+						# redisplay saved list
+						self.picker_screen.items = [GUI.GUISimpleListPicker.listitem("New Game",NewSaveGame)]+savelist()
+						self.picker_screen.show()
+						self.txt_screen.hide()
 					
 					# or should this call reset? or show "game saved" text?
 					VS.restoreKeyRepeat()
@@ -480,7 +488,7 @@ class QuineComputer:
 			#if saveitem in savelist() and ... # not working
 			if savename.lower() == "new_game" or savename.lower() == "autosave":
 				self.txt_screen.setText("\n"*7
-						+ "Please use another name for your samegame.\n"
+						+ "Please use another name for your savegame.\n"
 						+ "\n"*3
 						+ "Then press ENTER")
 				return
@@ -496,7 +504,12 @@ class QuineComputer:
 					return
 				else:
 					self.lastEnteredSavegameName = savename
-			VS.saveGame(savename)
+			if not VS.saveGame(savename):
+				self.txt_screen.setText("\n"*7
+						+ "Please use another name for your savegame.\n"
+						+ "\n"*3
+						+ "Then press ENTER")
+				return
 			if self.oldSaveName is not None and savename is not self.oldSaveName:
 				try:
 					os.remove(VS.getSaveDir() + os.sep + self.oldSaveName)

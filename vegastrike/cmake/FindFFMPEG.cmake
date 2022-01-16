@@ -13,30 +13,34 @@
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-if(NOT FFMPEG_DEBUG_ENABLE)
-    set(FFMPEG_DEBUG_ENABLE OFF)
-endif(NOT FFMPEG_DEBUG_ENABLE)
+if(NOT FFMPEG_CMAKE_DEBUG)
+    set(FFMPEG_CMAKE_DEBUG OFF)
+endif(NOT FFMPEG_CMAKE_DEBUG)
 
 macro(FFMPEG_DEBUG _message)
-    if (FFMPEG_DEBUG_ENABLE)
+    if (FFMPEG_CMAKE_DEBUG)
         message(STATUS "(DEBUG) ${_message}")
     endif ()
 endmacro(FFMPEG_DEBUG _message)
-
 
 
 if (FFMPEG_LIBRARIES AND FFMPEG_INCLUDE_DIRS)
   # in cache already
   set(FFMPEG_FOUND TRUE)
 else (FFMPEG_LIBRARIES AND FFMPEG_INCLUDE_DIRS)
-	SET(FFMPEG_LIBRARIES)
-    UNSET(FFMPEG_INCLUDE_DIR CACHE)
+  SET(FFMPEG_LIBRARIES)
+  UNSET(FFMPEG_INCLUDE_DIR CACHE)
       ## ^ will repeat the find_path() each time. if commented, need the HAVE_LIBAV... cached.
   # use pkg-config to get the directories and then use these values
   # in the FIND_PATH() and FIND_LIBRARY() calls
   #include(FindPkgConfig)
   find_package(PkgConfig)
-  pkg_check_modules(ffmpeg1 REQUIRED libavcodec )
+  if (FFMPEG_FIND_REQUIRED)
+    set(FFMPEG_PKG_REQUIRED REQUIRED)
+  else(FFMPEG_FIND_REQUIRED)
+    set(FFMPEG_PKG_REQUIRED "")
+  endif(FFMPEG_FIND_REQUIRED)
+  pkg_check_modules(ffmpeg1 ${FFMPEG_PKG_REQUIRED} libavcodec )
   SET(_FFMPEGIncDir ${ffmpeg1_INCLUDE_DIRS})
   SET(_FFMPEGLinkDir ${ffmpeg1_LIBRARY_DIRS})
   SET(_FFMPEGLinkFlags ${ffmpeg1_LDFLAGS})

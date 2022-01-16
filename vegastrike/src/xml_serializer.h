@@ -105,7 +105,7 @@ class XMLSerializer {
   XMLSerializer(const char * filename, const char * modificationname, void *mythis);
   void AddTag (const std::string &tag);
   void AddElement (const std::string &element, XMLHandler *handler, const XMLType &input);
-  void Write (const char * modificationname="");
+  bool Write (const char * modificationname="");
   string WriteString();
   void EndTag (const std::string endname=string(""));
   std::string getName (){return filename;}

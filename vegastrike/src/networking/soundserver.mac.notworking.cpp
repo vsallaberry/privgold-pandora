@@ -148,6 +148,8 @@ struct Music {
 
 
 #include "inet.h"
+#include "vsfilesystem.h"
+
 int fadeout=0, fadein=0;
 float volume=0;
 int bits=0,done=0;
@@ -193,20 +195,20 @@ void changehome (bool to, bool linuxhome=true) {
 	static std::vector <std::string> paths;
   if (to) {
 	 char mycurpath[8192];
-	 getcwd(mycurpath,8191);
+	 VSFileSystem::vs_getcwd(mycurpath,8191);
 	 mycurpath[8191]='\0';
 	 paths.push_back (std::string(mycurpath));
 #ifndef _WIN32
 	 if (linuxhome) {
 	   struct passwd *pwent;
 	   pwent = getpwuid (getuid());
-	   chdir (pwent->pw_dir);
+	   VSFileSystem::vs_chdir (pwent->pw_dir);
 	 }
 #endif
-	chdir (".vegastrike");
+	 VSFileSystem::vs_chdir (".vegastrike");
   }else {
 	  if (!paths.empty()) {
-		chdir (paths.back().c_str());
+		  VSFileSystem::vs_chdir (paths.back().c_str());
 		paths.pop_back();
 	  }
   }

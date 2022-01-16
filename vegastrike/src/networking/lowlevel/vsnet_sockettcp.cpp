@@ -217,7 +217,7 @@ int VsnetTCPSocket::lower_sendbuf( )
             COUT << "EFAULT" << endl
                  << "   *** An invalid user space address was specified for a parameter." << endl
                  << "   *** fd        : " << _sq_fd << endl
-                 << "   *** buf       : " << std::hex << (long)buf << std::dec << endl
+                 << "   *** buf       : " << std::hex << (size_t)buf << std::dec << endl
                  << "   *** sq offset : " << _sq_off << endl
                  << "   *** packet len: " << packet.len() << endl;
             return 0;

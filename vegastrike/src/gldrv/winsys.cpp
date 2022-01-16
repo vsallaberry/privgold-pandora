@@ -304,7 +304,14 @@ void winsys_warp_pointer( int x, int y )
 }
 
 static int sdl_pixel_format_from_bpp(int bpp) {
-    switch (bpp) {
+	static std::string rgbfmt = vs_config->getVariable("graphics","rgb_pixel_format",
+#if defined(__APPLE__)
+			"8888");
+#else
+			"888");
+#endif
+	//int zs = XMLSupport::parse_int( vs_config->getVariable("graphics","z_pixel_format","24") );
+	switch (bpp) {
         case 8:
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 3);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 3);
@@ -337,9 +344,13 @@ static int sdl_pixel_format_from_bpp(int bpp) {
             SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
             SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
             SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 32);
-            return SDL_PIXELFORMAT_ARGB32; //ARGB8888;
+            SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+            if (rgbfmt == "8888") {
+            	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+            	return SDL_PIXELFORMAT_ARGB32; //ARGB8888;
+            }
+            SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 0);
+            return SDL_PIXELFORMAT_RGB888;
         default:
             return SDL_PIXELFORMAT_RGB888;
     }
@@ -499,6 +510,7 @@ void winsys_init( int *argc, char **argv, char *window_title,
     } else {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
     }
+    sdl_pixel_format_from_bpp(gl_options.color_depth);
 
     /*
      * Init video
@@ -542,20 +554,15 @@ void winsys_init( int *argc, char **argv, char *window_title,
                    SDL_GetPixelFormatName(mode.format));
     }
 
-#if defined( USE_STENCIL_BUFFER )
-    /* Not sure if this is sufficient to activate stencil buffer  */
-    SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
-#endif
-
     if (icon) {
         SDL_SetWindowIcon(sdl_window, icon);
     }
 
-    /* setup resultion and pixel format */
-    setup_sdl_video_mode();
-
     /* show window */
     SDL_ShowWindow(sdl_window);
+
+    /* setup resultion and pixel format */
+    setup_sdl_video_mode();
 
     /* Create OpenGL context */
     sdl_glcontext = SDL_GL_CreateContext(sdl_window);
@@ -589,7 +596,7 @@ void winsys_init( int *argc, char **argv, char *window_title,
     }
     WINSYS_LOG(logvs::NOTICE, "(SDL%d) SwapInterval set to %s",
                WINSYS_SDL_MAJOR, winsys_sdl2_swapinterval_desc(SDL_GL_GetSwapInterval()));
-    
+
     if (gl_options.fullscreen) {
        // nothing
     } else if (maximized) {
@@ -727,6 +734,10 @@ void winsys_process_events()
     unsigned int					last_joystick_ms[MAX_JOYSTICKS];
     memset(last_joystick_ms, 0, sizeof(last_joystick_ms));
 
+    if (sdl_lockaudio) {
+    	SDL_InitSubSystem(SDL_INIT_AUDIO);
+    }
+
     WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering main loop...", WINSYS_SDL_MAJOR);
     while (true) {
     unsigned int event_count = 0;
@@ -734,7 +745,7 @@ void winsys_process_events()
         SDL_LockAudio();
         SDL_UnlockAudio();
     }
-        
+
     while ( SDL_PollEvent( &event ) ) {
         ++event_count;
         released = false;
@@ -782,7 +793,7 @@ void winsys_process_events()
                         (*keyboard_func)( key, mod, released, x, y );
                         continue ;
                     }
-                } else if (isprint(event.key.keysym.sym)
+                } else if (iswprint(event.key.keysym.sym)
                 && ((kb_unicode_mode & WS_UNICODE_FULL) != 0 || !HasKeyBinding(event.key.keysym.sym, mod))) {
                     // UNICODE KEYDOWN
                     WINSYS_DBG(logvs::DBG+1,
@@ -954,6 +965,7 @@ void winsys_process_events()
             }
             if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
                 VSExit(0); //winsys_exit(0);
+                break ;
             }
             if (event.window.event != SDL_WINDOWEVENT_RESIZED) {
                 break ;
@@ -1030,6 +1042,22 @@ void winsys_process_events()
     //    code_not_reached();
 }
 
+/*---------------------------------------------------------------------------*/
+/*!
+  Deallocates resources in preparation for program termination
+  \author  jfpatry
+  \date    Created:  2000-10-19
+  \date    Modified: 2000-10-19
+*/
+void winsys_shutdown()
+{
+  static bool shutdown=false;
+  if (!shutdown) {
+    shutdown=true;
+    SDL_Quit();
+  }
+}
+
 /* --------------------------------------------------------------------------*/
 
 #else
@@ -1040,6 +1068,7 @@ void winsys_process_events()
 
 static unsigned int kb_unicode_mode = WS_UNICODE_DISABLED;
 static SDL_Surface *screen = NULL;
+static SDL_Cursor * oldcursor = NULL;
 
 /*---------------------------------------------------------------------------*/
 /*!
@@ -1331,6 +1360,18 @@ void winsys_process_events()
     // **************
     // **** SDL1 ****
     // **************
+    if (sdl_lockaudio) {
+    	SDL_InitSubSystem(SDL_INIT_AUDIO);
+    }
+    // On some Windows and linux systems, the mouse motion events
+    // are badly handled when the cursor is hidden (winsys_show_cursor(0).
+    // This is a hack to hide it without telling SDL or WM.
+    winsys_show_cursor(1);
+    unsigned char cdata = 0, cmask = 0;
+    oldcursor = SDL_GetCursor();
+    SDL_Cursor * cursor = SDL_CreateCursor(&cdata, &cmask, 1, 1, 0, 0);
+    SDL_SetCursor(cursor);
+    winsys_warp_pointer(g_game.x_resolution/2, g_game.y_resolution/2);
 
     WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering main loop...", WINSYS_SDL_MAJOR);
     
@@ -1355,7 +1396,7 @@ void winsys_process_events()
 
             SDL_GetMouseState( &x, &y );
             bool shifton = mod&(KMOD_LSHIFT|KMOD_RSHIFT|KMOD_CAPS);
-            bool isprintable = isprint(event.key.keysym.sym);
+            bool isprintable = iswprint(event.key.keysym.sym);
             bool maybe_unicode = kb_unicode_mode && !(event.key.keysym.sym&~0xFF);
 
             // On some computers (eg apple), alt+ascii gives unicode specials, then we ignore that
@@ -1378,7 +1419,7 @@ void winsys_process_events()
                 && (itshift = keysym_to_shifted.find(event.key.keysym.sym)) != keysym_to_shifted.end()) {
                     event.key.keysym.sym = (SDLKey) itshift->second;
                 } else {
-                    if (isprint(event.key.keysym.unicode) && (unsigned int)event.key.keysym.unicode < 128u) {
+                    if (iswprint(event.key.keysym.unicode) && (unsigned int)event.key.keysym.unicode < 128u) {
                         if (shifton) {
                             if (!kb_sendlower || !isupper(event.key.keysym.unicode))
                             keysym_to_shifted.insert(std::make_pair((unsigned int)event.key.keysym.sym,
@@ -1528,8 +1569,6 @@ void winsys_process_events()
     //    code_not_reached();
 }
 
-#endif /* ! SDL1/SDL2 */
-
 /*---------------------------------------------------------------------------*/
 /*!
   Deallocates resources in preparation for program termination
@@ -1542,9 +1581,12 @@ void winsys_shutdown()
   static bool shutdown=false;
   if (!shutdown) {
     shutdown=true;
+    SDL_SetCursor(oldcursor);
     SDL_Quit();
   }
 }
+
+#endif /* ! SDL1/SDL2 */
 
 /*---------------------------------------------------------------------------*/
 /*!

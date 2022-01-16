@@ -61,7 +61,7 @@ esac
 rpaths[0]=${libs_path}
 
 case "${build_sysname}" in
-    linux*)
+    linux*|*bsd*|mingw*|cygwin*|msys*)
         install_name_tool() { true; }
         get_libs() { ldd "$@" | awk '/[^:]$/ { print $3 }'; }
         ;;
@@ -80,6 +80,7 @@ unset warnings; declare -a warnings
 i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     echo "+ target [${target}]"
     target_name=$(basename "${target}")
+    lowtarget=$(echo "${target}" | tr "[:upper:]" "[:lower:]")
 
     test -f "${target}" || { echo "!! target '${target_name}' not found"; errors[${#errors[@]}]="[${target_name}] file not found!"; continue ; }
 
@@ -89,8 +90,8 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
         mkdir -p "${target_libdir}"
     fi
 
-    case "${target}" in
-        *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|/Frameworks/*)
+    case "${lowtarget}" in
+        *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|*.dll|/frameworks/*)
             ;;
         *)
             for rpath in "${rpaths[@]}"; do
@@ -106,11 +107,13 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     for lib in `get_libs "${target}"`; do
         #echo "** ${lib}"
         lib_name=$(basename "${lib}")
+        lowlib=$(echo "${lib}" | tr "[:upper:]" "[:lower:]")
 
-        case "${lib}" in
+        case "${lowlib}" in
             /usr/lib/*) ;;
-            /System/Library/*) ;;
+            /system/library/*) ;;
             /lib/*|/lib64/*|/lib32/*) ;;
+            /c/windows/*) ;;
             @*) install_name_tool -change "${lib}" "@rpath/${lib_name}" "${target}" \
                     || errors[${#errors[@]}]="[${target_name}] nametool change @ (${lib_name})";;
             *)  copy=yes; for x in "${excludes[@]}"; do

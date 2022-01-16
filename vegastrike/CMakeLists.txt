@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 2.4)
 
 project (vsUTCS)
-set(VERSION "0.4.4.3")
+set(VERSION "0.4.4.4")
 
 #SET(CMAKE_CXX_STANDARD_REQUIRED 1) ## ERROR instead of DECAYING value if not supported
 if(NOT CMAKE_CXX_STANDARD)
@@ -646,7 +646,7 @@ include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
 # Let cmake find our in-tree modules
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${vsUTCS_SOURCE_DIR}/cmake-scripts")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${vsUTCS_SOURCE_DIR}/cmake")
 
 find_package(PythonLibs REQUIRED)
 IF(PYTHONLIBS_FOUND OR PYTHON_LIBRARIES AND PYTHON_INCLUDE_PATH)
@@ -678,6 +678,7 @@ ELSE(Boost_FOUND)
             SET(BOOST_INTERNAL 1_35)
         ENDIF(APPLE)
     ENDIF(NOT BOOST_INTERNAL) # VSA APPLE
+    add_definitions("-DBOOST_PYTHON_STATIC_LIB" )
     message("-- Using Internal Boost ! (" ${BOOST_INTERNAL} ")")
 
     SET(TST_INCLUDES ${TST_INCLUDES} ${vsUTCS_SOURCE_DIR}/boost/${BOOST_INTERNAL})
@@ -841,8 +842,23 @@ ENDIF(FFMPEG_FOUND)
 
 FIND_LIBRARY(DL_LIB dl)
 FIND_LIBRARY(UTIL_LIB util)
+if (WIN32)
+  FIND_LIBRARY(REGEX_LIB regex)
+  FIND_LIBRARY(SHLWAPI_LIB shlwapi)
+endif()
 
-SET(TST_LIBS ${TST_LIBS} ${DL_LIB} ${UTIL_LIB})
+if (DL_LIB)
+    SET(TST_LIBS ${TST_LIBS} ${DL_LIB})
+endif(DL_LIB)
+if (UTIL_LIB)
+    SET(TST_LIBS ${TST_LIBS} ${UTIL_LIB})
+endif(UTIL_LIB)
+if (REGEX_LIB)
+    SET(TST_LIBS ${TST_LIBS} ${REGEX_LIB})
+endif(REGEX_LIB)
+if (SHLWAPI_LIB)
+    SET(TST_LIBS ${TST_LIBS} ${SHLWAPI_LIB})
+endif(SHLWAPI_LIB)
 
 # Still need to add CEGUI and OGRE find packages
 
@@ -869,6 +885,7 @@ CHECK_INCLUDE_FILE(limits.h HAVE_LIMITS_H)
 CHECK_INCLUDE_FILE(zlib.h HAVE_ZLIB_H)
 CHECK_INCLUDE_FILE(math.h HAVE_MATH_H)
 CHECK_INCLUDE_FILE(fnmatch.h HAVE_FNMATCH_H)
+CHECK_INCLUDE_FILE(regex.h HAVE_REGEX_H)
 
 if(DEFINED CMAKE_REQUIRED_FLAGS)
     set(saved_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
@@ -916,13 +933,36 @@ endif(HAVE_STAT_H)
 
 CHECK_SYMBOL_EXISTS(GLX_ARB_get_proc_address GL/glx.h HAVE_GLXGETPROCADDRESSARB)
 
-CHECK_SYMBOL_EXISTS(strcasecmp "string.h;stdlib.h;stdio.h" HAVE_STRCASECMP)
-CHECK_SYMBOL_EXISTS(strncasecmp "string.h;stdlib.h;stdio.h" HAVE_STRNCASECMP)
-CHECK_SYMBOL_EXISTS(stricmp "string.h;stdlib.h;stdio.h;windows.h" HAVE_STRICMP)
-CHECK_SYMBOL_EXISTS(strnicmp "string.h;stdlib.h;stdio.h;windows.h" HAVE_STRNICMP)
+if (WIN32)
+    set(SYMBOL_LOOKUP_INCLUDES "windows.h;string.h;stdlib.h;stdio.h")
+    if (CYGWIN OR MINGW)
+        set(SYMBOL_LOOKUP_INCLUDES "${SYMBOL_LOOKUP_INCLUDES};io.h")
+    else()
+        set(SYMBOL_LOOKUP_INCLUDES "${SYMBOL_LOOKUP_INCLUDES};direct.h")
+    endif()
+else()
+    set(SYMBOL_LOOKUP_INCLUDES "stdlib.h;string.h;unistd.h;stdio.h")
+endif()
+
+CHECK_SYMBOL_EXISTS(strcasecmp "${SYMBOL_LOOKUP_INCLUDES}" HAVE_STRCASECMP)
+CHECK_SYMBOL_EXISTS(strncasecmp "${SYMBOL_LOOKUP_INCLUDES}" HAVE_STRNCASECMP)
+CHECK_SYMBOL_EXISTS(stricmp "${SYMBOL_LOOKUP_INCLUDES}" HAVE_STRICMP)
+CHECK_SYMBOL_EXISTS(strnicmp "${SYMBOL_LOOKUP_INCLUDES}" HAVE_STRNICMP)
+CHECK_SYMBOL_EXISTS(setenv "${SYMBOL_LOOKUP_INCLUDES}" HAVE_SETENV)
+if (NOT HAVE_SETENV)
+    CHECK_FUNCTION_EXISTS(setenv HAVE_SETENV)
+endif()
+
+## If you want to use SHGetKnownFolder instead of SHGetFolderPathW,
+## -> replace FALSE by TRUE in following IF() but this will not work before Vista
+if (FALSE AND WIN32)
+    CHECK_SYMBOL_EXISTS(FOLDERID_LocalAppData "windows.h;shlobj.h" HAVE_FOLDERID_LOCALAPPDATA)
+    CHECK_SYMBOL_EXISTS(FOLDERID_AppData "windows.h;shlobj.h" HAVE_FOLDERID_APPDATA)
+    CHECK_SYMBOL_EXISTS(SHGetKnownFolderPath "windows.h;shlobj.h" HAVE_SHGETKNOWNFOLDERPATH)
+endif()
 
 ## VSA / need update in
-##            * cmake-config.h (add HAVE_INTMAX_T, then config.h is filled according to variable HAVE_INTMAX_T)
+##            * cmake/config.h.in (add HAVE_INTMAX_T, then config.h is filled according to variable HAVE_INTMAX_T)
 ##            * src/cmd/collide2/opcodetypes.h: define CS_HAVE_INTMAX_T according to HAVE_INTMAX_T)
 include (CheckTypeSize)
 check_type_size(intmax_t INTMAX_T)
@@ -932,14 +972,14 @@ check_type_size(ptrdiff_t PTRDIFF_T)
 
 find_library(PTHREAD_LIBRARY NAMES pthread)
 
-CONFIGURE_FILE(${vsUTCS_SOURCE_DIR}/cmake-config.h.in ${vsUTCS_BINARY_DIR}/config.h)
+CONFIGURE_FILE(${vsUTCS_SOURCE_DIR}/cmake/config.h.in ${vsUTCS_BINARY_DIR}/config.h)
 
 #version.h generation
 add_custom_target(get_scm_revision ALL DEPENDS get_scm_revision_output)
 add_custom_command(OUTPUT get_scm_revision_output # trick so that make considers as PHONY and always run it
                    COMMAND ${CMAKE_COMMAND} -DGETSCM_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
                                             -DGETSCM_VERSION_FILE="${CMAKE_CURRENT_BINARY_DIR}/version.h"
-                                            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake-scripts/GetSCMrevision.cmake")
+                                            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GetSCMrevision.cmake")
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
 
 #end config.h generation
@@ -947,6 +987,9 @@ set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES G
 
 #Setup shared lib and include listings for vegastrike and vegaserver.
 SET(TST_LIBS engine_com OPcollide netgeneric netlowlevel ${TST_LIBS})
+if (WIN32)
+    set(TST_LIBS ${TST_LIBS} wsock32 ws2_32)
+endif (WIN32)
 SET(TST_SERVER_LIBS netgeneric engine_com netlowlevel OPcollide ${TST_LIBS})
 include_directories(${TST_INCLUDES})
 

@@ -13,7 +13,7 @@ namespace FFMpeg {
 #ifdef HAVE_FFMPEG
 
 extern "C" {
-#ifdef _WIN32
+#if 0 && defined(_WIN32)
 #define HAVE_FFMPEG_SWSCALE_H
 #endif
     #ifdef HAVE_FFMPEG_SWSCALE_H // Not sure how many people have swscale.

@@ -17,6 +17,8 @@
 #include "lin_time.h"
 #include "unit_const_cache.h"
 #include "log.h"
+#include "vs_log_modules.h"
+
 #define VS_PI 3.1415926535897931
 CSVRow LookupUnitRow(const string &unitname, const string &faction) {
   string hashname=unitname+"__"+faction;
@@ -1394,7 +1396,7 @@ CSVRow GetUnitRow(string filename, bool subu, int faction, bool readlast, bool &
   return CSVRow();
 }
 
-void Unit::WriteUnit (const char * modifications) {
+bool Unit::WriteUnit (const char * modifications) {
   static bool UNITTAB = XMLSupport::parse_bool(vs_config->getVariable("physics","UnitTable","false"));
   if (UNITTAB) {
     bool bad=false;
@@ -1405,8 +1407,8 @@ void Unit::WriteUnit (const char * modifications) {
       }
     }
     if (bad) {
-      fprintf(stderr,"Cannot Write out unit file %s %s that has no filename\n",name.get().c_str(),csvRow.get().c_str());
-      return;
+      UNIT_LOG(logvs::WARN, "Cannot Write out unit file %s %s that has no filename",name.get().c_str(),csvRow.get().c_str());
+      return true;
     }
     std::string savedir = modifications;
     VSFileSystem::CreateDirectoryHome( VSFileSystem::savedunitpath+"/"+savedir);
@@ -1415,19 +1417,24 @@ void Unit::WriteUnit (const char * modifications) {
     //cerr<<"Saving Unit to : "<<filepath<<endl;
     VSError err = f.OpenCreateWrite( savedir+"/"+name+".csv", UnitFile);
     if (err>Ok) {
-      fprintf( stderr, "!!! ERROR : Writing saved unit file : %s\n", f.GetFullPath().c_str() );
-      return;
+      UNIT_LOG(logvs::ERROR, "!!! ERROR : Writing saved unit file : %s", f.GetFullPath().c_str() );
+      return false;
     }
     std::string towrite = WriteUnitString();
     f.Write(towrite.c_str(),towrite.length());
     f.Close();
   }else {
-    if (image->unitwriter)
-      image->unitwriter->Write(modifications);
+    if (image->unitwriter) {
+      if (image->unitwriter->Write(modifications) != true)
+    	  return false;
+    }
     for (un_iter ui= getSubUnits();(*ui)!=NULL;++ui) {
-      (*ui)->WriteUnit(modifications);
+      if ((*ui)->WriteUnit(modifications) != true) {
+    	  return false;
+      }
     }
   }
+  return true;
 }
 using XMLSupport::tostring;
 

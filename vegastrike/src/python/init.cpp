@@ -36,6 +36,17 @@
 #if defined(_WIN32) && !defined(__CYGWIN__)
 #include <direct.h>
 #endif
+
+#if !defined(HAVE_SETENV)
+static int setenv(const char * var, const char * value, int override) {	
+	if (!override && getenv(var) != NULL) return 0;
+	char envstr[16384];
+	snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
+	//not working on windows: SetEnvironmentVariableA(var,val);
+	return putenv(envstr);
+}
+#endif
+
 class Unit;
 //FROM_PYTHON_SMART_POINTER(Unit)
 #ifdef OLD_PYTHON_TEST
@@ -248,7 +259,7 @@ void Python::overridePythonEnv() {
 void Python::initpaths(){
   /*
   char pwd[2048];
-  getcwd (pwd,2047);
+  VSFileSystem::vs_getcwd (pwd,2047);
   pwd[2047]='\0';
   for (int i=0;pwd[i]!='\0';i++) {
 	  if (pwd[i]=='\\')

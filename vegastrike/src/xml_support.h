@@ -94,6 +94,23 @@ namespace XMLSupport {
 	sprintf (tmp,"%ld",num);
 	return(std::string(tmp));
   }
+  inline std::string tostring (unsigned long num) {
+	char tmp[256];
+	sprintf (tmp,"%lu",num);
+	return(std::string(tmp));
+  }
+#if defined(_WIN32) // should be #if sizeof(size_t) > sizeof(unsigned long)
+  inline std::string tostring (size_t num) {
+	char tmp[256];
+	sprintf (tmp,"%zu",num);
+	return(std::string(tmp));
+  }
+  inline std::string tostring (ssize_t num) {
+	char tmp[256];
+	sprintf (tmp,"%zd",num);
+	return(std::string(tmp));
+  }
+#endif
   inline std::string tostring (float num) {
 	char tmp[256];
 	sprintf (tmp,"%g",num);

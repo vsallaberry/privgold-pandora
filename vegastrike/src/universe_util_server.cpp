@@ -66,7 +66,7 @@ namespace UniverseUtil
 	void musicLayerSkip(int layer) {}
 	void musicLayerStop(int layer) {}
 	void StopAllSounds(void) {}
-	void loadGame(const string &savename) {
+	bool loadGame(const string &savename) {
 		int num=-1;
 		sscanf(savename.c_str(),"%d",&num);
 		if (num>=0 && num<_Universe->numPlayers()) {
@@ -76,8 +76,9 @@ namespace UniverseUtil
 				un->Destroy();
 			}
 		}
+		return true;
 	}
-	void saveGame(const string &savename) {
+	bool saveGame(const string &savename) {
 		int num=-1;
 		sscanf(savename.c_str(),"%d",&num);
 		if (num>0 && num<_Universe->numPlayers()) {
@@ -87,6 +88,7 @@ namespace UniverseUtil
 			VSServer->save();
 			cout<<"<<< Finished saving."<<endl;
 		}
+		return true;
 	}
 
 	void showSplashScreen(const string &filename) {}

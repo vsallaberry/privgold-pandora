@@ -69,17 +69,17 @@ class SaveGame {
   std::string WritePlayerData( const QVector &FP, std::vector<std::string> unitname, const char * systemname, float credits, std::string fact="");
   std::string WriteDynamicUniverse();
   void ReadSavedPackets (char * &buf, bool commitfaction, bool skip_news=false, bool select_data=false, const std::set<std::string> &select_data_filter = std::set<std::string>());
-  ///cast address to long (for 64 bits compatibility)
-  void AddUnitToSave (const char * unitname, int type, const char * faction, long address);
-  void RemoveUnitFromSave (long address);//cast it to a long
+  ///cast address to size_t if you need address as integerlong
+  void AddUnitToSave (const char * unitname, int type, const char * faction, void * address);
+  void RemoveUnitFromSave (void * address);//cast it to a size_t if you need an integer
   void SetOutputFileName(const std::string &filename);
   void ParseSaveGame (const std::string &filename, std::string &ForceStarSystem, const std::string &originalstarsystem, QVector & pos, bool &shouldupdatedfighter0pos, float &credits, std::vector <std::string> & originalunit, int player_num, const std::string &savestr=std::string(), bool read=true, bool commitFaction=true, bool quick_read=false, bool skip_news=false, bool select_data=false, const std::set<std::string> &select_data_filter = std::set<std::string>());
   void LoadSavedMissions();
 };
-void WriteSaveGame (class Cockpit * cp, bool auto_save);
+bool WriteSaveGame (class Cockpit * cp, bool auto_save);
 const std::string& GetCurrentSaveGame();
 std::string SetCurrentSaveGame(std::string newname);
 const std::string& GetSaveDir();
-void CopySavedShips(std::string filename, int player_num,const std::vector<std::string>&starships,bool load);
+bool CopySavedShips(std::string filename, int player_num,const std::vector<std::string>&starships,bool load);
 #endif
 

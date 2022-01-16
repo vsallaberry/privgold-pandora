@@ -29,6 +29,11 @@
 #cmakedefine HAVE_STRNCASECMP 1
 #cmakedefine HAVE_STRICMP 1
 #cmakedefine HAVE_STRNICMP 1
+#cmakedefine HAVE_FOLDERID_LOCALAPPDATA 1
+#cmakedefine HAVE_FOLDERID_APPDATA 1
+#cmakedefine HAVE_SHGETKNOWNFOLDERPATH 1
+#cmakedefine HAVE_REGEX_H 1
+#cmakedefine HAVE_SETENV 1
 #cmakedefine HAVE_ISNAN 1
 #cmakedefine HAVE__ISNAN 1
 #cmakedefine HAVE_ISFINITE 1

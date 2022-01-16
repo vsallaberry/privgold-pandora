@@ -22,7 +22,7 @@ mydirname=$(basename "${mydir}")
 mypwd=$(pwd)
 
 # project settings
-priv_version="1.2.2"
+priv_version="1.2.3"
 priv_data="${mydir}/data"
 target="${mydir}/vegastrike"
 build_preferred="cmake configure"
@@ -46,7 +46,10 @@ builddir=
 buildpool=build
 
 # prefix with bin/lib/share/... containing vega build dependencies
-VEGA_PREFIX=/usr/local/vega05
+export VEGA_PREFIX=/usr/local/vega05
+#export GTK2_PREFIX=/opt/local/
+export GTK2_PREFIX=/usr/local/gtk2
+unset VEGA_PREFIX2
 
 # SYSTEM
 build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
@@ -65,58 +68,9 @@ clang_cc_flags=""
 cxx_flags="-Wno-deprecated-declarations" # -Wno-strict-aliasing"
 gcc_cxx_flags="-Wno-unused-local-typedefs"
 clang_cxx_flags="-Wno-unused-local-typedef -Wno-deprecated-register"
-case "${build_sysname}" in
-    darwin*) clang_cxx_flags="-stdlib=libc++${clang_cxx_flags:+ }${clang_cxx_flags}"
-             build_dllext="dylib";;
-    *)       build_dllext="so";;
-esac
 cxx_ldflags=
 
 py_version=2.7
-if false; then
-    # SYSTEM PYTHON
-    export PYTHON="/usr/bin/python${py_version}"
-    export PYTHONPATH="/usr/lib/python${py_version}"
-    #export PYTHON_LIBRARY=/System/Library/Frameworks/Python.framework/Versions/${py_version}/lib/python${py_version}/config/libpython${py_version}.dylib
-    export PYTHON_INCLUDE_DIR=/System/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version}
-    export PYTHON_LIBRARY=/usr/lib/libpython${py_version}.dylib
-else
-    # EMBEDED PYTHON
-    export PYTHON="${VEGA_PREFIX}/bin/python${py_version}"
-    case "${build_sysname}" in
-        darwin*)
-            export PYTHONPATH="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
-            export PYTHON_LIBRARY=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/lib/libpython${py_version}.dylib
-            export PYTHON_INCLUDE_DIR=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version};;
-        *)
-            export PYTHONPATH="${VEGA_PREFIX}/lib/python${py_version}"
-            export PYTHON_LIBRARY="${VEGA_PREFIX}/lib/libpython${py_version}.so"
-            export PYTHON_INCLUDE_DIR="${VEGA_PREFIX}/include/python${py_version}";;
-    esac
-fi
-export PYTHONHOME="${PYTHONPATH}"
-
-#export GTK2_PREFIX=/opt/local/
-export GTK2_PREFIX=/usr/local/gtk2
-export GTK2_HOME="${GTK2_PREFIX}/include/gtk-2.0"
-
-# PATH, tools, dependencies settings
-export PATH="/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX}/bin:${VEGA_PREFIX}/sbin:${GTK2_PREFIX}/bin:${GTK2_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/gcc/gcc-6.5.0_ada/bin:/usr/local/bin"
-#export PATH="${VEGA_PREFIX}/bin:/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin"
-export MAKE=$(which -a gmake make | head -n 1)
-export CMAKE=cmake
-
-#export PKG_CONFIG_PATH=/usr/local/libpng12/lib/pkgconfig:/usr/lib/pkgconfig:/opt/X11/lib/pkgconfig:/opt/local/lib/pkgconfig
-export PKGCONFIG=${VEGA_PREFIX}/bin/pkg-config
-export PKG_CONFIG=${PKGCONFIG}
-PKG_CONFIG_PATH=${VEGA_PREFIX}/lib/pkgconfig
-PKG_CONFIG_PATH+=:/usr/local/gtk2/lib/pkgconfig
-#PKG_CONFIG_PATH+=/usr/local/specific/libpng12/lib/pkgconfig
-#PKG_CONFIG_PATH+=:/usr/local/specific/ffmpeg1/lib/pkgconfig
-#PKG_CONFIG_PATH+=:/usr/local/specific/libsdl1/lib/pkgconfig
-PKG_CONFIG_PATH+=:/usr/lib/pkgconfig
-PKG_CONFIG_PATH+=:/opt/local/lib/pkgconfig
-export PKG_CONFIG_PATH
 
 # ----------------------------------------------------------------------------------------------
 show_help() {
@@ -278,21 +232,44 @@ fi
 
 compiler=${tmp_compiler}
 
-case "$(basename "${compiler}")" in
-    clang*) spec_cc_flags="${clang_cc_flags}"; spec_cxx_flags="${clang_cxx_flags}"
+cc_dir=$(dirname "${compiler}")
+compiler=$(basename "${compiler}")
+case "${compiler}" in
+    *-*-g[c+][c+]*) cc_pref="${compiler%g[c+][c+]*}gcc"; cxx_pref="${cc_pref%cc}++";;
+    *-*-clang*) cc_pref="${ccpref%clang*}clang"; cxx_pref="${cc_pref}++";;
+    *) cc_pref=${compiler%%-*}
+       cc_pref=${cc_pref%[0-9]*}
+       case "${cc_pref}" in
+           [cg]"++"|cc|gcc) cc_pref=gcc; cxx_pref=g++;;
+           *) cc_pref=${cc_pref%++}; cxx_pref=${cc_pref}++;;
+       esac ;;
+esac
+cc_suff=${compiler#${cc_pref%++}}
+
+# Identify target_sysname according to compiler
+case "${cc_pref}" in
+    *-*-mingw*) target_sysname=mingw; target_arch=${cc_pref%%-*};;
+    *) target_sysname=${build_sysname}; target_arch=$(uname -m);;
+esac
+
+# Exe / Shared Library file extension according to target
+exe=
+case "${target_sysname}" in
+    darwin*)
+        clang_cxx_flags="-stdlib=libc++${clang_cxx_flags:+ }${clang_cxx_flags}"
+        build_dllext="dylib";;
+    mingw*|cygwin*|msys*)
+        build_dllext="dll.a"; cc_suff="${cc_suff}.exe"; exe=".exe";;
+    *)
+        build_dllext="so";;
+esac
+
+# specific FLAGS for clang or gcc
+case "${compiler}" in
+    clang*|*-clang*) spec_cc_flags="${clang_cc_flags}"; spec_cxx_flags="${clang_cxx_flags}"
             ;;
     *) spec_cc_flags="${gcc_cc_flags}"; spec_cxx_flags="${gcc_cxx_flags}"
             ;;
-esac
-cc_dir=$(dirname "${compiler}")
-compiler=$(basename "${compiler}")
-cc_pref=${compiler%%-*}
-cc_pref=${cc_pref%[0-9]*}
-cc_suff=${compiler#${cc_pref}}
-
-case "${cc_pref}" in
-    [cg]"++"|cc|gcc) cc_pref=gcc; cxx_pref=g++;;
-    *) cc_pref=${cc_pref%++}; cxx_pref=${cc_pref}++;;
 esac
 
 export CC="${cc_dir}/${cc_pref}${cc_suff}"
@@ -358,6 +335,59 @@ if test -n "${macos_sdk}"; then
 else
     find_macos_sdk
 fi
+
+case "${target_sysname}" in
+    mingw*)
+        case "${target_arch}" in "x86_64") asuff=64;; arm64) suff=arm64;; *) asuff=32;; esac
+        case "${cc_pref}" in *clang*) suff="clang";; *) suff="mingw";; esac
+        export VEGA_PREFIX="/${suff}${asuff}"; export GTK2_PREFIX="${VEGA_PREFIX}"; export VEGA_PREFIX2=/usr/local64
+        ;;
+esac
+
+if false; then
+    # SYSTEM PYTHON
+    export PYTHON="/usr/bin/python${py_version}"
+    export PYTHONPATH="/usr/lib/python${py_version}"
+    #export PYTHON_LIBRARY=/System/Library/Frameworks/Python.framework/Versions/${py_version}/lib/python${py_version}/config/libpython${py_version}.dylib
+    export PYTHON_INCLUDE_DIR=/System/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version}
+    export PYTHON_LIBRARY=/usr/lib/libpython${py_version}.dylib
+else
+    # EMBEDED PYTHON
+    export PYTHON="${VEGA_PREFIX}/bin/python${py_version}"
+    case "${target_sysname}" in
+        darwin*)
+            export PYTHONPATH="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
+            export PYTHON_LIBRARY=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/lib/libpython${py_version}.dylib
+            export PYTHON_INCLUDE_DIR=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version};;
+        *)
+            export PYTHONPATH="${VEGA_PREFIX}/lib/python${py_version}"
+            export PYTHON_LIBRARY="${VEGA_PREFIX}/lib/libpython${py_version}.${build_dllext}"
+            export PYTHON_INCLUDE_DIR="${VEGA_PREFIX}/include/python${py_version}"
+            case "${target_sysname}" in mingw*|cygwin*|msys*) export PYTHON="$(cygpath -m "${PYTHON}")";; esac
+            ;;
+    esac
+fi
+export PYTHONHOME="${PYTHONPATH}"
+
+export GTK2_HOME="${GTK2_PREFIX}/include/gtk-2.0"
+
+# PATH, tools, dependencies settings
+export PATH="/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX2:+${VEGA_PREFIX2}/bin:${VEGA_PREFIX2}/sbin:}${VEGA_PREFIX}/bin:${VEGA_PREFIX}/sbin:${GTK2_PREFIX}/bin:${GTK2_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/gcc/gcc-6.5.0_ada/bin:/usr/local/bin"
+#export PATH="${VEGA_PREFIX}/bin:/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin"
+export MAKE=$(which -a gmake make | head -n 1)
+export CMAKE=$(which -a cmake | head -n1)
+
+#export PKG_CONFIG_PATH=/usr/local/libpng12/lib/pkgconfig:/usr/lib/pkgconfig:/opt/X11/lib/pkgconfig:/opt/local/lib/pkgconfig
+export PKGCONFIG="${VEGA_PREFIX}/bin/pkg-config"
+export PKG_CONFIG="${PKGCONFIG}"
+PKG_CONFIG_PATH="${VEGA_PREFIX2:+${VEGA_PREFIX2}/lib/pkgconfig:}${VEGA_PREFIX}/lib/pkgconfig"
+PKG_CONFIG_PATH+=":${GTK2_PREFIX}/lib/pkgconfig"
+#PKG_CONFIG_PATH+=/usr/local/specific/libpng12/lib/pkgconfig
+#PKG_CONFIG_PATH+=:/usr/local/specific/ffmpeg1/lib/pkgconfig
+#PKG_CONFIG_PATH+=:/usr/local/specific/libsdl1/lib/pkgconfig
+PKG_CONFIG_PATH+=":/usr/lib/pkgconfig"
+PKG_CONFIG_PATH+=":/opt/local/lib/pkgconfig"
+export PKG_CONFIG_PATH
 
 do_build_fun() {
     #
@@ -462,25 +492,26 @@ do_build_fun() {
                 add_config_args \
                 -DCMAKE_CXX_COMPILER="${CXX}" \
                 -DCMAKE_C_COMPILER="${CC}" \
+                ${cmake_generator:+"-G${cmake_generator}"} \
                 -DCMAKE_VERBOSE_MAKEFILE=ON \
                 -DCMAKE_FIND_FRAMEWORK=LAST \
-                -DBOOST_ROOT=/usr/local/specific/boost150 \
+                -DBOOST_ROOT="${VEGA_PREFIX}/libexec/boost/150" \
                 -DBOOST_INTERNAL=1_50 \
                 -D_GNU_SOURCE=1 \
                 -DHAVE_TR1_UNORDERED_MAP=0 \
                 -DCMAKE_BUILD_TYPE="${build_type}" \
-                -DCMAKE_OSX_SYSROOT="${macos_sdk}" \
                 -DSDL_DISABLE=0 \
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=10.7 \
                 -DCMAKE_CXX_STANDARD="${cxx_standard}" \
                 -DVS_STATIC_LIBS=0 \
                 -DVS_OPTIMIZE="${optim_level}" \
                 -DVS_DEBUG_LEVEL="-g3" \
                 -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}"
 
-                case "${build_sysname}" in
+                case "${target_sysname}" in
                     darwin*)
                         add_config_args \
+                            -DCMAKE_OSX_SYSROOT="${macos_sdk}" \
+                            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.7 \
                             -DZLIB_INCLUDE_DIR=${macos_sdk}/usr/include -DZLIB_LIBRARY=/usr/lib/libz.${build_dllext} \
                             -DBZ2_INCLUDE_DIR=${macos_sdk}/usr/include -DBZ2_LIBRARY=/usr/lib/libbz2.${build_dllext}  \
                             -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.dylib \
@@ -492,6 +523,20 @@ do_build_fun() {
                             -DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
                             -DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
                             -DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers"
+                        ;;
+                    mingw*)
+                        case "$(uname -o | tr "[:upper:]" "[:lower:]")" in
+                            msys*) add_config_args -G"MSYS Makefiles";;
+                            *) add_config_args -G"MinGW Makefiles";;
+                        esac
+                        add_config_args \
+                            -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
+                            -DMATH_INCLUDE_DIRS="${VEGA_PREFIX}/${target_arch}-w64-mingw32/include" \
+                            -DMATH_LIBRARIES="${VEGA_PREFIX}/${target_arch}-w64-mingw32/lib/libm.a" \
+                            -DPNG_INCLUDE_DIRS="${VEGA_PREFIX2}/include/libpng12" \
+                            -DPNG_LIBRARIES="${VEGA_PREFIX2}/lib/libpng12.a" \
+                            -DSHLWAPI_LIB="${VEGA_PREFIX}/${target_arch}-w64-mingw32/lib/libshlwapi.a" \
+                            -DCMAKE_MAKE_PROGRAM="${MAKE}"
                         ;;
                     *)
                         add_config_args \
@@ -516,10 +561,19 @@ do_build_fun() {
                           add_config_args "-DSDL_WINDOWING_DISABLE=1" \
                                           -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL2" \
                                           -DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDL2.${build_dllext}";;
-                    sdl1) export SDLDIR=${VEGA_PREFIX}
-                          add_config_args "-DSDL_WINDOWING_DISABLE=0" \
-                                          -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL";;
-                                          #-DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDLmain.a;${VEGA_PREFIX}/lib/libSDL.${build_dllext}";;
+                    sdl1)
+                        case "${target_sysname}" in
+                            mingw*|cygwin*|msys*)
+                                export SDLDIR="/mingw64"
+                                add_config_args "-DSDL_WINDOWING_DISABLE=0" \
+                                    -DSDL_INCLUDE_DIR="${SDLDIR}/include/SDL" \
+                                    -DSDL_LIBRARY="${SDLDIR}/lib/libSDLmain.a;${SDLDIR}/lib/libSDL.${build_dllext}";;
+                            *)
+                                export SDLDIR=${VEGA_PREFIX}
+                                add_config_args "-DSDL_WINDOWING_DISABLE=0" \
+                                  -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL";;
+                                  #-DSDL_LIBRARY="${VEGA_PREFIX}/lib/libSDLmain.a;${VEGA_PREFIX}/lib/libSDL.${build_dllext}";;
+                        esac;;
                     sdl2) export SDLDIR=${VEGA_PREFIX}
                           add_config_args -DSDL_WINDOWING_DISABLE=0 \
                                           -DSDL_INCLUDE_DIR="${VEGA_PREFIX}/include/SDL2" \
@@ -597,7 +651,7 @@ do_build_fun() {
                     *) echo "!! unknown gfx '${gfx}'"; exit 1;;
                 esac
 
-                case "${build_sysname}" in
+                case "${target_sysname}" in
                     darwin*)
                         add_config_args \
                             --with-macos-sdk="${macos_sdk_fwk}" \
@@ -609,6 +663,10 @@ do_build_fun() {
                             --with-glut-inc="${VEGA_PREFIX}/include" --with-glut-libs="${VEGA_PREFIX}/lib"
                         ;;
                 esac
+
+                if test "${target_sysname}" != "${build_sysname}"; then
+                    add_args --build="$(uname -m)-${build_sysname}" --host="${target_arch}-${target_sysname}"
+                fi
 
                 add_config_args \
                     "${spec_config_args[@]}"
@@ -662,7 +720,10 @@ do_run_fun() {
         echo "BUILD $build DATA $data ARGS ${run_args[@]}"
 
         case "${build_sysname}" in
-            linux*) export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib:${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}";;
+            linux*|*bsd*) export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib:${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}";;
+            mingw*|cygwin*|msys*)
+                case "${target_arch}" in x86_64|arm64) _archbits=64;; *) _archbits=32;; esac
+                export PATH="${VEGA_PREFIX}/bin:${GTK2_PREFIX}/bin:${PATH}:/mingw${_archbits}/bin:/mingw${_archbits}/${target_arch}-w64-mingw32/bin";;
         esac
 
         # important the chdir to have music and avoid crash when loading universe
@@ -671,14 +732,14 @@ do_run_fun() {
         if test -n "${do_setup}"; then
             # SETUP
             case "${build_sysname}" in linux*) export LD_LIBRARY_PATH="${GTK2_PREFIX}/lib:${LD_LIBRARY_PATH}";; esac
-            "${build}/setup/vssetup" "${run_args[@]}" || "${build}/setup/vssetup_dlg" "${run_args[@]}" \
-            || "${build}/vssetup" "${run_args[@]}" || "${build}/vssetup_dlg" "${run_args[@]}"; ret=$?
+            "${build}/setup/vssetup${exe}" "${run_args[@]}" || "${build}/setup/vssetup_dlg${exe}" "${run_args[@]}" \
+            || "${build}/vssetup${exe}" "${run_args[@]}" || "${build}/vssetup_dlg${exe}" "${run_args[@]}"; ret=$?
         elif test -n "${do_debug}"; then # -D${data}
             # GDB
             args="${run_args[@]}"
             test "${do_debug}" = "stop" && for a in "--one-line-on-crash" 'thread backtrace all' "--one-line-on-crash" 'quit'; do gdbargs[${#gdbargs[@]}]=$a; done \
             || args="${args}${args:+ }-Cgraphics/fullscreen=false"
-            ( unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike" \
+            ( unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike${exe}" \
                --batch -o "run -Clog/colorize=yes ${args}" "${gdbargs[@]}" 2>&1;) | tee "${log}"
 
             #{ { "${build}/vegastrike" --batch -o "run" 2>&1 >&3; } 3>&2 | tee "${log}"
@@ -687,7 +748,7 @@ do_run_fun() {
             #  |  { unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike" 2>&1; } | tee "${mydir}/${log}" & privpid=$!; ret=$?
         else
             # RUN vegastrike
-            "${build}/vegastrike" "-Clog/colorize=yes" "${run_args[@]}" 2>&1 | tee "${log}"; ret=$?
+            "${build}/vegastrike${exe}" "-Clog/colorize=yes" "${run_args[@]}" 2>&1 | tee "${log}"; ret=$?
         fi
 
         popd >/dev/null #data
@@ -803,12 +864,14 @@ do_delivery_fun() {
     unset bundle_addlibs; declare -a bundle_addlibs
     add_bundlelibs() { local _arg; for _arg in "$@"; do bundle_addlibs[${#bundle_addlibs[@]}]="${_arg}"; done; }
 
-    case "${build_sysname}" in
+    case "${target_sysname}" in
         darwin*)
             bundledir="${deliverydir}/bundle/PrivateerGold.app"
             bundle_bindir="${bundledir}/Contents/MacOS"
             bundle_resdir="${bundledir}/Contents/Resources"
-            bundle_librpath="../Resources/lib"
+            bundle_toolsdir="${bundle_resdir}/bin"
+            bundle_librpath="../Resources/lib"; bundle_gtklibrpath="${bundle_librpath}/gtk"; bundle_misclibrpath="${bundle_librpath}/misc"
+            bundle_tools_librpath="../lib"; bundle_tools_gtklibrpath="${bundle_tools_librpath}/gtk"; bundle_tools_misclibrpath="${bundle_tools_librpath}/misc"
             package_name="${deliverydir}/PrivateerGold-${priv_version}_macOS.dmg"
 
             get_libs() { otool -L "$@"; }
@@ -824,15 +887,33 @@ do_delivery_fun() {
             bundledir="${deliverydir}/bundle/PrivateerGold"
             bundle_bindir="${bundledir}/bin"
             bundle_resdir="${bundledir}"
-            bundle_librpath="../lib"
+            bundle_toolsdir="${bundle_resdir}/bin"
+            bundle_librpath="../lib"; bundle_gtklibrpath="${bundle_librpath}/gtk"; bundle_misclibrpath="${bundle_librpath}/misc"
+            bundle_tools_librpath="../lib"; bundle_tools_gtklibrpath="${bundle_tools_librpath}/gtk"; bundle_tools_misclibrpath="${bundle_tools_librpath}/misc"
             package_name="${deliverydir}/PrivateerGold-${priv_version}_linux64.tar.bz2"
 
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
-            case "${build_sysname}" in *bsd*) chmod_args='-hv';; linux*) chmod_args='-c';; esac
+            case "${target_sysname}" in *bsd*) chmod_args='-hv';; linux*) chmod_args='-c';; esac
             for _lib in "${VEGA_PREFIX}/lib/libasound.so"*; do
                 add_bundlelibs "alsa-lib" "${_lib}"
             done
             export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
+            ;;
+        mingw*|msys*|cygwin*)
+            bundledir="${deliverydir}/bundle/PrivateerGold"
+            bundle_bindir="${bundledir}/bin"
+            bundle_resdir="${bundledir}"
+            bundle_toolsdir="${bundle_resdir}/bin"
+            bundle_librpath="."; bundle_gtklibrpath="."; bundle_mlisclibrpath="."
+            bundle_tools_librpath="."; bundle_tools_gtklibrpath="${bundle_tools_librpath}"; bundle_tools_misclibrpath="${bundle_tools_librpath}"
+            package_name="${deliverydir}/PrivateerGold-${priv_version}_windows64.zip"
+            get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
+            chmod_args='-c'
+            case "${target_arch}" in x86_64) _archbits=64;; *) _archbits=32;; esac
+            export PATH="${VEGA_PREFIX}/bin:${GTK2_PREFIX}/bin:${PATH}:/mingw${_archbits}/bin:/mingw${_archbits}/${target_arch}-w64-mingw32/bin"
+            for _lib in "/c/WINDOWS/SYSTEM32/ucrtbase.dll" "/c/WINDOWS/SYSTEM32/downlevel/api-ms-win-crt-"*.dll; do
+                add_bundlelibs "." "${_lib}"
+            done
             ;;
         *)  chmod_args=''
             package_name="${deliverydir}/PrivateerGold-{priv_version}.zip"
@@ -847,20 +928,25 @@ do_delivery_fun() {
         # copy bundle template
         mkdir -p "${bundledir}" || exit $?
         mkdir -p "${bundle_bindir}" || exit $?
+        mkdir -p "${bundle_toolsdir}" || exit $?
         mkdir -p "${bundle_resdir}/share" || exit $?
-        xcopy "${VEGA_PREFIX}/share/terminfo" "${bundle_resdir}/share" || exit $?
 
-        case "${build_sysname}" in
+        case "${target_sysname}" in
             darwin*)
+                xcopy "${VEGA_PREFIX}/share/terminfo" "${bundle_resdir}/share" || exit $?
                 xcopy "${bundle_src}"/ "${bundledir}" || exit $?
                 # Applications link in bundle root
                 rm -f "${deliverydir}/bundle/Applications"
                 ln -s /Applications "${deliverydir}/bundle" || exit $?
                 ;;
             linux*|*bsd*)
+                xcopy "${VEGA_PREFIX}/share/terminfo" "${bundle_resdir}/share" || exit $?
                 xcopy "${mydir}/tools/linux_bundle/PrivateerGold/" "${bundledir}" || exit $?
                 xcopy "${bundle_src}/Contents/MacOS/launcher.sh" "${bundle_bindir}" || exit $?
                 mkdir -p "${bundledir}/etc" && cp -a "${VEGA_PREFIX}/share/alsa" "${bundledir}/etc/alsa" || exit $?
+                ;;
+            mingw*|msys*|cygwin*)
+                xcopy "${mydir}/tools/windows_bundle/PrivateerGold/" "${bundledir}" || exit $?
                 ;;
         esac
     } \
@@ -873,18 +959,18 @@ do_delivery_fun() {
 
         "${mydir}/build.sh" --type=release --gfx=${gfx} --build="${builddir}" --cxx-flags="${cxxf}" --optimize="-Os" || exit $?
 
-        "${builddir}/tests/${subdir}test" || exit $?
+        "${builddir}/tests/${subdir}test${exe}" || exit $?
 
-        cat "${priv_data}/New_Game" | "${builddir}/tools/${subdir}unicode-conv" -C \
-            | "${builddir}/tools/${subdir}unicode-conv" -B - "${builddir}/New_Game.tmp" \
+        cat "${priv_data}/New_Game" | "${builddir}/tools/${subdir}unicode-conv${exe}" -C \
+            | "${builddir}/tools/${subdir}unicode-conv${exe}" -B - "${builddir}/New_Game.tmp" \
             && diff -ru "${priv_data}/New_Game" "${builddir}/New_Game.tmp" || exit $?
 
         gfx=$(printf -- "${gfx}" | tr "[:lower:]" "[:upper:]")
-        cp -v "${builddir}/vegastrike" "${bundle_bindir}/vegastrike.${gfx}" || exit $?
+        cp -v "${builddir}/vegastrike${exe}" "${bundle_bindir}/vegastrike.${gfx}${exe}" || exit $?
 
     done
 
-    for f in "${mainbuilddir}/setup/${mainsubdir}vssetup" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg"; do
+    for f in "${mainbuilddir}/setup/${mainsubdir}vssetup${exe}" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg${exe}"; do
         cp -v "$f" "${bundle_bindir}"
     done
 
@@ -906,64 +992,65 @@ do_delivery_fun() {
     done
 
     # build checkModifierKeys tool and copy it to bundle bin dir
-    case "${build_sysname}" in
+    case "${target_sysname}" in
         darwin*)
             test -n "${macos_sdk}" && checkmod_archs="-isysroot${macos_sdk} " || checkmod_archs=
             "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
-            xcopy "${checkkeys_dir}/checkModifierKeys" "${bundle_bindir}" || exit $?
+            xcopy "${checkkeys_dir}/checkModifierKeys${exe}" "${bundle_bindir}" || exit $?
             ;;
     esac
 
-    # handle executables rpaths: vegastrike* and vssetup_dlg
+    # handle executables rpaths: vegastrike*
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
-        "${bundle_bindir}"/vegastrike.* || exit $?
+        "${bundle_bindir}"/vegastrike.*${exe} || exit $?
 
     # handle executables rpaths: vssetup_dlg
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
-        "${bundle_bindir}/vssetup_dlg" || { printf -- '!! warning: vssetup_dlg (terminal) is not included in this delivery !!'; }
+        "${bundle_bindir}/vssetup_dlg${exe}" || { printf -- '!! warning: vssetup_dlg (terminal) is not included in this delivery !!'; }
 
     # handle executables rpaths: vssetup(gtk)
     "${mydir}/tools/rpath.sh" -X'/opt/local' \
-        -L${bundle_librpath}/gtk -R${bundle_librpath} \
-        "${bundle_bindir}/vssetup" || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
+        -L${bundle_gtklibrpath} -R${bundle_librpath} \
+        "${bundle_bindir}/vssetup${exe}" || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
 
     # handle optional vegastrike tools executables rpaths: tools, objconv, vegaserver, test
     if true; then
         test "${build_tool}" = "configure" && subdir=../ || subdir=
         mkdir -p "${bundle_resdir}/bin" && cp -v "${mainbuilddir}"/vegaserver \
-            "${mainbuilddir}/tools/${mainsubdir}"{vsrextract,vsrmake,unicode-conv} \
-            "${mainbuilddir}/tests/${mainsubdir}"test \
-            "${mainbuilddir}/objconv/${mainsubdir}"{base_maker,asteroidgen,mesh_tool,mesh_xml,replace,tempgen,trisort} "${bundle_resdir}/bin"
-        "${mydir}/tools/rpath.sh" -X'/opt/local' -L../lib \
-            "${bundle_resdir}/bin"/{vegaserver,vsrextract,vsrmake,base_maker,asteroidgen,mesh_tool,mesh_xml,replace,tempgen,trisort,unicode-conv,test} || exit $?
+            "${mainbuilddir}/tools/${mainsubdir}"{vsrextract,vsrmake,unicode-conv}${exe} \
+            "${mainbuilddir}/tests/${mainsubdir}"test${exe} \
+            "${mainbuilddir}/objconv/${mainsubdir}"{base_maker,asteroidgen,mesh_tool,mesh_xml,replace,tempgen,trisort}${exe} "${bundle_resdir}/bin"
+        "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_tools_librpath} \
+            "${bundle_toolsdir}"/{vegaserver,vsrextract,vsrmake,base_maker,asteroidgen,mesh_tool,mesh_xml,replace,tempgen,trisort,unicode-conv,test}${exe} || exit $?
     fi
 
     # optional ffplay ffmpeg demo: usefull to check ffmpeg is fine
-    if true && test -x "${VEGA_PREFIX}/bin/ffplay"; then
-        mkdir -p "${bundle_resdir}/bin" && cp -v "${VEGA_PREFIX}/bin/ffplay" "${bundle_resdir}/bin"
+    ffplay_bin=$(which -a "${VEGA_PREFIX2:+${VEGA_PREFIX2}/bin/ffplay${exe}}" "${VEGA_PREFIX}/bin/ffplay${exe}" 2> /dev/null | head -n1)
+    if true && test -x "${ffplay_bin}"; then
+        mkdir -p "${bundle_toolsdir}" && cp -v "${ffplay_bin}" "${bundle_toolsdir}"
         "${mydir}/tools/rpath.sh" -X'/opt/local' \
-            -L../lib/misc -R../lib "${bundle_resdir}/bin/ffplay" || exit $?
+            -L${bundle_tools_misclibrpath} -R${bundle_tools_librpath} "${bundle_toolsdir}/ffplay${exe}" || exit $?
     fi
 
     # optional gtk-demo files: usefull to check gtk dist is fine
-    if true && test -x "${GTK2_PREFIX}/bin/gtk-demo"; then
-        mkdir -p "${bundle_resdir}/bin" && cp -v "${GTK2_PREFIX}/bin/gtk-demo" "${bundle_resdir}/bin"
+    if true && test -x "${GTK2_PREFIX}/bin/gtk-demo${exe}"; then
+        mkdir -p "${bundle_toolsdir}" && cp -v "${GTK2_PREFIX}/bin/gtk-demo${exe}" "${bundle_toolsdir}"
         mkdir -p "${bundle_resdir}/share/gtk-2.0/demo" \
         && xcopy "${GTK2_PREFIX}/share/gtk-2.0/demo"/* "${bundle_resdir}/share/gtk-2.0/demo"
         "${mydir}/tools/rpath.sh" -X'/opt/local' \
-            -L../lib/gtk -R../lib \
-            "${bundle_resdir}/bin/gtk-demo" || exit $?
+            -L${bundle_tools_gtklibrpath} -R${bundle_tools_librpath} \
+            "${bundle_toolsdir}/gtk-demo${exe}" || exit $?
     fi
 
     # gdk-pixbuf dynamic loaders when gdk not built with builtin_loaders
     if true && gdk_loaders="gdk-pixbuf-2.0/2.10.0/loaders" \
     && test -d "${GTK2_PREFIX}/lib/${gdk_loaders}"; then
-        mkdir -p "${bundle_resdir}/bin" && cp "${GTK2_PREFIX}/bin/gtk-demo" "${bundle_resdir}/bin" \
+        mkdir -p "${bundle_toolsdir}" && cp "${GTK2_PREFIX}/bin/gtk-demo${exe}" "${bundle_toolsdir}" \
         && mkdir -p "${bundle_resdir}/lib/gtk/${gdk_loaders}" \
         && xcopy "${GTK2_PREFIX}/lib/${gdk_loaders}"* "${bundle_resdir}/lib/gtk/${gdk_loaders}/.." \
         && "${mydir}/tools/rpath.sh" -X'/opt/local' \
-            -L../lib/gtk -R../lib \
-            "${bundle_resdir}/bin/gtk-demo" "${bundle_resdir}/lib/gtk/${gdk_loaders}"/* || exit $?
+            -L${bundle_tools_gtklibrpath} -R${bundle_tools_librpath} \
+            "${bundle_toolsdir}/gtk-demo${exe}" "${bundle_resdir}/lib/gtk/${gdk_loaders}"/* || exit $?
     fi
 
     # Add manually some LIBs
@@ -995,7 +1082,7 @@ do_delivery_fun() {
     fi
 
     # Display list of libs
-    case "${build_sysname}" in linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";; esac
+    case "${target_sysname}" in linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";; esac
     echo "+ Libraries:"
     for f in `find "${bundle_bindir}"/{,${bundle_librpath}} -type f`; do
         test -f "$f" && get_libs "$f" 2> /dev/null | grep -Ev '^[^[:space:]]'
@@ -1021,22 +1108,29 @@ do_delivery_fun() {
     find "${deliverydir}/bundle" -perm '+u=r' -print0 | xargs -0 chmod ${chmod_args} 'g+r,o+r'
 
     # Create Package
+    case "${git_rev}" in *-dirty)
+        case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
+        package_ext=${package_name#${package_pref}}; package_name="${package_pref}-${git_rev}${package_ext}";;
+    esac
     test -z "${interactive}" || yesno "? Create Package (${package_name}) ?" || exit 1
     echo "+ creating Package (${package_name})"
     rm -f "${package_name}" || exit $?
-    case "${build_sysname}" in
-        darwin*)
+    case "${package_name}" in
+        *.[Dd][Mm][Gg])
             # Create DMG
             #formats UDBZ(bz2,10.4) UDCO ULFO(lzfe,10.11) # -fs HFS+ # -type UDIF|SPARSE|SPARSEBUNDLE
             hdiutil create -fs "HFS+" -format "UDBZ" -volname "PrivateerGold" \
                 -srcfolder "${deliverydir}/bundle" "${package_name}" || exit $?
             ;;
-        linux*|*bsd*)
+        *.[bB][zZ]2)
             (cd "${deliverydir}/bundle" && tar cjf "${package_name}" "PrivateerGold" ) || exit 1
             ;;
+        *.[zZ][iI][pP])
+            (cd "${deliverydir}/bundle" && zip -r "${package_name}" "PrivateerGold" ) || exit 1
+            ;;
     esac
-    du -sh "${package_name}"
-
+    (cd "$(dirname "${package_name}")" && shasum -a256 "$(basename "${package_name}")" > "${package_name}.sha256" \
+     && du -sh "${package_name}" | awk '{ print $1 }' | tr '\n' ' ' && cat "${package_name}.sha256")
     popd >/dev/null
 }
 

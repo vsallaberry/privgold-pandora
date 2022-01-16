@@ -287,8 +287,8 @@ namespace UniverseUtil
 	std::string getCurrentSaveGame();
 	std::string setCurrentSaveGame(const std::string &newsave);
 	std::string getNewGameSaveName();
-	void loadGame(const std::string &savename);
-	void saveGame(const std::string &savename);
+	bool loadGame(const std::string &savename);
+	bool saveGame(const std::string &savename);
 
 	// Splash stuff
 	void showSplashScreen(const std::string &filename);

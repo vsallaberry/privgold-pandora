@@ -30,7 +30,7 @@
 #define vsHash stdext::hash
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__) && !defined(_LIBCPP_VERSION)
 # if defined(HAVE_TR1_UNORDERED_MAP) || defined(HAVE_UNORDERED_MAP)
 #  include <unordered_map>  // MSVC doesn't use tr1 dirs
 # else

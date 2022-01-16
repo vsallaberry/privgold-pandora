@@ -23,6 +23,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+# include <io.h>
+#endif
 #else
 #define PATH_SEP "/"
 #include <unistd.h>
@@ -123,14 +126,14 @@ void ShowReadme() {
     for (unsigned int i=0; i < 2; ++i) {
         for (const char ** search = searchs; *search; ++search) {
             FILE * fp;
-            int err;
+            ssize_t err;
             char arg[65535];
             snprintf(arg, sizeof(arg), "%s%s%s", curpath, PATH_SEP, *search);
             printf("readme: trying %s\n", arg);
             if ((fp = fopen(arg, "r")) != NULL) {
                 fclose(fp);
 #if defined (_WIN32)
-                err = (int)ShellExecute(NULL,"open",arg,"","",1);
+                err = (ssize_t)ShellExecute(NULL,"open",arg,"","",1);
 #elif defined (__APPLE__)
                 char * script = (char*)malloc(sizeof(arg));
                 snprintf(script, sizeof(arg), "tell application \"Preview.app\" to open \"%s\"", arg);
@@ -139,10 +142,8 @@ void ShowReadme() {
 #else
                 err = execlp("less", "less",arg, NULL); //Will this work in Linux?
 #endif
-                //if (err == 0) {
-                    i = (unsigned int)-1;
-                    break ;
-                //}
+                // don't check err, we have checked previously file existence (arg).
+                return ;
             }
         }
         if (i == 0) {

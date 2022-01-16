@@ -45,6 +45,19 @@
 #include <cstdlib>
 #include <iostream>
 #include "posh.h"
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+#ifdef VEGASTRIKE_VERSION
+# include "vsfilesystem.h"
+#else
+#include <cstdio>
+namespace VSFileSystem {
+	FILE * vs_fopen(const char * file, const char* mode) { return fopen(file, mode); }
+}
+#endif
+
 using std::cerr;
 using std::endl;
 using std::hex;
@@ -267,7 +280,7 @@ bool CPK3::CheckPK3(FILE *f)
 
 bool CPK3::Open( const char *filename)
 {
-  f = fopen(filename, "rb");
+  f = VSFileSystem::vs_fopen(filename, "rb");
   if(f)
   {
     strcpy(pk3filename,filename);
@@ -296,7 +309,7 @@ bool CPK3::ExtractFile( const char *lp_name, const char *new_filename)
   {
     if(size != -1)
     {
-      new_f = fopen(new_filename,"wb");
+      new_f = VSFileSystem::vs_fopen(new_filename,"wb");
       fwrite(data_content,1,size,new_f);
       fclose(new_f);
       delete data_content;

@@ -23,8 +23,13 @@
 
 #if defined(HAVE_SDL)
 # include <SDL.h>
-# if ! defined(SDL_WINDOWING) && defined(__APPLE__)
-#  undef main
+# if ! defined(SDL_WINDOWING)
+#  if defined(__APPLE__)
+#   undef main
+#  elif defined(_WIN32)
+#   undef main
+#   undef WinMain
+#  endif
 # endif
 #endif
 #include "cmd/role_bitmask.h"
@@ -259,7 +264,7 @@ int main( int argc, char *argv[] )
 	mission_name[0]='\0';
         {
           char pwd[8192]="";
-          getcwd(pwd,8191);
+          VSFileSystem::vs_getcwd(pwd,8191);
           pwd[8191]='\0';
           printf (" In path %s\n",pwd);
         }
@@ -308,8 +313,6 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
       // After this, vs_config is available.
       VSFileSystem::InitPaths( CONFIGFILE, subdir, &overrides);
     }
-    
-    
     
     // setup log file
     std::string logfile = UniverseUtil::LogFile("");

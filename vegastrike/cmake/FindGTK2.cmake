@@ -14,19 +14,21 @@
 #  For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 #
 
-set(GTK2_DEBUG OFF)
+if (NOT DEFINED GTK2_CMAKE_DEBUG)
+    set(GTK2_CMAKE_DEBUG OFF)
+endif()
 
 macro(GTK2_DEBUG_MESSAGE _message)
-  if (GTK2_DEBUG)
-    message(STATUS "(DEBUG) ${_message}")
-  endif (GTK2_DEBUG)
+    if (GTK2_CMAKE_DEBUG)
+        message(STATUS "(DEBUG) ${_message}")
+    endif (GTK2_CMAKE_DEBUG)
 endmacro(GTK2_DEBUG_MESSAGE _message)
 
 if (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
   # in cache already
   set(GTK2_FOUND TRUE)
 else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
-  if (UNIX)
+  if (UNIX OR CYGWIN OR MINGW)
     # use pkg-config to get the directories and then use these values
     # in the FIND_PATH() and FIND_LIBRARY() calls
     #include(FindPkgConfig)
@@ -38,10 +40,8 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         set(GTK2_PKG_REQUIRED "")
         set(GTK2_PKG_ERROR "")
     endif(GTK2_FIND_REQUIRED)
+
     pkg_check_modules(gtk2.0 ${GTK2_PKG_REQUIRED} gtk+-2.0)
-    #else(GTK2_FIND_REQUIRED)
-    #    pkg_check_modules(gtk2.0 gtk+-2.0)
-    #endif(GTK2_FIND_REQUIRED
     GTK2_DEBUG_MESSAGE("pkg: gtks_inc = ${gtk2.0_INCLUDE_DIRS}")
     GTK2_DEBUG_MESSAGE("pkg: gtks_libs = ${gtk2.0_LIBRARY_DIRS}")
 	SET(_GTK2IncDir ${gtk2.0_INCLUDE_DIRS})
@@ -94,7 +94,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_GLIB2IncDir}
         ${_GMODULE2IncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}/../../lib/glib-2.0
       PATHS
+	$ENV{GTK2_HOME}/../glib-2.0
+	$ENV{GTK2_HOME}/../../lib/glib-2.0/include
         /opt/gnome/lib64/glib-2.0/include
         /opt/gnome/lib/glib-2.0/include
         /opt/lib/glib-2.0/include
@@ -115,6 +118,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_GMODULE2IncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}/../glib-2.0
         /opt/include/glib-2.0
         /opt/gnome/include/glib-2.0
         /usr/include/glib-2.0
@@ -138,6 +142,9 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_GDK2IncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}
+	$ENV{GTK2_HOME}/gdk
+	$ENV{GTK2_HOME}/../../lib/gtk-2.0/include
         /opt/gnome/lib/gtk-2.0/include
         /opt/gnome/lib64/gtk-2.0/include
         /opt/lib/gtk-2.0/include
@@ -157,6 +164,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_GDK2IncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}/../gdk-pixbuf-2.0
         /opt/gnome/lib/gdk-pixbuf-2.0/include
         /opt/gnome/lib64/gdk-pixbuf-2.0/include
         /opt/lib/gdk-pixbuf-2.0/include
@@ -202,6 +210,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_PANGOIncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}/../pango-1.0
         /usr/include/pango-1.0
         /opt/gnome/include/pango-1.0
         /opt/include/pango-1.0
@@ -209,6 +218,30 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         /opt/local/include/pango-1.0
     )
     gtk2_debug_message("GTK2_PANGO_INCLUDE_DIR is ${GTK2_PANGO_INCLUDE_DIR}")
+
+    pkg_check_modules(Harfbuzz ${GTK2_PKG_REQUIRED} harfbuzz)
+    SET(_HARFBUZZIncDir ${Harfbuzz_INCLUDE_DIRS})
+    SET(_HARFBUZZLinkDir ${Harfbuzz_LIBRARY_DIRS})
+    SET(_HARFBUZZLinkFlags ${Harfbuzz_LDFLAGS})
+    SET(_HARFBUZZCflags ${Harfbuzz_CFLAGS})
+
+    string(REGEX REPLACE "([^ ])([ ]|$)" "\\1/include/harfbuzz " _TMP_VS_FIND_PREFIX_MORE_PATHS "${VS_FIND_PREFIX_MORE_PATHS}")
+
+    find_path(GTK2_HARFBUZZ_INCLUDE_DIR
+      NAMES
+        hb.h
+      HINTS
+        ${_HARFBUZZIncDir}
+        ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
+      PATHS
+	$ENV{GTK2_HOME}/../harfbuzz
+        /usr/include/harfbuzz
+        /opt/gnome/include/harfbuzz
+        /opt/include/harfbuzz
+        /sw/include/harfbuzz
+        /opt/local/include/harfbuzz
+    )
+    gtk2_debug_message("GTK2_HARFBUZZ_INCLUDE_DIR is ${GTK2_HARFBUZZ_INCLUDE_DIR}")
 
     pkg_check_modules(Cairo ${GTK2_PKG_REQUIRED} cairo)
     SET(_CAIROIncDir ${Cairo_INCLUDE_DIRS})
@@ -225,6 +258,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_CAIROIncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}/../cairo
         /opt/gnome/include/cairo
         /usr/include
         /usr/include/cairo
@@ -251,6 +285,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
         ${_ATKIncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
+	$ENV{GTK2_HOME}/../atk-1.0
         /opt/gnome/include/atk-1.0
         /usr/include/atk-1.0
         /opt/include/atk-1.0
@@ -265,6 +300,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gtk-x11-2.0
         gtk-quartz-2.0
+        gtk-win32-2.0
       HINTS
         ${_GTK2LinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
@@ -284,6 +320,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gdk-x11-2.0
         gdk-quartz-2.0
+        gdk-win32-2.0
       HINTS
         ${_GDK2LinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
@@ -470,8 +507,10 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
                 if (GTK2_PANGO_LIBRARY AND GTK2_PANGO_INCLUDE_DIR)
                   if (GTK2_CAIRO_LIBRARY AND GTK2_CAIRO_INCLUDE_DIR)
                     if (GTK2_ATK_LIBRARY AND GTK2_ATK_INCLUDE_DIR)
-
                       # set GTK2 includes
+                      if (NOT GTK2_HARFBUZZ_INCLUDE_DIR)
+                          set(GTK2_HARFBUZZ_INCLUDE_DIR "")
+                      endif()
                       set(GTK2_INCLUDE_DIRS
                         ${GTK2_GTK_INCLUDE_DIR}
                         ${GTK2_GLIBCONFIG_INCLUDE_DIR}
@@ -481,6 +520,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
                         ${GTK2_PANGO_INCLUDE_DIR}
                         ${GTK2_CAIRO_INCLUDE_DIR}
                         ${GTK2_ATK_INCLUDE_DIR}
+                        ${GTK2_HARFBUZZ_INCLUDE_DIR}
                       )
 
                       # set GTK2 libraries
@@ -554,6 +594,6 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     # show the GTK2_INCLUDE_DIRS and GTK2_LIBRARIES variables only in the advanced view
     mark_as_advanced(GTK2_INCLUDE_DIRS GTK2_LIBRARIES)
 
-  endif (UNIX)
+  endif (UNIX OR CYGWIN OR MINGW)
 endif (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
 

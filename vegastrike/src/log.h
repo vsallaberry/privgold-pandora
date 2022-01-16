@@ -32,6 +32,15 @@
 #include <string>
 #include <stdio.h>
 
+// wingdi.h ERROR macro conflict
+#if defined(_WIN32)
+# include <windows.h> 
+# if defined(ERROR)
+#  define WIN_ERROR ERROR
+#  undef ERROR
+# endif
+#endif
+
 #define VS_LOG_CHECK_BEFORE_CALL
 
 //

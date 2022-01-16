@@ -445,7 +445,7 @@ void init_opengl_extensions()
 
 
     /*
-    FILE * fp = fopen ("glsetup.txt","r");
+    FILE * fp = VSFileSystem::vs_fopen ("glsetup.txt","r");
     if (fp) {
       VSFileSystem::Fscanf (fp,"fov %f\n",&g_game.fov);
       VSFileSystem::Fscanf (fp,"aspect %f\n",&g_game.aspect);
@@ -479,7 +479,7 @@ void GFXInit (int argc, char ** argv){
     }
     
     winsys_init (&argc,argv,"Vega Strike",(char*)icon_file.c_str());
-    winsys_show_cursor(0);
+    //winsys_show_cursor(0);
     
     /* Ingore key-repeat messages, disable unicode */
     winsys_set_kb_mode(handle_unicode_kb_cockpit ? WS_UNICODE_ENABLED : WS_UNICODE_DISABLED,

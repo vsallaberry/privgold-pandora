@@ -1,4 +1,4 @@
-AC_INIT(vegastrike, 0.4.4.3)
+AC_INIT(vegastrike, 0.4.4.4)
 config_flags="$@"
 AC_DEFINE_UNQUOTED([VEGASTRIKE_VERSION],[VERSION],[VEGASTRIKE_VERSION])
 
@@ -146,13 +146,24 @@ else
 fi
 AC_MSG_RESULT(${needutil})
 
+AC_MSG_CHECKING([for libregex])
+saved_LIBS="${LIBS}"
+LIBS="-lregex"
+AC_TRY_LINK(, , [needregex=yes], [needregex=no])
+if test "x$needregex" = "xyes"; then
+    true
+else
+    LIBS="${saved_LIBS}"
+fi
+AC_MSG_RESULT(${needregex})
+
 
 
 # Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([OS.h arpa/inet.h fcntl.h fenv.h float.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h unistd.h values.h climits wchar.h cwchar cwctype wctype.h locale.h fnmatch.h clocale locale codecvt])
+AC_CHECK_HEADERS([OS.h arpa/inet.h fcntl.h fenv.h float.h inttypes.h limits.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h sys/file.h sys/ioctl.h sys/param.h sys/socket.h sys/time.h unistd.h values.h climits wchar.h cwchar cwctype wctype.h locale.h fnmatch.h regex.h clocale locale codecvt])
 
 
 if test "x$slabcheck" = "xyes"; then
@@ -208,8 +219,26 @@ AC_FUNC_STAT
 AC_FUNC_STRCOLL
 AC_FUNC_STRTOD
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([atexit bzero fesetround floor getcwd gethostbyname gettimeofday inet_ntoa iswprint localtime_r mblen memchr memmove memset mkdir munmap pow putenv rint rmdir select setenv socket sqrt strcasecmp strncasecmp stricmp strnicmp strchr strdup strerror strstr strtol strtoul])
+AC_CHECK_FUNCS([atexit bzero fesetround floor getcwd gethostbyname gettimeofday inet_ntoa iswprint localtime_r mblen memchr memmove memset mkdir munmap pow putenv rint rmdir select setenv socket sqrt strcasecmp strncasecmp stricmp strnicmp strchr strdup strerror strstr strtol strtoul SHGetKnownFolderPath])
 
+## If you want to use SHGetKnownFolder instead of SHGetFolderPathW,
+## replace false by true but this will not work before Vista
+if false; then
+ AC_MSG_CHECKING([for win32 FOLDERID_LocalAppData])
+ AC_COMPILE_IFELSE([[#include <windows.h>
+ #include <shlobj.h>
+ int main() { return (int)((ssize_t)FOLDERID_LocalAppData); }]], [have_folderid_localappdata=yes], [have_folderid_localappdata=no])
+ AC_MSG_RESULT([${have_folderid_localappdata}])
+
+ AC_MSG_CHECKING([for win32 FOLDERID_AppData])
+ AC_COMPILE_IFELSE([[#include <windows.h>
+ #include <shlobj.h>
+ int main() { return (int)((ssize_t)FOLDERID_AppData); }]], [have_folderid_appdata=yes], [have_folderid_appdata=no])
+ AC_MSG_RESULT([${have_folderid_appdata}])
+
+ test "x${have_folderid_localappdata}" = "xyes" && AC_DEFINE_UNQUOTED([HAVE_FOLDERID_LOCALAPPDATA],[1],[win32_FOLDERID_LocalAppData])
+ test "x${have_folderid_appdata}" = "xyes" && AC_DEFINE_UNQUOTED([HAVE_FOLDERID_APPDATA],[1],[win32_FOLDERID_AppData])
+fi
 
 dnl Check for non-standard floating point functions and headers
 AC_CHECK_FUNCS([finite _finite isfinite isnan _isnan])

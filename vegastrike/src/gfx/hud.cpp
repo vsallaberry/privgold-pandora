@@ -118,39 +118,33 @@ static float getFontPointSize(void * & font) {
     return point;
 }
 
-static void * getDefaultFont(bool&changed, bool force_inside=false, bool whatinside=false) {
+static bool getDefaultFont(void * & outfont, float & outpointsize, bool force_inside=false, bool whatinside=false) {
   static void * whichfont=getFontFromName(vs_config->getVariable("graphics","font","helvetica12"));
   static void * whichdockedfont=getFontFromName(vs_config->getVariable("graphics","basefont","helvetica12"));
-  bool inside=isInside();
+  bool inside = isInside();
   if (force_inside)
-    inside=whatinside;
+	  inside=whatinside;
   static bool lastinside=inside;
-  if (lastinside!=inside) {
-    changed=true;
-    lastinside=inside;
-  }else changed=false;
-  return inside? whichdockedfont : whichfont;
-}
-
-static float getDefaultFontHeight(bool & changed) {
-  void * font = getDefaultFont(changed,false,false);
-  static float point=0;
-  if (changed){
-    point=0;
+  outfont = inside? whichdockedfont : whichfont;
+  static float point = getFontPointSize(outfont);
+  bool changed = (lastinside != inside && whichfont != whichdockedfont);
+  if (changed) {
+	  point = getFontPointSize(outfont);
+      lastinside = inside;
+      VS_LOG("gui", logvs::VERBOSE, "defaultFont changed to %s, point:%g, inside:%d", getFontName(outfont).c_str(), point, inside);
   }
-  if (point==0) {
-      point = getFontPointSize(font);
-  }
-  return point/g_game.y_resolution;            
+  outpointsize = point;
+  return changed;
 }
 
 float getFontHeight(void * font) {
-    if (font == NULL) {
-        bool changed;
-        return getDefaultFontHeight(changed);
+    float point;
+	if (font == NULL) {
+        getDefaultFont(font, point);
     } else {
-        return getFontPointSize(font)/g_game.y_resolution;
+        point = getFontPointSize(font);
     }
+	return point / g_game.y_resolution;
 }
 
 /* *************************************************************
@@ -180,8 +174,9 @@ void * TextPlane::SetFont(const std::string & fontName) {
 }
 
 void * TextPlane::SetFont(void * font) {
-    if (font == myFont)
+	if (font == myFont)
         return font;
+	VS_DBG("gui", logvs::DBG+1, "TextPlane(%p)::SetFont(%s)", this, getFontName(font).c_str());
     if (font == NULL) {
         myFontHeight = 0.0;
     } else {
@@ -194,8 +189,10 @@ void * TextPlane::GetFont(bool forceinside, bool whichinside) const {
     if (myFont != NULL) {
         return myFont;
     }
-    bool changed;
-    return getDefaultFont(changed, forceinside, whichinside);
+    float point;
+    void * font;
+    getDefaultFont(font, point, forceinside, whichinside);
+    return font;
 }
 
 unsigned int TextPlane::SetFlag(unsigned int flag, bool enable) {
@@ -211,11 +208,14 @@ unsigned int TextPlane::SetFlags(unsigned int flags) {
 }
 
 float TextPlane::GetFontHeight() const {
-    if (myFont != NULL) {
-        return myFontHeight / g_game.y_resolution;
+    float point;
+	if (myFont != NULL) {
+        point = myFontHeight;
+    } else {
+    	void * font;
+    	getDefaultFont(font, point);
     }
-    bool changed;
-    return getDefaultFontHeight(changed);
+	return point / g_game.y_resolution;
 }
 
 static unsigned int * GetDisplayLists(void * font) {

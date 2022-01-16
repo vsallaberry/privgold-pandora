@@ -785,13 +785,13 @@ std::string speedStarHandler (const XMLType &input,void *mythis)
 
 
 static list<Unit*> Unitdeletequeue;
-static Hashtable <long, Unit, 2095> deletedUn;
+static Hashtable <void *, Unit, 2095> deletedUn;
 int deathofvs=1;
 void CheckUnit(Unit * un)
 {
-	if (deletedUn.Get ((long)un)!=NULL) {
+	if (deletedUn.Get (un)!=NULL) {
 		while (deathofvs) {
-			UNIT_LOG(logvs::NOTICE, "%ld died",(long)un);
+			UNIT_LOG(logvs::NOTICE, "0x%zx died",(size_t)un);
 		}
 	}
 }
@@ -799,8 +799,8 @@ void CheckUnit(Unit * un)
 
 void UncheckUnit (Unit * un)
 {
-	if (deletedUn.Get ((long)un)!=NULL) {
-		deletedUn.Delete ((long)un);
+	if (deletedUn.Get (un)!=NULL) {
+		deletedUn.Delete (un);
 	}
 }
 
@@ -5191,7 +5191,7 @@ void Unit::UnRef()
 	ucref--;
 	if (killed&&ucref==0) {
 #ifdef CONTAINER_DEBUG
-		deletedUn.Put ((long)this,this);
+		deletedUn.Put (this,this);
 #endif
 								 //delete
 		Unitdeletequeue.push_back(this);

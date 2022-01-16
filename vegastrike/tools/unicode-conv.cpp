@@ -217,6 +217,31 @@ static int get_num(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l, long 
 	return ret;
 }
 
+#if defined(_WIN32)
+static ssize_t getline(char ** pstr, size_t * psize, FILE * fp) {
+	const size_t bufsz = 1024;
+	size_t len = 0;
+	int c;
+	if (pstr == NULL || psize == NULL || fp == NULL) {
+		return -1;
+	}
+	while ((c = fgetc(fp)) != EOF) {
+		if ((*pstr == NULL || len + 1 >= *psize)
+		&&  !realloc_outline(pstr, psize, len + bufsz, stderr)) {
+			break ;
+		}
+		(*pstr)[len++] = c;
+		if (c == '\n') {
+			break ;
+		}
+	}
+	if (len < *psize) {
+		(*pstr)[len] = 0;
+	}
+	return len;
+}
+#endif
+
 int convert(const char * file, const char * outfile, unsigned int flags) {
     int ret = 0;
     FILE * fp_in, * fp_out;

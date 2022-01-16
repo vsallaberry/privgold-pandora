@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-     Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/06 -- Changes
+     Privateer Gemini Gold Pandora v1.2.3 -- 2022/01/17 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
@@ -10,9 +10,31 @@ Privateer Gemini Gold versions.
 -----------------------------------------------------------------------------
 
   -------------------------------------------------------------------------
+        Privateer Gemini Gold Pandora v1.2.3 -- 2022/01/17 -- Changes
+  -------------------------------------------------------------------------
+  9. CHANGES FROM 1.2.2 TO 1.2.3
+
+    Vegastrike 0.4.4.4
+
+    A. Windows x86_64 experimental build
+
+        - tested only with windows 10 & 7 on Virtual Machines.
+
+       - In this Windows release the HOME dir (where user data including
+         savegames are stored) is now in Windows UserProfile Folder instead of
+         the data directory (eg: 'c:\users\NAME\Local Settings\privgold120').
+
+   B. FIX: SDL1 mouse workaround on some windows and linux systems (mouse was not moving)
+
+   C. FIX: gui/FontHeight management in cockpit when Cockpit font is not base font.
+
+   D. FIX: (1.03 bug): don't crash if the savegame cannot be saved for some reasons
+           (eg:System does not allow name, access denied, ...)
+
+  -------------------------------------------------------------------------
         Privateer Gemini Gold Pandora v1.2.2 -- 2022/01/06 -- Changes
   -------------------------------------------------------------------------
-  7. CHANGES FROM 1.2.1 TO 1.2.2
+  8. CHANGES FROM 1.2.1 TO 1.2.2
 
     Vegastrike 0.4.4.3
 

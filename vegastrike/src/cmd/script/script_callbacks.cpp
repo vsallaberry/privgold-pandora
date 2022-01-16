@@ -68,7 +68,7 @@ string varToString (varInst * vi) {
     if (vi->objectname=="string") {
       return *((string *)vi->object);
     }else {
-      return XMLSupport::tostring ((long)vi->object);
+      return XMLSupport::tostring ((size_t)vi->object);
     }
   }
 }

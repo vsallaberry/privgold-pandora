@@ -398,7 +398,7 @@ static void ConvertFormat (vector<char>& ogg ) {
         convertToLittle(converted.size()-8,&converted[4]);
         convertToLittle(converted.size()-pcmsizestart,&converted[pcmsizestart-4]);
 #if 0
-		FILE * tmp = fopen("c:/temp/bleh","wb");
+		FILE * tmp = VSFileSystem::vs_fopen("c:/temp/bleh","wb");
         fwrite(&converted[0],converted.size(),1,tmp);
         fclose(tmp);
 #endif
@@ -448,14 +448,14 @@ bool AUDLoadSoundFile(const char *s, struct AUDSoundProperties *info, bool use_f
 	info->success=false;
 	vector <char> dat;
 	if (use_fileptr) {
-		FILE *f = fopen(s, "rb");
+		FILE *f = VSFileSystem::vs_fopen(s, "rb");
 		if (!f) {
 			std::string path =std::string("sounds/") +s;
-			f = fopen(path.c_str(), "rb");
+			f = VSFileSystem::vs_fopen(path.c_str(), "rb");
 		}
 		if (!f) {
 			std::string path = std::string("music/") +s;
-			f = fopen(path.c_str(), "rb");
+			f = VSFileSystem::vs_fopen(path.c_str(), "rb");
 		}
 		if (f) {
 			fseek(f, 0, SEEK_END);

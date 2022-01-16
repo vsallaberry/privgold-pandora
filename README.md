@@ -9,22 +9,27 @@
 * [Updates Overview](#updates-overview)
 * [Updates Detail](#updates-detail)
 * [About](#about)
+* [Credits](#credits)
 
 ## Introduction
 
 This is based on Privateer Gold v1.03 (2009) but 
 this is not an official release of vegastrike or Privateer Gold.  
-
+  
 The first Goal was to have a 64bit MacOS build: this is when the pandora
 box has been openned, implying a lot more updates.
-
-Tested on macOS El Capitan, Mojave and Catalina, linux debian 9.
+  
+Tested on macOS El Capitan, Mojave and Catalina, linux debian 9, and on virtual machines with Windows 7&10.
 Vegastrike now supports 3 graphical engines for openGL: GLUT, SDL1, SDL2.
 SDL1 is discouraged, SDL2 is recomanded, use GLUT if trouble with SDL2.
 Unicode handling (keyboard and graphics) has been improved.
-
-A big credit and thanks to Vegastrike team, Privateer Gemini Gold Team,
-Origin Systems Inc (and macports for useful hints and patches). 
+  
+A big credit and thanks to [Vegastrike Team](https://www.vega-strike.org), 
+[Privateer Gemini Gold Team](https://priv.solsector.net),
+[Origin Systems Inc](https://en.m.wikipedia.org/wiki/Origin_Systems), 
+and [macports](https://www.macports.org) for useful hints and patches, 
+[MSYS2](https://sourceforge.net/projects/msys2) for open-source libraries ports on windows.  
+  
 See [source-control](#source-control-management) 
 and [licenses](#about-licenses) for more details.
 
@@ -39,9 +44,12 @@ Tested on:
 * catalina
   
 * Experimental non-tested build for macOS BigSur or later with arm64 (apple M1).  
-* Experimental build for linux-x86_64 (tested on a macbook with debian9)
+* Experimental build for linux-x86_64 (tested on a macbook with freshly installed debian9)
+* Experimental build for Windows-x86_64 (tested with windows 10 & 7 in Virtual Machines) 
   
-On macOS, open the APP with alt (option) key pressed in order to run SETUP.
+* MacOS:
+  + supported architectures are i386, x86_64, arm64.
+  + open the APP with alt (option) key pressed in order to run SETUP.
 
 
 ## Source Control Management
@@ -77,8 +85,8 @@ is SVN revision 257, the 258 contains one single fix in Privateer data.
   <https://svn.code.sf.net/p/privateer/code/privgold> : dependencies/vs_gold_1_03.tar.bz2)
 
 * Extract from Privateer Gemini Gold Manual (1.03)
-
-Important  
+  
+__Important__    
 We offer our thanks to the authors of the original Privateer for their 
 inspirational game that drove us to recreate it so that it works on our 
 computers once again. We know their hard work and effort has not gone 
@@ -95,11 +103,18 @@ for their ideas and images that allow Privateer Gemini Gold to be what
 it is today...
 Some descriptions and images in this manual were extracted from the 
 original Privateer Manual created by Origin Systems Inc. © 1993.
-
+______  
+  
 * Except some MacOS system libs, libs used by vegastrike engine are 
 open sources with various licences (mit, gpl, lgpl, ...)
-'deps' folder contains scripts and patches used to build these dependencies.
+'deps' folder contains scripts and patches used to build these dependencies
+for macOS or linux. See [credits](#credits) for more details.
 
+* unlike macOS and linux releases for which I rebuilt myself needed libraries,
+the Windows release is shipped with open sources libraries provided
+by [MSYS2](https://sourceforge.net/projects/msys2), which is LGPL itself, and 
+the libraries it uses are open sources with various licences (mit,bsd,gpl,lgpl,...)
+There are currently two exceptions: I rebuilt ffmpeg and libpng (need old versions).
 
 ## Updates Overview
 
@@ -137,6 +152,17 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
 * BaseInterface: Links navigation with keyboard or joystick
 * joystick: now joystick handling is event-based, and plug&play with SDL2.
 * 1.2.1: experimental build for macOS BigSur and Apple M1 (arm64)
+* 1.2.2: experimental build for linux-x86_64 (tested with a freshly installed
+  debian9 on a x86_64 mac)
+* 1.2.3: 
+  + EXPERIMENTAL build for windows-x86_64 (tested only with windows 10 & 7 on 
+    Virtual Machines). In this Windows release the HOME dir (where user data including 
+    savegames are stored) is now in Windows UserProfile Folder instead of the data 
+    directory (eg: 'c:\users\NAME\Local Settings\privgold120'). 
+  + SDL1 mouse workaround on some windows and linux systems (mouse was not moving)
+  + fix: FontHeight management in cockpit when Cockpit font is not base font
+  + fix: (1.03 bug) don't crash if the savegame cannot be saved for some reasons 
+    (eg:System does not allow name)
 
 ## Updates Detail
 
@@ -289,7 +315,43 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
 
 Privateer Gold Pandora (Vincent Sallaberry, 2021-2022) is a fork of
 Privateer Gemini Gold 1.03, 2009. It includes builds for recent
-MacOS systems, and updates/new features.  
+MacOS systems, updates/new features and experimental builds for
+x86_64 linux and Windows.  
 
 https://github.com/vsallaberry/privgold-pandora
+
+## Credits
+
+* [GitHub](https://github.com)
+* [Vegastrike Team](https://www.vega-strike.org)
+* [Privateer Gemini Gold Team](https://priv.solsector.net)
+* [Origin Systems Inc](https://en.m.wikipedia.org/wiki/Origin_Systems)
+* [macports](https://www.macports.org)
+* [Xcode-SDK](https://developer.apple.com/xcode)
+* [MSYS2](https://sourceforge.net/projects/msys2)
+* [GCC](https://gcc.gnu.org)
+* [CLANG](https://clang.llvm.org)
+* [GnuTools](https://www.gnu.org/software)
+* [SDL](http://www.libsdl.org)
+* [FFMPEG](https://ffmpeg.org)
+* [OpenAL](http://www.openal.org)
+* [LibOGG](http://www.vorbis.com)
+* [LibVorbis](https://xiph.org/vorbis)
+* [OpenGL](http://www.opengl.org)
+* [FreeGLUT](http://freeglut.sourceforge.net)
+* [GTK](https://www.gtk.org)
+* [Python](https://www.python.org)
+* [Boost](http://www.boost.org)
+* [Expat](http://www.libexpat.org)
+* [CMake](https://cmake.org)
+* [PNG](http://www.libpng.org/pub/png/libpng.html)
+* [JPEG](http://www.ijg.org)
+* [JPEG-Turbo](https://www.libjpeg-turbo.org)
+* [BZIP2](https://sourceware.org/bzip2)
+* [ZLIB](http://www.zlib.net)
+* [NCurses](https://invisible-island.net/ncurses)
+* [LibDialog](https://invisible-island.net/dialog)
+* [Xorg](https://www.x.org)
+* [Mesa](https://www.mesa3d.org)
+* and more...
 

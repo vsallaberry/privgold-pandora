@@ -15,20 +15,50 @@
  *                                                                         *
  **************************************************************************/
 
+#if defined(HAVE_CONFIG_H)
+# include "config.h"
+#endif
 #include "../include/central.h"
 #include <stdlib.h>
 #ifdef _WIN32
-#include <direct.h>
-#include <windows.h>
+# include <windows.h>
+# include <shlobj.h>
+# if !defined(VS_HOME_INSIDE_DATA)
+#  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
+#   include <shlwapi.h>
+static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+	PWSTR pszPath = NULL;
+	HRESULT ret;
+	ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
+	if (pszPath == NULL)
+		return S_OK-1;
+	if (ret == S_OK)
+		StrCpyW(wappdata, pszPath);
+	CoTaskMemFree((LPVOID)pszPath);
+	return ret;
+}
+#  elif defined(CSIDL_LOCAL_APPDATA)
+static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+	return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
+}
+#  else
+static HRESULT vs_win32_get_appdata(WCHAR * wappdata) { (void)wappdata; return S_OK-1; }
+#  endif
+# endif
+# if defined(__CYGIN__) || defined(__MINGW32__)
+#  include <io.h>
+# else
+#  include <direct.h>
+# endif
 #else
-#include <sys/dir.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <pwd.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
+# include <sys/dir.h>
+# include <stdio.h>
+# include <unistd.h>
+# include <pwd.h>
+# include <sys/stat.h>
+# include <sys/types.h>
 #endif
+
 #include <vector>
 #include <string>
 using std::string;
@@ -38,7 +68,7 @@ char origpath[65536];
 static void changeToProgramDirectory(char *argv0) {
     int ret = -1; /* Should it use argv[0] directly? */
     char *program = argv0;
-#ifndef _WIN32
+#if defined(linux) || defined(__linux__)
     char buf[65536];
     {
 	char linkname[128]; /* /proc/<pid>/exe */
@@ -171,10 +201,6 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 	}
-#ifndef _WIN32
-	struct passwd *pwent;
-	pwent = getpwuid (getuid());
-	
 	string HOMESUBDIR;
 	FILE *version=fopen("Version.txt","r");
 	if (!version)
@@ -197,17 +223,35 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr,"Error: Failed to find Version.txt anywhere.\n");
 		return 1;
 	}
+#if !defined(VS_HOME_INSIDE_DATA)
+# if !defined(_WIN32)
+	struct passwd *pwent;
+	pwent = getpwuid (getuid());
 	chdir (pwent->pw_dir);
+# else
+	WCHAR wappdata_path[PATH_MAX];
+	if (vs_win32_get_appdata(wappdata_path) != S_OK) {
+		// use datadir as homedir
+	} else {
+		if (HOMESUBDIR.size() && HOMESUBDIR[0] == '.') {
+			HOMESUBDIR=HOMESUBDIR.substr(1);
+		}
+		_wchdir(wappdata_path);
+	}
+# endif
+#endif
 
-	mkdir(HOMESUBDIR.c_str(), 0755);
+	mkdir(HOMESUBDIR.c_str() 
+#ifndef _WIN32
+              , 0755
+#endif
+              );
 	chdir (HOMESUBDIR.c_str());
     
     char tmp_path[16384];
     getcwd(tmp_path,16384);
     tmp_path[16383]=0;
     printf("Now in Home Dir: %s\n",tmp_path);
-#endif
-
 	
 	Start(&argc,&argv);
 #if defined(_WINDOWS)&&defined(_WIN32)

@@ -44,6 +44,7 @@ typedef int Mix_Music;
 #include <sys/file.h>
 #endif
 #include "softvolume.h"
+#include "vsfilesystem.h"
 
 #ifndef MIX_CHANNEL_POST
 #define MIX_CHANNEL_POST -2
@@ -125,20 +126,20 @@ void changehome (bool to, bool linuxhome=true) {
 	static std::vector <std::string> paths;
   if (to) {
 	 char mycurpath[8192];
-	 getcwd(mycurpath,8191);
+	 VSFileSystem::vs_getcwd(mycurpath,8191);
 	 mycurpath[8191]='\0';
 	 paths.push_back (mycurpath);
 #ifndef _WIN32
 	 if (linuxhome) {
 	   struct passwd *pwent;
 	   pwent = getpwuid (getuid());
-	   chdir (pwent->pw_dir);
+	   VSFileSystem::vs_chdir (pwent->pw_dir);
 	 }
 #endif
-	chdir (HOMESUBDIR.c_str());
+	 VSFileSystem::vs_chdir (HOMESUBDIR.c_str());
   }else {
 	  if (!paths.empty()) {
-		chdir (paths.back().c_str());
+		  VSFileSystem::vs_chdir (paths.back().c_str());
 		paths.pop_back();
 	  }
   }
@@ -195,7 +196,7 @@ std::string concat (const std::vector<std::string> &files) {
       alphan+=alphanum(files[i]);
   }
   ret+=alphan;
-  FILE * checker = fopen(ret.c_str(),"rb");
+  FILE * checker = VSFileSystem::vs_fopen(ret.c_str(),"rb");
   if (checker) {
     fclose(checker);
     return ret;
@@ -203,7 +204,7 @@ std::string concat (const std::vector<std::string> &files) {
   std::ofstream o (ret.c_str(),std::ios::binary);
   if (!o.is_open()){
 	 ret="music/"+alphan;//current dir
-     checker = fopen(ret.c_str(),"rb");
+     checker = VSFileSystem::vs_fopen(ret.c_str(),"rb");
      if (checker) {
         fclose(checker);
         return ret;
@@ -217,7 +218,7 @@ std::string concat (const std::vector<std::string> &files) {
 #ifdef _WIN32
 			  ret=tempnam("c:\tmp",alphan.c_str());
 			  ret+=".ogg";
-              checker = fopen(ret.c_str(),"rb");
+              checker = VSFileSystem::vs_fopen(ret.c_str(),"rb");
               if (checker) {
                  fclose(checker);
                  return ret;
@@ -396,7 +397,7 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int 
 	FileNameCharType argvc;
 	FileNameCharType *argv= &argvc;
 	GetModuleFileName(NULL, argvc, 65534);
-	mystdout=fopen("soundserver_log.txt", "w");
+	mystdout=VSFileSystem::vs_fopen("soundserver_log.txt", "w");
 	int pipes[2]={-1,-1};
 	getPipes(lpCmdLine,&pipes);
 	if (mystdout) {
@@ -412,7 +413,7 @@ int main(int argc, char **argv) {
 #endif
 	{
 	char origpath[65535];
-	getcwd (origpath,65534);
+	VSFileSystem::vs_getcwd (origpath,65534);
 	origpath[65534]=0;
         fprintf(STD_OUT,"Current Path %s\n",origpath);
 #ifdef _WIN32
@@ -420,19 +421,19 @@ int main(int argc, char **argv) {
 	for (i=strlen(argv[0]);argv[0][i]!='\\'&&argv[0][i]!='/'&&i>=0;i--) {
 	}
 	argv[0][i+1]='\0';
-	chdir(argv[0]);
+	VSFileSystem::vs_chdir(argv[0]);
 #endif	
 	struct stat st;
 	if (stat("vegastrike.config",&st)!=0) {
 		//vegastrike.config not found.  Let's check ../
-		chdir (".."); //gotta check outside bin dir
+		VSFileSystem::vs_chdir (".."); //gotta check outside bin dir
 	}
-        getcwd(origpath,65534);
+		VSFileSystem::vs_getcwd(origpath,65534);
         fprintf(STD_OUT,"Final Path %s\n",origpath);
 	}
 
 
-		FILE *version=fopen("Version.txt","r");
+		FILE *version=VSFileSystem::vs_fopen("Version.txt","r");
 		
 		if (version) {
 			std::string hsd="";
@@ -570,7 +571,7 @@ int main(int argc, char **argv) {
 						curmus=str;
 					} else {
                                           char mycurpath[8192];
-                                          getcwd(mycurpath,8191);
+                                          VSFileSystem::vs_getcwd(mycurpath,8191);
                                           mycurpath[8191]='\0';
                                           fprintf(STD_OUT, "\n[UNABLE TO PLAY %s IN %s WITH %d FADEIN AND %d FADEOUT]\n",str.c_str(),mycurpath,fadein,fadeout);
 					}

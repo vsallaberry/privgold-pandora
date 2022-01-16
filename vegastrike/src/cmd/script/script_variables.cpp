@@ -753,7 +753,7 @@ void Mission::saveVarInst(varInst *vi,ostream& aa_out){
 	  sprintf(buffer,"type=\"object\"  object=\"%s\" value=\"%s\" >\n ", vi->objectname.c_str(),sptr->c_str());
 	}
 	else{
-	  sprintf(buffer,"type=\"object\"  object=\"%s\" value=\"0x%lx\" >\n ", vi->objectname.c_str(),(unsigned long)vi->object);
+	  sprintf(buffer,"type=\"object\"  object=\"%s\" value=\"0x%zx\" >\n ", vi->objectname.c_str(),(size_t)vi->object);
 	
 	  string modname="_"+vi->objectname;
 	

@@ -142,7 +142,7 @@ Music::Music (Unit *parent):random(false), p(parent),song(-1),thread_initialized
       int pid=spawnl(P_NOWAIT,ss_path.c_str(),ss_path.c_str(),NULL);
       if (pid==-1) {
 		ss_path = VSFileSystem::datadir+"/bin/soundserver.exe";
-		chdir("bin");
+		VSFileSystem::vs_chdir("bin");
 		int pid=spawnl(P_NOWAIT,ss_path.c_str(),ss_path.c_str(),NULL);
 		if (pid==-1) {
 			g_game.music_enabled=false;
@@ -182,9 +182,9 @@ Music::Music (Unit *parent):random(false), p(parent),song(-1),thread_initialized
       int pid=spawnl(P_NOWAIT,ss_path.c_str(),ss_path.c_str(),buffer1,buffer2,NULL);
       if (pid==-1) {
 		ss_path = VSFileSystem::datadir+"/bin/soundserver.exe";
-		bool chsuccess= (chdir("bin")==0);
+		bool chsuccess= (VSFileSystem::vs_chdir("bin")==0);
 		int pid=spawnl(P_NOWAIT,ss_path.c_str(),ss_path.c_str(),buffer1,buffer2,NULL);
-		if (chsuccess) chdir("..");
+		if (chsuccess) VSFileSystem::vs_chdir("..");
 		if (pid==-1) {
 			g_game.music_enabled=false;
 			VSFileSystem::vs_fprintf(stderr,"Unable to spawn music player server Error (%d)\n",pid);
@@ -193,10 +193,10 @@ Music::Music (Unit *parent):random(false), p(parent),song(-1),thread_initialized
 #else
   if (g_game.music_enabled) {
     std::string tmp=VSFileSystem::datadir+"/bin/soundserver";
-    FILE * fp=fopen (tmp.c_str(),"rb");
+    FILE * fp=VSFileSystem::vs_fopen (tmp.c_str(),"rb");
     if (!fp) {
       tmp=VSFileSystem::datadir+"/soundserver";
-      fp = fopen(tmp.c_str(),"rb");
+      fp = VSFileSystem::vs_fopen(tmp.c_str(),"rb");
       if (!fp){
         g_game.music_enabled=false;
         socketw=-1;

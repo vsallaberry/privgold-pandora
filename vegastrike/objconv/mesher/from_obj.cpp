@@ -534,7 +534,7 @@ void ObjToXMESH (FILE* obj, FILE * mtl, vector<XML> &xmllist, bool forcenormals)
      ObjToXML(xml,vtxlist,txclist,normallist,(*it).second);
      xmllist.push_back(xml);
 
-     printf("%d_0: %d faces, %d vertices, %d lines, %d tris, %d quads\n",textnum,(*it).second.size(),xml.vertices.size(),xml.lines.size(),xml.tris.size(),xml.quads.size());
+     printf("%d_0: %zu faces, %zu vertices, %zu lines, %zu tris, %zu quads\n",textnum,(*it).second.size(),xml.vertices.size(),xml.lines.size(),xml.tris.size(),xml.quads.size());
      textnum++;
      totface += int((*it).second.size());
    }

@@ -3,7 +3,7 @@
 #include "config.h"
 #include <string>
 #include <gnuhash.h>
-#ifndef WIN32
+#if !defined(WIN32) || __GNUC__ >= 5 || defined(_LIBCPP_VERSION)
 class ConstHasher;
 #endif
 class StringIntKey {
@@ -26,7 +26,7 @@ public:
   operator size_t () const{return Hashtable<std::string,int,(1<<30)>::hash(key)^fac;}
 };
 
-#if !defined(_WIN32) && __GNUC__!=2
+#if (!defined(_WIN32) && __GNUC__!=2) || __GNUC__ >= 5 || defined(_LIBCPP_VERSION)
 class ConstHasher {
 public:
   template <class T> size_t operator () (const T&key)const{
@@ -39,7 +39,7 @@ public:
 #endif
 
 template <class Typ,class Key> class ClassCache {
-#if !defined(_WIN32) && __GNUC__!=2
+#if (!defined(_WIN32) && __GNUC__!=2) || __GNUC__ >= 5 || defined(_LIBCPP_VERSION)
   static vsUMap<Key, Typ *, ConstHasher> unit_cache;
 #else
   static vsUMap<Key, Typ *> unit_cache;
@@ -49,7 +49,7 @@ template <class Typ,class Key> class ClassCache {
     return getCachedMutable(k);
   }
   static Typ *getCachedMutable (const Key &k) {
-#if !defined(_WIN32) && __GNUC__!=2
+#if (!defined(_WIN32) && __GNUC__!=2) || __GNUC__ >= 5 || defined(_LIBCPP_VERSION)
     typename vsUMap<Key,Typ *,ConstHasher>::iterator i=unit_cache.find(k);
 #else
 	typename vsUMap<Key,Typ *>::iterator i=unit_cache.find(k);

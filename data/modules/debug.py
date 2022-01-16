@@ -39,7 +39,7 @@ class VSException(Exception):
 	pass
 
 def prettyfile(fil):
-	lasttwo=str(fil).split('/')[-2:]
+	lasttwo=str(fil).replace('\\', '/').split('/')[-2:]
 	if len(lasttwo)<2: return fil
 	return lasttwo[0][0]+'/'+lasttwo[1]
 
@@ -59,8 +59,11 @@ def _dprint(msg, eol='\n', level=0, stackdec=0):
 	global _logfile
 	(modlevel,_,_,_) = (0,0,0,0) if level==0 else log_levelModuleFileLine(stackdec+1)
 	if modlevel >= level and _logfile is not None:
-		_logfile.write(msg + eol)
-
+		try:
+			_logfile.write(msg + eol)
+		except:
+			print '!! LOG ERRORS: ' + str(_logfile.errors)
+	
 def _pprint(object, stream=None, level=NOTICE,stackdec=0):
 	global _logfile
 	(modlevel,_,_,_) = log_levelModuleFileLine(stackdec+1)

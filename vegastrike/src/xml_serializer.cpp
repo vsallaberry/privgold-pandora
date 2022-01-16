@@ -6,6 +6,7 @@
 #include "vs_globals.h"
 #include "vegastrike.h"
 #include "networking/const.h"
+#include "vs_log_modules.h"
 ///Assumes that the tag is  <Mount type=\"  and that it will finish with " ></Mount>
 using namespace XMLSupport;
 using namespace VSFileSystem;
@@ -129,7 +130,7 @@ void XMLnode::Write (VSFileSystem::VSFile & f, void *mythis, int level) {
     Tab(f,level);f.Fprintf ("</%s>\n",val.c_str());
   }
 }
-void XMLSerializer::Write (const char * modificationname) {
+bool XMLSerializer::Write (const char * modificationname) {
   if (modificationname)
     if (strlen(modificationname)!=0) 
       savedir=modificationname;
@@ -140,13 +141,14 @@ void XMLSerializer::Write (const char * modificationname) {
   //cerr<<"Saving Unit to : "<<filepath<<endl;
   VSError err = f.OpenCreateWrite( savedir+"/"+this->filename, UnitFile);
   if (err>Ok) {
-    fprintf( stderr, "!!! ERROR : Writing saved unit file : %s\n", f.GetFullPath().c_str() );
-    return;
+    UNIT_LOG(logvs::ERROR, "!!! ERROR : Writing saved unit file : %s", f.GetFullPath().c_str() );
+    return false;
   }
   for (unsigned int i=0;i<topnode.subnodes.size();i++) {
     topnode.subnodes[i].Write (f,mythis,0);
   }
   f.Close();
+  return true;
 }
 
 static string TabString( int level) {

@@ -74,7 +74,7 @@ jpeg_compress_to_file(char *src, char *file, int width, int height, int quality)
   struct jpeg_error_mgr jerr;
   JSAMPROW row_pointer;
 
-  if ((outfile = fopen(file, "wb"))==NULL) {
+  if ((outfile = VSFileSystem::vs_fopen(file, "wb"))==NULL) {
     cerr<<"can't open "<<file<<endl;
     return -1;
   }
@@ -199,7 +199,7 @@ jpeg_decompress_from_file(unsigned char *dst, char *file, int size, int *w, int 
   unsigned char *dstcur;
   FILE *infile;
 
-  if ((infile = fopen(file, "rb"))==NULL) {
+  if ((infile = VSFileSystem::vs_fopen(file, "rb"))==NULL) {
     cerr<<"can't open "<<file<<endl;;
     return;
   }

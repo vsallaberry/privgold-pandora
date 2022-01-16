@@ -3,18 +3,19 @@
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <sys/stat.h>
 #include <string>
 #include <vector>
 #include <list>
 #include <iostream>
 using std::string;
 using std::vector;
-#include <stdarg.h>
+
 #include "gfx/vec.h"
 #include "networking/const.h"
 #include "pk3.h"
 #include <gnuhash.h>
-
 
 class VegaConfig;
 class VSImage;
@@ -129,6 +130,20 @@ namespace VSFileSystem
 	/**** VSFileSystem wrappers to stdio calls                                                   ****/
 	/************************************************************************************************/
 
+#if defined(_WIN32)
+	int 	vs_mkdir(const char * path, mode_t mode);
+	FILE * 	vs_fopen(const char * path, const char * mode);
+	char *	vs_getcwd(char * path, size_t size);
+	int 	vs_chdir(const char * path);
+	int 	vs_stat(const char * path, struct stat * st);
+#else
+	inline int		vs_mkdir(const char * path, mode_t mode) { return mkdir(path, mode); }
+	inline FILE * 	vs_fopen(const char * path, const char * mode) { return fopen(path, mode); }
+	inline char *	vs_getcwd(char * path, size_t size) { return getcwd(path, size); }
+	inline int 		vs_chdir(const char * path) { return chdir(path); }
+	inline int 		vs_stat(const char * path, struct stat * st) { return stat(path, st); }
+#endif
+
 	FILE *	vs_open( const char * filename, const char * mode);
 	size_t	vs_read( void *ptr, size_t size, size_t nmemb, FILE * fp);
 	size_t	vs_write( const void *ptr, size_t size, size_t nmemb, FILE * fp);
@@ -211,7 +226,6 @@ namespace VSFileSystem
 	void vs_resetdir ();									// Reset the current directory
 	*/
 
-
 	/************************************************************************************************/
 	/**** VSFileSystem functions                                                                 ****/
 	/************************************************************************************************/
@@ -226,14 +240,14 @@ namespace VSFileSystem
 	void	ChangeToProgramDirectory(char *argv0);
 
 	// Create a directory
-	void	CreateDirectoryAbs( const char * filename);
-	void	CreateDirectoryAbs( const string &filename);
+	VSError	CreateDirectoryAbs( const char * filename);
+	VSError	CreateDirectoryAbs( const string &filename);
 	// Create a directory in home_path
-	void	CreateDirectoryHome( const char * filename);
-	void	CreateDirectoryHome( const string &filename);
+	VSError	CreateDirectoryHome( const char * filename);
+	VSError	CreateDirectoryHome( const string &filename);
 	// Create a directory in data_path_path
-	void	CreateDirectoryData( const char * filename);
-	void	CreateDirectoryData( const string &filename);
+	VSError	CreateDirectoryData( const char * filename);
+	VSError	CreateDirectoryData( const string &filename);
 
 	/********** DO NO USE FileExists functions directly : USE LookForFile instead **********/
 	// Test if a directory exists (absolute path)
@@ -339,7 +353,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];
@@ -369,7 +383,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];
@@ -399,7 +413,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];
@@ -429,7 +443,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];
@@ -458,7 +472,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];
@@ -487,7 +501,7 @@ namespace VSFileSystem
 					if( q_volume_format==vfmtPK3 )
 					{
 						checkExtracted();
-						int ret = -1, readbytes=0;
+						int readbytes=0;
 						int length = strlen( format);
 						int newlength = length+3;
 						char * newformat = new char[newlength];

@@ -121,7 +121,7 @@ namespace UniverseUtil
 		particleTrail.AddParticle (p,velocity,size);
 	}
 
-	void loadGame(const string &savename) {
+	bool loadGame(const string &savename) {
 		Cockpit *cockpit = _Universe->AccessCockpit();
 		Unit *player = cockpit->GetParent();
 		UniverseUtil::setCurrentSaveGame(savename);
@@ -135,15 +135,22 @@ namespace UniverseUtil
 		RespawnNow(cockpit);
 		globalWindowManager().shutDown();
 		TerminateCurrentBase();
+		return true;
 	}
 
-	void saveGame(const string &savename) {
+	bool saveGame(const string &savename) {
+		bool result = true;
 		if (Network) {
 			Network[_Universe->CurrentCockpit()].saveRequest();
 		} else {
+			string oldsavename = UniverseUtil::getCurrentSaveGame();
 			UniverseUtil::setCurrentSaveGame(savename);
-			WriteSaveGame(_Universe->AccessCockpit(), false);
+			result = WriteSaveGame(_Universe->AccessCockpit(), false);
+			if (result != true) {
+				UniverseUtil::setCurrentSaveGame(oldsavename);
+			}
 		}
+		return result;
 	}
 
 	void showSplashScreen(const string &filename) {

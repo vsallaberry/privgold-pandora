@@ -178,12 +178,12 @@ std::string GetReadPlayerSaveGame(int num) {
 }
 
 // Used only to copy a savegame to a different named one
-void SaveFileCopy (const char * src, const char * dst) {
+bool SaveFileCopy (const char * src, const char * dst) {
   if (dst[0]!='\0'&&src[0]!='\0') {
 
-  VSFile f;
-  VSError err = f.OpenReadOnly( src, SaveFile);
-  if (err<=Ok) {
+    VSFile f;
+    VSError err = f.OpenReadOnly( src, SaveFile);
+    if (err<=Ok) {
       string savecontent = f.ReadFull();
 	  f.Close();
       err = f.OpenCreateWrite( dst, SaveFile);
@@ -191,12 +191,17 @@ void SaveFileCopy (const char * src, const char * dst) {
 		f.Write( savecontent);
 	    f.Close();
       }
-	  else
+	  else {
 	  	GAME_LOG(logvs::WARN, "WARNING : couldn't open savegame to copy to : %s as SaveFile", dst);
+	  	return false;
+	  }
+    }
+    else {
+  	  GAME_LOG(logvs::WARN, "WARNING : couldn't find the savegame to copy : %s as SaveFile", src);
+  	  return false;
+    }
   }
-  else
-  	GAME_LOG(logvs::WARN, "WARNING : couldn't find the savegame to copy : %s as SaveFile", src);
-  }
+  return true;
 }
 
 class MissionStringDat {
@@ -246,7 +251,7 @@ QVector SaveGame::GetPlayerLocation () {
   return PlayerLocation;
 }
 
-void SaveGame::RemoveUnitFromSave (long address) {
+void SaveGame::RemoveUnitFromSave (void * address) {
   /*
   SavedUnits *tmp;
   if (NULL!=(tmp =savedunits->Get (address))) {
@@ -299,7 +304,7 @@ std::string FixEncodingInString(const std::string & str) {
         }
     }
     if (strcmp(fixed.c_str(), str.c_str())) {
-        GAME_LOG(logvs::INFO, "The SaveGame data '%s' has been fixed to '%s'", str.c_str(), fixed.c_str());
+        GAME_LOG(logvs::INFO, "The SaveGame data '%s' has been fixed.", fixed.c_str());
     }
     return fixed;
 }
@@ -328,7 +333,7 @@ string createPipedString(vector <string> s) {
     ret+=s.back();
   return ret;
 }
-void CopySavedShips(std::string filename, int player_num, const std::vector<std::string> &starships, bool load) {
+bool CopySavedShips(std::string filename, int player_num, const std::vector<std::string> &starships, bool load) {
   Cockpit * cp = _Universe->AccessCockpit(player_num);
   for (int i=0;i<starships.size();i+=2) {
     if (i==2) i=1;
@@ -354,19 +359,18 @@ void CopySavedShips(std::string filename, int player_num, const std::vector<std:
                     starships[i].c_str(),
                 srcnam.c_str(),
                 dstnam.c_str());
-        
+        return false;
       }
     }else {
       GAME_LOG(logvs::ERROR, "Error: Cannot Open Unit %s from save file %s.",
               starships[i].c_str(),
               srcnam.c_str());
-      
+      return false;
     }        
   }
-
+  return true;
 }
-void WriteSaveGame (Cockpit * cp,bool auto_save) {
-  
+bool WriteSaveGame (Cockpit * cp,bool auto_save) {
   int player_num= 0;
   for (int kk=0;kk<_Universe->numPlayers();++kk) {
     if (_Universe->AccessCockpit(kk)==cp)
@@ -374,21 +378,28 @@ void WriteSaveGame (Cockpit * cp,bool auto_save) {
   }
   Unit * un = cp->GetSaveParent();
   if (!un) {
-    return;
+    return true;
   }
   if (un->GetHull()>0) {
     GAME_LOG(logvs::NOTICE, "WriteSaveGame '%s' (auto:%d)", GetCurrentSaveGame().c_str(), auto_save);
-    cp->savegame->WriteSaveGame (cp->activeStarSystem->getFileName().c_str(),un->LocalPosition(),cp->credits,cp->unitfilename,auto_save?-1:player_num);
-    un->WriteUnit(cp->GetUnitModifications().c_str());
+    if (cp->savegame->WriteSaveGame (cp->activeStarSystem->getFileName().c_str(),
+    		                         un->LocalPosition(),cp->credits,cp->unitfilename,auto_save?-1:player_num).empty()) {
+    	return false;
+    }
+    if (un->WriteUnit(cp->GetUnitModifications().c_str()) != true) {
+    	return false;
+    }
     if (GetWritePlayerSaveGame(player_num).length()&&!auto_save) {
       cp->savegame->SetSavedCredits (_Universe->AccessCockpit()->credits);
       cp->savegame->SetStarSystem(cp->activeStarSystem->getFileName());
       //      un->WriteUnit(GetWritePlayerSaveGame(player_num).c_str());
       cp->savegame->SetPlayerLocation(un->LocalPosition());    
-      CopySavedShips(cp->GetUnitModifications(),player_num,cp->unitfilename,false);
+      if (CopySavedShips(cp->GetUnitModifications(),player_num,cp->unitfilename,false) != true) {
+    	  return false;
+      }
     }
   }
-
+  return true;
 }
 int hopto (char *buf,char endln, char endln2,int readlen) {
   if (endln==' '||endln2==' ') {
@@ -432,7 +443,7 @@ void SaveGame::ReadNewsData (char * &buf, bool just_skip) {
     }
   }
 }
-void SaveGame::AddUnitToSave (const char * filename, int type, const char * faction, long address) 
+void SaveGame::AddUnitToSave (const char * filename, int type, const char * faction, void * address) 
 {
   if(game_options.Drone.compare(filename)){
     RemoveUnitFromSave (address);
@@ -886,12 +897,14 @@ string SaveGame::WriteSaveGame (const char *systemname, const QVector &FP, float
 			{// AND THEN COPY IT TO THE SPECIFIED SAVENAME (from save.4.x.txt)
 				last_pickled_data =last_written_pickled_data;
 				string sg =GetWritePlayerSaveGame(player_num);
-				SaveFileCopy (outputsavegame.c_str(),sg.c_str());     
+				if (SaveFileCopy (outputsavegame.c_str(),sg.c_str()) != true)
+					return std::string();
 			}
 		}
 		else
 		{// error occured while opening file
-			GAME_LOG(logvs::WARN, "occured while opening file: %s", outputsavegame.c_str());
+			GAME_LOG(logvs::WARN, "an error occured while opening file: %s", outputsavegame.c_str());
+			return std::string();
 		}
 	}	
   }

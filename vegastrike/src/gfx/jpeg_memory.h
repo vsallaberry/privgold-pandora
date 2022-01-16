@@ -5,7 +5,7 @@
 #define __JPEG_MEMORY_H
 #include <string.h>
 /* BAD BAD!!
-#if defined( _WIN32) && !defined( __CYGWIN__)
+#if defined( _WIN32) && !(defined( __CYGWIN__) || defined(__MINGW32__))
 #ifndef HAVE_BOOLEAN
 #define HAVE_BOOLEAN
 #define FALSE 0
@@ -18,11 +18,11 @@ typedef int INT32;
 #endif
 #endif
 */
-#if defined( _WIN32) && !defined( __CYGWIN__)
+#if defined( _WIN32) && !(defined( __CYGWIN__) || defined(__MINGW32__))
 #include <windows.h>
 #endif
 #include "vsfilesystem.h"
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(HAVE_BOOLEAN)
 #define XMD_H
 #undef HAVE_BOOLEAN
 #define boolean boolean1

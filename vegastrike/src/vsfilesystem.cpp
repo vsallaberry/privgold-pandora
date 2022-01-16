@@ -1,12 +1,33 @@
+/*
+ * Vega Strike
+ * Copyright (C) 2001-2021 VegaStrike developers
+ *
+ * http://vegastrike.sourceforge.net/
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+#include "config.h"
+#include <string.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
-#if defined(_WIN32) && !defined(__CYGWIN__)
-#include <direct.h>
-#include <config.h>
-#include <string.h>
-#include <windows.h>
 #include <stdlib.h>
+
+#if defined(_WIN32) && !(defined(__CYGWIN__))// || defined(__MINGW32__))
+# include <direct.h>
+# include <windows.h>
 struct dirent { char d_name[1]; };
 #else
 #include <unistd.h>
@@ -14,8 +35,8 @@ struct dirent { char d_name[1]; };
 #include <sys/types.h>
 #include <dirent.h>
 #endif
+
 #include <sys/stat.h>
-#include "config.h"
 #include "configxml.h"
 #include "vsfilesystem.h"
 #include "vs_globals.h"
@@ -26,6 +47,99 @@ struct dirent { char d_name[1]; };
 
 #include "gnuhash.h"
 
+#include "unicode.h"
+
+#ifdef _WIN32
+# include <shlobj.h>
+namespace VSFileSystem {
+# if !defined(VS_HOME_INSIDE_DATA)
+#  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
+#   include <shlwapi.h>
+static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+	PWSTR pszPath = NULL;
+	HRESULT ret;
+	ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
+	if (pszPath == NULL)
+		return S_OK-1;
+	if (ret == S_OK)
+		StrCpyW(wappdata, pszPath);
+	CoTaskMemFree((LPVOID)pszPath);
+	return ret;
+}
+#  else
+static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+	return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
+}
+#  endif
+# endif
+wchar_t * utf8_to_wchar(const char * s) {
+	if (!s) 
+		return NULL;
+	size_t len = strlen(s);
+	if (!len) 
+		return NULL;
+	wchar_t * news = (wchar_t*)malloc((len+1) * sizeof(wchar_t));
+	if (!news) 
+		return NULL;
+	size_t newlen = 0;
+	for (Utf8Iterator it = Utf8Iterator::begin(s, len); it != it.end(); ++it, ++newlen) {
+		news[newlen] = *it;
+	}
+	news[newlen]=0;
+	return news;
+}
+int 	vs_mkdir(const char * path, mode_t mode) {
+	(void)mode;
+	wchar_t * wfilename = utf8_to_wchar(path);
+	if (wfilename == NULL) {
+		return -1;
+	}
+	int res = _wmkdir(wfilename);
+	free(wfilename);
+	return res;
+}
+FILE * 	vs_fopen(const char * path, const char * mode) {
+	wchar_t * wfilename = utf8_to_wchar(path);
+	wchar_t * wmode = utf8_to_wchar(mode);
+	FILE * res = NULL;
+	if (wfilename != NULL && wmode != NULL) {
+		res = _wfopen(wfilename, wmode);
+	}
+	if (wfilename != NULL)	free(wfilename);
+	if (wmode != NULL) 		free(wmode);
+	return res;
+}
+char * 	vs_getcwd(char * path, size_t size) {
+	WCHAR wpath[PATH_MAX];
+	wchar_t * res = _wgetcwd(wpath, PATH_MAX);
+	size_t n8 = 0;
+	for (size_t n16 = 0; n8 + 1 < size && wpath[n16]; ++n16) {
+		n8 += utf32_to_utf8(path + n8, wpath[n16]);
+	}
+	if (n8 < size)
+		path[n8] = 0;
+	return path;
+}
+int 	vs_chdir(const char * path) {
+	wchar_t * wfilename = utf8_to_wchar(path);
+	if (wfilename == NULL) {
+		return -1;
+	}
+	int res = _wchdir(wfilename);
+	free(wfilename);
+	return res;
+}
+int 	vs_stat(const char * path, struct stat * st) {
+	wchar_t * wfilename = utf8_to_wchar(path);
+	if (wfilename == NULL) {
+		return -1;
+	}
+	int res = wstat(wfilename, st);
+	free(wfilename);
+	return res;
+}
+} // ! namespace VSFileSystem
+#endif
 
 using VSFileSystem::VSVolumeType;
 using VSFileSystem::VSFSNone;
@@ -91,7 +205,7 @@ int	selectdirs( const struct dirent * entry)
 	std::string tmp=selectcurrentdir+'/'+entry->d_name;
 	//cerr<<"Read directory entry : "<< tmp <<endl;
 	struct stat s;
-	if( stat( tmp.c_str(), &s)<0)
+	if( VSFileSystem::vs_stat(tmp.c_str(), &s) < 0)
 		return 0;
 	if( (s.st_mode & S_IFDIR))
 	{
@@ -140,13 +254,13 @@ std::string vegastrike_cwd;
 		{
 			char pwd[8192];
 			pwd[0]='\0';
-			getcwd(pwd,8191);
+			vs_getcwd(pwd,8191);
 			pwd[8191]='\0';
 			vegastrike_cwd = pwd;
 		}
 		int ret = -1; /* Should it use argv[0] directly? */
 		char *program = argv0;
-#ifndef _WIN32
+#if defined(linux) || defined(__linux__)
 		char buf[65536];
 		{
 			char linkname[128]; /* /proc/<pid>/exe */
@@ -187,7 +301,7 @@ std::string vegastrike_cwd;
 
 		*c = '\0';             /* cut off last part (binary name) */
 		if (strlen (parentdir)>0) {
-			chdir (parentdir);/* chdir to the binary app's parent */
+			vs_chdir (parentdir);/* chdir to the binary app's parent */
 		}
 		delete []parentdir;
 	}
@@ -392,18 +506,18 @@ std::string vegastrike_cwd;
 			if( !use_volumes && (string( mode) == "rb" || string( mode) == "r"))
 			{
 				string output("");
-				fp = fopen( fullpath.c_str(), mode);
+				fp = vs_fopen( fullpath.c_str(), mode);
 				if( !fp)
 				{
 					fullpath = string(filename);
 					output += fullpath+"... NOT FOUND\n\tTry loading : "+fullpath;
-					fp = fopen( fullpath.c_str(), mode);
+					fp = vs_fopen( fullpath.c_str(), mode);
 				}
 				if( !fp)
 				{
 					fullpath = datadir+"/"+string(filename);
 					output += "... NOT FOUND\n\tTry loading : "+fullpath;
-					fp = fopen( fullpath.c_str(), mode);
+					fp = vs_fopen( fullpath.c_str(), mode);
 				}
                                 if (VSFS_DEBUG()) {
                                   if( fp){
@@ -416,7 +530,7 @@ std::string vegastrike_cwd;
 			}
 			else
 			{
-				fp = fopen( fullpath.c_str(), mode);
+				fp = vs_fopen( fullpath.c_str(), mode);
 				if( fp)
 				{
                                   if (VSFS_DEBUG()>2)
@@ -532,8 +646,9 @@ std::string vegastrike_cwd;
 	void	InitHomeDirectory()
 	{
 		// Setup home directory
+#if !defined(VS_HOME_INSIDE_DATA)
+# if !defined(_WIN32)
 		char * chome_path = NULL;
-#ifndef _WIN32
 		struct passwd *pwent;
 		pwent = getpwuid (getuid());
 		chome_path = pwent->pw_dir;
@@ -542,13 +657,30 @@ std::string vegastrike_cwd;
 			cerr<<"!!! ERROR : home directory not found"<<endl;
 			VSExit(1);
 		}
-		string user_home_path( chome_path);
-		homedir = user_home_path+"/"+HOMESUBDIR;
+		homedir = string(chome_path) + "/" + HOMESUBDIR;
+# else
+		unicodeInitLocale();
+		WCHAR wappdata_path[PATH_MAX];
+		CHAR appdata_path[PATH_MAX];
+		if (vs_win32_get_appdata(wappdata_path) != S_OK) {
+			homedir = datadir + "/" + HOMESUBDIR;
+		} else {
+            size_t i8 = 0;
+			for (size_t i16 = 0; wappdata_path[i16]; ++i16) {
+				i8 += utf32_to_utf8(appdata_path + i8, wappdata_path[i16]);
+			}
+			appdata_path[i8] = 0;
+			size_t idx = HOMESUBDIR.size() && HOMESUBDIR[0] == '.' ? 1 : 0;
+			homedir = string(appdata_path) + "/" + HOMESUBDIR.substr(idx);
+		}
+# endif
 #else
-		homedir = datadir+"/"+HOMESUBDIR;
+		homedir = datadir + "/" + HOMESUBDIR;
 #endif
-		cerr<<"USING HOMEDIR : "<<homedir<< " As the home directory "<<endl;
-		CreateDirectoryAbs( homedir);
+		cerr << "USING HOMEDIR : " << homedir << " As the home directory " << endl;
+		if (CreateDirectoryAbs(homedir) > Ok) {
+			VSExit(1);
+		}
 	}
 
 	void	InitDataDirectory()
@@ -607,18 +739,18 @@ std::string vegastrike_cwd;
 			if( FileExists( (*vsit), config_file)>=0)
 			{
 				cerr<<"Found data in "<<(*vsit)<<endl;
-				getcwd( tmppath, 16384);
+				vs_getcwd( tmppath, 16384);
 				if( (*vsit).substr( 0, 1) == ".")
 					datadir = string( tmppath)+"/"+(*vsit);
 				else
 					datadir = (*vsit);
 
-				if( chdir( datadir.c_str())<0)
+				if( vs_chdir( datadir.c_str())<0)
 				{
 					cerr<<"Error changing to datadir"<<endl;
 					exit(1);
 				}
-				getcwd( tmppath, 16384);
+				vs_getcwd( tmppath, 16384);
 				datadir = string( tmppath);
 
 				cerr<<"Using "<<datadir<<" as data directory"<<endl;
@@ -627,13 +759,13 @@ std::string vegastrike_cwd;
 		}
 		data_paths.clear();
 		string versionloc=datadir+"/Version.txt";
-		FILE * version = fopen (versionloc.c_str(),"r");
+		FILE * version = vs_fopen (versionloc.c_str(),"r");
 		if (!version) {
 			versionloc=datadir+"Version.txt";
-			version=fopen(versionloc.c_str(),"r");
+			version=vs_fopen(versionloc.c_str(),"r");
 		}
 		if (!version) {
-			version=fopen("Version.txt","r");
+			version=vs_fopen("Version.txt","r");
 		}
 		if (version) {
 			string hsd="";
@@ -749,8 +881,10 @@ std::string vegastrike_cwd;
 			}
 		}else if (subdir!="") {
                   printf ("Using Mod Directory %s\n",moddir.c_str());
-                  CreateDirectoryHome( "mods");
-                  CreateDirectoryHome("mods/"+subdir);
+                  if (CreateDirectoryHome( "mods") > Ok
+                  ||  CreateDirectoryHome("mods/"+subdir) > Ok) {
+                	  VSExit(1);
+				  }
                   //datadir = moddir+"/"+subdir;
                   homedir = homedir+"/mods/"+subdir;
                 }
@@ -947,14 +1081,16 @@ std::string vegastrike_cwd;
 		VS_LOG("config", logvs::NOTICE, "SIMULATION_ATOM: %f", SIMULATION_ATOM);
 
 		/************************* Home directory subdirectories creation ************************/
-		CreateDirectoryHome( savedunitpath);
-		CreateDirectoryHome( sharedtextures);
-		CreateDirectoryHome( sharedtextures+"/backgrounds");
-		CreateDirectoryHome( sharedsectors);
-		CreateDirectoryHome( sharedsectors+"/"+universe_name);
-		CreateDirectoryHome( sharedsounds);
-		CreateDirectoryHome( "save");
-		CreateDirectoryHome( "generatedbsp");
+		if (CreateDirectoryHome( savedunitpath) > Ok
+		||  CreateDirectoryHome( sharedtextures) > Ok
+		||  CreateDirectoryHome( sharedtextures+"/backgrounds") > Ok
+		||  CreateDirectoryHome( sharedsectors) > Ok
+		||  CreateDirectoryHome( sharedsectors+"/"+universe_name) > Ok
+		||  CreateDirectoryHome( sharedsounds) > Ok
+		||  CreateDirectoryHome( "save") > Ok
+		||  CreateDirectoryHome( "generatedbsp") > Ok) {
+			VSExit(1);
+		}
 
 
 		// We will be able to automatically add mods files (set of resources or even directory structure similar to the data tree)
@@ -1042,36 +1178,33 @@ std::string vegastrike_cwd;
 		}
 	}
 
-	void	CreateDirectoryAbs( const char * filename)
+	VSError	CreateDirectoryAbs( const char * filename)
 	{
-		int err;
+		int err = -1;
 		if( !DirectoryExists( filename))
 		{
-			err = mkdir (filename
-#if !defined( _WIN32) || defined( __CYGWIN__)
-				,0xFFFFFFFF
-#endif
-			);
+			err = vs_mkdir(filename, 0xFFFFFFFF);
 			if( err<0 && errno!=EEXIST)
 			{
-				cerr<<"Errno="<<errno<<" - FAILED TO CREATE : "<<filename<<endl;
+				VS_LOG("game", logvs::ERROR, "Errno=%d - FAILED TO CREATE : %s", errno, filename);
 				GetError("CreateDirectory");
-				VSExit(1);
+				return Unspecified;
 			}
 		}
+		return Ok;
 	}
 
-	void	CreateDirectoryAbs( const string &filename) { CreateDirectoryAbs( filename.c_str()); }
-	void	CreateDirectoryHome( const char * filename) { CreateDirectoryAbs( homedir+"/"+string( filename)); }
-	void	CreateDirectoryHome( const string &filename) { CreateDirectoryHome( filename.c_str()); }
-	void	CreateDirectoryData( const char * filename) { CreateDirectoryAbs( datadir+"/"+string( filename)); }
-	void	CreateDirectoryData( const string &filename) { CreateDirectoryData( filename.c_str()); }
+	VSError	CreateDirectoryAbs( const string &filename) { return CreateDirectoryAbs( filename.c_str()); }
+	VSError	CreateDirectoryHome( const char * filename) { return CreateDirectoryAbs( homedir+"/"+string( filename)); }
+	VSError	CreateDirectoryHome( const string &filename) { return CreateDirectoryHome( filename.c_str()); }
+	VSError	CreateDirectoryData( const char * filename) { return CreateDirectoryAbs( datadir+"/"+string( filename)); }
+	VSError	CreateDirectoryData( const string &filename) { return CreateDirectoryData( filename.c_str()); }
 
 	// Absolute directory -- DO NOT USE FOR TESTS IN VOLUMES !!
 	bool	DirectoryExists( const char * filename)
 	{
 		struct stat s;
-		if( stat( filename, &s)<0)
+		if( vs_stat(filename, &s) < 0)
 			return false;
 		if( s.st_mode & S_IFDIR)
 		{
@@ -1113,7 +1246,7 @@ std::string vegastrike_cwd;
                         //      isin_bigvolumes = VSFSNone;
                         //    }
 			//}else {
-			    if( stat( fullpath.c_str(), &s) >= 0){
+			    if( vs_stat(fullpath.c_str(), &s) >= 0){
 				if( s.st_mode & S_IFDIR) {
 				    cerr<<" File is a directory ! ";
 				    found = -1;
@@ -1250,27 +1383,27 @@ std::string vegastrike_cwd;
 
 	VSError GetError( const char * str)
 	{
-			cerr<<"!!! ERROR/WARNING VSFile : ";
+			logvs::vs_printf("!!! ERROR/WARNING VSFile : ");
 			if( str)
-				cerr<<"on "<<str<<" : ";
+				logvs::vs_printf("on %s : ", str);
 			if( errno==ENOENT)
 			{
-				cerr<<"File not found"<<endl;
+				logvs::vs_printf("File not found\n");
 				return FileNotFound;
 			}
 			else if( errno==EPERM)
 			{
-				cerr<<"Permission denied"<<endl;
+				logvs::vs_printf("Permission denied\n");
 				return LocalPermissionDenied;
 			}
 			else if( errno==EACCES)
 			{
-				cerr<<"Access denied"<<endl;
+				logvs::vs_printf("Access denied\n");
 				return LocalPermissionDenied;
 			}
 			else
 			{
-				cerr<<"Unspecified error (maybe to document in VSFile ?)"<<endl;
+				logvs::vs_printf("Unspecified error (maybe to document in VSFile ?)\n");
 				return Unspecified;
 			}
 	}
@@ -1596,7 +1729,7 @@ std::string vegastrike_cwd;
 				}
 				else
 				{
-					if( (this->fp = fopen( filestr.c_str(), "rb"))==NULL)
+					if( (this->fp = vs_fopen( filestr.c_str(), "rb"))==NULL)
 					{
 						cerr<<"!!! SERIOUS ERROR : failed to open Unknown file "<<filestr<<" - this should not happen"<<endl;
 						VSExit(1);
@@ -1615,7 +1748,7 @@ std::string vegastrike_cwd;
 					return FileNotFound;
 				}
 				filestr = this->GetFullPath();
-				this->fp = fopen( filestr.c_str(), "rb");
+				this->fp = vs_fopen( filestr.c_str(), "rb");
 				if( !this->fp)
 				{
 					cerr<<"!!! SERIOUS ERROR : failed to open "<<filestr<<" - this should not happen"<<endl;
@@ -1644,7 +1777,7 @@ std::string vegastrike_cwd;
 				if( this->volume_type==VSFSNone || (this->alt_type!=this->file_type && !UseVolumes[this->alt_type]))
 				{
 					filestr = this->GetFullPath();
-					this->fp = fopen( filestr.c_str(), "rb");
+					this->fp = vs_fopen( filestr.c_str(), "rb");
 					if( !this->fp)
 					{
 						cerr<<"!!! SERIOUS ERROR : failed to open "<<filestr<<" - this should not happen"<<endl;
@@ -1710,17 +1843,19 @@ std::string vegastrike_cwd;
 		if( type==SystemFile)
 		{
 			string dirpath( sharedsectors+"/"+universe_name);
-			CreateDirectoryHome( dirpath);
-			CreateDirectoryHome( dirpath+"/"+getStarSystemSector( this->filename));
+			if (CreateDirectoryHome( dirpath) > Ok
+			||  CreateDirectoryHome( dirpath+"/"+getStarSystemSector( this->filename)) > Ok) {
+				return LocalPermissionDenied;
+			}
 			string fpath( homedir+"/"+dirpath+"/"+this->filename);
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
 		else if( type==TextureFile)
 		{
 			string fpath( homedir+"/"+sharedtextures+"/"+this->filename);
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
@@ -1729,28 +1864,28 @@ std::string vegastrike_cwd;
 			string fpath( homedir+"/"+savedunitpath+"/"+this->filename);
 			this->rootname = homedir;
 			this->directoryname = savedunitpath;
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
 		else if( type==SaveFile)
 		{
 			string fpath( homedir+"/save/"+this->filename);
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
 		else if( type==BSPFile)
 		{
 			string fpath( homedir+"/generatedbsp/"+this->filename);
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
 		else if( type==AccountFile)
 		{
 			string fpath( datadir+"/accounts/"+this->filename);
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
@@ -1759,7 +1894,7 @@ std::string vegastrike_cwd;
 			string fpath( homedir+"/"+this->filename);
 			this->rootname=homedir;
 			this->directoryname="";
-			this->fp = fopen( fpath.c_str(), "wb");
+			this->fp = vs_fopen( fpath.c_str(), "wb");
 			if( !fp)
 				return LocalPermissionDenied;
 		}
@@ -2061,7 +2196,7 @@ std::string vegastrike_cwd;
 		if( !UseVolumes[alt_type] || this->volume_type==VSFSNone || file_mode!=ReadOnly)
 		{
 			fclose( fp);
-			this->fp = fopen( this->GetFullPath().c_str(), "w+b");
+			this->fp = vs_fopen( this->GetFullPath().c_str(), "w+b");
 			// This should not happen
 			if( !fp)
 			{

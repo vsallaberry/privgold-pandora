@@ -36,8 +36,15 @@
 #include <pwd.h>
 #endif
 
-#ifdef HAVE_FNMATCH_H
+#if defined(HAVE_FNMATCH_H)
 # include <fnmatch.h>
+#else
+# if defined(_WIN32)
+#  include <shlwapi.h>
+# elif defined(HAVE_REGEX_H)
+#  include <regex.h>
+# endif
+# define FNM_CASEFOLD (1 << 0)
 #endif
 
 #include <expat.h>
@@ -312,12 +319,46 @@ class MsgFnMatchItPattern : public MessageStrEqualPred { // the pattern is in it
         virtual ~MsgFnMatchItPattern() {}
         virtual bool operator() (const std::string & other) const {
             //fprintf(stderr, "fnMatchItPattern other=%p str=%p\n", other.c_str(), _str.c_str());
-#          ifdef HAVE_FNMATCH_H
             return (fnmatch(other.c_str(), _str.c_str(), FNM_CASEFOLD) == 0);
-#          else
-            return other == _str;
-#          endif
         }
+    protected:
+#     if !defined(HAVE_FNMATCH_H)
+#      if defined(_WIN32)
+        int fnmatch(const char * p, const char * str, int flags) const {
+        	return PathMatchSpecA(str, p) != TRUE;
+        }
+#      elif defined(HAVE_REGEX_H)
+        int fnmatch(const char * p, const char * str, int flags) const {
+        	regex_t re;
+        	char repattern[1024];
+        	int ret, bracket = 0;
+        	size_t i;
+        	for (i = 0; *p && i + 1 < sizeof(repattern); ++i, ++p) {
+        		if (*p == '\\') { repattern[i++] = *p++; repattern[i] = *p; }
+        		else if (!bracket) {
+        			if (*p == '?') repattern[i] = '.';
+        			else if (*p == '*') { repattern[i++] = '.'; repattern[i] = '*'; }
+        			else if (*p == '(' || *p == ')' || *p == '{' || *p == '}' || *p == '+') {
+        				repattern[i++] = '\\'; repattern[i] = *p;
+        			} else repattern[i] = *p;
+        			if (*p == '[') bracket = 1;
+        		} else {
+        			repattern[i] = *p;
+        			if (*p == ']' && *(p+1) != ']') bracket = 0;
+        		}
+        	}
+        	repattern[i] = 0;
+        	//fprintf(stderr, "***** RE : %s , str : %s\n", repattern, str);
+        	if (regcomp(&re, repattern, REG_EXTENDED | ((flags & FNM_CASEFOLD) != 0 ? REG_ICASE : 0)) != 0)
+        		return -1;
+        	ret = regexec(&re, str, 0, NULL, 0);
+        	regfree(&re);
+        	return ret;
+        }
+#      else
+        int fnmatch(const char * p, const char * str, int flags) const { return strcmp(p, str); }	
+#      endif
+#     endif
 };
 
 typedef MessageWhoPredicate<MsgFnMatchItPattern> MessageWhoFnMatchPred;

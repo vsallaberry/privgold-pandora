@@ -578,15 +578,15 @@ void GameUnit<UnitType>::Draw(const Transformation &parent, const Matrix &parent
         while (spawn-- > 0) {
 		    switch (switcher) {
 		    case 5:
-			    LaunchOneParticle(*ctm,this->GetVelocity(),((long)this)+165,this,damagelevel,this->faction);
+			    LaunchOneParticle(*ctm,this->GetVelocity(),((size_t)this)+165,this,damagelevel,this->faction);
 		    case 4:
-			    LaunchOneParticle(*ctm,this->GetVelocity(),((long)this)+47,this,damagelevel,this->faction);
+			    LaunchOneParticle(*ctm,this->GetVelocity(),((size_t)this)+47,this,damagelevel,this->faction);
 		    case 3:
-			    LaunchOneParticle(*ctm,this->GetVelocity(),((long)this)+61,this,damagelevel,this->faction);
+			    LaunchOneParticle(*ctm,this->GetVelocity(),((size_t)this)+61,this,damagelevel,this->faction);
 		    case 2:
-			    LaunchOneParticle(*ctm,this->GetVelocity(),((long)this)+65537,this,damagelevel,this->faction);			
+			    LaunchOneParticle(*ctm,this->GetVelocity(),((size_t)this)+65537,this,damagelevel,this->faction);			
 		    default:
-			    LaunchOneParticle(*ctm,this->GetVelocity(),((long)this)+257,this,damagelevel,this->faction);
+			    LaunchOneParticle(*ctm,this->GetVelocity(),((size_t)this)+257,this,damagelevel,this->faction);
 		    }
         }
 	}

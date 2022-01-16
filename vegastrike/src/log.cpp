@@ -27,8 +27,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#ifndef _WIN32
-#include <unistd.h>
+
+#if defined(_WIN32)
+# define flockfile(f)   _lock_file(f)
+# define funlockfile(f) _unlock_file(f)
+# if defined(__CYGWIN__) || defined(__MINGW32__)
+#  include <io.h>
+# endif
+#else
+# include <unistd.h>
 #endif
 
 #include "log.h"
@@ -229,15 +236,21 @@ unsigned int vs_log_level(const std::string & category, bool store) {
     LogMap::const_iterator it = log_map.find(category);
     
     if (it == log_map.end()) {
-#ifndef VS_LOG_NO_XML
-        if (vs_config == NULL) {
-#endif
+#ifdef VS_LOG_NO_XML
+    	if (log_level_default == -1) {
+    		log_level_default = VSLOG_LEVEL_DEFAULT;
+    		log_colorize = -1;
+    	}
+    	loglevel = log_level_default;
+#else
+    	if (vs_config == NULL) {
             if (log_level_default == -1) {
-                log_level_default = VSLOG_LEVEL_DEFAULT;
+            	loglevel = VSLOG_LEVEL_DEFAULT;
                 log_colorize = -1;
+            } else {
+            	loglevel = log_level_default;
             }
-            loglevel = log_level_default;
-#ifndef VS_LOG_NO_XML
+            store = false;
         } else {
             if (log_level_default == -1) {
 
@@ -258,9 +271,11 @@ unsigned int vs_log_level(const std::string & category, bool store) {
             log_map.insert(std::make_pair(category, loglevel));
         }
         
-        VS_LOG("log", logvs::NOTICE, "%s log entry '%s' = %s (%u)",
-               store ? "creating" : "getting",
-               category.c_str(), log_level_name(loglevel), loglevel);
+        if (store || log_level_default >= 0) {
+        	VS_LOG("log", logvs::NOTICE, "%s log entry '%s' = %s (%u)",
+        		   store ? "creating" : "getting",
+                   category.c_str(), log_level_name(loglevel), loglevel);
+    	}
     } else {
         loglevel = it->second;
     }

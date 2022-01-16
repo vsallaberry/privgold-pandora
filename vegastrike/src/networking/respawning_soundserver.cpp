@@ -13,6 +13,8 @@
 #include "lin_time.h"
 #include <sys/types.h>
 #include <pwd.h>
+#include "vsfilesystem.h"
+
 using std::string;
 //assumes null termination;
 float fadein=0;
@@ -91,7 +93,7 @@ pid_t F0rkProcess (int close_this_socket,int &write, int &read) {
     changehome(true,true);
     write = mkstemp (writer);
     int tmpread = mkstemp (reader);
-    getcwd (pwd,32766);
+    VSFileSystem::vs_getcwd (pwd,32766);
     changehome(false,false);
     strcat (pwd,"/");
     strcpy (writer_str,pwd);
@@ -147,21 +149,21 @@ void changehome (bool to, bool linuxhome=true) {
   static std::vector <std::string> paths;
   if (to) {
     char mycurpath[8192];
-    getcwd(mycurpath,8191);
+    VSFileSystem::vs_getcwd(mycurpath,8191);
     mycurpath[8191]='\0';
     paths.push_back (mycurpath);
 #ifndef _WIN32
     if (linuxhome) {
       struct passwd *pwent;
       pwent = getpwuid (getuid());
-      chdir (pwent->pw_dir);
+      VSFileSystem::vs_chdir (pwent->pw_dir);
     }
 #endif
-    mkdir (".vegastrike",0xffffffff);
-    chdir (".vegastrike");
+    VSFileSystem::vs_mkdir (".vegastrike",0xffffffff);
+    VSFileSystem::vs_chdir (".vegastrike");
   }else {
     if (!paths.empty()) {
-      chdir (paths.back().c_str());
+    	VSFileSystem::vs_chdir (paths.back().c_str());
       paths.pop_back();
     }
   }

@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "unit_bsp.h"
 #include "vsfilesystem.h"
+#include "vs_log_modules.h"
 
 using namespace VSFileSystem;
 
@@ -144,7 +145,7 @@ bsp_tree * buildbsp(bsp_tree * bsp,vector <bsp_polygon> &tri, vector <bsp_tree> 
       select = rand()%tri.size();
     }
     if (select >=tri.size()) {
-      VSFileSystem::vs_fprintf (stderr,"Error Selecting tri for splittage");
+      UNIT_LOG(logvs::ERROR, "Error Selecting tri for splittage");
       return NULL;
     }	
     temp->a=triplane[select].a;
@@ -350,9 +351,9 @@ void bsp_stats (bsp_tree * tree) {
     if (numends>0)
       average_height /=numends;
   }
-  VSFileSystem::vs_fprintf (stderr,"Num Nodes: %d, NumEnds: %d\n", numnodes,numends);
-  VSFileSystem::vs_fprintf (stderr,"Min Height: %d, Max Height: %d\n",minheight, maxheight);
-  VSFileSystem::vs_fprintf (stderr,"Average Height %f\n", average_height);
+  UNIT_LOG(logvs::NOTICE, "unit_bsp: Num Nodes: %d, NumEnds: %d", numnodes,numends);
+  UNIT_LOG(logvs::NOTICE,"unit_bsp: Min Height: %d, Max Height: %d",minheight, maxheight);
+  UNIT_LOG(logvs::NOTICE, "unit_bsp: Average Height %f", average_height);
 }
 
 static void display_bsp_tree(bsp_tree * tree)

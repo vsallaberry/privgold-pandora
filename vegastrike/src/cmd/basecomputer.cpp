@@ -5874,10 +5874,18 @@ bool BaseComputer::actionConfirmedSaveGame() {
 			if (tmp.length()>0) {
 				Cockpit* cockpit = player?_Universe->isPlayerStarship(player):0;
 				if (player && cockpit) {
+					std::string oldsavename = UniverseUtil::getCurrentSaveGame();
 					UniverseUtil::setCurrentSaveGame(tmp);
-					WriteSaveGame(cockpit, false);
+					bool result = WriteSaveGame(cockpit, false);
+					if (result != true) {
+						UniverseUtil::setCurrentSaveGame(oldsavename);
+					}
 					loadLoadSaveControls();
-					showAlert("Game saved successfully.");
+					if (result) {
+						showAlert("Game saved successfully.");
+				    } else {
+						showAlert("Oops - game not saved.");
+					}
 				} else {
 					showAlert ("Oops - unexpected error (player or cockpit is null)");
 				}

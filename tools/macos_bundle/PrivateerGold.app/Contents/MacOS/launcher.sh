@@ -113,10 +113,14 @@ test -w "${log_file}" || log_file=/dev/stderr
 #
 # some x11 backward compatibility features
 #
-setenv DISPLAY :0.0 2>/dev/null
-export DISPLAY=:0.0 2>/dev/null
-setenv XAUTHORITY ~/.Xauthority 2>/dev/null
-export XAUTHORITY=~/.Xauthority 2>/dev/null
+if test -z "${DISPLAY}"; then
+    setenv DISPLAY :0.0 2>/dev/null || true
+    export DISPLAY=:0.0 2>/dev/null || true
+fi
+if test -z "${XAUTHORITY}"; then
+    setenv XAUTHORITY ~/.Xauthority 2>/dev/null || true
+    export XAUTHORITY=~/.Xauthority 2>/dev/null || true
+fi
 
 cd "${curdir}"
 echo
