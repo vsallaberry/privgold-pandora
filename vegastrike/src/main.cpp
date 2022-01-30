@@ -71,6 +71,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <sstream>
 
 #ifndef _WIN32
 #include <sys/signal.h>
@@ -122,7 +123,7 @@ enum {
 	VPB_SCM         = 1 << 5,
     VPB_ALL         = 0xffffffff
 };
-static void vs_print_buildinfo(std::ostream & out, int flags);
+static void vs_print_buildinfo(FILE * out, int flags);
 
 void enableNetwork(bool usenetwork) {
 	ignore_network = !usenetwork;
@@ -278,7 +279,7 @@ int main( int argc, char *argv[] )
 printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
 #endif
     /* Print copyright notice */
-	vs_print_buildinfo(std::cout, VPB_VERSION | VPB_SCM);
+    vs_print_buildinfo(stdout, VPB_VERSION | VPB_SCM);
 	std::cout << "See http://www.gnu.org/copyleft/gpl.html for license details." << std::endl << std::endl;
     /* Seed the random number generator */
 
@@ -295,7 +296,7 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     {
       string subdir=ParseCommandLine(argc,argv);
 
-      vs_print_buildinfo(std::cerr, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
+      vs_print_buildinfo(stderr, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
       std::cerr << std::endl;
         
       cerr<<"GOT SUBDIR ARG = "<<subdir<<endl;
@@ -930,7 +931,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
           exit(0);
         }
         else if(strcmp(lpCmdLine[i], "--version")==0) {
-          vs_print_buildinfo(std::cout, VPB_ALL & (~(VPB_VERSION | VPB_SCM)));
+          vs_print_buildinfo(stdout, VPB_ALL & (~(VPB_VERSION | VPB_SCM)));
           exit(0);
         }
       }
@@ -959,7 +960,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
 #if defined(HAVE_AL)
 # include "aldrv/al_globals.h"
 #endif
-static void vs_print_buildinfo(std::ostream & out, int flags) {
+static void vs_print_buildinfo(FILE * out, int flags) {
     (void)flags;
   #if defined(HAVE_SDL)
   # if defined(SDL_MAJOR_VERSION) && defined(SDL_MINOR_VERSION) && defined(SDL_PATCHLEVEL)
@@ -972,30 +973,26 @@ static void vs_print_buildinfo(std::ostream & out, int flags) {
   #endif
     
     if ((flags & VPB_VERSION)) {
-        out << "Vegastrike v" << VERSION
-        << std::endl;
+        fprintf(out, "Vegastrike v%s\n", VERSION);
     }
     if ((flags & VPB_SCM)) {
-        out << "revision " << SCM_VERSION << " from " << SCM_REMOTE
-        << std::endl;
+        fprintf(out, "revision %s from %s\n", SCM_VERSION, SCM_REMOTE);
     }
     if ((flags & VPB_ARCH)) {
-        out << POSH_GetArchString() << std::endl;
+        fprintf(out, "%s\n", POSH_GetArchString());
     }
     if (!(flags & (~(VPB_VERSION|VPB_ARCH|VPB_SCM))))
         return ;
-    out << "configured with:";
+    fprintf(out, "configured with:");
     if ((flags & VPB_CONFIGURE)) {
-        out << std::endl << "  " << CONFIGURE_CMD
-            << std::endl;
+        fprintf(out, "\n  %s\n", CONFIGURE_CMD);
     }
     if ((flags & VPB_BUILD)) {
-        out << std::endl << "  COMPILER: " << COMPILER
-            << std::endl << "  COMPILER_FLAGS: " << COMPILER_FLAGS
-            << std::endl;
+        fprintf(out, "\n  COMPILER: %s\n  COMPILER_FLAGS: %s\n", COMPILER, COMPILER_FLAGS);
     }
     if ((flags & VPB_LIBS)) {
-        out
+        std::ostringstream oss;
+        oss
       #if defined(HAVE_SDL)
         << std::endl << "  " << "SDL: " << sdlstr << " (h)"
       #endif
@@ -1052,5 +1049,6 @@ static void vs_print_buildinfo(std::ostream & out, int flags) {
         << std::endl << "  " << "ZLIB: " << ZLIB_VERSION << " (h)"
       #endif
         << std::endl;
+      fprintf(out, "%s", oss.str().c_str());
     }
 }
