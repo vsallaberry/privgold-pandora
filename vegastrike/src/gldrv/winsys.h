@@ -444,8 +444,8 @@ void winsys_set_kb_mode(unsigned int unicode, int delay_ms, int interval_ms,
 void winsys_warp_pointer( int x, int y );
 void winsys_show_cursor( bool visible );
 
-void winsys_init( int *argc, char **argv, char *window_title,
-		  char *icon_title );
+void winsys_init( int *argc, char **argv, const char *window_title,
+		  const char *icon_title );
 void winsys_shutdown();
 
 void winsys_process_events(); /* Never returns */

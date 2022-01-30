@@ -448,8 +448,8 @@ static const char * winsys_sdl2_swapinterval_desc(int v) {
  \date    Created:  2021-09
  \date    Modified: 2021-09
  */
-void winsys_init( int *argc, char **argv, char *window_title,
-                 char *icon_title )
+void winsys_init( int *argc, char **argv, const char *window_title,
+                  const char *icon_title )
 {
     SDL_DisplayMode display_mode;
 
@@ -1212,8 +1212,8 @@ static void setup_sdl_video_mode()
   \date    Modified: 2000-10-19
 */
 
-void winsys_init( int *argc, char **argv, char *window_title,
-		  char *icon_title )
+void winsys_init( int *argc, char **argv, const char *window_title,
+		  const char *icon_title )
 {
     winsys_common_init();
 
@@ -2020,12 +2020,13 @@ void winsys_glut_print_gl_attributes() {
   \date    Created:  2000-10-19
   \date    Modified: 2000-10-19
 */
-void winsys_init( int *argc, char **argv, char *window_title,
-		  char *icon_title )
+void winsys_init( int *argc, char **argv, const char *window_title,
+		  const char *icon_title )
 {
     int width, height;
     int glutWindow;
     int maximized;
+    int status;
 
     winsys_common_init();
 
@@ -2062,18 +2063,23 @@ void winsys_init( int *argc, char **argv, char *window_title,
     sprintf (str, "%dx%d:%d@60",g_game.x_resolution,g_game.y_resolution,gl_options.color_depth);
     glutGameModeString(str);
     WINSYS_LOG(logvs::NOTICE, "(GLUT) Game Mode Params %dx%d at depth %d @ %d Hz",
-    		   glutGameModeGet( GLUT_GAME_MODE_WIDTH ),glutGameModeGet( GLUT_GAME_MODE_WIDTH ),
+    		   glutGameModeGet( GLUT_GAME_MODE_WIDTH ),glutGameModeGet( GLUT_GAME_MODE_HEIGHT ),
 			   glutGameModeGet( GLUT_GAME_MODE_PIXEL_DEPTH ),glutGameModeGet( GLUT_GAME_MODE_REFRESH_RATE ));
 
     /* Create a window */
     if ( gl_options.fullscreen &&(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)!=-1)) {
     	glutInitWindowPosition( 0, 0 );
-    	glutEnterGameMode();
-        WINSYS_LOG(logvs::NOTICE, "(GLUT) Game Mode Params %dx%d at depth %d @ %d Hz",
-        		  glutGameModeGet( GLUT_GAME_MODE_WIDTH ), glutGameModeGet( GLUT_GAME_MODE_WIDTH ),
-				  glutGameModeGet( GLUT_GAME_MODE_PIXEL_DEPTH ), glutGameModeGet( GLUT_GAME_MODE_REFRESH_RATE ));
-
+    	if ((status = glutEnterGameMode()) != 0) {
+            WINSYS_LOG(logvs::NOTICE, "(GLUT) Entered Game Mode, Params %dx%d at depth %d @ %d Hz",
+                       glutGameModeGet( GLUT_GAME_MODE_WIDTH ), glutGameModeGet( GLUT_GAME_MODE_HEIGHT ),
+				       glutGameModeGet( GLUT_GAME_MODE_PIXEL_DEPTH ), glutGameModeGet( GLUT_GAME_MODE_REFRESH_RATE ));
+        } else {
+            WINSYS_LOG(logvs::WARN, "(GLUT) Cannot enter in Game Mode, trying to create a window...");
+        }
     } else {
+        status = 1;
+    }
+    if (!status) {
         /* Set the initial window size */
         glutInitWindowSize( g_game.x_resolution,g_game.y_resolution );
 
@@ -2083,7 +2089,7 @@ void winsys_init( int *argc, char **argv, char *window_title,
             WINSYS_ERR("(GLUT) Couldn't create a window.");
             exit(1);
         }
-        if (maximized) {
+        if (maximized || gl_options.fullscreen) {
             WINSYS_LOG(logvs::NOTICE, "(GLUT) enter fullscreen");
             glutFullScreen();
         }
