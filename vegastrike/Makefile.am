@@ -891,6 +891,7 @@ librootgeneric = \
   src/log.cpp \
   src/log.h \
   src/unicode.cpp \
+  src/unicode_combine.cpp \
   src/unicode.h \
   src/vs_log_modules.cpp \
   src/vs_log_modules.h \
@@ -1179,7 +1180,8 @@ unicode_conv_LDFLAGS =
 unicode_conv_CXXFLAGS=-I.. -DVS_LOG_NO_XML
 unicode_conv_SOURCES= \
   tools/unicode-conv.cpp \
-  tools/unicode.link.cpp
+  tools/unicode.link.cpp \
+  src/unicode_combine.cpp
 
 test_LDFLAGS =
 test_CXXFLAGS=-I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS
@@ -1187,6 +1189,7 @@ test_SOURCES= \
   tests/test.cpp \
   tests/log.link.cpp \
   tests/unicode.link.cpp \
+  src/unicode_combine.cpp \
   tests/multimap.link.cpp
 
 vegastrike_launch_tests: test

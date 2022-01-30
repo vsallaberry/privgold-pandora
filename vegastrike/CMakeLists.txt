@@ -341,6 +341,7 @@ SET(LIBROOTGENERIC_SOURCES src/configxml.cpp
 						   src/options.cpp
                            src/log.cpp
                            src/unicode.cpp
+                           src/unicode_combine.cpp
                            src/multimap.cpp
                            src/vs_log_modules.cpp)
 

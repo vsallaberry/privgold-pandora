@@ -44,6 +44,8 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #if defined(HAVE_CWCHAR)
 # include <cwchar>
@@ -94,7 +96,7 @@ static inline int utf8_debug_dummy() { return 0; }
  * *****************************************/
 
 /* get UTF32 unicode from utf8 character(s) : use utf8StringIter to process a string
- * returns the utf32 character or 0 on error */
+ * returns the utf32 character or 0 on error */
 wchar_t utf8_to_utf32(const char * utf8);
 /* get utf8 bytes from an utf32 character (MB_CUR_MAX bytes stored at most)
  * returns the number of bytes stored in dst or (size_t)-1 or error */
@@ -103,6 +105,17 @@ size_t utf32_to_utf8(char * dst, wchar_t utf32);
 /* init Locale, needed for wcrtomb and mbrtowc used by Utf8Iterator */
 void unicodeInitLocale();
 
+/** check if an unicode character is combinable, returns boolean. */
+int unicode_combinable(uint16_t character);
+
+/** check if an unicode character is decomposable, returns boolean. */
+int unicode_decomposeable(uint16_t character);
+
+/** Combine two unicode characters, returns the combined character or 0 on error. */
+uint16_t unicode_combine(uint16_t base, uint16_t combining);
+
+/** Decompose an unicode character, returns the number of returned characters. */
+int unicode_decompose(uint16_t character, uint16_t *convertedChars);
 
 /* *****************************************
  * class Utf8Iterator
@@ -114,12 +127,14 @@ void unicodeInitLocale();
  * does not exist. Indeed you have to process each character before going to the next.
  *   Then, if you can replace (*(it+6)) by iterative ++it, it will be better. */
 class Utf8Iterator : public std::iterator<std::input_iterator_tag, const wchar_t,
-long, const wchar_t *, const wchar_t &> {
+                                          long, const wchar_t *, const wchar_t &> {
 public:
+    // Types
+    typedef enum { U8F_NONE = 0, U8F_STOP_ON_ERROR = 1 << 0, U8F_COMBINE = 1 << 1 } u8_flags;
     // Ctors
     explicit Utf8Iterator(const std::string & s, size_t start = 0, size_t end = (size_t)-1) {
         size_t slen = s.length(); if (start > slen) start = slen;
-        _size = (end > slen ? slen : end) - start;
+        _size = (start >= end ? 0 : (end > slen ? slen : end) - start);
         _str = s.c_str() + start;
         init();
         //fprintf(stderr, "[contructed] ('%s' size:%zu strlen:%zu).\n", _str, _size, strlen(_str));
@@ -166,9 +181,14 @@ public:
     }
     const Utf8Iterator  end() const {
         Utf8Iterator ret = *this; ret._pos = _size;
-        ret._value = 0; ret._incr = 0; return ret;
+        ret._value = ret._nextvalue = 0; ret._incr = ret._nextincr = 0; return ret;
     }
-
+    unsigned int setFlags(unsigned int flags) {
+        unsigned int ret = _flags; _flags = flags; return ret;
+    }
+    static unsigned int setDefaultFlags(unsigned int flags) {
+        unsigned int ret = _default_flags; _default_flags = flags; return ret;
+    }
     // static builders
     static Utf8Iterator begin(const std::string & s, size_t start = 0, size_t end = (size_t)-1) {
         return Utf8Iterator(s, start, end);
@@ -182,14 +202,15 @@ public:
     static Utf8Iterator end(const char * _s, size_t _size = (size_t)-1) {
         return Utf8Iterator::begin(_s, _size).end();
     }
-
 protected:
+    static unsigned int _default_flags;
     const char *        _str;
     size_t              _size;
     size_t              _pos;
-    size_t              _incr;
+    size_t              _incr, _nextincr;
     mbstate_t           _mbstate;
-    wchar_t             _value;
+    wchar_t             _value, _nextvalue;
+    unsigned int        _flags;
 
     void        init();
     void        next();

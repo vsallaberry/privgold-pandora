@@ -113,11 +113,14 @@ size_t utf32_to_utf8(char * dst, wchar_t utf32) {
 // -----------------------------
 // Utf8Iterator class impl.
 // -----------------------------
+unsigned int Utf8Iterator::_default_flags = U8F_COMBINE;
 
 void Utf8Iterator::init() {
     memset(&_mbstate, 0, sizeof(_mbstate));
-    _incr = _pos = 0;
-    next(); // initializes _value and _incr.
+    _incr = _nextincr = _pos = 0;
+    _nextvalue = 0;
+    _flags = Utf8Iterator::_default_flags;
+    next(); next(); // initializes _{next,}value and _{next,}incr.
 }
 
 Utf8Iterator & Utf8Iterator::operator++() {
@@ -127,7 +130,7 @@ Utf8Iterator & Utf8Iterator::operator++() {
 }
 
 Utf8Iterator & Utf8Iterator::operator--() {
-    _incr = 0;
+    _incr = _nextincr = 0;
     UTF8_ITERATOR_DEBUG("Utf8Iterator::--() POS %zu VAL %x\n", _pos, _str[_pos]&0xff);
     while (_pos > 0 && (_str[--_pos] & 0x80)) {
         UTF8_ITERATOR_DEBUG("Utf8Iterator::--() POS %zu VAL %x\n", _pos, _str[_pos]&0xff);
@@ -136,28 +139,47 @@ Utf8Iterator & Utf8Iterator::operator--() {
         }
     }
     UTF8_ITERATOR_DEBUG("Utf8Iterator::--() RETURN. POS %zu VAL %x\n", _pos, _str[_pos]&0xff);
+    wchar_t save_next = _value;
+    size_t save_incr = _incr;
     next();
+    _value = _nextvalue;
+    _incr = _nextincr;
+    _nextvalue = save_next;
+    _nextincr = save_incr;
     return *this;
 }
 
 void Utf8Iterator::next() {
-    if ((_incr = mbrtowc(&_value, _str + _pos, _size - _pos, &_mbstate)) == 0
-    ||   _incr == (size_t)-1 || _incr == (size_t)-2) {
-        if (_pos < _size && _incr >= (size_t) -2) {
+    size_t nextpos = _pos + _nextincr;
+    _value = _nextvalue;
+    _incr = _nextincr;
+    if ((_nextincr = mbrtowc(&_nextvalue, _str + nextpos, _size - nextpos, &_mbstate)) == 0
+    ||   _nextincr == (size_t)-1 || _nextincr == (size_t)-2) {
+        if (nextpos < _size && _nextincr >= (size_t) -2 && (_flags & U8F_STOP_ON_ERROR) == 0) {
             // decoding error/incomplete utf8 sequence ; consider the character and go to next
-            _value = _str[_pos]&0xff;
-            if (!iswprint(_value))
-                _value = '?';
-            _incr = 1;
+            _nextvalue = _str[nextpos]&0xff;
+            if (!iswprint(_nextvalue))
+                _nextvalue = '?';
+            _nextincr = 1;
             memset(&_mbstate, 0, sizeof(_mbstate));
         } else {
             // end of string
-            _value = 0;
-            _incr = _size - _pos;
+            _nextvalue = 0;
+            _nextincr = _size - nextpos;
             //UTF8_ITERATOR_DEBUG("Utf8Iterator::next(): endOfString or decoding error\n");
         }
     } else {
-        // nothing
+        if ((_flags & U8F_COMBINE) != 0) {
+            // combine utf8 characters if possible
+            if (_value < ((size_t)(1<<16)) && _nextvalue < ((size_t)(1<<16)) && unicode_combinable(_nextvalue)) {
+                wchar_t newvalue = unicode_combine(_value, _nextvalue);
+                if (newvalue) {
+                    _nextvalue = newvalue;
+                    _nextincr = _incr + _nextincr;
+                    next();
+                }
+            }
+        }
     }
     //if (UTF8_ITERATOR_DEBUG("\n wc:%x incr:%zu pos:%zu '", _value, _incr, _pos)) { fputwc(_value, stderr); printf("'\n"); }
 }
@@ -305,6 +327,9 @@ static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::str
 
         it = find_one(out, L'∏', begin, end);
         errs += TEST(HDR, it != end && it != begin.end() && *it == L'∏');
+
+        it = find_one(out, 0x301, begin, end); // must not be here as it should be combined
+        errs += TEST(HDR, it == end);
     }
 
     out << "u8Reversestring: '";
@@ -402,7 +427,7 @@ int utf8_iterator_test() {
     //template <typename T> std::basic_ostream<T> & out = std::wcout;
     //std::wostream & out = std::wcout;
     std::ostream & out = std::cerr;
-    std::string     s = "Hello World hé hé ·ﬂ∏ ∏ = 3.14•••.";
+    std::string     s = "Hello World hé hé ·ﬂ∏ ∏ = 3.14•••. \xc3\xa9\xc2\xa9\x65\xcc\x81(combined)";//\xef\xa3\xbf.";
     char *          cs = (char*)malloc(s.length() + 1); s.copy(cs, s.length()); cs[s.length()] = 0;
     unsigned int    errs = 0;
 

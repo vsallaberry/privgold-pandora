@@ -9,6 +9,7 @@ set(VSREXTRACT_SOURCES
 
 set(UNICODE_CONV_SOURCES
     ../src/unicode.cpp
+    ../src/unicode_combine.cpp
     unicode-conv.cpp)
 
 add_executable(vsrextract ${VSREXTRACT_SOURCES})
