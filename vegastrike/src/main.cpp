@@ -331,6 +331,8 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
     } else if (loglocation == "footer") {
         logvs::vs_log_setflag(logvs::F_LOCATION_FOOTER, true);
     }
+    logvs::vs_log_setflag(logvs::F_TIMESTAMP, 
+                XMLSupport::parse_bool(vs_config->getVariable("log", "timestamp", "true")));
     logvs::vs_log_setflag(logvs::F_LOCATION_ALLWAYS,
                 XMLSupport::parse_bool(vs_config->getVariable("log", "location_allways", "false")));
     logvs::vs_log_setflag(logvs::F_MSGCENTER,

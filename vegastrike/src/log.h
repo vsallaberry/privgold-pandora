@@ -201,6 +201,7 @@ namespace logvs {
         F_LOCATION_HEADER = 1 << 3,
         F_LOCATION_FOOTER = 1 << 4,
         F_MSGCENTER       = 1 << 5,
+        F_TIMESTAMP       = 1 << 6,
         F_LOCATION_MASK = F_LOCATION_HEADER | F_LOCATION_FOOTER,
     };
     

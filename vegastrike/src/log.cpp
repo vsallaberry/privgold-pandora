@@ -29,6 +29,7 @@
 #include <errno.h>
 
 #if defined(_WIN32)
+# include <time.h>
 # define flockfile(f)   _lock_file(f)
 # define funlockfile(f) _unlock_file(f)
 # if defined(__CYGWIN__) || defined(__MINGW32__)
@@ -36,6 +37,7 @@
 # endif
 #else
 # include <unistd.h>
+# include <sys/time.h>
 #endif
 
 #include "log.h"
@@ -45,11 +47,30 @@
 # include "xml_support.h"
 # include "configxml.h"
 # include "cmd/script/msgcenter.h"
+# include "lin_time.h"
 extern VegaConfig * vs_config;
 extern Mission * mission;
+//#define VS_LOG_USE_VSTIME
 #else
+# undef  VS_LOG_USE_VSTIME
 # undef  VS_LOG_NO_MSGCENTER
 # define VS_LOG_NO_MSGCENTER
+#endif
+
+#if defined(VS_LOG_USE_VSTIME)
+# define logGetElapsedTime() GetElapsedTime()
+#elif defined(HAVE_GETTIMEOFDAY)
+static double logGetElapsedTime() {
+    struct timeval time;
+    gettimeofday(&time, NULL);
+    static double origtime = time.tv_sec + (time.tv_usec/1000000.0);
+    return (time.tv_sec + (time.tv_usec/1000000.0)) - origtime;
+}
+#elif defined(HAVE_SDL)
+# include <SDL_timer.h> 
+static double logGetElapsedTime() {
+    return SDL_GetTicks() * 1.e-3;
+}
 #endif
 
 /*------------------------------------------------------------------------------------------*/
@@ -285,7 +306,7 @@ unsigned int vs_log_level(const std::string & category, bool store) {
 
 int vs_log_header(const std::string & category, unsigned int level, unsigned int flags,
                   const char * file, const char * func, int line, const char * fmt, ...) {
-    int ret;
+    int ret = 0, n;
     FILE * out;
     
     if (vslog_out == NULL) {
@@ -309,7 +330,12 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
 #else
     static const char * const color = "", * color_reset = "";
 #endif
-    if ((ret = fprintf(out, "[%s%s%s] ", color, category.c_str(), color_reset)) > 0) {
+
+    if (((flags | log_flags) & logvs::F_TIMESTAMP) != 0 && (n = fprintf(out, "%.03lf ", logGetElapsedTime())) > 0) {
+        ret += n;
+    }
+    if ((n = fprintf(out, "[%s%s%s] ", color, category.c_str(), color_reset)) > 0) {
+        ret += n;
         flags = (flags | log_flags) & (~F_LOCATION_FOOTER);
         ret += log_print_location(out, flags, category, level, file, func, line);
         
