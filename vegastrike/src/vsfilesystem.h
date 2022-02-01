@@ -105,6 +105,7 @@ namespace VSFileSystem
 	extern string moddir;
 	extern string datadir;
 	extern string homedir;									// User home directory including .vegastrike subdir
+	extern string bindir;
 
 	extern string config_file;
 	extern string weapon_list;

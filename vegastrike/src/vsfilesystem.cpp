@@ -302,7 +302,13 @@ std::string vegastrike_cwd;
 		*c = '\0';             /* cut off last part (binary name) */
 		if (strlen (parentdir)>0) {
 			vs_chdir (parentdir);/* chdir to the binary app's parent */
-		}
+            char pwd[8192] = { 0, };
+			vs_getcwd(pwd,sizeof(pwd) - 1);
+			pwd[sizeof(pwd)-1]='\0';
+			bindir = pwd;
+		} else {
+            bindir = vegastrike_cwd;
+        }
 		delete []parentdir;
 	}
 
@@ -406,6 +412,7 @@ std::string vegastrike_cwd;
 	string moddir;
 	string datadir;
 	string homedir;
+	string bindir;
 
 	string config_file;
 	string weapon_list;
@@ -694,25 +701,25 @@ std::string vegastrike_cwd;
 #endif
 		if (!vegastrike_cwd.empty()) {
 			data_paths.push_back( vegastrike_cwd );
+			data_paths.push_back( vegastrike_cwd+"/../data");
+			data_paths.push_back( vegastrike_cwd+"/../Resources/data");
 			data_paths.push_back( vegastrike_cwd+"/..");
 			data_paths.push_back( vegastrike_cwd+"/../data4.x");
 			data_paths.push_back( vegastrike_cwd+"/../../data4.x");
 			data_paths.push_back( vegastrike_cwd+"/../../data");
 			data_paths.push_back( vegastrike_cwd+"/data4.x");
 			data_paths.push_back( vegastrike_cwd+"/data");
-			data_paths.push_back( vegastrike_cwd+"/../data");
 			data_paths.push_back( vegastrike_cwd+"/../Resources");
-            data_paths.push_back( vegastrike_cwd+"/../Resources/data");
 		}
 
 		data_paths.push_back( ".");
+		data_paths.push_back( "../data");
+		data_paths.push_back( "../Resources/data");
 		data_paths.push_back( "..");
 		data_paths.push_back( "../data4.x");
 		data_paths.push_back( "../../data4.x");
-		data_paths.push_back( "../data");
 		data_paths.push_back( "../../data");
 		data_paths.push_back( "../Resources");
-		data_paths.push_back( "../Resources/data");
 		data_paths.push_back( "../Resources/data4.x");
 /*
 		data_paths.push_back( "/usr/share/local/vegastrike/data");
