@@ -469,7 +469,15 @@ void bootstrap_draw (const std::string &message, Animation * newSplashScreen) {
 
     static std::string defaultbootmessage=vs_config->getVariable("graphics","default_boot_message","");
     static std::string initialbootmessage=vs_config->getVariable("graphics","initial_boot_message","Loading...");
-    bs_tp->Draw (defaultbootmessage.length()>0?defaultbootmessage:message.length()>0?message:initialbootmessage);
+    static unsigned int maxdots_persec = XMLSupport::parse_int(vs_config->getVariable("graphics","boot_message_dots_per_sec","5"));
+
+    std::string tmpmessage = defaultbootmessage.length()>0 ? defaultbootmessage
+                                                           : message.length()>0 ? message : initialbootmessage;
+    if (maxdots_persec > 0) {
+        const int nbdots = (((long)(getNewTime()*1000.0)) % 1000) / (1000 / maxdots_persec) + 1;
+        for (int i = 0; i < nbdots; ++i) tmpmessage = tmpmessage + ".";
+    }
+    bs_tp->Draw (tmpmessage);
 
     GFXHudMode (GFXFALSE);
     GFXEndScene();
@@ -531,14 +539,12 @@ void bootstrap_first_loop() {
   }
   bootstrap_draw ("Vegastrike Loading...",SplashScreen);
 
-  if (i++>4) {
-    if (_Universe) {
+  if (i++>4 && _Universe) {
       if (isgamemenu) {
         UniverseUtil::startMenuInterface(true);
       } else {
         _Universe->Loop(bootstrap_main_loop);
       }
-    }
   }
 }
 void SetStartupView(Cockpit * cp) {
@@ -549,6 +555,8 @@ void bootstrap_main_loop () {
   static bool LoadMission=true;
   static bool loadLastSave = XMLSupport::parse_bool(vs_config->getVariable("general","load_last_savegame","false"));
   InitTime();
+
+  GAME_LOG(logvs::NOTICE, "Initializing Main Loop...");
 
   if (LoadMission) {
     LoadMission=false;
@@ -779,13 +787,19 @@ void bootstrap_main_loop () {
         for (unsigned int i=0;i<_Universe->numPlayers();++i) {
           _Universe->AccessCockpit(i)->savegame->LoadSavedMissions();
         }
+
     GAME_LOG(logvs::NOTICE, "Running Main Loop");
              _Universe->Loop(main_loop);
+
+    // Execute Director once to initialize python objects before hiding splashscreen.
+    extern void ExecuteDirector(); // star_system_generic.cpp
+    ExecuteDirector();
+
     ///return to idle func which now should call main_loop mohahahah
     if (XMLSupport::parse_bool(vs_config->getVariable("splash","auto_hide","true")))
         UniverseUtil::hideSplashScreen();
-    //winsys_warp_pointer(g_game.x_resolution / 2 ,g_game.y_resolution / 2);
-    //winsys_post_redisplay();
+
+    winsys_warp_pointer(g_game.x_resolution / 2 ,g_game.y_resolution / 2);
   }
   ///Draw Texture
 

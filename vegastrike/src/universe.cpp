@@ -90,12 +90,14 @@ void GameUniverse::Init( int argc, char** argv, const char * galaxy)
 	VSFileSystem::vs_chdir(pwd);
 #endif
 	StartGFX();
-	InitInput();
+
+    // Hasten splash screen loading, to cover up lengthy universe initialization
+    //   was previously after InitInput and Camera()
+    bootstrap_first_loop();
+
+    InitInput();
 
 	hud_camera = Camera();
-
-	// Hasten splash screen loading, to cover up lengthy universe initialization
-	bootstrap_first_loop();
 
 	this->Universe::Init( galaxy);
 	//this->galaxy = new GalaxyXML::Galaxy (galaxy);
@@ -104,8 +106,10 @@ void GameUniverse::Init( int argc, char** argv, const char * galaxy)
 
 GameUniverse::GameUniverse(int argc, char** argv, const char * galaxy)
 {
+	VS_LOG("universe", logvs::NOTICE, "creating universe...");
 	this->Init( argc, argv, galaxy);
 	is_server = false;
+	VS_LOG("universe", logvs::NOTICE, "universe created.");
 }
 
 
