@@ -168,8 +168,18 @@ namespace logvs { inline int logdummy() { return 0;} };
 		static const unsigned int level = logvs::vs_log_level(VSLOG_STR(name)); return level; \
 	} };
 
+#ifdef VS_LOG_NO_XML
+# define VS_LOG_CACHED_LEVEL(name) logvs::VSLOG_CACHE_FUN_NAME(name)()
+#else
+class VegaConfig;
+extern VegaConfig * vs_config;
+# define VS_LOG_CACHED_LEVEL(name) \
+    ((vs_config == NULL) ? (logvs::vs_log_level(VSLOG_STR(name))) \
+                         : (logvs::VSLOG_CACHE_FUN_NAME(name)()))
+#endif
+
 #define VS_LOG_M(name, level, ...) \
-	VS_LOG_CACHED(logvs::VSLOG_CACHE_FUN_NAME(name)(), VSLOG_STR(name), level, __VA_ARGS__)
+	VS_LOG_CACHED(VS_LOG_CACHED_LEVEL(name), VSLOG_STR(name), level, __VA_ARGS__)
 
 #define VS_DBG_M(name, level, ...) \
 	VS_DBG_CACHED(logvs::VSLOG_CACHE_FUN_NAME(name)(), VSLOG_STR(name), level, __VA_ARGS__)
@@ -213,8 +223,11 @@ namespace logvs {
     // returns the allowed level for a given category (check in XML and cache it if store is true)
     unsigned int vs_log_level(const std::string & category, bool store = true);
 
+    // get current logging file
+    FILE * vs_log_getfile(const std::string & module = "");
+
     // changes logging file, returns old one
-    FILE * vs_log_setfile(FILE * out);
+    FILE * vs_log_setfile(FILE * out, const std::string & module = "");
 
     // update log flags, return old ones
     unsigned int vs_log_setflag(unsigned int flag, bool value);

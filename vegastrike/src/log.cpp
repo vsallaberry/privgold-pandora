@@ -219,7 +219,13 @@ unsigned int log_level_byname(const char * name) {
     return log_level_default > 0 ? log_level_default : VSLOG_LEVEL_DEFAULT;
 }
 
-FILE * vs_log_setfile(FILE * out) {
+FILE * vs_log_getfile(const std::string & module) {
+    (void)module;
+    return vslog_out;
+}
+
+FILE * vs_log_setfile(FILE * out, const std::string & module) {
+    (void)module;
     FILE * old = vslog_out;
     if (out != NULL) flockfile(out);
     if (old != NULL) flockfile(old);

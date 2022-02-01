@@ -46,9 +46,7 @@
 //#include "vegastrike.h"
 #include "gfx/screenshot.h"
 #include "log.h"
-using std::cout;
-using std::endl;
-using std::cerr;
+
 /* *********************************************************** */
 
 #define CONFIG_LOG(_lvl, ...) VS_LOG("config", _lvl, __VA_ARGS__)

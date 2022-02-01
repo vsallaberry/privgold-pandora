@@ -78,7 +78,7 @@ string easyDomNode::attr_value(string search_name){
   return attribute_map[search_name];
 }
 
-void easyDomNode::printNode(ostream& out,int recurse_level,int level){
+void easyDomNode::printNode(std::ostringstream& out,int recurse_level,int level){
 	vsUMap<string,string>::const_iterator iter;
  //vector<string>::const_iterator iter2;
 
@@ -100,6 +100,18 @@ void easyDomNode::printNode(ostream& out,int recurse_level,int level){
   if(!(recurse_level==0 && level==0)){
     out << "</" << name << ">" << endl;
   }
+}
+
+void easyDomNode::printNode(ostream& out,int recurse_level,int level){
+    std::ostringstream oss;
+    printNode(oss, recurse_level, level);
+    out << oss.str();
+}
+
+void easyDomNode::printNode(FILE * out,int recurse_level,int level){
+    std::ostringstream oss;
+    printNode(oss, recurse_level, level);
+    fputs(oss.str().c_str(), out);
 }
 
 const char * textAttr="Text_Attr";

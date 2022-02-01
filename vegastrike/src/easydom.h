@@ -30,8 +30,10 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <sstream>
 #include <gnuhash.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "vsfilesystem.h"
 //using namespace VSFileSystem;
 using VSFileSystem::VSFile;
@@ -60,7 +62,9 @@ class easyDomNode {
   virtual ~easyDomNode();
     
   void set(easyDomNode *parent,string name,const XML_Char **atts  );
+  void printNode(std::ostringstream& out,int recurse_level,int level);
   void printNode(ostream& out,int recurse_level,int level);
+  void printNode(FILE * out,int recurse_level,int level);
 
   void addChild(easyDomNode *child);
 
