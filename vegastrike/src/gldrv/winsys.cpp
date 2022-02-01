@@ -764,10 +764,15 @@ void winsys_process_events()
         case SDL_KEYDOWN: {
             mod = (SDL_Keymod) event.key.keysym.mod;
             // ALT TAB handling in fullscreen mode
+           #if defined(__APPLE__)
+            key = KMOD_GUI|KMOD_LGUI|KMOD_RGUI;
+           #else
+            key = KMOD_LALT|KMOD_RALT|KMOD_ALT;
+           #endif
             if (kb_alt_tab
             &&  !released && event.key.keysym.sym == SDLK_TAB && gl_options.fullscreen
-            &&  (mod & (KMOD_LALT|KMOD_RALT|KMOD_ALT|KMOD_GUI|KMOD_LGUI|KMOD_RGUI)) != 0) {
                 //SDL_HideWindow(sdl_window);
+            &&  (mod & key) != 0 && (mod & ~(key)) == 0) {
                 SDL_MinimizeWindow(sdl_window);
                 fullwindow_hidden = true;
                 break ;
@@ -1789,8 +1794,8 @@ static void glut_keyboard_cb( unsigned char ch, int x, int y )
         unsigned int wch = ch & 0xff;
         int gm = glutGetModifiers();
         if (gm) {
-            if (kb_alt_tab && (gm & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT
-            && wch == 9 && gl_options.fullscreen) {
+            if (kb_alt_tab && wch == 9 && gl_options.fullscreen 
+            && (gm & GLUT_ACTIVE_ALT) == GLUT_ACTIVE_ALT && (gm & ~(GLUT_ACTIVE_ALT)) == 0) {
                 glutLeaveGameMode();
                 glutIconifyWindow();
                 return ;
