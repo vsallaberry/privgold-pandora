@@ -301,9 +301,7 @@ extern bool screenshotkey;
 extern int getmicrosleep ();
 void GameUniverse::StartDraw()
 {
-#ifndef WIN32
 	RESETTIME();
-#endif
 	GFXBeginScene();
 	unsigned int i;
 	StarSystem * lastStarSystem = NULL;

@@ -50,17 +50,23 @@
 # include "lin_time.h"
 extern VegaConfig * vs_config;
 extern Mission * mission;
-//#define VS_LOG_USE_VSTIME
+#define VS_LOG_USE_LOOP_TIME
 #else
-# undef  VS_LOG_USE_VSTIME
+# undef  VS_LOG_USE_LOOP_TIME
 # undef  VS_LOG_NO_MSGCENTER
 # define VS_LOG_NO_MSGCENTER
 #endif
 
-#if defined(VS_LOG_USE_VSTIME)
-# define logGetElapsedTime() GetElapsedTime()
+#if defined(VS_LOG_USE_LOOP_TIME)
+static inline double logGetTime() { 
+    double time = getNewTime();
+    if (time == 0.0) { time = queryTime(); } // 0 means loop is not running yet --> force query
+    return time;
+}
+#elif !defined(VS_LOG_NO_XML)
+# define logGetTime() queryTime()
 #elif defined(HAVE_GETTIMEOFDAY)
-static double logGetElapsedTime() {
+static double logGetTime() {
     struct timeval time;
     gettimeofday(&time, NULL);
     static double origtime = time.tv_sec + (time.tv_usec/1000000.0);
@@ -68,8 +74,17 @@ static double logGetElapsedTime() {
 }
 #elif defined(HAVE_SDL)
 # include <SDL_timer.h> 
-static double logGetElapsedTime() {
+static double logGetTime() {
     return SDL_GetTicks() * 1.e-3;
+}
+#else
+#if !defined(_WIN32)
+# include <sys/time.h>
+#endif
+# include <time.h>
+static double logGetTime() { 
+    static time_t origtime = time(NULL);
+    return time(NULL) - origtime; 
 }
 #endif
 
@@ -337,7 +352,7 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
     static const char * const color = "", * color_reset = "";
 #endif
 
-    if (((flags | log_flags) & logvs::F_TIMESTAMP) != 0 && (n = fprintf(out, "%.03lf ", logGetElapsedTime())) > 0) {
+    if (((flags | log_flags) & logvs::F_TIMESTAMP) != 0 && (n = fprintf(out, "%.03lf ", logGetTime())) > 0) {
         ret += n;
     }
     if ((n = fprintf(out, "[%s%s%s] ", color, category.c_str(), color_reset)) > 0) {

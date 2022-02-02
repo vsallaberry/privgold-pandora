@@ -23,6 +23,7 @@ _logfile = sys.stderr
 _logfile_istty = False
 _log_colorize = -1
 _msgcenter_dispatch = False
+_log_timestamp = True
 
 _level_color_reset = "\x1b[00m"
 _level_color = [
@@ -48,6 +49,8 @@ def log_levelModuleFileLine(stackdec=0):
 	laststack = traceback.extract_stack()[-2-stackdec]
 	pfile = prettyfile(laststack[0])
 	module = pfile if _perfilelog else 'pyModules'
+	if module == '<string>':
+		module = 'python<string>'
 	if not module in _levels:
 		level = VS.LogLevel(module, False)
 		_levels[module] = level
@@ -77,12 +80,13 @@ def _debug_noengine(msg, level=NOTICE, stackdec=0): # Simple line number
 	return 1
 
 def _debug(msg, level=NOTICE, stackdec=0): # Simple line number
-	global _perfilelog, _level_colors, _logfile_istty, _log_colorize, _msgcenter_dispatch
+	global _perfilelog, _level_colors, _logfile_istty, _log_colorize, _msgcenter_dispatch, _log_timestamp
 	(modlevel,module,pfile,line) = log_levelModuleFileLine(stackdec+1)
 	if modlevel >= level:
 		logmsg = (pfile+':' if not _perfilelog else '')+str(line)+': '+str(msg)
 		color = (_level_color[level if level >= 0 and level <= DEBUG else DEBUG] if (_log_colorize and (_logfile_istty or _log_colorize==1)) else '')
-		dprint('[' + color + module + (_level_color_reset if len(color) else '') + '] ' + logmsg)
+		timestamp = '%.03f ' % (VS.timeofday()) if _log_timestamp else ''
+		dprint(timestamp + '[' + color + module + (_level_color_reset if len(color) else '') + '] ' + logmsg)
 		if _msgcenter_dispatch:
 			VS.IOmessage(0, "log/"+module, "all", logmsg)
 		return 1
@@ -126,22 +130,32 @@ info = _info   # I don't think this is useful, but why not?
 # For release, we can disable unimportant messages:
 # debug = _info
 
+def _str2bool(s):
+	return s == '1' or s.lower() == 'yes' or s.lower() == 'true' or s.lower() == 'enabled' or s.lower() == 'on'
+
 def init(forceMsgCenter=False):
-	global _logfile, _logfile_istty, _log_colorize, _msgcenter_dispatch
+	global _logfile, _logfile_istty, _log_colorize, _msgcenter_dispatch, _log_timestamp
 	_file = VS.LogFile("")
 	if _file == "":
 		_logfile = None
-	elif _file == "stdout":
+	elif _file.lower() == "stdout":
 		_logfile = sys.stdout
-	else:
+	elif _file.lower() == "stderr":
 		_logfile = sys.stderr
+	else:
+		try:
+			_logfile = os.open(_file, "a", 1) # 1 for line-buffered
+		except:
+			_logfile = sys.stderr
 	try:
-		str_msgcenter=VS.vsConfig("log","msgcenter","false") if not forceMsgCenter else "yes"
-		_msgcenter_dispatch = str_msgcenter.lower() == 'yes' or str_msgcenter.lower() == 'true' or str_msgcenter.lower() == 'enabled'
-		str_colorize=VS.vsConfig("log","colorize","auto")
+		str_msgcenter=VS.vsConfig("log","msgcenter","false").lower() if not forceMsgCenter else "yes"
+		_msgcenter_dispatch = _str2bool(str_msgcenter)
+		str_colorize=VS.vsConfig("log","colorize","auto").lower()
+		_log_timestamp=_str2bool(VS.vsConfig("log","timestamp","yes").lower())
+
 		if _logfile is not None and os.name == 'posix':
 			_logfile_istty=_logfile.isatty()
-			_log_colorize = (1 if str_colorize == 'yes' else (0 if str_colorize == 'no' else -1))
+			_log_colorize = -1 if str_colorize == "" or str_colorize == 'auto' else (1 if _str2bool(str_colorize) else 0)
 		else:
 			_logfile_istty = False
 			_log_colorize = 0
@@ -151,6 +165,7 @@ def init(forceMsgCenter=False):
 		_msgcenter_dispatch=False
 		_logfile=sys.stderr
 		_log_colorize=0
+		_log_timestamp = False
 		debug('debug initialize failed, os='+os.name+' using file = stderr.')
 
 init()

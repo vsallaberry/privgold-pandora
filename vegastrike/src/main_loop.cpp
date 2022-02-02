@@ -1107,7 +1107,7 @@ void restore_main_loop() {
   RestoreMouse();
   RestoreJoystick();
   last_check = cur_check = 1;
-  loop_count = 0x7fffffff;
+  loop_count = 0;
   GFXLoop (main_loop);
 }
 

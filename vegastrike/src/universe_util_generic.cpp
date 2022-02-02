@@ -810,7 +810,12 @@ namespace UniverseUtil
 	std::string getSubVariable(std::string section,std::string subsection,std::string name,std::string def) {
 		return vs_config->getVariable(section,subsection,name,def);
 	}
-	double timeofday () {return getNewTime();}
+	double timeofday () {
+        double time = getNewTime();
+        if (time == 0.0) { time = queryTime(); } // 0 means loop is not running yet --> force query
+        return time;
+    }
+    double queryTimeofday () {return queryTime();}
 	double sqrt (double x) {return ::sqrt (x);}
 	double log (double x) {return ::log (x);}
 	double exp (double x) {return ::exp (x);}

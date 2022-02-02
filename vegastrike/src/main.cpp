@@ -260,7 +260,11 @@ bool isVista=false;
 
 int main( int argc, char *argv[] )
 {
-	VSFileSystem::ChangeToProgramDirectory(argv[0]);
+    VSFileSystem::ChangeToProgramDirectory(argv[0]);
+
+    InitTime();
+    UpdateTime();
+
 	CONFIGFILE=0;
 	mission_name[0]='\0';
         {
@@ -270,17 +274,17 @@ int main( int argc, char *argv[] )
           printf (" In path %s\n",pwd);
         }
 #ifdef _WIN32
-	    OSVERSIONINFO osvi;
-    ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	OSVERSIONINFO osvi;
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
-    GetVersionEx(&osvi);
+	GetVersionEx(&osvi);
 	isVista=(osvi.dwMajorVersion==6);
-printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
+	fprintf(stdout, "Windows version %d %d\n", osvi.dwMajorVersion, osvi.dwMinorVersion);
 #endif
     /* Print copyright notice */
     vs_print_buildinfo(stdout, VPB_VERSION | VPB_SCM);
-	std::cout << "See http://www.gnu.org/copyleft/gpl.html for license details." << std::endl << std::endl;
+	fprintf(stdout, "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
     /* Seed the random number generator */
 
     if(benchmark<0.0){
@@ -297,9 +301,9 @@ printf ("Windows version %d %d\n",osvi.dwMajorVersion,osvi.dwMinorVersion);
       string subdir=ParseCommandLine(argc,argv);
 
       vs_print_buildinfo(stderr, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
-      std::cerr << std::endl;
+      fputc('\n', stderr);
         
-      cerr<<"GOT SUBDIR ARG = "<<subdir<<endl;
+      VS_LOG("config", logvs::NOTICE, "GOT SUBDIR ARG = %s", subdir.c_str());
       if (CONFIGFILE==0) {
         CONFIGFILE=new char[42];
         sprintf(CONFIGFILE,"vegastrike.config");
@@ -554,7 +558,7 @@ void SetStartupView(Cockpit * cp) {
 void bootstrap_main_loop () {
   static bool LoadMission=true;
   static bool loadLastSave = XMLSupport::parse_bool(vs_config->getVariable("general","load_last_savegame","false"));
-  InitTime();
+  //InitTime(); // Now done at beginning of main()
 
   GAME_LOG(logvs::NOTICE, "Initializing Main Loop...");
 
@@ -817,7 +821,7 @@ int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_t
             std::string section(argv[i]+2, 0, slash - (argv[i]+2));
             std::string key(slash + 1, 0, equal - (slash + 1));
             std::string value(equal + 1);
-            std::cout << "config override: " << section << " / " << key << " = " << value << std::endl;
+            VS_LOG("config", logvs::NOTICE, "config override: %s/%s=%s", section.c_str(), key.c_str(), value.c_str());
             overrides.push_back(std::make_pair(std::make_pair(section,key), value));
         }
     }

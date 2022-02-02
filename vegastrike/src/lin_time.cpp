@@ -22,7 +22,7 @@
 #include "vegastrike.h"
 #include "in_kb.h"
 #include "vs_random.h"
-static double firsttime;
+static double firsttime = 0;
 VSRandom vsrandom(time(NULL));
 
 #ifdef WIN32
@@ -30,24 +30,27 @@ VSRandom vsrandom(time(NULL));
 static LONGLONG ttime;
 static LONGLONG newtime = 0;
 static LONGLONG freq;
-static double dblnewtime;
+static double dblnewtime = 0;
+static double dblnewtime0 = 0; // time since program start (use firsttime)
 #else
 #if defined( HAVE_SDL )
 #   include <SDL.h>
 #endif /* defined( HAVE_SDL ) */
-static double newtime;
-static double lasttime;
+static double newtime = 0;
+static double newtime0 = 0; // time since program start (use firsttime)
+static double lasttime = 0;
 
 #include <sys/time.h>
 #include <sys/types.h>
 #endif
 static double elapsedtime=.1;
 static double timecompression=1;
+
 double getNewTime() {
 #ifdef _WIN32
-	return dblnewtime-firsttime;
+	return dblnewtime0;
 #else
-	return newtime-firsttime;
+	return newtime0;
 #endif
 }
 
@@ -175,9 +178,11 @@ void UpdateTime() {
   ttime = newtime;
   if( freq==0)
 	  dblnewtime = 0.;
-  else
+  else {
 	  dblnewtime = ((double)newtime)/((double)freq);
+  }
   static double ftime = firsttime = dblnewtime;
+  dblnewtime0 = dblnewtime - firsttime;
 #elif defined(HAVE_GETTIMEOFDAY)
   struct timeval tv;
   (void) gettimeofday(&tv, NULL);
@@ -186,11 +191,13 @@ void UpdateTime() {
   newtime = (double)tv.tv_sec + (double)tv.tv_usec * 1.e-6;
   elapsedtime = newtime-lasttime;
   static double ftime = firsttime = newtime;
+  newtime0 = newtime - firsttime;
 #elif defined(HAVE_SDL)
   lasttime = newtime;
   newtime = SDL_GetTicks() * 1.e-3;
   elapsedtime = newtime-lasttime;
   static double ftime = firsttime = newtime;
+  newtime0 = newtime - firsttime;
 #else
 # error "We have no way to determine the time on this system."
 #endif
