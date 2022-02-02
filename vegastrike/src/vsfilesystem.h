@@ -75,6 +75,7 @@ namespace VSFileSystem
 
 	void	      DisplayType( VSFileType type);
 	void	      DisplayType( VSFileType type, std::ostream& ostr );
+	void	      DisplayType( VSFileType type, FILE * out );
 
 	int		GetReadBytes( char * fmt, va_list ap);
 
@@ -106,6 +107,7 @@ namespace VSFileSystem
 	extern string datadir;
 	extern string homedir;									// User home directory including .vegastrike subdir
 	extern string bindir;
+	extern string libdir;
 
 	extern string config_file;
 	extern string weapon_list;

@@ -23,6 +23,9 @@
 
 #include "log.h"
 
+/* declaring log modules is not mandatory, it allows to have dedicated macros
+ * and to have an internal cache for its log level, without looking in the hashmap */
+
 #define MMAP_LOGNAME mmap
 VSLOG_DECL_CACHE(MMAP_LOGNAME)
 #define MMAP_LOG(level, ...) VS_LOG_M(MMAP_LOGNAME, level, __VA_ARGS__)
@@ -60,5 +63,54 @@ VSLOG_DECL_CACHE(JOY_LOGNAME)
 #define JOY_DBG(level, ...) VS_DBG_M(JOY_LOGNAME, level, __VA_ARGS__)
 #define JOY_LOG_START(level, ...) VS_LOG_START_M(JOY_LOGNAME, level, __VA_ARGS__)
 #define JOY_LOG_END(level, ...) VS_LOG_END_M(JOY_LOGNAME, level, __VA_ARGS__)
+
+#define CONFIG_LOGNAME config
+VSLOG_DECL_CACHE(CONFIG_LOGNAME)
+#define CONFIG_LOG(level, ...) VS_LOG_M(CONFIG_LOGNAME, level, __VA_ARGS__)
+#define CONFIG_DBG(level, ...) VS_DBG_M(CONFIG_LOGNAME, level, __VA_ARGS__)
+#define CONFIG_LOG_START(level, ...) VS_LOG_START_M(CONFIG_LOGNAME, level, __VA_ARGS__)
+#define CONFIG_LOG_END(level, ...) VS_LOG_END_M(CONFIG_LOGNAME, level, __VA_ARGS__)
+
+#define VSFS_LOGNAME vsfilesystem
+VSLOG_DECL_CACHE(VSFS_LOGNAME)
+#define VSFS_LOG(level, ...) VS_LOG_M(VSFS_LOGNAME, level, __VA_ARGS__)
+#define VSFS_DBG(level, ...) VS_DBG_M(VSFS_LOGNAME, level, __VA_ARGS__)
+#define VSFS_LOG_START(level, ...) VS_LOG_START_M(VSFS_LOGNAME, level, __VA_ARGS__)
+#define VSFS_LOG_END(level, ...) VS_LOG_END_M(VSFS_LOGNAME, level, __VA_ARGS__)
+
+#define UNIVERSE_LOGNAME universe
+VSLOG_DECL_CACHE(UNIVERSE_LOGNAME)
+#define UNIV_LOG(level, ...) VS_LOG_M(UNIVERSE_LOGNAME, level, __VA_ARGS__)
+#define UNIV_DBG(level, ...) VS_DBG_M(UNIVERSE_LOGNAME, level, __VA_ARGS__)
+#define UNIV_LOG_START(level, ...) VS_LOG_START_M(UNIVERSE_LOGNAME, level, __VA_ARGS__)
+#define UNIV_LOG_END(level, ...) VS_LOG_END_M(UNIVERSE_LOGNAME, level, __VA_ARGS__)
+
+#define PYTHON_LOGNAME python
+VSLOG_DECL_CACHE(PYTHON_LOGNAME)
+#define PYTHON_LOG(level, ...) VS_LOG_M(PYTHON_LOGNAME, level, __VA_ARGS__)
+#define PYTHON_DBG(level, ...) VS_DBG_M(PYTHON_LOGNAME, level, __VA_ARGS__)
+#define PYTHON_LOG_START(level, ...) VS_LOG_START_M(PYTHON_LOGNAME, level, __VA_ARGS__)
+#define PYTHON_LOG_END(level, ...) VS_LOG_END_M(PYTHON_LOGNAME, level, __VA_ARGS__)
+
+#define GL_LOGNAME gl
+VSLOG_DECL_CACHE(GL_LOGNAME)
+#define GL_LOG(level, ...) VS_LOG_M(GL_LOGNAME, level, __VA_ARGS__)
+#define GL_DBG(level, ...) VS_DBG_M(GL_LOGNAME, level, __VA_ARGS__)
+#define GL_LOG_START(level, ...) VS_LOG_START_M(GL_LOGNAME, level, __VA_ARGS__)
+#define GL_LOG_END(level, ...) VS_LOG_END_M(GL_LOGNAME, level, __VA_ARGS__)
+
+#define GLTEX_LOGNAME gltex
+VSLOG_DECL_CACHE(GLTEX_LOGNAME)
+#define GLTEX_LOG(level, ...) VS_LOG_M(GLTEX_LOGNAME, level, __VA_ARGS__)
+#define GLTEX_DBG(level, ...) VS_DBG_M(GLTEX_LOGNAME, level, __VA_ARGS__)
+#define GLTEX_LOG_START(level, ...) VS_LOG_START_M(GLTEX_LOGNAME, level, __VA_ARGS__)
+#define GLTEX_LOG_END(level, ...) VS_LOG_END_M(GLTEX_LOGNAME, level, __VA_ARGS__)
+
+#define GFX_LOGNAME gfx
+VSLOG_DECL_CACHE(GFX_LOGNAME)
+#define GFX_LOG(level, ...) VS_LOG_M(GFX_LOGNAME, level, __VA_ARGS__)
+#define GFX_DBG(level, ...) VS_DBG_M(GFX_LOGNAME, level, __VA_ARGS__)
+#define GFX_LOG_START(level, ...) VS_LOG_START_M(GFX_LOGNAME, level, __VA_ARGS__)
+#define GFX_LOG_END(level, ...) VS_LOG_END_M(GFX_LOGNAME, level, __VA_ARGS__)
 
 #endif

@@ -36,6 +36,7 @@ struct dirent { char d_name[1]; };
 #include <dirent.h>
 #endif
 
+#include <sstream>
 #include <sys/stat.h>
 #include "configxml.h"
 #include "vsfilesystem.h"
@@ -48,8 +49,10 @@ struct dirent { char d_name[1]; };
 #include "gnuhash.h"
 
 #include "unicode.h"
+#include "vs_log_modules.h"
 
 #ifdef _WIN32
+# define PATHSEP "\\"
 # include <shlobj.h>
 namespace VSFileSystem {
 # if !defined(VS_HOME_INSIDE_DATA)
@@ -66,12 +69,12 @@ static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
 	CoTaskMemFree((LPVOID)pszPath);
 	return ret;
 }
-#  else
+#  else // ! HAVE_SHGETKNOWNFOLDERPATH
 static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
 	return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
 }
-#  endif
-# endif
+#  endif // ! HAVE_SHGETKNOWNFOLDERPATH
+# endif // ! VS_HOME_INSIDE_DATA
 wchar_t * utf8_to_wchar(const char * s) {
 	if (!s) 
 		return NULL;
@@ -139,13 +142,12 @@ int 	vs_stat(const char * path, struct stat * st) {
 	return res;
 }
 } // ! namespace VSFileSystem
-#endif
+#else // ! _WIN32
+# define PATHSEP "/"
+#endif // ! _WIN32
 
 using VSFileSystem::VSVolumeType;
 using VSFileSystem::VSFSNone;
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::string;
 int VSFS_DEBUG() {
   if (vs_config) {
@@ -323,7 +325,7 @@ std::string vegastrike_cwd;
 
 	void	DisplayType( VSFileSystem::VSFileType type)
 	{
-	    DisplayType( type, std::cerr );
+	    DisplayType( type, logvs::vs_log_getfile());
 	}
 
 	#define CASE(a) case a: ostr<<#a; break;
@@ -356,11 +358,17 @@ std::string vegastrike_cwd;
 	}
 	#undef CASE
 
+	void	DisplayType( VSFileSystem::VSFileType type, FILE * out) {
+        std::stringstream oss;
+        DisplayType(type, oss);
+        fputs(oss.str().c_str(), out);
+    }
+
 	int		GetReadBytes( char * fmt, va_list ap)
 	{
 		int ret = 0;
 
-		cerr<<"STARTING ARGLIST"<<endl;
+		VSFS_LOG(logvs::NOTICE, "STARTING ARGLIST");
 		while( *fmt)
 		{
 			switch( *fmt++)
@@ -375,13 +383,13 @@ std::string vegastrike_cwd;
 				break;
 				case 'n' :	// Number of bytes
 					ret = va_arg( ap, int);
-					cerr<<"\tFound 'n' : "<<ret<<endl;
+					VSFS_LOG(logvs::NOTICE, "\tFound 'n' : %d", ret);
 				break;
 				default :
-					cerr<<"\tOther arg"<<endl;
+					VSFS_LOG(logvs::NOTICE, "\tOther arg");
 			}
 		}
-		cerr<<"ENDING ARGLIST"<<endl;
+		VSFS_LOG(logvs::NOTICE, "ENDING ARGLIST");
 		return ret;
 	}
 
@@ -413,6 +421,7 @@ std::string vegastrike_cwd;
 	string datadir;
 	string homedir;
 	string bindir;
+	string libdir;
 
 	string config_file;
 	string weapon_list;
@@ -467,7 +476,7 @@ std::string vegastrike_cwd;
 		  return newpath+string("/");
 		}
 		std::string MakeSharedPath (const std::string &s) {
-		  VSFileSystem::vs_fprintf (stderr,"MakingSharedPath %s",s.c_str());
+		  VSFS_LOG(logvs::NOTICE, "MakingSharedPath %s",s.c_str());
 		  return MakeSharedPathReturnHome (s)+s;
 		}
 		std::string MakeSharedStarSysPath (const std::string &s){
@@ -505,7 +514,7 @@ std::string vegastrike_cwd;
 	FILE *	vs_open( const char * filename, const char * mode)
 	{
           if (VSFS_DEBUG()>1) {
-		cerr<<"-= VS_OPEN in mode "<<mode<<" =- ";
+		VSFS_LOG(logvs::NOTICE, "-= VS_OPEN in mode %s =- ", mode);;
           }
 
 			FILE * fp;
@@ -529,9 +538,9 @@ std::string vegastrike_cwd;
                                 if (VSFS_DEBUG()) {
                                   if( fp){
                                     if (VSFS_DEBUG()>2)
-                                      cerr<<fullpath<<" SUCCESS !!!"<<endl;
+                                      VSFS_LOG(logvs::NOTICE, "%s SUCCESS !!!", fullpath.c_str());
                                   }else {
-                                    cerr<<output<<" NOT FOUND !!!"<<endl;
+                                    VSFS_LOG(logvs::NOTICE, "%s NOT FOUND !!!", output.c_str());
                                   }
                                 }
 			}
@@ -541,12 +550,12 @@ std::string vegastrike_cwd;
 				if( fp)
 				{
                                   if (VSFS_DEBUG()>2)
-					cerr<<fullpath<<" opened for writing SUCCESS !!!"<<endl;
+					VSFS_LOG(logvs::NOTICE, "%s opened for writing SUCCESS !!!", fullpath.c_str());
 				}
 				else
 				{
                                   if (VSFS_DEBUG())
-                                    cerr<<fullpath<<" FAILED !!!"<<endl;
+                                    VSFS_LOG(logvs::WARN, "%s FAILED !!!", fullpath.c_str());
 				}
 			}
 
@@ -661,7 +670,7 @@ std::string vegastrike_cwd;
 		chome_path = pwent->pw_dir;
 		if( !DirectoryExists( chome_path))
 		{
-			cerr<<"!!! ERROR : home directory not found"<<endl;
+			CONFIG_LOG(logvs::ERROR, "!!! ERROR : home directory not found");
 			VSExit(1);
 		}
 		homedir = string(chome_path) + "/" + HOMESUBDIR;
@@ -684,7 +693,7 @@ std::string vegastrike_cwd;
 #else
 		homedir = datadir + "/" + HOMESUBDIR;
 #endif
-		cerr << "USING HOMEDIR : " << homedir << " As the home directory " << endl;
+		CONFIG_LOG(logvs::NOTICE, "USING HOMEDIR : %s As the home directory ", homedir.c_str());
 		if (CreateDirectoryAbs(homedir) > Ok) {
 			VSExit(1);
 		}
@@ -745,7 +754,7 @@ std::string vegastrike_cwd;
 			// Test if the dir exist and contains config_file
 			if( FileExists( (*vsit), config_file)>=0)
 			{
-				cerr<<"Found data in "<<(*vsit)<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Found data in %s", (*vsit).c_str());
 				vs_getcwd( tmppath, 16384);
 				if( (*vsit).substr( 0, 1) == ".")
 					datadir = string( tmppath)+"/"+(*vsit);
@@ -754,13 +763,13 @@ std::string vegastrike_cwd;
 
 				if( vs_chdir( datadir.c_str())<0)
 				{
-					cerr<<"Error changing to datadir"<<endl;
+					CONFIG_LOG(logvs::ERROR, "Error changing to datadir");
 					exit(1);
 				}
 				vs_getcwd( tmppath, 16384);
 				datadir = string( tmppath);
 
-				cerr<<"Using "<<datadir<<" as data directory"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using %s as data directory", datadir.c_str());
 				break;
 			}
 		}
@@ -785,7 +794,7 @@ std::string vegastrike_cwd;
 			fclose(version);
 			if (hsd.length()) {
 				HOMESUBDIR=hsd;
-				printf ("Using %s as the home directory\n",hsd.c_str());
+				CONFIG_LOG(logvs::NOTICE, "Using %s as the home directory",hsd.c_str());
 			}
 		}
 
@@ -795,7 +804,7 @@ std::string vegastrike_cwd;
 		memcpy( conffile, config_file.c_str(), config_file.length());
 		// Get the mods path
 		moddir = datadir+"/"+string( "mods");
-		cout<<"Found MODDIR = "<<moddir<<endl;
+		CONFIG_LOG(logvs::NOTICE, "Found MODDIR = %s", moddir.c_str());
 	}
 
 	// Config file has been loaded from data dir but now we look at the specified moddir in order
@@ -814,7 +823,8 @@ std::string vegastrike_cwd;
 			{
 				if( FileExists( homedir+"/mods/"+subdir, config_file)>=0)
 				{
-					cout<<"CONFIGFILE - Found a config file in home mod directory, using : "<<(homedir+"/mods/"+subdir+"/"+config_file)<<endl;
+					CONFIG_LOG(logvs::NOTICE, "CONFIGFILE - Found a config file in home mod directory, using : %s%s/%s/%s",
+                            homedir.c_str(), "/mods", subdir.c_str(), config_file.c_str());
 					if( FileExists( homedir+"/mods/"+subdir, "weapon_list.xml")>=0) {
 						weapon_list = homedir+"/mods/"+subdir+"/weapon_list.xml";
                                                 foundweapons=true;
@@ -826,12 +836,14 @@ std::string vegastrike_cwd;
 
 
                           if (!found)
-                            cout<<"WARNING : coudn't find a mod named '"<<subdir<<"' in homedir/mods"<<endl;
+                            CONFIG_LOG(logvs::WARN, "WARNING : coudn't find a mod named '%s' in homedir/mods", subdir.c_str());
 				if( DirectoryExists( moddir+"/"+subdir))
 				{
 					if( FileExists( moddir+"/"+subdir, config_file)>=0)
 					{
-						if (!found) cout<<"CONFIGFILE - Found a config file in mods directory, using : "<<(moddir+"/"+subdir+"/"+config_file)<<endl;
+						if (!found) 
+                            CONFIG_LOG(logvs::NOTICE, "CONFIGFILE - Found a config file in mods directory, using : %s/%s/%s", 
+                                   moddir.c_str(), subdir.c_str(), config_file.c_str());
 						if( (!foundweapons)&&FileExists( moddir+"/"+subdir, "weapon_list.xml")>=0) {
 							weapon_list = moddir+"/"+subdir+"/weapon_list.xml";
                                                         foundweapons=true;
@@ -842,7 +854,7 @@ std::string vegastrike_cwd;
 				}
 				else
 				{
-					cout<<"ERROR : coudn't find a mod named '"<<subdir<<"' in datadir/mods"<<endl;
+					CONFIG_LOG(logvs::WARN, "ERROR : coudn't find a mod named '%s' in datadir/mods", subdir.c_str());
 					// exit(1);
 				}
 			//}
@@ -854,7 +866,8 @@ std::string vegastrike_cwd;
 			// Next check if we have a config file in homedir if we haven't found one for mod
 			if( FileExists( homedir, config_file)>=0)
 			{
-				cerr<<"CONFIGFILE - Found a config file in home directory, using : "<<(homedir+"/"+config_file)<<endl;
+				CONFIG_LOG(logvs::NOTICE, "CONFIGFILE - Found a config file in home directory, using : %s/%s",
+                       homedir.c_str(), config_file.c_str());
                                 config_file=homedir+"/"+config_file;
 				/*
 				char * conffile = new char[homedir.length()+1+config_file.length()+1];
@@ -866,10 +879,11 @@ std::string vegastrike_cwd;
 			}
 			else
 			{
-				cerr<<"CONFIGFILE - No config found in home : "<<(homedir+"/"+config_file)<<endl;
+				CONFIG_LOG(logvs::NOTICE, "CONFIGFILE - No config found in home : %s/%s", homedir.c_str(), config_file.c_str());
 				if( FileExists( datadir,  config_file)>=0)
 				{
-					cerr<<"CONFIGFILE - No home config file found, using datadir config file : "<<(datadir+"/"+config_file)<<endl;
+					CONFIG_LOG(logvs::NOTICE, "CONFIGFILE - No home config file found, using datadir config file : %s/%s",
+                            datadir.c_str(), config_file.c_str());
 					// We didn't find a config file in home_path so we load the data_path one
 					/*
 					char * conffile = new char[datadir.length()+1+config_file.length()+1];
@@ -881,13 +895,14 @@ std::string vegastrike_cwd;
 				}
 				else
 				{
-					cerr<<"CONFIGFILE - No config found in data dir : "<<(datadir+"/"+config_file)<<endl;
-					cerr<<"CONFIG FILE NOT FOUND !!!"<<endl;
+					CONFIG_LOG(logvs::ERROR, "CONFIGFILE - No config found in data dir : %s/%s",
+                            datadir.c_str(), config_file.c_str());
+					CONFIG_LOG(logvs::ERROR, "CONFIG FILE NOT FOUND !!!");
 					VSExit(1);
 				}
 			}
 		}else if (subdir!="") {
-                  printf ("Using Mod Directory %s\n",moddir.c_str());
+                  CONFIG_LOG(logvs::NOTICE, "Using Mod Directory %s",moddir.c_str());
                   if (CreateDirectoryHome( "mods") > Ok
                   ||  CreateDirectoryHome("mods/"+subdir) > Ok) {
                 	  VSExit(1);
@@ -898,7 +913,7 @@ std::string vegastrike_cwd;
 
 		// Delete the default config in order to reallocate it with the right one (if it is a mod)
 		if (vs_config) {
-			fprintf (stderr,"reallocating vs_config \n");
+			CONFIG_LOG(logvs::NOTICE, "reallocating vs_config");
 			delete vs_config;
 		}
 		vs_config=NULL;
@@ -919,17 +934,17 @@ std::string vegastrike_cwd;
 		if( data_path != "")
 		{
 			// We found a path to data in config file
-			VS_LOG("config", logvs::NOTICE, "DATADIR - Found a datadir in config, using : %s",data_path.c_str());
+			CONFIG_LOG(logvs::NOTICE, "DATADIR - Found a datadir in config, using : %s",data_path.c_str());
 			datadir = data_path;
 		}
 		else
-			VS_LOG("config", logvs::NOTICE, "DATADIR - No datadir specified in config file, using ; %s",datadir.c_str());
+			CONFIG_LOG(logvs::NOTICE, "DATADIR - No datadir specified in config file, using ; %s",datadir.c_str());
 	}
 
 	void	InitMods()
 	{
 		string curpath;
-		struct dirent ** dirlist;
+		struct dirent ** dirlist = NULL;
 		// new config program should insert hqtextures variable
 		// with value "hqtextures" in data section.
 		string hq = vs_config->getVariable("data","hqtextures","");
@@ -942,15 +957,16 @@ std::string vegastrike_cwd;
 					string dname (dirlist[ret]->d_name);
 					if (dname == hq) {
 						curpath = selectcurrentdir+"/"+dname;
-						cout<< "\n\nAdding HQ Textures Pack\n\n";
+						CONFIG_LOG(logvs::NOTICE, "Adding HQ Textures Pack");
 						Rootdir.push_back( curpath);
 					}
 				}
 			}
-			free( dirlist);
+			if (dirlist) free(dirlist);
 		}
 
 		selectcurrentdir = moddir;
+        dirlist = NULL;
 		int ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 		if( ret <0)
 			return;
@@ -959,14 +975,15 @@ std::string vegastrike_cwd;
 				string dname (dirlist[ret]->d_name);
 				if (dname == modname) {
 					curpath = moddir+"/"+dname;
-					cout<<"Adding mod path : "<<curpath<<endl;
+					CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
 					Rootdir.push_back( curpath);
 				}
 			}
-		free( dirlist);
+		if (dirlist) free(dirlist);
 		// Scan for mods with standard data subtree
 		curmodpath = homedir+"/mods/";
 		selectcurrentdir = curmodpath;
+        dirlist = NULL;
 		ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 		if( ret <0)
 			return;
@@ -975,13 +992,38 @@ std::string vegastrike_cwd;
 				string dname (dirlist[ret]->d_name);
 				if (dname == modname) {
 					curpath = curmodpath+dname;
-					cout<<"Adding mod path : "<<curpath<<endl;
+					CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
 					Rootdir.push_back( curpath);
 				}
 			}
-		free( dirlist);
+		if (dirlist) free(dirlist);
 	}
 
+    void    InitBinDirectory() {
+        static const char * libsearchs[] = { ".", ".." PATHSEP "lib", ".." PATHSEP "Resources" PATHSEP "lib", "lib", "..", NULL };
+        libdir = ".";
+        
+        for (const char ** path = libsearchs; *path != NULL; ++path) {
+            std::string libpath = (bindir + PATHSEP) + *path;
+            if (DirectoryExists(libpath)) {
+                struct dirent ** dirlist = NULL;
+                int ret = scandir( libpath.c_str(), &dirlist, NULL, NULL);
+                while( ret-- > 0) {
+                    std::string dname;
+                    for (const char * s = dirlist[ret]->d_name; *s; ++s) dname.append(1, (char)tolower(*s));
+                    if ((!strncmp(dname.c_str(), "sdl", 3) || !strncmp(dname.c_str(), "libsdl", 6))
+                    &&  (strstr(dname.c_str(), ".so") || strstr(dname.c_str(), ".dll") || strstr(dname.c_str(), ".dylib"))) {
+                        libdir = libpath;
+                        while (*(path + 1) != NULL) ++path;
+                        break ;
+                    }
+                }
+                if (dirlist) free(dirlist);
+            }
+        }
+        CONFIG_LOG(logvs::NOTICE, "Found binary directory: %s", bindir.c_str());
+        CONFIG_LOG(logvs::NOTICE, "Found libraries directory: %s", libdir.c_str());
+    }
 
 	void	InitPaths( string conf, string subdir, ConfigOverrides_type * overrides)
 	{
@@ -1000,6 +1042,8 @@ std::string vegastrike_cwd;
 
 		InitDataDirectory();	// Need to be first for win32
 		InitHomeDirectory();
+		InitBinDirectory();
+
 		LoadConfig( subdir, overrides );
 
 		// Paths relative to datadir or homedir (both should have the same structure)
@@ -1085,7 +1129,7 @@ std::string vegastrike_cwd;
 		Directories[AccountFile] = "accounts";
 
 		simulation_atom_var=atof(vs_config->getVariable("general","simulation_atom","0.1").c_str());
-		VS_LOG("config", logvs::NOTICE, "SIMULATION_ATOM: %f", SIMULATION_ATOM);
+		CONFIG_LOG(logvs::NOTICE, "SIMULATION_ATOM: %f", SIMULATION_ATOM);
 
 		/************************* Home directory subdirectories creation ************************/
 		if (CreateDirectoryHome( savedunitpath) > Ok
@@ -1129,57 +1173,57 @@ std::string vegastrike_cwd;
 			if( FileExists( datadir, "/"+sharedunits+"."+volume_format)>=0)
 			{
 				UseVolumes[UnitFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedunits)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3", datadir.c_str(), sharedunits.c_str());
 			}
 			if( FileExists( datadir,"/"+sharedmeshes+"."+volume_format)>=0)
 			{
 				UseVolumes[MeshFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedmeshes)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3",datadir.c_str(), sharedmeshes.c_str());
 			}
 			if( FileExists( datadir,"/"+sharedtextures+"."+volume_format)>=0)
 			{
 				UseVolumes[TextureFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedtextures)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3", datadir.c_str(), sharedtextures.c_str());
 			}
 			if( FileExists( datadir,"/"+sharedsounds+"."+volume_format)>=0)
 			{
 				UseVolumes[SoundFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedsounds)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3", datadir.c_str(), sharedsounds.c_str());
 			}
 			if( FileExists( datadir,"/"+sharedcockpits+"."+volume_format)>=0)
 			{
 				UseVolumes[CockpitFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedcockpits)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3", datadir.c_str(), sharedcockpits.c_str());
 			}
 			if( FileExists( datadir,"/"+sharedsprites+"."+volume_format)>=0)
 			{
 				UseVolumes[VSSpriteFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/"+sharedsprites)<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/%s.pk3", datadir.c_str(), sharedsprites.c_str());
 			}
 			if( FileExists( datadir,"/animations."+volume_format)>=0)
 			{
 				UseVolumes[AnimFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/animations")<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/animations.pk3", datadir.c_str());
 			}
                         if( FileExists( datadir,"/movies."+volume_format)>=0)
                         {
                                 UseVolumes[VideoFile] = 1;
-                                cout<<"Using volume file "<<(datadir+"/movies")<<".pk3"<<endl;
+                                CONFIG_LOG(logvs::NOTICE, "Using volume file %s/movies.pk3", datadir.c_str());
                         }
 			if( FileExists( datadir,"/communications."+volume_format)>=0)
 			{
 				UseVolumes[CommFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/communications")<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/communications.pk3", datadir.c_str());
 			}
 			if( FileExists( datadir,"/mission."+volume_format)>=0)
 			{
 				UseVolumes[MissionFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/mission")<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/mission.pk3", datadir.c_str());
 			}
 			if( FileExists( datadir,"/ai."+volume_format)>=0)
 			{
 				UseVolumes[AiFile] = 1;
-				cout<<"Using volume file "<<(datadir+"/ai")<<".pk3"<<endl;
+				CONFIG_LOG(logvs::NOTICE, "Using volume file %s/ai.pk3", datadir.c_str());
 			}
 			UseVolumes[ZoneBuffer] = 0;
 		}
@@ -1190,7 +1234,7 @@ std::string vegastrike_cwd;
 		int err = -1;
 		if( !DirectoryExists( filename))
 		{
-			err = vs_mkdir(filename, 0xFFFFFFFF);
+			err = vs_mkdir(filename, 0755);
 			if( err<0 && errno!=EEXIST)
 			{
 				VS_LOG("game", logvs::ERROR, "Errno=%d - FAILED TO CREATE : %s", errno, filename);
@@ -1255,7 +1299,7 @@ std::string vegastrike_cwd;
 			//}else {
 			    if( vs_stat(fullpath.c_str(), &s) >= 0){
 				if( s.st_mode & S_IFDIR) {
-				    cerr<<" File is a directory ! ";
+				    VSFS_LOG(logvs::WARN, " File is a directory ! ");
 				    found = -1;
 				    //fileExistsCache[fullpath]=false;
 				}
@@ -1390,27 +1434,27 @@ std::string vegastrike_cwd;
 
 	VSError GetError( const char * str)
 	{
-			logvs::vs_printf("!!! ERROR/WARNING VSFile : ");
+			VSFS_LOG_START(logvs::WARN, "!!! ERROR/WARNING VSFile : ");
 			if( str)
 				logvs::vs_printf("on %s : ", str);
 			if( errno==ENOENT)
 			{
-				logvs::vs_printf("File not found\n");
+				VSFS_LOG_END(logvs::NOTICE, "File not found");
 				return FileNotFound;
 			}
 			else if( errno==EPERM)
 			{
-				logvs::vs_printf("Permission denied\n");
+				VSFS_LOG_END(logvs::NOTICE, "Permission denied");
 				return LocalPermissionDenied;
 			}
 			else if( errno==EACCES)
 			{
-				logvs::vs_printf("Access denied\n");
+				VSFS_LOG_END(logvs::NOTICE, "Access denied");
 				return LocalPermissionDenied;
 			}
 			else
 			{
-				logvs::vs_printf("Unspecified error (maybe to document in VSFile ?)\n");
+				VSFS_LOG_END(logvs::NOTICE, "Unspecified error (maybe to document in VSFile ?)");
 				return Unspecified;
 			}
 	}
@@ -1442,6 +1486,9 @@ std::string vegastrike_cwd;
             // Animations are always in subdir named like the anim itself
 			extra += "/" + f.GetFilename();
             break;
+        default:
+            // No extra
+            break ;
         }
 
 		// This test lists all the VSFileType that should be looked for in the current directory
@@ -1536,9 +1583,9 @@ std::string vegastrike_cwd;
                 if (VSFS_DEBUG()>1) {
 		//cerr<<failed<<" - VOLUME TYPE="<<isin_bigvolumes<<endl;
                   if( isin_bigvolumes>VSFSNone)
-			 cerr<<failed<<" - INDEX="<<found<<endl<<endl;
+			 VSFS_LOG(logvs::WARN, "%s - INDEX=%d", failed.c_str(), found);
                   else
-			cerr<<failed<<endl;
+			 VSFS_LOG(logvs::NOTICE, "%s", failed.c_str());
                 }
 		if( found>=0)
 		{
@@ -1648,7 +1695,7 @@ std::string vegastrike_cwd;
 					CPK3 * pk3newfile = new CPK3;
 					if( !pk3newfile->Open( full_vol_path.c_str()))
 					{
-						cerr<<"!!! ERROR : opening volume : "<<full_vol_path<<endl;
+						VSFS_LOG(logvs::ERROR, "!!! ERROR : opening volume : %s", full_vol_path.c_str());
 						VSExit(1);
 					}
 					std::pair<std::string, CPK3 *> pk3_pair( full_vol_path, pk3newfile);
@@ -1664,7 +1711,8 @@ std::string vegastrike_cwd;
 				else
 					pk3_extracted_file = (char *) pk3_file->ExtractFile( (this->subdirectoryname+"/"+this->filename).c_str(), &pk3size);
 				this->size = pk3size;
-				cerr<<"EXTRACTING "<<(this->subdirectoryname+"/"+this->filename)<<" WITH INDEX="<<this->file_index<<" SIZE="<<pk3size<<endl;
+				VSFS_LOG(logvs::NOTICE, "EXTRACTING %s WITH INDEX=%d SIZE=%d", 
+                       (this->subdirectoryname+"/"+this->filename).c_str(), this->file_index, pk3size);
 			}
 		}
 	}
@@ -1681,7 +1729,7 @@ std::string vegastrike_cwd;
 
 		VSError err = Ok;
                 if (VSFS_DEBUG()) {
-                  cerr<<"Loading a " << type << " : "<<file<<endl;
+                  VSFS_LOG(logvs::NOTICE, "Loading a %d : %s", type, file);
                 }
 	if( type < ZoneBuffer || type==UnknownFile) // It is a "classic file"
 	{
@@ -1729,7 +1777,7 @@ std::string vegastrike_cwd;
 				if( found<0)
 				{
                                   if (VSFS_DEBUG()) {
-                                    cerr<<failed<<endl;
+                                    VSFS_LOG(logvs::WARN, "%s", failed.c_str());
                                   }
                                   this->valid = false;
                                   err = FileNotFound;
@@ -1738,12 +1786,13 @@ std::string vegastrike_cwd;
 				{
 					if( (this->fp = vs_fopen( filestr.c_str(), "rb"))==NULL)
 					{
-						cerr<<"!!! SERIOUS ERROR : failed to open Unknown file "<<filestr<<" - this should not happen"<<endl;
+						VSFS_LOG(logvs::WARN, "!!! SERIOUS ERROR : failed to open Unknown file %s - this should not happen",
+                               filestr.c_str());
 						VSExit(1);
 					}
 					this->valid = true;
                                         if (VSFS_DEBUG()>1)
-                                          cerr<<filestr<<" SUCCESS !!!"<<endl;
+                                          VSFS_LOG(logvs::NOTICE, "%s SUCCESS !!!", filestr.c_str());
 				}
 			}
 			else
@@ -1758,7 +1807,7 @@ std::string vegastrike_cwd;
 				this->fp = vs_fopen( filestr.c_str(), "rb");
 				if( !this->fp)
 				{
-					cerr<<"!!! SERIOUS ERROR : failed to open "<<filestr<<" - this should not happen"<<endl;
+					VSFS_LOG(logvs::WARN, "!!! SERIOUS ERROR : failed to open %s - this should not happen", filestr.c_str());
                                         this->valid=false;
 					return FileNotFound; // fault!
 				}
@@ -1787,7 +1836,7 @@ std::string vegastrike_cwd;
 					this->fp = vs_fopen( filestr.c_str(), "rb");
 					if( !this->fp)
 					{
-						cerr<<"!!! SERIOUS ERROR : failed to open "<<filestr<<" - this should not happen"<<endl;
+						VSFS_LOG(logvs::WARN, "!!! SERIOUS ERROR : failed to open %s - this should not happen", filestr.c_str());
                                                 this->valid=false;
 						return FileNotFound;//fault
 					}
@@ -1804,9 +1853,10 @@ std::string vegastrike_cwd;
 				current_subdirectory.push_back( this->subdirectoryname);
 				current_type.push_back( this->alt_type);
                                 if (VSFS_DEBUG()>1) {
-                                  cerr<<endl<<"BEGINNING OF ";
-                                  DisplayType( type);
-                                  cerr<<endl;
+                                  if (VSFS_LOG_START(logvs::NOTICE, "BEGINNING OF ")) {
+                                    DisplayType( type);
+                                    VSFS_LOG_END(logvs::NOTICE, "");
+                                  }  
                                 }
 
 			}
@@ -1958,7 +2008,7 @@ std::string vegastrike_cwd;
 				bool nl_found = false;
 				int i=0;
 				if (VSFS_DEBUG()>1) {
-					cerr<<"READLINE STARTING OFFSET="<<offset;
+					VSFS_LOG_START(logvs::NOTICE, "READLINE STARTING OFFSET=%d ", offset);
 				}
 				for( i=0; !nl_found && i<length && offset<size; offset++, i++)
 				{
@@ -1967,23 +2017,23 @@ std::string vegastrike_cwd;
 						nl_found = true;
 						if (VSFS_DEBUG()>1) {
 							if( pk3_extracted_file[offset]=='\n')
-								cerr<<"\\n ";
+								logvs::vs_printf("\\n ");
 							if( pk3_extracted_file[offset]=='\r')
-								cerr<<"\\r ";
+								logvs::vs_printf("\\r ");
 						}
 					}
 					else
 					{
 						ret[i] = pk3_extracted_file[offset];
 						if (VSFS_DEBUG()>1) {
-							cerr<<std::hex<<ret[i]<<" ";
+							logvs::vs_printf("%x ", ret[i]&0xff);
 						}
 					}
 				}
 				this->GoAfterEOL( length);
 				ret[i] = 0;
 				if (VSFS_DEBUG()>1) {
-					cerr<<std::dec<<" - read "<<i<<" char - "<<ret<<endl;
+					VSFS_LOG_END(logvs::NOTICE, " - read %d char - %s", i, ret);
 				}
 				if( !nl_found)
 					return Unspecified;
@@ -1995,7 +2045,7 @@ std::string vegastrike_cwd;
 	string  VSFile::ReadFull()
 	{
 		if (this->Size()<0) {
-			cerr<<"Attempt to call ReadFull on a bad file "<<this->filename<<endl;
+			VSFS_LOG(logvs::NOTICE, "Attempt to call ReadFull on a bad file %s", this->filename.c_str());
 		}
 		if( !UseVolumes[alt_type] || this->volume_type==VSFSNone)
 		{
@@ -2004,7 +2054,7 @@ std::string vegastrike_cwd;
 			int readsize = fread( content, 1, this->Size(), this->fp);
 			if( this->Size()!=readsize)
 			{
-				cerr<<"Only read "<<readsize<<" out of "<<this->Size()<<" bytes of "<<this->filename<<endl;
+				VSFS_LOG(logvs::NOTICE, "Only read %d out of %zu bytes of %s", readsize, this->Size(), this->filename.c_str());
 				GetError("ReadFull");
 				if (readsize<=0)
 					return string();
@@ -2039,7 +2089,7 @@ std::string vegastrike_cwd;
 		}
 		else
 		{
-			cerr<<"!!! ERROR : Writing is not supported within resource/volume files"<<endl;
+			VSFS_LOG(logvs::ERROR, "!!! ERROR : Writing is not supported within resource/volume files");
 			VSExit(1);
 		}
 		return Ok;
@@ -2057,7 +2107,7 @@ std::string vegastrike_cwd;
 			fputs( (const char *)ptr, this->fp);
 		else
 		{
-			cerr<<"!!! ERROR : Writing is not supported within resource/volume files"<<endl;
+			VSFS_LOG(logvs::ERROR, "!!! ERROR : Writing is not supported within resource/volume files");
 			VSExit(1);
 		}
 		return Ok;
@@ -2078,7 +2128,7 @@ std::string vegastrike_cwd;
 		}
 		else
 		{
-			cerr<<"!!! ERROR : Writing is not supported within resource/volume files"<<endl;
+			VSFS_LOG(logvs::ERROR, "!!! ERROR : Writing is not supported within resource/volume files");
 			VSExit(1);
 		}
 		return 0;
@@ -2213,7 +2263,7 @@ std::string vegastrike_cwd;
 		}
 		else
 		{
-			cerr<<"!!! ERROR : Writing is not supported within resource/volume files"<<endl;
+			VSFS_LOG(logvs::ERROR, "!!! ERROR : Writing is not supported within resource/volume files");
 			VSExit(1);
 		}
 	}
@@ -2279,9 +2329,10 @@ std::string vegastrike_cwd;
 			current_subdirectory.pop_back();
 			current_type.pop_back();
                         if (VSFS_DEBUG()>2) {
-                          cerr<<"END OF ";
-                          DisplayType( this->file_type);
-                          cerr<<endl<<endl;
+                          if (VSFS_LOG_START(logvs::NOTICE, "END OF ")) {
+                            DisplayType( this->file_type);
+                            VSFS_LOG_END(logvs::NOTICE, "");
+                          }
                         }
 		}
 		if( !UseVolumes[file_type] || this->volume_type==VSFSNone || file_mode!=ReadOnly)
