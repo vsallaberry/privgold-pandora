@@ -223,13 +223,6 @@ BOOST_PYTHON_MODULE_INIT(Vegastrike)
 #endif
 #include "vsfilesystem.h"
 
-#ifdef _WIN32
-// Python 2.5 doesn't seem to like forward-slashes.
-#define PATHSEP "\\"
-#else
-#define PATHSEP "/"
-#endif
-
 static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 40) {
     std::string res = pythonscript;
     for (std::string::iterator it = res.begin(); it != res.end(); ++it) {
@@ -248,7 +241,7 @@ void Python::overridePythonEnv() {
         if(pythonenv.size()) {
             pythonenv += ":";
         }
-        pythonenv += VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "builtin";
+        pythonenv += VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
     }
 
     static bool override_python_path
@@ -261,7 +254,7 @@ void Python::overridePythonEnv() {
 
 void Python::initpaths(){
     // Looking for python lib-dynload (optional modules loaded dynamically)
-    std::string pyLibsPath = "r\"" + VSFileSystem::libdir + PATHSEP "pythonlibs" "\"";
+    std::string pyLibsPath = "r\"" + VSFileSystem::libdir + VSFS_PATHSEP "pythonlibs" "\"";
     PYTHON_LOG(logvs::NOTICE, "PYTHON LIBS PATH: %s", pyLibsPath.c_str());
   /*
   char pwd[2048];
@@ -289,12 +282,12 @@ void Python::initpaths(){
       if(modpaths.size()) {
           modpaths += ",";
       }
-	  modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "builtin\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "quests\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "missions\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+ PATHSEP "ai\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +moduledir+"\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ PATHSEP +basesdir+"\"";
+	  modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin\",";
+      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "quests\",";
+      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "missions\",";
+      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "ai\",";
+      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+"\",";
+      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +basesdir+"\"";
   }
   /*
   string::size_type backslash;

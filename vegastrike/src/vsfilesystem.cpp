@@ -52,7 +52,6 @@ struct dirent { char d_name[1]; };
 #include "vs_log_modules.h"
 
 #ifdef _WIN32
-# define PATHSEP "\\"
 # include <shlobj.h>
 namespace VSFileSystem {
 # if !defined(VS_HOME_INSIDE_DATA)
@@ -142,8 +141,6 @@ int 	vs_stat(const char * path, struct stat * st) {
 	return res;
 }
 } // ! namespace VSFileSystem
-#else // ! _WIN32
-# define PATHSEP "/"
 #endif // ! _WIN32
 
 using VSFileSystem::VSVolumeType;
@@ -1000,11 +997,11 @@ std::string vegastrike_cwd;
 	}
 
     void    InitBinDirectory() {
-        static const char * libsearchs[] = { ".", ".." PATHSEP "lib", ".." PATHSEP "Resources" PATHSEP "lib", "lib", "..", NULL };
-        libdir = ".";
-        
+        static const char * libsearchs[] = { ".", ".." VSFS_PATHSEP "lib", ".." VSFS_PATHSEP "Resources" VSFS_PATHSEP "lib", "lib", "..", NULL };
+        libdir = bindir;
+
         for (const char ** path = libsearchs; *path != NULL; ++path) {
-            std::string libpath = (bindir + PATHSEP) + *path;
+            std::string libpath = (bindir + VSFS_PATHSEP) + *path;
             if (DirectoryExists(libpath)) {
                 struct dirent ** dirlist = NULL;
                 int ret = scandir( libpath.c_str(), &dirlist, NULL, NULL);
@@ -1022,7 +1019,7 @@ std::string vegastrike_cwd;
             }
         }
         CONFIG_LOG(logvs::NOTICE, "Found binary directory: %s", bindir.c_str());
-        CONFIG_LOG(logvs::NOTICE, "Found libraries directory: %s", libdir.c_str());
+        CONFIG_LOG(logvs::NOTICE, "Using libraries directory: %s", libdir.c_str());
     }
 
 	void	InitPaths( string conf, string subdir, ConfigOverrides_type * overrides)

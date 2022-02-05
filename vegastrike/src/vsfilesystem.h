@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <string>
 #include <vector>
@@ -26,6 +27,21 @@ extern ObjSerial	serial_seed;
 ObjSerial			getUniqueSerial();
 #define DELIM '/'
 #define DELIMSTR "/"
+
+#ifdef _WIN32
+// Python 2.5 doesn't seem to like forward-slashes.
+# define VSFS_PATHSEP "\\"
+#else // ! _WIN32
+# define VSFS_PATHSEP "/"
+#endif
+
+#if !defined(HAVE_STRCASECMP) && !defined(strcasecmp) && defined(HAVE_STRICMP)
+# define strcasecmp(s1,s2) stricmp(s1,s2)
+#endif
+#if !defined(HAVE_STRNCASECMP) && !defined(strncasecmp) && defined(HAVE_STRNICMP)
+# define strncasecmp(s1,s2,n) strnicmp(s1,s2,n)
+#endif
+
 namespace VSFileSystem
 {
 	class VSFile;
