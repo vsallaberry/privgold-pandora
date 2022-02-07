@@ -21,5 +21,6 @@ cd "%MYDIR%\data"
 
 REM LAUNCH
 set VEGALOG=%VEGAHOME%\vegastrike.log
-"%MYDIR%\bin\vegastrike.%GFX%.exe" 1> "%VEGALOG%" 2>&1
+REM "%MYDIR%\bin\vegastrike.%GFX%.exe" 1> "%VEGALOG%" 2>&1
+"%MYDIR%\bin\vegastrike.%GFX%.exe"
 

@@ -179,11 +179,16 @@ if test -n "${do_setup}" -o "$("${mydir}/checkModifierKeys" option 2>/dev/null)"
                     done
                     ;;
                 linux*|*bsd*)
-                    xterm -e "${mydir}/${setup}" "$@"
+                    for term in $(which -a xterm gnome-terminal konsole "${TERM}" 2>/dev/null); do
+                        if test -x "${term}"; then
+                            exec "${term}" -e "${mydir}/${setup}" "$@"
+                            break # break not neeed with exec
+                        fi
+                    done
                     ;;
             esac
         else
-            "${mydir}/${setup}" "$@" > "${setuplog_file}" 2>&1
+            exec "${mydir}/${setup}" "$@"
         fi && break
     done
 
@@ -195,7 +200,6 @@ else
     # Run VEGASTRIKE
     cd "${data_dir}"
 
-    exec "${mydir}/vegastrike.${engine}" "$@" > "${log_file}" 2>&1
-
+    exec "${mydir}/vegastrike.${engine}" "$@"
 fi
 
