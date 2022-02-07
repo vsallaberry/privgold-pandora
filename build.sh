@@ -353,21 +353,22 @@ if false; then
     export PYTHON_LIBRARY=/usr/lib/libpython${py_version}.dylib
 else
     # EMBEDED PYTHON
-    export PYTHON="${VEGA_PREFIX}/bin/python${py_version}"
     case "${target_sysname}" in
         darwin*)
-            export PYTHONPATH="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
-            export PYTHON_LIBRARY=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/lib/libpython${py_version}.dylib
-            export PYTHON_INCLUDE_DIR=${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}/include/python${py_version};;
+            export PYTHON_PREFIX="${VEGA_PREFIX}/Library/Frameworks/Python.framework/Versions/${py_version}"
+            export PYTHON="${PYTHON_PREFIX}/bin/python${py_version}"
+            export PYTHON_LIBRARY="${PYTHON_PREFIX}/lib/libpython${py_version}.dylib"
+            export PYTHON_INCLUDE_DIR="${PYTHON_PREFIX}/include/python${py_version}";;
         *)
-            export PYTHONPATH="${VEGA_PREFIX}/lib/python${py_version}"
-            export PYTHON_LIBRARY="${VEGA_PREFIX}/lib/libpython${py_version}.${build_dllext}"
-            export PYTHON_INCLUDE_DIR="${VEGA_PREFIX}/include/python${py_version}"
+            export PYTHON_PREFIX="${VEGA_PREFIX}"
+            export PYTHON="${PYTHON_PREFIX}/bin/python${py_version}"
+            export PYTHON_LIBRARY="${PYTHON_PREFIX}/lib/libpython${py_version}.${build_dllext}"
+            export PYTHON_INCLUDE_DIR="${PYTHON_PREFIX}/include/python${py_version}"
             case "${target_sysname}" in mingw*|cygwin*|msys*) export PYTHON="$(cygpath -m "${PYTHON}")";; esac
             ;;
     esac
 fi
-export PYTHONHOME="${PYTHONPATH}"
+#export PYTHONHOME="${PYTHONPATH}"
 
 export GTK2_HOME="${GTK2_PREFIX}/include/gtk-2.0"
 
@@ -381,6 +382,7 @@ export CMAKE=$(which -a cmake | head -n1)
 export PKGCONFIG="${VEGA_PREFIX}/bin/pkg-config"
 export PKG_CONFIG="${PKGCONFIG}"
 PKG_CONFIG_PATH="${VEGA_PREFIX2:+${VEGA_PREFIX2}/lib/pkgconfig:}${VEGA_PREFIX}/lib/pkgconfig"
+PKG_CONFIG_PATH+=":${PYTHON_PREFIX}/lib/pkgconfig"
 PKG_CONFIG_PATH+=":${GTK2_PREFIX}/lib/pkgconfig"
 #PKG_CONFIG_PATH+=/usr/local/specific/libpng12/lib/pkgconfig
 #PKG_CONFIG_PATH+=:/usr/local/specific/ffmpeg1/lib/pkgconfig
@@ -672,7 +674,7 @@ do_build_fun() {
                     "${spec_config_args[@]}"
             fi
 
-            test -f Makefile || echo '--Makefile' >> ${build_config_cache}
+            test -f Makefile || echo '--' >> ${build_config_cache}
 
             configure_if_needed "${configure}" "${config_args[@]}"
 
@@ -748,7 +750,10 @@ do_run_fun() {
             #  |  { unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike" 2>&1; } | tee "${mydir}/${log}" & privpid=$!; ret=$?
         else
             # RUN vegastrike
-            "${build}/vegastrike${exe}" "-Clog/colorize=yes" "${run_args[@]}" 2>&1 | tee "${log}"; ret=$?
+            #"${build}/vegastrike${exe}" "-Clog/file=${log}" "-Clog/colorize=yes" "${run_args[@]}" 2>&1 | tee "${log}"; ret=$?
+            ("${build}/vegastrike${exe}" "-Clog/file=${log}" "-Clog/colorize=yes" "${run_args[@]}" & vegapid=$!
+             tail -F "${log}" & tailpid=$!
+             wait ${vegapid}; ret=$?; kill ${tailpid})
         fi
 
         popd >/dev/null #data
@@ -974,6 +979,11 @@ do_delivery_fun() {
         cp -v "$f" "${bundle_bindir}"
     done
 
+    for _lib in "${mainbuilddir}/lib/pythonlibs"/*; do
+        test -L "${_lib}" && _lib="$(readlink "${_lib}")"
+        add_bundlelibs "pythonlibs" "${_lib}"
+    done
+
     test -z "${interactive}" || { yesno "? Finalize bundle (update libs, version, tools, ...) ?" || exit 1; }
 
     # Update Version in bundle
@@ -1174,6 +1184,7 @@ do_generate_python_cpp_api() {
             else if (module "." class "::" method == "VS.un_iter::current") { ret="Unit()"; } \
             else if (module "." class "::" method == "Base.::GetRandomBarMessage") { ret="(\"\",\"\")"; } \
             else if (module "." class "::" method == "VS.Unit::getSubUnits") { ret="un_iter()"; } \
+            else if (module "." class "::" method == "VS.::LogPrint") { doreturn=indent "    " "import sys; sys.stdout.write(a1); return"; ret=1; } \
             print doreturn " " ret >> outfile; \
         }; \
         function fixret(ret) { \

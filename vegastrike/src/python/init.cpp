@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#if defined(_WIN32) && !defined(__CYGWIN__)
+#include <direct.h>
+#endif
 #include <boost/version.hpp>
 #if BOOST_VERSION != 102800
 #if defined (_MSC_VER) && _MSC_VER<=1200
@@ -34,9 +37,7 @@
 #include "cmd/unit_generic.h"
 #include "log.h"
 #include "vs_log_modules.h"
-#if defined(_WIN32) && !defined(__CYGWIN__)
-#include <direct.h>
-#endif
+#include "vsfilesystem.h"
 
 #if !defined(HAVE_SETENV)
 static int setenv(const char * var, const char * value, int override) {	
@@ -221,7 +222,6 @@ BOOST_PYTHON_MODULE_INIT(Vegastrike)
 	return from_python(p,boost::python::type<Orders::FireAt &>());
 }*/
 #endif
-#include "vsfilesystem.h"
 
 static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 40) {
     std::string res = pythonscript;
@@ -238,10 +238,19 @@ void Python::overridePythonEnv() {
     // Find all the mods dir (ignore homedir)
     for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
     {
+        std::string pydir = VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
+ 
+        if (!VSFileSystem::DirectoryExists(pydir)) {
+            PYTHON_LOG(logvs::WARN, "WARNING: the Python Home Path does not exist, "
+                       "this could be fatal (check the datadir)");
+            PYTHON_LOG(logvs::WARN, "  missing PYTHONHOME: %s", pydir.c_str());
+        }
+
         if(pythonenv.size()) {
             pythonenv += ":";
         }
-        pythonenv += VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
+
+        pythonenv += pydir;
     }
 
     static bool override_python_path
@@ -254,7 +263,7 @@ void Python::overridePythonEnv() {
 
 void Python::initpaths(){
     // Looking for python lib-dynload (optional modules loaded dynamically)
-    std::string pyLibsPath = "r\"" + VSFileSystem::libdir + VSFS_PATHSEP "pythonlibs" "\"";
+    std::string pyLibsPath = "r\"" + VSFileSystem::libdir + VSFS_PATHSEP VEGASTRIKE_PYTHON_DYNLIB_PATH "\"";
     PYTHON_LOG(logvs::NOTICE, "PYTHON LIBS PATH: %s", pyLibsPath.c_str());
   /*
   char pwd[2048];

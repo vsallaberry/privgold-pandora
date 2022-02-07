@@ -499,6 +499,10 @@ AC_ARG_WITH(python-libs, AC_HELP_STRING([--with-python-libs=DIR], [Python Libs l
 #with_python_inc=${macos_sdk}//System/Library/Frameworks/Python.framework/Versions/Current/include/python2.7
 #with_python_libs=/System/Library/Frameworks/Python.framework/Versions/Current/lib
 
+dnl --------------------------------------------------------------------------
+dnl Check if compiling for macOS
+dnl --------------------------------------------------------------------------
+
 if test "x$is_macosx" = "xyes" ; then
     AC_MSG_NOTICE([using MACOS SDK $macos_sdk])
 
@@ -538,6 +542,28 @@ fi
 
 
 VS_CHECK_PYTHON
+
+###############################
+vs_pythonlibs_path="pythonlibs"
+AC_DEFINE_UNQUOTED([VEGASTRIKE_PYTHON_DYNLIB_PATH], ["${vs_pythonlibs_path}"], [python_dynlibs])
+
+vs_pythonlibs_buildir="lib/${vs_pythonlibs_path}"
+mkdir -p "${vs_pythonlibs_buildir}"
+tmp_found=
+for dir in $("${PYTHON_BINARY}" -E -c "import sys; print('\n'.join(sys.path))"); do
+    for lib in "unicodedata" "time" "_struct" "_io"; do
+        for ext in ".so" ".dylib" ".dll"; do
+            if test -f "${dir}/${lib}${ext}"; then
+                tmp_found="${tmp_found} ${lib}${ext}"
+                ln -sf "${dir}/${lib}${ext}" "${vs_pythonlibs_buildir}/${lib}${ext}" \
+                || cp "${dir}/${lib}${ext}" "${vs_pythonlibs_buildir}/${lib}${ext}"
+            fi
+        done
+    done
+    test -n "${tmp_found}" && break 
+done
+AC_MSG_RESULT([Found pythonlibs:${tmp_found}])
+###############################
 
 AC_LANG(C++)
 

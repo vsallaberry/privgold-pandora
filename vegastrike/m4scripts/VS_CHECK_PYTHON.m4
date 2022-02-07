@@ -32,6 +32,7 @@ do
     PYTHON_check=`$i -V 2>/dev/null; echo $?`
     if test ${PYTHON_check} -eq 0;
     then
+        PYTHON_BINARY="${i}"
         FOUND_PYTHON=yes
     fi
 
@@ -96,6 +97,7 @@ then
     PYTHON_libchk="${with_python_libs} ${PYTHON_LIBPATH} /usr/lib /usr/local/lib /usr/lib64 /usr/local/lib64 /usr/lib64/python${PYTHON_SHORT}/config /usr/local/lib64/python${PYTHON_SHORT}/config /sw/lib/python${PYTHON_SHORT}/config /usr/lib/python${PYTHON_SHORT} /usr/lib/python${PYTHON_SHORT}/config /usr/local/lib/python${PYTHON_SHORT} /usr/local/lib/python${PYTHON_SHORT}/config /lib/python2.2/config"
     for i in ${PYTHON_libchk};
     do
+        PYTHON_LIB_DIR=$i
         if test "x$is_macosx" = "xyes" ; then
           dylix=dylib
         else

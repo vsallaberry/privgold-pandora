@@ -649,16 +649,55 @@ include (CheckIncludeFileCXX)
 # Let cmake find our in-tree modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${vsUTCS_SOURCE_DIR}/cmake")
 
-find_package(PythonLibs REQUIRED)
-IF(PYTHONLIBS_FOUND OR PYTHON_LIBRARIES AND PYTHON_INCLUDE_PATH)
-    SET(TST_INCLUDES ${PYTHON_INCLUDE_PATH})
-    SET(TST_LIBS ${PYTHON_LIBRARIES})
+# Find PYTHON2
+### With pkg-config
+pkg_check_modules(PYTHON Python2)
+if(NOT PYTHON_FOUND)
+    pkg_check_modules(PYTHON Python<3)
+endif()
+if(PYTHON_FOUND) 
+    set(PYTHON_LIBRARY ${PYTHON_LINK_LIBRARIES})
+    set(PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIRS})
+    find_program(PYTHON_EXECUTABLE NAMES python python${PYTHON_VERSION} HINTS "${PYTHON_PREFIX}/bin" "${PYTHON_PREFIX}")
+endif()
+if(NOT PYTHON_LIBRARY OR NOT PYTHON_INCLUDE_DIR)
+    find_package(PythonInterp 2) # deprecated, use Python or Pyhton2 (CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
+    find_package(PythonLibs 2) # deprecated, use Python or Pyhton2 (CMAKE_VERSION VERSION_GREATER_EQUAL 3.12)
+    if(PythonLibs_FOUND)
+        SET(PYTHON_LIBRARY ${PYTHON_LIBRARIES})
+        SET(PYTHON_INCLUDE_DIR ${PYTHON_INCLUDE_DIRS})
+    endif()
+endif()
+IF(PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY)
+    SET(TST_INCLUDES ${PYTHON_INCLUDE_DIR})
+    SET(TST_LIBS ${PYTHON_LIBRARY})
     SET(HAVE_PYTHON 1)
-ELSE(PYTHONLIBS_FOUND OR PYTHON_LIBRARIES AND PYTHON_INCLUDE_PATH)
+    message(STATUS "  Python includes:${PYTHON_INCLUDE_DIR}, libs:${PYTHON_LIBRARY}, bin:${PYTHON_EXECUTABLE}")
+    # As we don't want to use all python libs in dev mode, we need to specify them one by one.
+    # In release(bundle) mode, no issue, as we provide only the libs we want.
+    SET(VEGASTRIKE_PYTHON_DYNLIB_PATH "pythonlibs")
+    SET(VS_PYTHON_DYNLIB_BUILDDIR "${CMAKE_BINARY_DIR}/lib/${VEGASTRIKE_PYTHON_DYNLIB_PATH}")
+    SET(VS_PYTHON_DYNLIB_NAMES unicodedata time _struct _io)
+    if (NOT EXISTS "${VS_PYTHON_DYNLIB_BUILDDIR}")
+        unset(tmp_pythonlibs)
+        file (MAKE_DIRECTORY "${VS_PYTHON_DYNLIB_BUILDDIR}")
+        execute_process(COMMAND ${PYTHON_EXECUTABLE} -E -c "import sys; print(\";\".join(sys.path))"
+                        OUTPUT_VARIABLE VS_PYTHON_DYNLIB_PATHS OUTPUT_STRIP_TRAILING_WHITESPACE)
+        FOREACH(tmp_dyn_name ${VS_PYTHON_DYNLIB_NAMES})
+            find_library(tmp_dyn_path NAMES ${tmp_dyn_name}.so ${tmp_dyn_name}.dll ${tmp_dyn_name}.dylib
+                         HINTS ${VS_PYTHON_DYNLIB_PATHS}) 
+            if (tmp_dyn_path)
+                get_filename_component(tmp_basename "${tmp_dyn_path}" NAME)
+                set(tmp_pythonlibs "${tmp_pythonlibs} ${tmp_basename}")
+                file(CREATE_LINK "${tmp_dyn_path}" "${VS_PYTHON_DYNLIB_BUILDDIR}/${tmp_basename}" SYMBOLIC COPY_ON_ERROR)
+            endif()
+            unset(tmp_dyn_path CACHE)
+        ENDFOREACH()
+        message(STATUS "found python libs:${tmp_pythonlibs}")
+    endif()
+ELSE(PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY)
     message(FATAL_ERROR "Can't find python")
-ENDIF(PYTHONLIBS_FOUND OR PYTHON_LIBRARIES AND PYTHON_INCLUDE_PATH)
-
-
+ENDIF(PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY)
 
 # Find Boost with boost_python library
 #SET(BOOST_INTERNAL 0)
