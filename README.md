@@ -17,11 +17,11 @@ This is based on Privateer Gold v1.03 (2009) but
 this is not an official release of vegastrike or Privateer Gold.  
   
 The first Goal was to have a 64bit MacOS build: this is when the pandora
-box has been openned, implying a lot more updates.
+box has been opened, implying a lot more updates.
   
 Tested on macOS El Capitan, Mojave and Catalina, linux debian 9, and on virtual machines with Windows 7&10.
 Vegastrike now supports 3 graphical engines for openGL: GLUT, SDL1, SDL2.
-SDL1 is discouraged, SDL2 is recomanded, use GLUT if trouble with SDL2.
+SDL1 is discouraged, SDL2 is recommended, use GLUT if trouble with SDL2.
 Unicode handling (keyboard and graphics) has been improved.
   
 A big credit and thanks to [Vegastrike Team](https://www.vega-strike.org), 
