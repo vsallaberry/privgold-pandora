@@ -720,9 +720,9 @@ bool cockpitfront=true;
           game_options.show_msgcenter_base = !flags;
           if (!flags) {
               GAME_LOG(logvs::NOTICE, "enabling msgcenter logs");
-              run_python("#\nimport debug\ndebug.init(True)");
+              run_python("#\nimport debug\ndebug.initMsgCenter(True)");
           } else {
-        	  run_python("#\nimport debug\ndebug.init()");
+        	  run_python("#\nimport debug\ndebug.initMsgCenter()");
           }
       }
     }

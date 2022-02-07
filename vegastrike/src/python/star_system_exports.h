@@ -119,3 +119,5 @@ EXPORT_UTIL(restoreKeyRepeat,false)
 EXPORT_UTIL(Log,0)
 EXPORT_UTIL(LogLevel,3)
 EXPORT_UTIL(LogFile,"stdout")
+EXPORT_UTIL(LogPrint,0)
+

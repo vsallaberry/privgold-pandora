@@ -212,42 +212,53 @@ namespace logvs {
         F_LOCATION_FOOTER = 1 << 4,
         F_MSGCENTER       = 1 << 5,
         F_TIMESTAMP       = 1 << 6,
+        F_HEADER          = 1 << 7,
+        F_QUEUELOGS       = 1 << 8,
         F_LOCATION_MASK = F_LOCATION_HEADER | F_LOCATION_FOOTER,
+        F_DEFAULTS = F_HEADER | F_LOCATION_FOOTER,
     };
     
-    // returns number of bytes written or 0 on error or when log is disabled
+    /** returns number of bytes written or 0 on error or when log is disabled */
     int vs_log(const std::string & category, unsigned int level, unsigned int flags,
                const char * file, const char * func, int line,
                const char *fmt, ...) __attribute__((format(printf, 7, 8)));
 
-    // returns the allowed level for a given category (check in XML and cache it if store is true)
+    /** returns the allowed level for a given category (check in XML and cache it if store is true) */
     unsigned int vs_log_level(const std::string & category, bool store = true);
 
-    // get current logging file
+    /** get current logging file */
     FILE * vs_log_getfile(const std::string & module = "");
 
-    // changes logging file, returns old one
+    /** changes logging file, returns old one */
     FILE * vs_log_setfile(FILE * out, const std::string & module = "");
 
-    // update log flags, return old ones
+    /** update log flags, return old ones */
     unsigned int vs_log_setflag(unsigned int flag, bool value);
     unsigned int vs_log_setflags(unsigned int flags);
 
-    // Starts a log line
+    /** Starts a log line */
     int vs_log_header(const std::string & category, unsigned int level, unsigned int flags,
                       const char * file, const char * func, int line,
                       const char * fmt, ...) __attribute__((format(printf, 7, 8)));
 
-    // printf like in the log file
+    /** printf like in the log file */
     int vs_printf(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
 
-    // terminates a log line started with log_header
+    /** terminates a log line started with log_header */
     int vs_log_footer(const std::string & category, unsigned int level, unsigned int flags,
                       const char * file, const char * func, int line,
                       const char * fmt, ...) __attribute__((format(printf, 7, 8)));
 
     const char * log_level_name(unsigned int level);
     unsigned int log_level_byname(const char * name);
+
+    /** Set log to given file. Special values: stdout, stderr.
+      * After this call the log flag F_QUEUELOGS is reset to false. */
+    int log_openfile(const std::string & module, 
+                     const std::string & filename, bool redirect, bool append);
+
+    /** close & flush logs, trying to go back to initial setup. To be used with atexit() */
+    void log_terminate();
 
 #ifdef VS_LOG_NO_XML
     void vs_log_setlevel(const std::string & category, unsigned int level);

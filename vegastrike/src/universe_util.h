@@ -309,6 +309,8 @@ namespace UniverseUtil
     int Log(const std::string & module, unsigned int level, const std::string & message);
     unsigned int LogLevel(const std::string & module, bool store = true);
     std::string LogFile(const std::string & module);
+    int LogPrint(const std::string & message, const std::string & module);
+
 }
 
 

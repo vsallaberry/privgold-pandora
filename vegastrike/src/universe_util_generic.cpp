@@ -1060,9 +1060,35 @@ namespace UniverseUtil
     std::string LogFile(const std::string & module) {
         (void)module;
         static const std::string
-            logfile = vs_config->getVariable("log","file","stderr");
-        return logfile.empty() ? logfile : "stderr"; // currently only stderr and none supported
+            conf_logfile = vs_config->getVariable("log","file","stderr");
+        static std::string logfile;
+        if (conf_logfile.empty() || !logfile.empty())
+           return logfile;
+        // compute the logfile if not done already
+        logfile = conf_logfile;
+        if (strcasecmp(logfile.c_str(), "stdout") == 0 || strcasecmp(logfile.c_str(), "stderr") == 0) {
+            return logfile;
+        }
+        if (logfile[0] != '/'
+#if defined(WIN32)
+                && logfile[0] != '\\' && (tolower(logfile[0]) < 'a' || tolower(logfile[0]) > 'z'
+                    || (strncmp(logfile.c_str()+1, ":\\",2) && strncmp(logfile.c_str()+1, ":/", 2)))
+#endif
+        ) {
+            // This is a relative path, making it from home dir
+            logfile = (VSFileSystem::homedir + VSFS_PATHSEP) + logfile;
+        }
+        return logfile; // currently only stderr and none supported
     }
+
+    int LogPrint(const std::string & message, const std::string & module) {
+        FILE * out = logvs::vs_log_getfile(module);
+        if (out != NULL) {
+            return (fputs(message.c_str(), out)) >= 0 ? message.length() : 0;
+        }
+        return 0;
+    }
+
 }
 
 

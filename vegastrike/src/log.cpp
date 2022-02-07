@@ -18,18 +18,30 @@
 * along with this program; if not, write to the Free Software
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+/*
+ * CONFIG
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #elif ! defined(_WIN32) && !defined(HAVE_STRCASECMP)
 #define HAVE_STRCASECMP
 #endif
+
+/*
+ * STD HEADERS
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <time.h>
+#include <queue>
 
+/*
+ * WIN32 Specific headers
+ */
 #if defined(_WIN32)
-# include <time.h>
 # define flockfile(f)   _lock_file(f)
 # define funlockfile(f) _unlock_file(f)
 # if defined(__CYGWIN__) || defined(__MINGW32__)
@@ -40,9 +52,17 @@
 # include <sys/time.h>
 #endif
 
+/*
+ * Specific cpp file headers
+ */
 #include "log.h"
 
 #include "gnuhash.h"
+
+/*
+ * Detect if we are building vegastrike and include
+ * specific stuff such as configxml, msgcenter, getNewTime, ...
+ */
 #ifndef VS_LOG_NO_XML
 # include "xml_support.h"
 # include "configxml.h"
@@ -57,8 +77,12 @@ extern Mission * mission;
 # define VS_LOG_NO_MSGCENTER
 #endif
 
+
+/*
+ * logGetTime() function
+ */
 #if defined(VS_LOG_USE_LOOP_TIME)
-static inline double logGetTime() { 
+static inline double logGetTime() {
     double time = getNewTime();
     if (time == 0.0) { time = queryTime(); } // 0 means loop is not running yet --> force query
     return time;
@@ -73,7 +97,7 @@ static double logGetTime() {
     return (time.tv_sec + (time.tv_usec/1000000.0)) - origtime;
 }
 #elif defined(HAVE_SDL)
-# include <SDL_timer.h> 
+# include <SDL_timer.h>
 static double logGetTime() {
     return SDL_GetTicks() * 1.e-3;
 }
@@ -82,9 +106,9 @@ static double logGetTime() {
 # include <sys/time.h>
 #endif
 # include <time.h>
-static double logGetTime() { 
+static double logGetTime() {
     static time_t origtime = time(NULL);
-    return time(NULL) - origtime; 
+    return time(NULL) - origtime;
 }
 #endif
 
@@ -95,11 +119,24 @@ namespace logvs {
 #define STR(x) #x //convert argument into string
 #define STR2(x) STR(x) // resolve the macro value before stringifying it
 
-typedef vsUMap<std::string, unsigned int> LogMap;
+struct LogEntry {
+    std::string message;
+    std::string category;
+    unsigned int level;
+    unsigned int flags;
+    double timestamp;
+    LogEntry(const std::string & _category, unsigned int _level, unsigned int _flags, double _timestamp, const std::string & _message)
+        : message(_message), category(_category), level(_level), flags(_flags), timestamp(_timestamp) {}
+};
 
-static unsigned int log_flags = F_LOCATION_FOOTER; // | F_LOCATION_ALLWAYS;
+typedef vsUMap<std::string, unsigned int> LogMap;
+typedef std::queue<LogEntry> LogQueue;
+
+static unsigned int log_flags = F_DEFAULTS; // | F_LOCATION_ALLWAYS;
 static LogMap       log_map;
+static LogQueue     log_queue;
 static FILE *       vslog_out = stderr;
+static int          vslog_stdout_fd = -1, vslog_stderr_fd = -1;
 static bool         vslog_out_istty = false;
 static int          log_level_default = -1;
 static int          log_colorize = -1;
@@ -128,8 +165,7 @@ static const char * const log_level_color[logvs::LVL_NB] = {
 };
 #endif
 
-#ifndef VS_LOG_NO_MSGCENTER
-#define VSLOG_MSGCENTER_ON(flags) (((flags) & logvs::F_MSGCENTER) != 0 && mission != NULL && mission->msgcenter != NULL)
+#define VSLOG_MSGCENTER_ON(flags) (((flags) & (logvs::F_MSGCENTER | logvs::F_QUEUELOGS)) != 0)
 #define vs_log_msgcenter_v(category,level,flags,islast,file,func,line,fmt,valist) \
     if (VSLOG_MSGCENTER_ON(flags)) { \
         va_start(valist, fmt); \
@@ -144,7 +180,7 @@ static void vs_log_msgcenter_v_(const std::string & category, unsigned int level
                                 bool islast, const char * file, const char * func, int line,
                                 const char * fmt, va_list valist) {
     (void)level; (void)file; (void)func; (void)line;
-    static char buf[4096];//it is ok to use static because it is under FILE* vslog_out lock which is unique
+    static char buf[4096] = { 0, }; //it is ok to use static because it is under FILE* vslog_out lock which is unique
     static size_t off = 0;
     int ret;
     if (fmt != NULL && (ret = vsnprintf(buf+off, sizeof(buf)-off, fmt, valist)) > 0) {
@@ -152,9 +188,19 @@ static void vs_log_msgcenter_v_(const std::string & category, unsigned int level
         if (off > sizeof(buf))
             off = sizeof(buf);
     }
-    if (islast) {
-        mission->msgcenter->add("log/" + category, "all", buf);
+    bool eol = (!islast && off > 0 && buf[off-1] == '\n');
+    if (islast || off == sizeof(buf) || eol) {
+        std::string message(buf, off - (eol ? 1 : 0));
+        if ((flags & F_QUEUELOGS) != 0) {
+            log_queue.push(LogEntry(category, level, (flags | log_flags), logGetTime(), message));
+        }
+#ifndef VS_LOG_NO_MSGCENTER
+        if ((flags & F_MSGCENTER) != 0 && mission != NULL && mission->msgcenter != NULL) {
+            mission->msgcenter->add("log/" + category, "all", message);
+        }
+#endif // ! VS_LOG_NO_MSGCENTER
         off = 0;
+        *buf = 0;
     }
 }
 static void vs_log_msgcenter_(const std::string & category, unsigned int level, unsigned int flags,
@@ -165,11 +211,6 @@ static void vs_log_msgcenter_(const std::string & category, unsigned int level, 
 	vs_log_msgcenter_v_(category, level, flags, islast, file, func, line, fmt, valist);
 	va_end(valist);
 }
-#else
-// VS_LOG_NO_MSGCENTER
-# define vs_log_msgcenter_v(...)
-# define vs_log_msgcenter(...)
-#endif
 
 #ifdef VS_LOG_NO_XML
 void vs_log_setlevel(const std::string & category, unsigned int level) {
@@ -224,13 +265,13 @@ unsigned int log_level_byname(const char * name) {
     if (errno == 0 && result >= 0 && last != NULL && *last == 0) {
         return (unsigned int) result;
     }
-    
+
     for (unsigned int i = 0; i < logvs::LVL_NB; ++i) {
         if (!strcasecmp(name, log_level_names[i])) {
             return i;
         }
     }
-    
+
     return log_level_default > 0 ? log_level_default : VSLOG_LEVEL_DEFAULT;
 }
 
@@ -239,13 +280,38 @@ FILE * vs_log_getfile(const std::string & module) {
     return vslog_out;
 }
 
+size_t vs_log_flushqueue() {
+    vs_log_setflag(F_QUEUELOGS, false);
+    unsigned int saved_flags = log_flags;
+    size_t queue_sz = log_queue.size();
+    while (log_queue.size()) {
+        vs_log_setflags(log_queue.front().flags & ~F_QUEUELOGS);
+        vs_log(log_queue.front().category, log_queue.front().level, F_NONE, 
+                __FILE__, __func__, __LINE__, "%s", log_queue.front().message.c_str());
+        log_queue.pop();
+    }
+    vs_log_setflags(saved_flags);
+    return queue_sz;
+}
+
 FILE * vs_log_setfile(FILE * out, const std::string & module) {
     (void)module;
     FILE * old = vslog_out;
     if (out != NULL) flockfile(out);
-    if (old != NULL) flockfile(old);
+    if (old != NULL) {
+        flockfile(old);
+        fflush(old);
+        if (old == stdout) fflush(stderr);
+        else if (old == stderr) fflush(stdout);
+    }
     vslog_out = out;
     vslog_out_istty = isatty(fileno(out));
+
+    bool same_file = out == old || ((out == stderr || out == stdout) && (old == stderr || old == stdout));
+    if (out != NULL && (!same_file || (vslog_stderr_fd >= 0 && fileno(out) != vslog_stderr_fd && fileno(out) != vslog_stdout_fd))) { 
+        vs_log_flushqueue();
+    }
+
     if (out != NULL) funlockfile(out);
     if (old != NULL) funlockfile(old);
     return old;
@@ -272,11 +338,11 @@ unsigned int vs_log_level(const std::string & category, bool store) {
     if (out == NULL) {
         return 0;
     }
-    
+
     unsigned int loglevel;
     flockfile(out);
     LogMap::const_iterator it = log_map.find(category);
-    
+
     if (it == log_map.end()) {
 #ifdef VS_LOG_NO_XML
     	if (log_level_default == -1) {
@@ -312,7 +378,7 @@ unsigned int vs_log_level(const std::string & category, bool store) {
         if (store) {
             log_map.insert(std::make_pair(category, loglevel));
         }
-        
+
         if (store || log_level_default >= 0) {
         	VS_LOG("log", logvs::NOTICE, "%s log entry '%s' = %s (%u)",
         		   store ? "creating" : "getting",
@@ -329,21 +395,26 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
                   const char * file, const char * func, int line, const char * fmt, ...) {
     int ret = 0, n;
     FILE * out;
-    
+
     if (vslog_out == NULL) {
         return 0;
     }
-    
+
     flockfile((out = vslog_out));
     if (level > 0 && (flags & logvs::F_NO_LVL_CHECK) == 0) { // no need to use the hashmap if requested level is 0 (always displayed)
         unsigned int loglevel = vs_log_level(category, true);
-        
+
         if (loglevel < level) {
             funlockfile(out);
             return 0;
         }
     }
-    
+    if (((log_flags | flags) & logvs::F_HEADER) == 0) {
+        if ((flags & logvs::F_AUTO_LOCK) == 0) // done by vs_log_footer() if flag ON
+            funlockfile(out);
+        return 1; //return 0 would cause the log to be discarded.
+    }
+
 #ifndef _WIN32
     const char * const color = log_colorize &&
         (vslog_out_istty||log_colorize==1) ? log_level_color[level > logvs::DBG ? logvs::DBG : level] : "";
@@ -359,7 +430,7 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
         ret += n;
         flags = (flags | log_flags) & (~F_LOCATION_FOOTER);
         ret += log_print_location(out, flags, category, level, file, func, line);
-        
+
         if (fmt != NULL) {
             va_list valist;
             va_start(valist, fmt);
@@ -368,10 +439,10 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
             vs_log_msgcenter_v(category, level, flags | log_flags, false, file, func, line, fmt, valist);
         }
     }
-    
-    if ((flags & logvs::F_AUTO_LOCK) == 0)
+
+    if ((flags & logvs::F_AUTO_LOCK) == 0) // done by vs_log_footer() if flag ON
         funlockfile(out);
-    
+
     return ret;
 }
 
@@ -383,7 +454,11 @@ int vs_log_footer(const std::string & category, unsigned int level, unsigned int
     FILE * out = vslog_out;
     int ret = 0;
     va_list valist;
-    
+
+    if (out == NULL) {
+        return 0;
+    }
+
     flags = (flags | log_flags) & (~F_LOCATION_HEADER);
     if (fmt != NULL) {
         va_start(valist, fmt);
@@ -391,11 +466,11 @@ int vs_log_footer(const std::string & category, unsigned int level, unsigned int
         va_end(valist);
         vs_log_msgcenter_v(category, level, flags, false, file, func, line, fmt, valist);
     }
-    
+
     ret += log_print_location(out, flags, category, level, file, func, line);
-    
+
     ret += fprintf(out, "\n");
-    
+
     vs_log_msgcenter(category, level, flags, true, file, func, line, "");//(fmt=NULL), valist);
 
     if ((flags & logvs::F_AUTO_LOCK) != 0) {
@@ -407,11 +482,11 @@ int vs_log_footer(const std::string & category, unsigned int level, unsigned int
 int vs_log(const std::string & category, unsigned int level, unsigned int flags,
            const char * file, const char * func, int line, const char * fmt, ...) {
     int ret;
-    
+
     if ((ret = vs_log_header(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL)) <= 0) {
         return 0;
     }
-    
+
     if (fmt != NULL) {
         va_list valist;
         va_start(valist, fmt);
@@ -419,7 +494,7 @@ int vs_log(const std::string & category, unsigned int level, unsigned int flags,
         va_end(valist);
         vs_log_msgcenter_v(category, level, flags | log_flags, false, file, func, line, fmt, valist);
     }
-    
+
     return ret + vs_log_footer(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL);
 }
 
@@ -434,6 +509,92 @@ int vs_printf(const char * fmt, ...) {
     va_end(valist);
     vs_log_msgcenter_v("", 0, log_flags, false, "", "", 0, fmt, valist);
     return ret;
+}
+
+int log_openfile(const std::string & module, 
+                 const std::string & filename, bool redirect, bool append) {
+    (void)module;
+    char buftime[50] = { 0, };
+    time_t tm = time(NULL);
+    const char * stime = ctime(&tm);
+
+    if (stime != NULL) {
+        size_t i;
+        for(i = 0; i+1 < sizeof(buftime) && stime[i] != 0 && stime[i] != '\n'; ++i) 
+            buftime[i] = stime[i];
+        buftime[i] = 0;
+    }
+    VS_LOG("log", logvs::NOTICE, "(%s) Logging to %s", buftime, filename.c_str());
+    FILE * logout;
+    if (filename == "") {
+        logout = NULL;
+    } else if (strcasecmp(filename.c_str(), "stdout") == 0) {
+        logout = stdout;
+    } else if (strcasecmp(filename.c_str(), "stderr") == 0) {
+        logout = stderr;
+    } else {
+        if (!redirect) {
+            logout = fopen(filename.c_str(), append ? "a" : "w");
+            vslog_stdout_fd = vslog_stderr_fd = -1;
+        } else {
+            vslog_stderr_fd = dup(fileno(stderr));
+            vslog_stdout_fd = dup(fileno(stdout));
+            if ((logout = freopen(filename.c_str(), append ? "a" : "w", stderr)) == NULL) {
+                close(vslog_stderr_fd);
+                close(vslog_stdout_fd);
+                vslog_stdout_fd = vslog_stderr_fd = -1;
+                //VS_LOG("log", logvs::WARN, "error while reopening stderr as %s.", filename.c_str());
+            } else {
+                if (vslog_out == stdout || vslog_out == stderr) {
+                    fflush(stdout); 
+                    fflush(stderr); 
+                    vslog_out = NULL; // we will close streams, so set it to NULL;
+                }
+                fclose(stdout);
+                stdout = stderr; // Portable ?
+                //dup2(fileno(logout), fileno(stderr));
+                //dup2(fileno(logout), fileno(stdout));
+                //logout_err = freopen(filename.c_str(), "a", stdout);
+            }
+        }
+        if (logout == NULL) { // || logout_err == NULL) {
+            VS_LOG("log", logvs::WARN, "error while opening logfile %s, using stderr.", filename.c_str());
+            logout = stderr;
+        }
+    }
+    if (logout != NULL) {
+        if ((logout != stderr && logout != stdout) || (vslog_stderr_fd >= 0 && fileno(stderr) != vslog_stderr_fd)) {
+            const int bufsz = 8192; //BUFSIZ;
+            const int iobuffering = _IOFBF; // _IOFBF: full buffered, _IOLBF: line buffered, setbuf(file,NULL):no buffering.
+            setvbuf(logout, NULL, iobuffering, bufsz);
+        } else {
+            setvbuf(stdout, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+            setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+        }
+    }
+    logvs::vs_log_setflag(logvs::F_QUEUELOGS, false);
+    logvs::vs_log_setfile(logout);
+    return (vslog_out != NULL);
+}
+
+void log_terminate() {
+    if (vslog_out!= NULL) {
+        if ((vslog_out != stdout && vslog_out != stderr) || (vslog_stderr_fd >= 0 && fileno(stderr) != vslog_stderr_fd)) {
+            if (vslog_stdout_fd >= 0) {
+                stdout = fdopen(vslog_stdout_fd, "w");
+                stderr = fdopen(vslog_stderr_fd, "w");
+                setvbuf(stdout, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+                setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+                vslog_stdout_fd = vslog_stderr_fd = -1;
+            }
+            fclose(vslog_out);
+            vslog_out = NULL;
+            vs_log_setfile(stderr);
+        } else {
+            fflush(stdout);
+            fflush(stderr);
+        }
+    }
 }
 
 } // ! namespace vslog

@@ -20,6 +20,7 @@ _levels=dict()
 _perfilelog = True
 # logfile
 _logfile = sys.stderr
+_logwrite = _logfile.write
 _logfile_istty = False
 _log_colorize = -1
 _msgcenter_dispatch = False
@@ -59,20 +60,26 @@ def log_levelModuleFileLine(stackdec=0):
 	return (level,module,pfile,laststack[1])
 
 def _dprint(msg, eol='\n', level=0, stackdec=0):
-	global _logfile
+	global _logwrite
 	(modlevel,_,_,_) = (0,0,0,0) if level==0 else log_levelModuleFileLine(stackdec+1)
-	if modlevel >= level and _logfile is not None:
+	if modlevel >= level and _logwrite is not None:
 		try:
-			_logfile.write(msg + eol)
-		except:
-			print '!! LOG ERRORS: ' + str(_logfile.errors)
-	
+			_logwrite(msg + eol)
+		except Exception as e:
+			print '[debug.py] !! LOG WRITE ERROR: ' + str(e)
+
+class VSLogPrintStream:
+	def __init__(self):
+		pass
+	def write(self, string):
+		VS.LogPrint(string, '')
+
 def _pprint(object, stream=None, level=NOTICE,stackdec=0):
 	global _logfile
 	(modlevel,_,_,_) = log_levelModuleFileLine(stackdec+1)
 	if modlevel >= level:
 		import pprint
-		pprint.pprint(object, _logfile if stream is None else stream)
+		pprint.pprint(object, (VSLogPrintStream() if _logfile is None else _logfile) if stream is None else stream)
 
 def _debug_noengine(msg, level=NOTICE, stackdec=0): # Simple line number
 	laststack = traceback.extract_stack()[-2-stackdec]
@@ -133,23 +140,39 @@ info = _info   # I don't think this is useful, but why not?
 def _str2bool(s):
 	return s == '1' or s.lower() == 'yes' or s.lower() == 'true' or s.lower() == 'enabled' or s.lower() == 'on'
 
-def init(forceMsgCenter=False):
-	global _logfile, _logfile_istty, _log_colorize, _msgcenter_dispatch, _log_timestamp
-	_file = VS.LogFile("")
-	if _file == "":
-		_logfile = None
-	elif _file.lower() == "stdout":
-		_logfile = sys.stdout
-	elif _file.lower() == "stderr":
-		_logfile = sys.stderr
-	else:
-		try:
-			_logfile = os.open(_file, "a", 1) # 1 for line-buffered
-		except:
-			_logfile = sys.stderr
+def initMsgCenter(forceMsgCenter=False):
+	global _msgcenter_dispatch
+	_msgcenter_dispatch = True if forceMsgCenter else _str2bool(VS.vsConfig("log","msgcenter","false")) 
+	debug('MsgCenter dispatch '+ ('enabled' if _msgcenter_dispatch else 'disabled') + '.')
+
+def __init():
+	global _logfile, _logwrite, _logfile_istty, _log_colorize, _msgcenter_dispatch, _log_timestamp
 	try:
-		str_msgcenter=VS.vsConfig("log","msgcenter","false").lower() if not forceMsgCenter else "yes"
-		_msgcenter_dispatch = _str2bool(str_msgcenter)
+		_file = VS.LogFile("")
+		_logwrite = None
+		if _file == "":
+			_logfile = None
+		elif _file.lower() == "stdout":
+			_logfile = sys.stdout
+		elif _file.lower() == "stderr" or _str2bool(VS.vsConfig("log","redirect","yes")):
+			_logfile = sys.stderr
+		else:
+			try:
+				_logfile = open(_file, 'a', buffering=1) # buffering = 1, -1 for full buffered, system default if omitted
+				_logwrite = VS.LogPrint
+				# We use VS.LogPrint() rather than a python file object, in order to have FILE streams sync in python/c++
+				if os.name == 'posix':
+					_logfile_istty=_logfile.isatty()
+				_logfile.close()
+				_logfile = None
+			except:
+				sys.stderr.write('debug.py: ERROR while opening logfile '+_file+', using stderr.\n')
+				_logfile = sys.stderr
+
+		if _logfile is not None and _logwrite is None:
+			_logwrite = _logfile.write
+
+		_msgcenter_dispatch = _str2bool(VS.vsConfig("log","msgcenter","false")) 
 		str_colorize=VS.vsConfig("log","colorize","auto").lower()
 		_log_timestamp=_str2bool(VS.vsConfig("log","timestamp","yes").lower())
 
@@ -157,16 +180,27 @@ def init(forceMsgCenter=False):
 			_logfile_istty=_logfile.isatty()
 			_log_colorize = -1 if str_colorize == "" or str_colorize == 'auto' else (1 if _str2bool(str_colorize) else 0)
 		else:
+			# on windows: try 'reg add HKEY_CURRENT_USER\Console /v VirtualTerminalLevel /t REG_DWORD /d 0x00000001 /f'
 			_logfile_istty = False
 			_log_colorize = 0
-		debug('debug initialized, os='+os.name+' file = ' + _file + ('(tty)' if _logfile_istty else '')+'.')
+		debug('debug initialized, os='+os.name+' file = ' + _file + ('(tty)' if _logfile_istty else '')+', msgcenter='+str(_msgcenter_dispatch)+'.')
 	except:
 		_logfile_istty=False
 		_msgcenter_dispatch=False
 		_logfile=sys.stderr
+		_logwrite=_logfile.write
 		_log_colorize=0
 		_log_timestamp = False
 		debug('debug initialize failed, os='+os.name+' using file = stderr.')
 
-init()
+def log_terminate():
+	global _logfile, _logwrite
+	if _logfile is not None:
+		_logfile.flush()
+		if _logfile is not sys.stderr and _logfile is not sys.stdout:
+			_logfile.close()
+	_logfile = sys.stderr
+	_logwrite = _logfile.write
+
+__init()
 

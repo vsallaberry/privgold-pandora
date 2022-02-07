@@ -71,6 +71,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <sstream>
 
 #ifndef _WIN32
@@ -162,9 +163,9 @@ VegaConfig * createVegaConfig( char * file)
 }
 
 extern bool soundServerPipes();
-std::string ParseCommandLine(int argc, char ** CmdLine);
+std::string ParseCommandLine(int argc, char ** CmdLine, FILE * out);
 int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_type & overrides);
-    
+
 void VSExit( int code)
 {
     fflush(NULL);
@@ -254,25 +255,34 @@ void nothinghappens (unsigned int, unsigned int, bool,int,int) {
 
 }
 
+void python_terminatelog() {
+    static const char * pythonstr = "import debug\ntry:\n\tdebug.log_terminate()\nexcept:\n\tpass\n";
+    PyRun_SimpleString(pythonstr);
+    Python::reseterrors();
+}
+
 //int allexcept=FE_DIVBYZERO|FE_INVALID;//|FE_OVERFLOW|FE_UNDERFLOW;
 extern void InitUnitTables();
 bool isVista=false;
 
 int main( int argc, char *argv[] )
 {
+    logvs::vs_log_setfile(stdout);
+    logvs::vs_log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
+    
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
-
     InitTime();
     UpdateTime();
 
-	CONFIGFILE=0;
+	CONFIGFILE = NULL;
 	mission_name[0]='\0';
         {
           char pwd[8192]="";
           VSFileSystem::vs_getcwd(pwd,8191);
           pwd[8191]='\0';
-          printf (" In path %s\n",pwd);
+          VS_LOG("main", logvs::NOTICE, " In path %s",pwd);
         }
+
 #ifdef _WIN32
 	OSVERSIONINFO osvi;
 	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
@@ -280,13 +290,14 @@ int main( int argc, char *argv[] )
 
 	GetVersionEx(&osvi);
 	isVista=(osvi.dwMajorVersion==6);
-	fprintf(stdout, "Windows version %d %d\n", osvi.dwMajorVersion, osvi.dwMinorVersion);
+	VS_LOG("main", logvs::NOTICE, "Windows version %d %d", osvi.dwMajorVersion, osvi.dwMinorVersion);
 #endif
-    /* Print copyright notice */
-    vs_print_buildinfo(stdout, VPB_VERSION | VPB_SCM);
-	fprintf(stdout, "See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
-    /* Seed the random number generator */
 
+    /* Print copyright notice */
+    vs_print_buildinfo(NULL, VPB_VERSION | VPB_SCM);
+    logvs::vs_printf("See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
+
+    /* Seed the random number generator */
     if(benchmark<0.0){
       srand( time(NULL) );
     }
@@ -294,19 +305,24 @@ int main( int argc, char *argv[] )
       // in benchmark mode, always use the same seed
       srand(171070);
     }
+
     //this sets up the vegastrike config variable
     setup_game_data();
     // loads the configuration file .vegastrike/vegastrike.config from home dir if such exists
     {
-      string subdir=ParseCommandLine(argc,argv);
+      string subdir=ParseCommandLine(argc,argv,NULL);
 
-      vs_print_buildinfo(stderr, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
-      fputc('\n', stderr);
-        
+      vs_print_buildinfo(NULL, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
+      logvs::vs_printf("\n");
+
+      /* Restore log default flags */
+      logvs::vs_log_setflags(logvs::F_DEFAULTS | logvs::F_QUEUELOGS);
+      logvs::vs_log_setfile(stderr);
+
       VS_LOG("config", logvs::NOTICE, "GOT SUBDIR ARG = %s", subdir.c_str());
-      if (CONFIGFILE==0) {
-        CONFIGFILE=new char[42];
-        sprintf(CONFIGFILE,"vegastrike.config");
+      if (CONFIGFILE == NULL) {
+        CONFIGFILE=new char[50];
+        strcpy(CONFIGFILE,"vegastrike.config");
       }
 
       // Config overrides via command line
@@ -318,30 +334,28 @@ int main( int argc, char *argv[] )
       // After this, vs_config is available.
       VSFileSystem::InitPaths( CONFIGFILE, subdir, &overrides);
     }
-    
+
     // setup log file
-    std::string logfile = UniverseUtil::LogFile("");
-    if (logfile == "") {
-        logvs::vs_log_setfile(NULL);
-    } else if (logfile == "stdout") {
-        logvs::vs_log_setfile(stdout);
-    } else{
-        logvs::vs_log_setfile(stderr); // currently only stdout,stderr and none supported
-    }
+    static bool redirect = XMLSupport::parse_bool(vs_config->getVariable("log", "redirect", "true"));
+    static bool append = XMLSupport::parse_bool(vs_config->getVariable("log", "append", "false"));
+    logvs::log_openfile("", UniverseUtil::LogFile(""), redirect, append);
+    atexit(logvs::log_terminate);
+    atexit(python_terminatelog);
     std::string loglocation = vs_config->getVariable("log", "location", "false");
+    logvs::vs_log_setflag(logvs::F_QUEUELOGS, false);
     logvs::vs_log_setflag(logvs::F_LOCATION_MASK, false);
     if (loglocation == "header") {
         logvs::vs_log_setflag(logvs::F_LOCATION_HEADER, true);
     } else if (loglocation == "footer") {
         logvs::vs_log_setflag(logvs::F_LOCATION_FOOTER, true);
     }
-    logvs::vs_log_setflag(logvs::F_TIMESTAMP, 
+    logvs::vs_log_setflag(logvs::F_TIMESTAMP,
                 XMLSupport::parse_bool(vs_config->getVariable("log", "timestamp", "true")));
     logvs::vs_log_setflag(logvs::F_LOCATION_ALLWAYS,
                 XMLSupport::parse_bool(vs_config->getVariable("log", "location_allways", "false")));
     logvs::vs_log_setflag(logvs::F_MSGCENTER,
                            XMLSupport::parse_bool(vs_config->getVariable("log", "msgcenter", "false")));
-    
+
 	// This should be put into some common function...
 	// Keep in mind that initialization must also go into networking/netserver.cpp
     game_options.init();
@@ -360,11 +374,11 @@ int main( int argc, char *argv[] )
     //might overwrite the default mission with the command line
     InitUnitTables();
 #ifdef HAVE_PYTHON
-    std::cerr << std::endl;
+    logvs::vs_printf("\n");
     Python::init();
 
     Python::test();
-    std::cerr << std::endl;
+    logvs::vs_printf("\n");
 #endif
     std::vector<std::vector <char > > temp = ROLES::getAllRolePriorities();
     // signal( SIGSEGV, SIG_DFL );
@@ -479,9 +493,11 @@ void bootstrap_draw (const std::string &message, Animation * newSplashScreen) {
                                                            : message.length()>0 ? message : initialbootmessage;
     if (maxdots_persec > 0) {
         const int nbdots = (((long)(getNewTime()*1000.0)) % 1000) / (1000 / maxdots_persec) + 1;
-        for (int i = 0; i < nbdots; ++i) tmpmessage = tmpmessage + ".";
+        tmpmessage.append(nbdots, '.');
     }
-    bs_tp->Draw (tmpmessage);
+    if (!tmpmessage.empty()) {
+        bs_tp->Draw (tmpmessage);
+    }
 
     GFXHudMode (GFXFALSE);
     GFXEndScene();
@@ -585,7 +601,7 @@ void bootstrap_main_loop () {
 	if( !ignore_network && nbplayers != "")
 	{
 		numplayers = atoi( nbplayers.c_str());
-		cout<<numplayers<<" Players in Networking Mode"<<endl;
+		GAME_LOG(logvs::NOTICE, "%d Players in Networking Mode", numplayers");
 	}
 	else
 	{
@@ -630,7 +646,7 @@ void bootstrap_main_loop () {
 	  vector<vector<std::string> > savefiles;
 	if ( !ignore_network )
 	{
-		cout<<"Number of local players = "<<numplayers<<endl;
+		GAME_LOG(logvs::NOTICE, "Number of local players = %d", numplayers);
 		// Initiate the network if in networking play mode for each local player
 		if( !ignore_network )
 		{
@@ -644,7 +660,7 @@ void bootstrap_main_loop () {
 		else
 		{
 			Network = NULL;
-			cout<<"Non-networking mode"<<endl;
+			GAME_LOG(logvs::NOTICE, "Non-networking mode");
 		// Here we say we want to only handle activity in 1 starsystem not more
 			run_only_player_starsystem=true;
 		}
@@ -681,15 +697,15 @@ void bootstrap_main_loop () {
 		Network[k].SetConfigServerAddress(srvipadr, port); // Sets from the config vars.
 
         if (!Network[k].connectLoad(pname, ppasswd, err)) {
-			cout<<"error while connecting: "<<err<<endl;
+			GAME_LOG(logvs::NOTICE, "error while connecting: %s", err.c_str());
 			VSExit(1);
 		}
 		savefiles.push_back( *Network[k].loginSavedGame(0) );
 		_Universe->AccessCockpit(k)->savegame->ParseSaveGame ("",mysystem,mysystem,pos,setplayerXloc,credits,_Universe->AccessCockpit()->unitfilename,k, savefiles[k][0], false);
 		_Universe->AccessCockpit(k)->TimeOfLastCollision=getNewTime();
 		/*
-		cout<<"UNIT XML :"<<endl<<savefiles[k][0]<<endl<<endl;
-		cout<<"UNIT FILE NAME = "<<_Universe->AccessCockpit(k)->unitfilename[0]<<endl;
+		GAME_LOG(logvs::NOTICE, "UNIT XML : %s", savefiles[k][0].c_str());
+		GAME_LOG(logvs::NOTICE, "UNIT FILE NAME = %s", _Universe->AccessCockpit(k)->unitfilename[0].c_str());
 		*/
 	  } else {
 		if (loadLastSave)
@@ -828,6 +844,9 @@ int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_t
     return 0;
 }
 
+#define wr_fprintf(out, ...) ((out) == NULL ? /*VS_LOG("main", 0, */logvs::vs_printf(__VA_ARGS__) \
+                                            : fprintf(out, __VA_ARGS__))
+
 const char helpmessage[] =
 "Command line options for vegastrike\n"
 "\n"
@@ -843,22 +862,22 @@ const char helpmessage[] =
 " --net     Networking Enabled (Experimental)\n"
 " --version Version information\n"
 "\n";
-std::string ParseCommandLine(int argc, char ** lpCmdLine) {
+std::string ParseCommandLine(int argc, char ** lpCmdLine, FILE * out) {
   std::string st;
   std::string retstr;
   std::string datatmp;
   QVector PlayerLocation;
   for (int i=1;i<argc;i++) {
     if(lpCmdLine[i][0]=='-') {
-		std::cerr << "ARG #" << i <<" = " << lpCmdLine[i] << std::endl;
+        wr_fprintf(out, "ARG #%d = %s\n", i, lpCmdLine[i]);
 		if (i + 1 == argc)
-			std::cerr << std::endl;
+			wr_fprintf(out, "\n");
       switch(lpCmdLine[i][1]){
     case 'd':
     case 'D':
       // Specifying data directory
         if(lpCmdLine[i][2] == 0) {
-            cout << "Option -D requires an argument" << endl;
+            wr_fprintf(out, "Option -D requires an argument\n");
             exit(1);
         }
  		datatmp = &lpCmdLine[i][2];
@@ -866,10 +885,10 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
 			VSFileSystem::datadir = datatmp;
 		else
 		{
-			cout<<"Specified data directory not found... exiting"<<endl;
+            wr_fprintf(out, "Specified data directory not found... exiting\n");
 			exit(1);
 		}
-        cout << "Using data dir specified on command line : " << datatmp << endl;
+        wr_fprintf(out, "Using data dir specified on command line : %s", datatmp.c_str());
 	    break ;
 	  case 'r':
       case 'R':
@@ -931,7 +950,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
         const char * equal = strchr(lpCmdLine[i]+2, '='), * slash;
         // it is a config override, it will be handled later once vs_config is loaded
         if (equal == NULL || (slash = strchr(lpCmdLine[i]+2, '/'))==NULL || slash > equal) {
-            cout << "Option -C requires an argument of format <section(s)/key>=<value>" << endl;
+            wr_fprintf(out, "Option -C requires an argument of format <section(s)/key>=<value>\n");
             exit(1);
         }
         } break ;
@@ -947,11 +966,11 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine) {
           ignore_network=false;
         }
         else if(strcmp(lpCmdLine[i], "--help")==0) {
-          cout << helpmessage;
+            logvs::vs_printf(helpmessage);
           exit(0);
         }
         else if(strcmp(lpCmdLine[i], "--version")==0) {
-          vs_print_buildinfo(stdout, VPB_ALL & (~(VPB_VERSION | VPB_SCM)));
+          vs_print_buildinfo(NULL, VPB_ALL & (~(VPB_VERSION | VPB_SCM)));
           exit(0);
         }
       }
@@ -991,24 +1010,24 @@ static void vs_print_buildinfo(FILE * out, int flags) {
     std::string sdlstr = "?";
   # endif
   #endif
-    
+
     if ((flags & VPB_VERSION)) {
-        fprintf(out, "Vegastrike v%s\n", VERSION);
+        wr_fprintf(out, "Vegastrike v%s\n", VERSION);
     }
     if ((flags & VPB_SCM)) {
-        fprintf(out, "revision %s from %s\n", SCM_VERSION, SCM_REMOTE);
+        wr_fprintf(out, "revision %s from %s\n", SCM_VERSION, SCM_REMOTE);
     }
     if ((flags & VPB_ARCH)) {
-        fprintf(out, "%s\n", POSH_GetArchString());
+        wr_fprintf(out, "%s\n", POSH_GetArchString());
     }
     if (!(flags & (~(VPB_VERSION|VPB_ARCH|VPB_SCM))))
         return ;
-    fprintf(out, "configured with:");
+    wr_fprintf(out, "configured with:");
     if ((flags & VPB_CONFIGURE)) {
-        fprintf(out, "\n  %s\n", CONFIGURE_CMD);
+        wr_fprintf(out, "\n  %s\n", CONFIGURE_CMD);
     }
     if ((flags & VPB_BUILD)) {
-        fprintf(out, "\n  COMPILER: %s\n  COMPILER_FLAGS: %s\n", COMPILER, COMPILER_FLAGS);
+        wr_fprintf(out, "\n  COMPILER: %s\n  COMPILER_FLAGS: %s\n", COMPILER, COMPILER_FLAGS);
     }
     if ((flags & VPB_LIBS)) {
         std::ostringstream oss;
@@ -1069,6 +1088,6 @@ static void vs_print_buildinfo(FILE * out, int flags) {
         << std::endl << "  " << "ZLIB: " << ZLIB_VERSION << " (h)"
       #endif
         << std::endl;
-      fprintf(out, "%s", oss.str().c_str());
+      wr_fprintf(out, "%s", oss.str().c_str());
     }
 }
