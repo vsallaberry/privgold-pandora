@@ -7,6 +7,7 @@
 #include <queue>
 #include <iostream>
 //#include "gfx/sprite.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include "base_maker_texture.h"
 #include "gfx/vec.h"
@@ -1351,7 +1352,7 @@ int Base::Room::MouseOver (Base *base,float x, float y) {
 	return -1;
 }
 
-Base *Base::CurrentBase=0;
+Base *Base::CurrentBase=NULL;
 
 bool RefreshGUI(void) {
 	Base::CurrentBase->Draw();
