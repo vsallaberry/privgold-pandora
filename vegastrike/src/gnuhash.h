@@ -40,12 +40,14 @@
 #  endif
 # else
 #  include <hash_map>
+#  define GNUHASH_CLASS class
 # endif
 #else
 # if __GNUC__ == 2
 #  include <map>
 #  define hash_map map
 #  define stdext std
+#  define GNUHASH_CLASS class
 namespace stdext {
     template<class Key, class Traits = std::less<Key> > class hash_compare
 	{
@@ -69,12 +71,14 @@ class Unit;
 namespace std{
 #  elif defined(HAVE_TR1_UNORDERED_MAP)
 #   include <tr1/unordered_map>
+#   define GNUHASH_CLASS class
 #   include "hashtable.h"
 class Unit;
 namespace std{
 namespace tr1{
 #  else
 #   include <ext/hash_map>
+#   define GNUHASH_CLASS class
 #   define stdext __gnu_cxx
 #   include "hashtable.h"
 
