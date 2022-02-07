@@ -52,28 +52,6 @@ struct dirent { char d_name[1]; };
 #include "vs_log_modules.h"
 
 #ifdef _WIN32
-# include <shlobj.h>
-namespace VSFileSystem {
-# if !defined(VS_HOME_INSIDE_DATA)
-#  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
-#   include <shlwapi.h>
-static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
-	PWSTR pszPath = NULL;
-	HRESULT ret;
-	ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
-	if (pszPath == NULL)
-		return S_OK-1;
-	if (ret == S_OK)
-		StrCpyW(wappdata, pszPath);
-	CoTaskMemFree((LPVOID)pszPath);
-	return ret;
-}
-#  else // ! HAVE_SHGETKNOWNFOLDERPATH
-static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
-	return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
-}
-#  endif // ! HAVE_SHGETKNOWNFOLDERPATH
-# endif // ! VS_HOME_INSIDE_DATA
 wchar_t * utf8_to_wchar(const char * s) {
 	if (!s) 
 		return NULL;
@@ -675,7 +653,7 @@ std::string vegastrike_cwd;
 		unicodeInitLocale();
 		WCHAR wappdata_path[PATH_MAX];
 		CHAR appdata_path[PATH_MAX];
-		if (vs_win32_get_appdata(wappdata_path) != S_OK) {
+		if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {
 			homedir = datadir + "/" + HOMESUBDIR;
 		} else {
             size_t i8 = 0;
@@ -700,34 +678,27 @@ std::string vegastrike_cwd;
 	{
 		vector<string>	data_paths;
 
+        // use the datadir specified in command line if any
+        if (!datadir.empty()) {
+            data_paths.push_back(datadir);
+        }
+
+        const char * pathorder[] = { bindir.c_str(), vegastrike_cwd.c_str(), ".", NULL };
+        for (const char ** base = pathorder; *base; ++base) {
+            if ((*base)[0]) {
+                for (const char ** searchs = VSCommon::datadirs; *searchs; ++searchs) {
+                    data_paths.push_back((std::string(*base) + VSFS_PATHSEP) + *searchs);
+                }
+            }
+        }
+
 		/* DATA_DIR should no longer be necessary--it will either use the path
 		 to the binary, or the current directory. */
 #ifdef DATA_DIR
 		data_paths.push_back( DATA_DIR);
 #endif
-		if (!vegastrike_cwd.empty()) {
-			data_paths.push_back( vegastrike_cwd );
-			data_paths.push_back( vegastrike_cwd+"/../data");
-			data_paths.push_back( vegastrike_cwd+"/../Resources/data");
-			data_paths.push_back( vegastrike_cwd+"/..");
-			data_paths.push_back( vegastrike_cwd+"/../data4.x");
-			data_paths.push_back( vegastrike_cwd+"/../../data4.x");
-			data_paths.push_back( vegastrike_cwd+"/../../data");
-			data_paths.push_back( vegastrike_cwd+"/data4.x");
-			data_paths.push_back( vegastrike_cwd+"/data");
-			data_paths.push_back( vegastrike_cwd+"/../Resources");
-		}
-
-		data_paths.push_back( ".");
-		data_paths.push_back( "../data");
-		data_paths.push_back( "../Resources/data");
-		data_paths.push_back( "..");
-		data_paths.push_back( "../data4.x");
-		data_paths.push_back( "../../data4.x");
-		data_paths.push_back( "../../data");
-		data_paths.push_back( "../Resources");
-		data_paths.push_back( "../Resources/data4.x");
-/*
+ 
+		/*
 		data_paths.push_back( "/usr/share/local/vegastrike/data");
 		data_paths.push_back( "/usr/local/share/vegastrike/data");
 		data_paths.push_back( "/usr/local/vegastrike/data");
@@ -1008,8 +979,9 @@ std::string vegastrike_cwd;
                 while( ret-- > 0) {
                     std::string dname;
                     for (const char * s = dirlist[ret]->d_name; *s; ++s) dname.append(1, (char)tolower(*s));
-                    if ((!strncmp(dname.c_str(), "sdl", 3) || !strncmp(dname.c_str(), "libsdl", 6))
-                    &&  (strstr(dname.c_str(), ".so") || strstr(dname.c_str(), ".dll") || strstr(dname.c_str(), ".dylib"))) {
+                    if (!strcmp(dname.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH)
+                    || ((!strncmp(dname.c_str(), "sdl", 3) || !strncmp(dname.c_str(), "libsdl", 6))
+                        &&  (strstr(dname.c_str(), ".so") || strstr(dname.c_str(), ".dll") || strstr(dname.c_str(), ".dylib")))) {
                         libdir = libpath;
                         while (*(path + 1) != NULL) ++path;
                         break ;

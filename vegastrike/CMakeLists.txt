@@ -333,6 +333,7 @@ SET(LIBROOTGENERIC_SOURCES src/configxml.cpp
 						   src/universe_generic.cpp
 						   src/universe_util_generic.cpp
 						   src/vs_globals.cpp
+						   src/common/common.cpp
 						   src/vsfilesystem.cpp
 						   src/VSFileXMLSerializer.cpp
 						   src/xml_serializer.cpp

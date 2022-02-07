@@ -14,27 +14,79 @@
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
-#include <string>
-#include <stdio.h>
-#ifndef _WIN32
-#include <unistd.h>
+#if defined(HAVE_CONFIG_H)
+# include "config.h"
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#include <string>
+
 using std::string;
+
 #include "common.h"
 
+namespace VSCommon {
 
-#ifndef _WIN32
+#ifdef _WIN32
+# include <windows.h>
+# include <shlobj.h>
+
+# if !defined(VS_HOME_INSIDE_DATA)
+#  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
+#   include <shlwapi.h>
+HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+    PWSTR pszPath = NULL;
+    HRESULT ret;
+    ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
+    if (pszPath == NULL)
+        return S_OK-1;
+    if (ret == S_OK)
+        StrCpyW(wappdata, pszPath);
+    CoTaskMemFree((LPVOID)pszPath);
+    return ret;
+}
+#  else // ! HAVE_SHGETKNOWNFOLDERPATH
+HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+    return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
+}
+#  endif // ! HAVE_SHGETKNOWNFOLDERPATH
+# endif // ! VS_HOME_INSIDE_DATA
+
+# if defined(__CYGIN__) || defined(__MINGW32__)
+#  include <io.h>
+# else
+#  include <direct.h>
+# endif
+#include <sys/stat.h>
+#else // ! _WIN32
+# include <sys/dir.h>
+# include <unistd.h>
+# include <pwd.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+#endif // ! _WIN32
 
 // Directories to look for data
-const char *datadirs[] =
-{".",
- "../data",
- "../../data",
-// Added for MacOS X
- "../Resources/data",
+const char * datadirs[] = {
+".",
+"../data",
+"../Resources/data",
+"..",
+"../data4.x",
+"../../data4.x",
+"../../data",
+"data4.x",
+"data",
+"../Resources",
+"../Resources/data4.x",
 #ifdef DATA_DIR
  DATA_DIR,
 #endif
+#if 0
  "/usr/share/local/vegastrike/data",
  "/usr/local/share/vegastrike/data",
  "/usr/local/vegastrike/data",
@@ -49,46 +101,147 @@ const char *datadirs[] =
  "/usr/local/games/vegastrike/data4.x",
  "/usr/games/vegastrike/data4.x",
  "/opt/share/vegastrike/data4.x",
+#endif
+ NULL
 };
 
-
-string getdatadir()
+string getdatadir(const char * base)
 {
-    string datadir;
     char tmppwd[65536];
+    getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
-    getcwd (tmppwd,32768);
-
-    unsigned int i = 0;
-    for(; i < (sizeof(datadirs) / sizeof(datadirs[0])); i++) {
-        chdir(datadirs[i]);
-        FILE *tfp = fopen("vegastrike.config", "r");
-        if(tfp) {
-            fclose(tfp);
-            // We have found the data directory
-            break;
-        }
-    }
-
-    if(i >= sizeof(datadirs) / sizeof(datadirs[0])) {
-      printf ("Unable to find data directory\n");
-        for(i = 0; i < (sizeof(datadirs) / sizeof(datadirs[0])); i++)
-            printf ( "Tried %s\n",datadirs[i]);
-        datadir = tmppwd;
+    const char * found = NULL;
+    for(const char ** searchs = datadirs; *searchs; ++searchs) {
         chdir(tmppwd);
+        if (base != NULL) {
+            chdir(base);
+        }
+        chdir(*searchs);
+        FILE *tfp = fopen("setup.config", "r");
+        if (tfp == NULL)
+            continue ;
+        fclose(tfp);
+        tfp = fopen("Version.txt", "r");
+        if (tfp == NULL)
+            continue ;
+        fclose(tfp);
+        // We have found the data directory
+        found = *searchs;
+        break;
     }
 
-    // Set data dir
-    else if(datadirs[i][0] != '/') {
-        // Was a relative path
-        datadir = tmppwd;
-        datadir += '/';
-        datadir += datadirs[i];
+    if(found == NULL) {
+        fprintf(stderr, "Unable to find data directory\n");
+        for(const char ** searchs = datadirs; *searchs; ++searchs) {
+            fprintf(stderr, "Tried %s\n", *searchs);
+        }
+        chdir(tmppwd);
+        return "";
     }
-    else
-        datadir = datadirs[i];
 
-    return datadir;
+    getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+
+    return std::string(tmppwd);
 }
 
-#endif // !_WIN32
+string gethomedir(const char * base) {
+    char tmppwd[65535];
+    getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+
+    string HOMESUBDIR;
+    if (base != NULL) {
+        chdir(base);
+    }
+	FILE *version=fopen("Version.txt","r");
+	if (!version)
+		version=fopen("../Version.txt","r");
+	if (version) {
+		std::string hsd="";
+		int c;
+		while ((c=fgetc(version))!=EOF) {
+			if (isspace(c))
+				break;
+			hsd+=(char)c;
+		}
+		fclose(version);
+		if (hsd.length()) {
+			HOMESUBDIR=hsd;
+		}
+	}
+	if (HOMESUBDIR.empty()) {
+		fprintf(stderr,"Error: Failed to find Version.txt anywhere.\n");
+        chdir(tmppwd);
+		return "";
+	}
+#if !defined(VS_HOME_INSIDE_DATA)
+# if !defined(_WIN32)
+	struct passwd *pwent;
+	pwent = getpwuid (getuid());
+	chdir (pwent->pw_dir);
+# else
+	WCHAR wappdata_path[PATH_MAX];
+	if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {
+		// use datadir as homedir
+	} else {
+		if (HOMESUBDIR.size() && HOMESUBDIR[0] == '.') {
+			HOMESUBDIR=HOMESUBDIR.substr(1);
+		}
+		_wchdir(wappdata_path);
+	}
+# endif
+#endif
+
+	mkdir(HOMESUBDIR.c_str() 
+#ifndef _WIN32
+              , 0755
+#endif
+              );
+	chdir (HOMESUBDIR.c_str());
+    //mkdir("generatedbsp"); 
+    mkdir("save"
+#ifndef _WIN32
+              , 0755
+#endif
+              );
+
+    char homepath[65535];
+    getcwd(homepath, sizeof(homepath)-1); homepath[sizeof(homepath)-1] = 0;
+    chdir(tmppwd);
+
+    return std::string(homepath);
+}
+
+std::pair<std::string,std::string> getbindir(const char *argv0, const char * base) {
+    std::string bindir;
+    std::string basename = argv0;
+
+    char tmppwd[65535];
+    getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+    std::string origpath = tmppwd;
+     
+    for (const char * dir = argv0 + strlen(argv0) - 1; *dir && dir >= argv0; --dir) {
+        if (*dir == '/' || *dir == '\\') {
+            bindir = (dir == argv0) ? "/" : std::string(argv0, 0, dir - argv0);
+            basename = std::string(dir + 1);
+            break ;
+        }
+    }
+    
+    if (bindir.empty() || (bindir[0] != '/'
+#if defined(_WIN32)      
+    && bindir[0] != '\\' && (tolower(bindir[0]) < 'a' || tolower(bindir[0]) > 'z'
+                             || (strncmp(logfile.c_str()+1, ":\\",2) && strncmp(logfile.c_str()+1, ":/", 2)))
+#endif
+    )) {
+       bindir = (std::string(base != NULL ? base : origpath.c_str()) + "/") + bindir;
+    }
+    
+    chdir(bindir.c_str());
+    getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+    chdir(origpath.c_str());
+
+    return std::make_pair(std::string(tmppwd), basename);
+}
+
+} // ! namespace VSCommon
+

@@ -880,6 +880,8 @@ librootgeneric = \
   src/vs_globals.cpp \
   src/vs_globals.h \
   src/vs_random.h \
+  src/common/common.cpp \
+  src/common/common.h \
   src/vsfilesystem.cpp \
   src/vsfilesystem.h \
   src/xml_serializer.cpp \

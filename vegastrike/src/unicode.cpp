@@ -64,6 +64,8 @@
 # else
 #  include <direct.h>
 # endif
+#elif defined(__APPLE__)
+# include <AvailabilityMacros.h>
 #endif
 
 #include "log.h"
@@ -231,19 +233,21 @@ void unicodeInitLocale() {
                 snprintf(loc, sizeof(loc), "%s%s%s", *lang, **lang && **lang != '.' ? "." : "", *cod);
                 VS_LOG("unicode", logvs::VERBOSE, "trying LCCTYPE locale: %s", loc);
                 if (setlocale(LC_CTYPE, loc) != NULL) {
-                   #if defined(HAVE_LOCALE) && (!defined(__APPLE__) || (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9) && MAC_OS_X_VERSION_MAX_ALLOWED > MAC_OS_X_VERSION_10_9)
+                   #if defined(HAVE_LOCALE) && (!defined(__APPLE__) || (MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_9 && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_9))
                     try {
                         std::cout.imbue(std::locale(std::locale::classic(), loc, std::locale::ctype));
                         std::cerr.imbue(std::locale(std::locale::classic(), loc, std::locale::ctype));
                     } catch (...) {
                         VS_LOG("unicode", logvs::WARN, "cannot set std::cout utf8 locale");
                     }
+                   #else
+                   VS_LOG("unicode", logvs::NOTICE, "no std::cout::imbue support on this system");
                    #endif
 				   #if defined(_WIN32)
 				   # if 0 && (defined(__CYGWIN__) || defined(__MINGW32__))
 					_setmode(fileno(stdout), _O_U8TEXT);
 					_setmode(fileno(stderr), _O_U8TEXT);
-				   # elif defined(_WIN32)
+				   # elif defined(_WIN32) && !defined(_WINDOWS)
 					SetConsoleOutputCP(CP_UTF8);
 				   # endif
 				   #endif
@@ -255,6 +259,8 @@ void unicodeInitLocale() {
     //}
     VS_LOG("unicode", logvs::NOTICE, "using locale %s for characters encoding",
            setlocale(LC_CTYPE, NULL));
+#else
+    VS_LOG("unicode", logvs::WARN, "warning: locale is not supported on this system");
 #endif
 }
 // END
@@ -418,7 +424,7 @@ static inline size_t u8index(const std::string & s, size_t wcindex) {
 template <typename charT>
 static unsigned int big_u8it_test(std::basic_ostream<charT> & out) { //, const Utf8Iterator _end) {
     unsigned int errs = 0;
-    std::string s("abcdefghijklmnopqrstuvwxyzéAe");//\xcc\x81");
+    std::string s("abcdefghijklmnopqrstuvwxyzéAe");//\xcc\x81ài\xcc\x81");
     const Utf8Iterator begin = Utf8Iterator::begin(s);
     const Utf8Iterator end=begin.end();
 
