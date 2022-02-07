@@ -7,6 +7,7 @@
 
 #include <utility>
 #include <assert.h>
+#include <stdlib.h>
 
 #include "XMLDocument.h"
 #include "VSFileXMLSerializer.h"
@@ -41,7 +42,7 @@ namespace Audio {
                 
                 void computeExpirationTime() throw()
                 {
-                    assert(parsed.get());
+                    assert(parsed.get() != NULL);
                     expirationTime = 10 + min(600, 2 * parsed->numChildren());
                 }
                 
@@ -74,7 +75,7 @@ namespace Audio {
             {
                 DefinitionMap::iterator it = loadedDefinitions.find(path);
                 if (it != loadedDefinitions.end()) {
-                    if (it->second.parsed.get() == 0)
+                    if (it->second.parsed.get() == NULL)
                         it->second.load(path); else
                         it->second.touch();
                     return it->second.parsed;
@@ -88,7 +89,7 @@ namespace Audio {
             {
                 DefinitionMap::iterator it = loadedDefinitions.find(path);
                 if (it != loadedDefinitions.end()) {
-                    if (it->second.parsed.get() == 0)
+                    if (it->second.parsed.get() == NULL)
                         throw ResourceNotLoadedException(); else
                         it->second.touch();
                     return it->second.parsed;

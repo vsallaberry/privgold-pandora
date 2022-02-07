@@ -206,7 +206,7 @@ class TextAreaItem {
 public:
 //	TextAreaItem(void);
 	// parent_class is NULL for the master TextAreaItem
-	TextAreaItem(const char *new_name="blank", const char *desc="", TextAreaItem *parent_class=0);
+	TextAreaItem(const char *new_name="blank", const char *desc="", TextAreaItem *parent_class=NULL);
 	~TextAreaItem(void);
 
 	// A recursive function. This function will be called to all the children until one of them matches the search_name

@@ -44,7 +44,7 @@ static char empty_string[2] = { 0, 0 };
 
 char *next_parm(char *string) {
 	char *next;
-	if (string[0] == '\0') { return 0; }
+	if (string[0] == '\0') { return NULL; }
 	next = string;
 	while (next[0] != ' ' && next[0] != '\0') {
 		next++;
@@ -92,7 +92,7 @@ char *split_words(char *string, int max_words) {
 char *ptr_copy(char *string) {
 	char *alloc;
 	alloc = (char *)malloc(strlen(string)+1);
-	if (alloc == 0) { ShowError("Out of memory", "G01", 1); return NULL; }
+	if (alloc == NULL) { ShowError("Out of memory", "G01", 1); return NULL; }
 	strncpy(alloc, string, strlen(string));
 	alloc[strlen(string)] = '\0';
 	return alloc;
@@ -324,13 +324,13 @@ void btoa(char *dest, char *string) {
 
 // Some handy wrappers for glib that help error handling which prevent segfaults
 char *GetString(GString *line) {
-	if (line == 0) { return empty_string; }
+	if (line == NULL) { return empty_string; }
 	return line->str;
 }
 
 void SetString(GString **ptr, char *line) {
-	if (ptr <= 0) { return; }
-	if (*ptr <= 0) {
+	if (ptr == NULL) { return; }
+	if (*ptr == NULL) {
 		*ptr = g_string_new(line);
 		return;
 	}
@@ -343,7 +343,7 @@ void SetString(GString **ptr, char *line) {
 char *NewString(char *line) {
 	char *new_str;
 	new_str = (char *)malloc(strlen(line)+1);
-	if (new_str == 0) { ShowError("Out of Memory", "G02", 1); return NULL; }
+	if (new_str == NULL) { ShowError("Out of Memory", "G02", 1); return NULL; }
 	strcpy(new_str, line);
 	new_str[strlen(line)] = '\0';
 	return new_str;
@@ -352,7 +352,7 @@ char *NewString(char *line) {
 
 #ifdef __cplusplus
 char *GetString(char *line) {
-        if (line == 0) { return empty_string; }
+        if (line == NULL) { return empty_string; }
         return line;
 }
 
@@ -454,13 +454,13 @@ glob_t *FindPath(char *path, int type) {
 #else
 	char thispath[800000];
 #endif
-        char* curpath = 0;
+        char* curpath = NULL;
 	DIR *dir;
 	vector <string> result;
 	vector <string> pathlist;
 	dirent *entry;
 	unsigned int cur;
-	char *newpath = 0;
+	char *newpath = NULL;
 #if defined(__APPLE__) || defined(MACOSX)
 	getcwd(thispath, MAXPATHLEN);
 #else
@@ -471,8 +471,8 @@ glob_t *FindPath(char *path, int type) {
 		curpath = strdup(pathlist[cur].c_str());
 		dir = opendir(curpath);
 		chdir(curpath);
-		if (dir == 0) { continue; }
-		entry = 0;
+		if (dir == NULL) { continue; }
+		entry = NULL;
 		while ((entry = readdir(dir)) != NULL) {
 			newpath = strdup((string(curpath)+SEPERATOR+entry->d_name).c_str());
 			if (isdir(newpath) == 1) {
@@ -491,7 +491,7 @@ glob_t *FindPath(char *path, int type) {
 	FILES->gl_pathv = new char*[FILES->gl_pathc];
 	#else
 	FILES->gl_pathv = (char *)malloc(sizof(char *) * FILES->gl_pathc);
-	if (FILES->gl_pathv == 0) { ShowError("Out of memory", "G04", 1); return NULL; }
+	if (FILES->gl_pathv == NULL) { ShowError("Out of memory", "G04", 1); return NULL; }
 	#endif
 
 	for (cur = 0; cur < FILES->gl_pathc; cur++) {

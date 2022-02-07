@@ -17,6 +17,7 @@
 
 #include "hashtable.h"
 
+#include <stdlib.h>
 #include <string>
 #include "vs_globals.h"
 #include "configxml.h"
@@ -347,7 +348,7 @@ Unit * Unit::BeamInsideCollideTree (const QVector & start,const QVector & end, Q
 	}
 	//FIXME
 	//doesn't check all i*j options of subunits vs subunits
-	return 0;
+	return NULL;
 }
 
 

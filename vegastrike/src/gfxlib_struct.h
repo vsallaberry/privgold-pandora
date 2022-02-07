@@ -20,6 +20,7 @@
  */
 #ifndef _GFXLIB_STRUCT
 #define _GFXLIB_STRUCT
+#include <stdlib.h>
 #include "gfx/vec.h"
 #include "endianness.h"
 
@@ -319,7 +320,7 @@ class /*GFXDRVAPI*/ GFXQuadList {
   ///Draws all quads contained in quad list
   void Draw();
   ///Adds quad to quad list, an integer indicating number that should be used to henceforth Mod it or delete it
-  int AddQuad (const GFXVertex *vertices, const GFXColorVertex * colors=0);
+  int AddQuad (const GFXVertex *vertices, const GFXColorVertex * colors=NULL);
   ///Removes quad from Quad list
   void DelQuad (int which);
   ///modifies quad in quad list to contain new vertices and color information
@@ -383,16 +384,16 @@ protected:
   GFXVertexList();
 public:
   ///creates a vertex list with 1 polytype and a given number of vertices
-  inline GFXVertexList(enum POLYTYPE poly, int numVertices, const GFXVertex *vertices,int numindices, bool Mutable=false, unsigned int * index=0){Init (&poly, numVertices, vertices,0, 1,&numindices, Mutable,index);}
+  inline GFXVertexList(enum POLYTYPE poly, int numVertices, const GFXVertex *vertices,int numindices, bool Mutable=false, unsigned int * index=NULL){Init (&poly, numVertices, vertices,NULL, 1,&numindices, Mutable,index);}
   ///Creates a vertex list with an arbitrary number of poly types and given vertices, num list and offsets (see above)
-  inline GFXVertexList(enum POLYTYPE *poly, int numVertices, const GFXVertex *vertices, int numlists, int *offsets, bool Mutable=false,  unsigned int * index=0) {
-    Init(poly,numVertices,vertices,0,numlists,offsets,Mutable, index);
+  inline GFXVertexList(enum POLYTYPE *poly, int numVertices, const GFXVertex *vertices, int numlists, int *offsets, bool Mutable=false,  unsigned int * index=NULL) {
+    Init(poly,numVertices,vertices,NULL,numlists,offsets,Mutable, index);
   }
   ///Creates a vertex list with 1 poly type and color information to boot
-  inline GFXVertexList(enum POLYTYPE poly, int numVertices, const GFXColorVertex *colors, int numindices, bool Mutable=false, unsigned int * index=0){Init (&poly, numVertices, 0, colors, 1, &numindices,Mutable,index);}
+  inline GFXVertexList(enum POLYTYPE poly, int numVertices, const GFXColorVertex *colors, int numindices, bool Mutable=false, unsigned int * index=NULL){Init (&poly, numVertices, NULL, colors, 1, &numindices,Mutable,index);}
   ///Creates a vertex list with an arbitrary number of poly types and color
-  inline GFXVertexList(enum POLYTYPE *poly, int numVertices,  const GFXColorVertex *colors, int numlists, int *offsets, bool Mutable=false, unsigned int *index=0) {
-    Init(poly,numVertices,0,colors, numlists,offsets,Mutable, index);
+  inline GFXVertexList(enum POLYTYPE *poly, int numVertices,  const GFXColorVertex *colors, int numlists, int *offsets, bool Mutable=false, unsigned int *index=NULL) {
+    Init(poly,numVertices,NULL,colors, numlists,offsets,Mutable, index);
   }
   virtual ~GFXVertexList();
   ///Returns number of Triangles in vertex list (counts tri strips)

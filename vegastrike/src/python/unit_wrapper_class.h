@@ -1,4 +1,5 @@
 #include "log.h"
+#include <stdlib.h>
 using std::string;
 //WARNING: Macro City ahead.  Please skip this section if you don't like macros.
 static const char* error="ERROR: NULL Unit used in Python script; returning default value...";
@@ -64,9 +65,9 @@ public:
 */
 /////////////////////////////////NO WRAP//////
   UnitWrapper(UnitContainer cont) : UnitContainer(cont){}
-  UnitWrapper(Unit *un=0) : UnitContainer(un){}
+  UnitWrapper(Unit *un=NULL) : UnitContainer(un){}
   operator Unit* () {return GetUnit();}
-  bool isNull () {Unit * un=GetUnit(); if (un) {if (un->GetHull()<=0) {return true;}}return un==0; }
+  bool isNull () {Unit * un=GetUnit(); if (un) {if (un->GetHull()<=0) {return true;}}return un==NULL; }
   bool notNull () {return !isNull();}
   void setNull () {SetUnit(0);}
   bool equal (UnitWrapper oth) {

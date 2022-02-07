@@ -11,6 +11,7 @@
 #include "gfxlib.h"
 #include "aux_texture.h"
 
+#include <stdlib.h>
 #include <exception>
 #include <map>
 #include <boost/smart_ptr.hpp>
@@ -366,13 +367,13 @@ void Technique::Pass::compile()
         int lastTU = -1;
         for (TextureUnitList::iterator tit = textureUnits.begin(); tit != textureUnits.end(); ++tit) {
             if (tit->sourceType == TextureUnit::File) {
-                if (tit->texture.get() == 0) {
+                if (tit->texture.get() == NULL) {
                     tit->texture.reset( new Texture(tit->sourcePath.c_str()) );
                     if (!tit->texture->LoadSuccess())
                         throw InvalidParameters("Cannot load texture file \"" + tit->sourcePath + "\"");
                 }
             } else if (tit->defaultType == TextureUnit::File) {
-                if (tit->texture.get() == 0) {
+                if (tit->texture.get() == NULL) {
                     tit->texture.reset( new Texture(tit->defaultPath.c_str()) );
                     if (!tit->texture->LoadSuccess())
                         throw InvalidParameters("Cannot load texture file \"" + tit->defaultPath + "\"");

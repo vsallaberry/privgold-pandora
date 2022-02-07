@@ -233,7 +233,7 @@ void GFXVertexList::ColVtxCopy (GFXVertexList * thus, GFXVertex *dst, int offset
 }
 
 void GFXVertexList::RenormalizeNormals () {
-  if (data.colors==0&&data.vertices==0)
+  if (data.colors==NULL&&data.vertices==NULL)
     return;//
   if (numVertices>0) {
     Vector firstNormal;
@@ -313,7 +313,7 @@ void GFXVertexList::GetPolys (GFXVertex **vert, int *numpolys, int *numtris) {
   if (numVertices==0){
     *numpolys=0;
     *numtris=0;
-    *vert=0;
+    *vert=NULL;
     return;
   }
   this->Map(true,false);

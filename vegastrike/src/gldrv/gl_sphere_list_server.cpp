@@ -38,7 +38,7 @@ GFXSphereVertexList::GFXSphereVertexList(float radius, int detail, bool Insideou
   while (detail>=vlists[which].size()) {
     vlists[which].insert(vlists[which].end(),1+detail-vlists[which].size(),NULL);
   }
-  if (vlists[which][detail]==0) {
+  if (vlists[which][detail]==NULL) {
     int slices;
     int stacks=slices=detail;
     if (stacks>12) {
@@ -144,12 +144,12 @@ GFXSphereVertexList::GFXSphereVertexList(float radius, int detail, bool Insideou
 
 GFXSphereVertexList::~GFXSphereVertexList() {
   numVertices=0;
-  data.vertices=0;
-  data.colors=0;
-  index.i=0;
-  mode=0;
+  data.vertices=NULL;
+  data.colors=NULL;
+  index.i=NULL;
+  mode=NULL;
   numlists=0;
   display_list=0;
-  offsets=0;
+  offsets=NULL;
   
 }

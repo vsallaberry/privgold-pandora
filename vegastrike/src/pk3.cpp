@@ -409,7 +409,7 @@ char *CPK3::ExtractFile(const char *lpname, int *file_size)
 
   // if the file isn't in the archive
   if (index == -1)
-    return 0;
+    return NULL;
 
   int flength = GetFileLen(index);
 
@@ -547,8 +547,8 @@ bool CPK3::ReadFile(int i, void *pBuf)
   stream.avail_in = (uInt)h.cSize;
   stream.next_out = (Bytef*)pBuf;
   stream.avail_out = h.ucSize;
-  stream.zalloc = (alloc_func)0;
-  stream.zfree = (free_func)0;
+  stream.zalloc = (alloc_func)NULL;
+  stream.zfree = (free_func)NULL;
 
   // Perform inflation. wbits < 0 indicates no zlib header inside the data.
   err = inflateInit2(&stream, -MAX_WBITS);

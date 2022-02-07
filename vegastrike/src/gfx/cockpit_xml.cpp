@@ -2,6 +2,7 @@
 #include "cockpit.h"
 #include "xml_support.h"
 #include "gauge.h"
+#include <stdlib.h>
 #include <float.h>
 #include "hud.h"
 #include "vdu.h"
@@ -302,7 +303,7 @@ void GameCockpit::beginElement(const string &name, const AttributeList &attribut
     for (counter=0;counter<4;++counter) {
       if (!replaced[counter]) {
         delete Pit[counter];
-        Pit[counter]=0;
+        Pit[counter]=NULL;
       }
     }
     break;

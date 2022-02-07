@@ -33,7 +33,7 @@ protected:
     
     static void initializeSingleton()
     {
-        if (_singletonInstance != 0)
+        if (_singletonInstance != NULL)
             delete _singletonInstance;
         
         // GCC 3.3 errors out if you do '(INIT())()'
@@ -43,7 +43,7 @@ protected:
     
     static void deinitializeSingleton()
     {
-        _singletonInstance = 0;
+        _singletonInstance = NULL;
     }
     
     ~Singleton()
@@ -55,7 +55,7 @@ protected:
 public:
     static T* getSingleton()
     {
-        if (_singletonInstance == 0)
+        if (_singletonInstance == NULL)
             initializeSingleton();
         return _singletonInstance;
     }

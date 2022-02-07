@@ -7,6 +7,7 @@
 #include "config.h"
 #include "ffmpeg_init.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <utility>
@@ -144,20 +145,21 @@ public:
     size_t height;
 
     VideoFileImpl(size_t maxDimensions) :
-        pFormatCtx(0),
-        pCodecCtx(0),
-        pCodec(0),
-        pStream(0),
-        pFrameRGB(0),
-        pFrameYUV(0),
-        pNextFrameYUV(0),
-        frameBuffer(0),
-        packetBuffer(0),
+        pFormatCtx(NULL),
+        pCodecCtx(NULL),
+        pCodec(NULL),
+        pStream(NULL),
+        pFrameRGB(NULL),
+        pFrameYUV(NULL),
+        pNextFrameYUV(NULL),
+        frameBuffer(NULL),
+        _frameBuffer(NULL),
+        packetBuffer(NULL),
         packetBufferSize(0),
         frameReady(false),
         fbDimensionLimit(maxDimensions)
     {
-        packet.data = 0;
+        packet.data = NULL;
     }
     
     ~VideoFileImpl()
@@ -189,7 +191,7 @@ public:
     
     void open(const std::string& path) throw(VideoFile::Exception)
     {
-        if (pCodecCtx != 0)
+        if (pCodecCtx != NULL)
             throw VideoFile::Exception("Already open");
         
         // Initialize libavcodec/libavformat if necessary
@@ -209,17 +211,17 @@ public:
         #endif
         
         // Find first video stream
-        pCodecCtx = 0;
+        pCodecCtx = NULL;
         videoStreamIndex = -1;
-        for (int i=0; (pCodecCtx==0) && (i < pFormatCtx->nb_streams); ++i)
+        for (int i=0; (pCodecCtx==NULL) && (i < pFormatCtx->nb_streams); ++i)
             if(pFormatCtx->streams[i]->codec->codec_type == CODEC_TYPE_VIDEO)
                 pCodecCtx = (pStream = pFormatCtx->streams[videoStreamIndex = i])->codec;
-        if (pCodecCtx == 0)
+        if (pCodecCtx == NULL)
             throw VideoFile::FileOpenException(errbase + " (no video stream)");
         
         // Find codec for video stream and open it
         pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
-        if(pCodec == 0)
+        if(pCodec == NULL)
             throw VideoFile::UnsupportedCodecException(errbase + " (unsupported codec)");
         
         if(avcodec_open(pCodecCtx, pCodec) < 0)
@@ -227,7 +229,7 @@ public:
         
         pFrameYUV = avcodec_alloc_frame();
         pNextFrameYUV = avcodec_alloc_frame();
-        if ((pFrameYUV == 0) || (pNextFrameYUV == 0))
+        if ((pFrameYUV == NULL) || (pNextFrameYUV == NULL))
             throw VideoFile::Exception("Problem during YUV framebuffer initialization");
         
         // Get some info
@@ -242,12 +244,12 @@ public:
         
         // Allocate RGB frame buffer
         pFrameRGB = avcodec_alloc_frame();
-        if(pFrameRGB == 0)
+        if(pFrameRGB == NULL)
             throw VideoFile::Exception("Problem during RGB framebuffer initialization");
             
         frameBufferSize = avpicture_get_size(PIX_FMT_RGB24, width, height);
         _frameBuffer = new uint8_t[frameBufferSize];
-        if(_frameBuffer == 0)
+        if(_frameBuffer == NULL)
             throw VideoFile::Exception("Problem during RGB framebuffer initialization");
         
         avpicture_fill((AVPicture *)pFrameRGB, _frameBuffer, PIX_FMT_RGB24, width, height);
@@ -343,7 +345,7 @@ void VideoFile::close() throw()
 {
     if (impl) {
         delete impl;
-        impl = 0;
+        impl = NULL;
     }
 }
 
@@ -379,6 +381,6 @@ int VideoFile::getFrameBufferStride() const throw()
 
 bool VideoFile::seek(float time) throw(Exception)
 {
-    return (impl != 0) && impl->seek(time);
+    return (impl != NULL) && impl->seek(time);
 }
 

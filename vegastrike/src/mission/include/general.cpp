@@ -22,6 +22,7 @@
 #define __restrict
 #endif
 #include "general.h"
+#include <stdlib.h>
 #ifdef _WIN32
 #include <direct.h>
 #else
@@ -43,7 +44,7 @@ int RANDOMIZED = 0;
 
 char *next_parm(char *string) {
 	char *next;
-	if (string[0] == '\0') { return 0; }
+	if (string[0] == '\0') { return NULL; }
 	next = string;
 	while (next[0] != ' ' && next[0] != '\0') {
 		next++;
@@ -91,7 +92,7 @@ char *split_words(char *string, int max_words) {
 char *ptr_copy(char *string) {
 	char *alloc;
 	alloc = (char *)malloc(strlen(string)+1);
-	if (alloc == 0) { ShowError("Out of memory", "G01", 1); return NULL; }
+	if (alloc == NULL) { ShowError("Out of memory", "G01", 1); return NULL; }
 	strncpy(alloc, string, strlen(string));
 	alloc[strlen(string)] = '\0';
 	return alloc;
@@ -132,7 +133,7 @@ char *replace(char *line, char *search, char *replace, int LENGTH) {
 	if (calc > LENGTH) { return line; }
 	length = strlen(line);
 	strcpy(current, line);
-	while ((location = strstr(current, search)) > 0) {
+	while ((location = strstr(current, search)) != NULL) {
 		chr_new[0] = '\0';
 		calc = strlen(current) - strlen(search) + strlen(replace);
 		if (calc > LENGTH) { strcpy(line, current); free(current); free(chr_new); return line; }
@@ -325,13 +326,13 @@ static char empty_string[2] = { 0, 0 };
 
 // Some handy wrappers for glib that help error handling which prevent segfaults
 char *GetString(GString *line) {
-	if (line == 0) { return empty_string; }
+	if (line == NULL) { return empty_string; }
 	return line->str;
 }
 
 void SetString(GString **ptr, char *line) {
-	if (ptr <= 0) { return; }
-	if (*ptr <= 0) {
+	if (ptr == NULL) { return; }
+	if (*ptr == NULL) {
 		*ptr = g_string_new(line);
 		return;
 	}
@@ -344,7 +345,7 @@ void SetString(GString **ptr, char *line) {
 char *NewString(char *line) {
 	char *new_str;
 	new_str = (char *)malloc(strlen(line)+1);
-	if (new_str == 0) { ShowError("Out of Memory", "G02", 1); return NULL; }
+	if (new_str == NULL) { ShowError("Out of Memory", "G02", 1); return NULL; }
 	strcpy(new_str, line);
 	new_str[strlen(line)] = '\0';
 	return new_str;
@@ -353,12 +354,12 @@ char *NewString(char *line) {
 
 #ifdef __cplusplus
 char *GetString(char *line) {
-        if (line == 0) { return empty_string; }
+        if (line == NULL) { return empty_string; }
         return line;
 }
 
 void SetString(char **ptr, char *line) {
-        if (*ptr > 0) { delete *ptr; }
+        if (*ptr != NULL) { delete *ptr; }
         *ptr = strdup(line);
 }
 

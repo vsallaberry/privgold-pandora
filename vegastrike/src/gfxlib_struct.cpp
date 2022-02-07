@@ -42,7 +42,7 @@ void GFXVertexList::RefreshDisplayList ()
 
 #ifndef NO_VBO_SUPPORT
   if (game_options.vbo&&!vbo_data) {
-    if (glGenBuffersARB_p==0||glBindBufferARB_p==0||glBufferDataARB_p==0||glMapBufferARB_p==0||glUnmapBufferARB_p==0) {
+    if (glGenBuffersARB_p==NULL||glBindBufferARB_p==NULL||glBufferDataARB_p==NULL||glMapBufferARB_p==NULL||glUnmapBufferARB_p==NULL) {
       game_options.vbo=0;
     }else {
       (*glGenBuffersARB_p)(1,(GLuint *)&vbo_data);
@@ -531,9 +531,15 @@ void GFXVertexList::EndMutate (int newvertexsize) {
 
 }
 
-
 GFXVertexList::GFXVertexList() {
-  vbo_data=0;
+  numVertices = 0;
+  data.colors = NULL;
+  index.b = NULL;
+  mode = NULL;
+  unique_mode = false;
   display_list=0;
-  memset(this,0,sizeof(GFXVertexList));
+  vbo_data=0;
+  numlists = 0;
+  offsets = NULL;
+  changed = 0;
 }//private, only for inheriters

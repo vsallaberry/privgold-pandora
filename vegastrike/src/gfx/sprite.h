@@ -43,7 +43,7 @@ class VSSprite {
     bool isAnimation;
 
 	// For private use only
-	VSSprite() : surface(0) {}
+	VSSprite() : surface(NULL) {}
 
 public:
     /**
@@ -64,7 +64,7 @@ public:
     /**
      * Return true if sprite was loaded successfully
      */
-	bool LoadSuccess()const {return surface!=(Texture*)0/*NULL VSA*/;}
+	bool LoadSuccess()const {return surface!=NULL;}
 
     /**
      * Draw

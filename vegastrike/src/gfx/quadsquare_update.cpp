@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include "quadsquare.h"
+
 int	MaxCreateDepth = 0;
 
 void	quadsquare::EnableEdgeVertex(int index, bool IncrementCount, const quadcornerdata& cd)
@@ -92,7 +94,7 @@ quadsquare*	quadsquare::EnableDescendant(int count, int path[], const quadcorner
 void	quadsquare::CreateChild(int index, const quadcornerdata& cd)
 // Creates a child square at the specified index.
 {
-	if (Child[index] == 0) {
+	if (Child[index] == NULL) {
 		quadcornerdata	q;
 		SetupCornerData(&q, cd, index);
 		
@@ -112,7 +114,7 @@ void	quadsquare::EnableChild(int index, const quadcornerdata& cd)
 		EnableEdgeVertex(index, true, cd);
 		EnableEdgeVertex((index + 1) & 3, true, cd);
 		
-		if (Child[index] == 0) {
+		if (Child[index] == NULL) {
 			CreateChild(index, cd);
 		}
 	}
@@ -145,7 +147,7 @@ void	quadsquare::NotifyChildDisable(const quadcornerdata& cd, int index)
 	
 	if (Child[index]->Static == false) {
 		delete Child[index];
-		Child[index] = 0;
+		Child[index] = NULL;
 
 	}
 }

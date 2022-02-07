@@ -1,6 +1,7 @@
 #include <config.h>
 #include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <stdio.h>
 #if !defined(WIN32)
 #include <unistd.h>
@@ -102,7 +103,7 @@ void PacketMem::inner_set( void* buffer, size_t size, bool own )
     }
     else
     {
-        _buffer.reset( /*VSA 0*/(char*)0 );
+        _buffer.reset( NULL );
         _len = 0;
     }
 }

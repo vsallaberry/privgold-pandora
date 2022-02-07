@@ -9,7 +9,7 @@
  * Rewritten and adapted to Vegastrike by Daniel Horn
  */
 
-
+#include <stdlib.h>
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
@@ -284,11 +284,11 @@ quadsquare* quadsquare::GetFarNeighbor (int dir, const quadcornerdata&cd) {
   // If we don't have a parent, then we don't have a neighbor.
   // (Actually, we could have inter-tree connectivity at this level
   // for connecting separate trees together.)
-  if (cd.Parent == 0) 
+  if (cd.Parent == NULL) 
     return neighbor[dir];
 	
 	// Find the parent and the child-index of the square we want to locate or create.
-	quadsquare*	p = 0;
+	quadsquare*	p = NULL;
 	
 	int	index = cd.ChildIndex ^ 1 ^ ((dir & 1) << 1);
 	bool	SameParent = ((dir - cd.ChildIndex) & 2) ? true : false;
@@ -298,7 +298,7 @@ quadsquare* quadsquare::GetFarNeighbor (int dir, const quadcornerdata&cd) {
 	} else {
 		p = cd.Parent->Square->GetFarNeighbor(dir, *cd.Parent);
 		
-		if (p == 0) return 0;
+		if (p == NULL) return NULL;
 	}
 	
 	quadsquare*	n = p->Child[index];
@@ -313,10 +313,10 @@ quadsquare*	quadsquare::GetNeighbor(int dir, const quadcornerdata& cd)
 	// If we don't have a parent, then we don't have a neighbor.
 	// (Actually, we could have inter-tree connectivity at this level
 	// for connecting separate trees together.)
-	if (cd.Parent == 0) return NULL;
+	if (cd.Parent == NULL) return NULL;
 	
 	// Find the parent and the child-index of the square we want to locate or create.
-	quadsquare*	p = 0;
+	quadsquare*	p = NULL;
 	
 	int	index = cd.ChildIndex ^ 1 ^ ((dir & 1) << 1);
 	bool	SameParent = ((dir - cd.ChildIndex) & 2) ? true : false;
@@ -326,7 +326,7 @@ quadsquare*	quadsquare::GetNeighbor(int dir, const quadcornerdata& cd)
 	} else {
 		p = cd.Parent->Square->GetNeighbor(dir, *cd.Parent);
 		
-		if (p == 0) return 0;
+		if (p == NULL) return NULL;
 	}
 	
 	quadsquare*	n = p->Child[index];

@@ -20,6 +20,7 @@
  */
 #include "config.h"
 #include <Python.h>
+#include <stdlib.h>
 #include <string.h>
 #include "base.h"
 #include "gldrv/winsys.h"
@@ -1294,7 +1295,7 @@ BaseInterface::~BaseInterface () {
 		VSFileSystem::vs_close(fp);
 	}
 #endif
-	CurrentBase=0;
+	CurrentBase=NULL;
 	restore_main_loop();
 	for (size_t i=0;i<rooms.size();i++) {
 		delete rooms[i];

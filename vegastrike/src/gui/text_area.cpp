@@ -241,7 +241,7 @@ void TextArea::RenderTextItem(TextAreaItem *current, int level) {
 	float new_y = 0, new_x = 0;
 	int max = 0;
 	int cur = 0;
-	if (current == 0) { return; }
+	if (current == NULL) { return; }
 	if (level == 0) { count = 0; }
 	if ((count - top_item_number) >= max_lines) { return; }
 	if (level > 0) {
@@ -271,15 +271,15 @@ void TextArea::AddTextItem(const char *name, const char *description, const char
 void TextArea::ChangeTextItem(const char *name, const char *description,bool wrap) {
 	TextAreaItem *search;
 	search = ItemList->FindChild(name);
-	if (search == 0) { return; }
-	if (search->description != 0) { free(search->description); }
+	if (search == NULL) { return; }
+	if (search->description != NULL) { free(search->description); }
 	search->description = strdup(description);
 }
 
 void TextArea::ChangeTextItemColor(const char *name, const GFXColor &col) {
 	TextAreaItem *search;
 	search = ItemList->FindChild(name);
-	if (search == 0) { return; }
+	if (search == NULL) { return; }
 	search->col=col;
 }
 
@@ -309,7 +309,7 @@ const char *TextArea::GetSelectedItemDesc(void) const {
 const char *TextArea::GetSelectedItem(int type) const {
 	TextAreaItem *search;
 	search = ItemList->FindCount(cur_selected, 0);
-	if (search == 0) { return empty_string; }
+	if (search == NULL) { return empty_string; }
 	if (type == 1) { return search->name; }
 	else { return search->description; }
 }
@@ -573,9 +573,9 @@ TextAreaItem::TextAreaItem(const char *new_name, const char *desc, TextAreaItem 
 	: col (1,1,1,1) {
 //{	col = GFXColor (rnd,rnd,rnd,1);
 	if (new_name != 0 ) { name = strdup(new_name); }
-	else { name = 0; }
+	else { name = NULL; }
 	if (desc != 0 ) { description = strdup(desc); }
-	else { description = 0; }
+	else { description = NULL; }
 	child_count_multiplier = 0;
 	child_count = 0;
 	child = NULL;

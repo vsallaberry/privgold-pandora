@@ -228,7 +228,7 @@ void /*GFXDRVAPI*/ GFXFrustum (float *mat, float *inv, float left,float right, f
  * trilinear troubles, and it might be a memory constraint)
  * Texture target defines the type of texture it is for eventual cube mapping
  */
-GFXBOOL /*GFXDRVAPI*/ GFXCreateTexture(int width, int height, TEXTUREFORMAT externaltextureformat, int *handle, char *palette = 0, int texturestage = 0, enum FILTER mipmap = MIPMAP, enum TEXTURE_TARGET texture_target = TEXTURE2D, enum ADDRESSMODE address_mode = DEFAULT_ADDRESS_MODE);
+GFXBOOL /*GFXDRVAPI*/ GFXCreateTexture(int width, int height, TEXTUREFORMAT externaltextureformat, int *handle, char *palette = NULL, int texturestage = 0, enum FILTER mipmap = MIPMAP, enum TEXTURE_TARGET texture_target = TEXTURE2D, enum ADDRESSMODE address_mode = DEFAULT_ADDRESS_MODE);
 
 ///Sets the priority of the texture for memory management.
 void /*GFXDRVAPI*/ GFXPrioritizeTexture (unsigned int handle, float priority);
@@ -414,7 +414,7 @@ void GFXTextureCoordGenMode(int stage, GFXTEXTURECOORDMODE tex, const float para
 
 int GFXCreateProgram(const char *vertex, const char *fragment);
 //program created if necessary and active
-int GFXActivateShader(const char *program = (const char*)0/*NULL VSA*//*null for default prog*/);
+int GFXActivateShader(const char *program = NULL /*null for default prog*/);
 int GFXActivateShader(int program);
 void GFXDeactivateShader();
 //return location of named value

@@ -10,6 +10,7 @@
 #include <utility>
 #include <limits>
 #include <math.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "vsfilesystem.h"
@@ -65,13 +66,15 @@ namespace Audio {
             
             
             FFData(const std::string &path, VSFileSystem::VSFileType type, Format &fmt, int streamIdx) throw(Exception) :
-                pFormatCtx(0),
-                pCodecCtx(0),
-                pCodec(0),
-                pStream(0),
-                packetBuffer(0),
+                pFormatCtx(NULL),
+                pCodecCtx(NULL),
+                pCodec(NULL),
+                pStream(NULL),
+                packetBuffer(NULL),
                 packetBufferSize(0),
-                sampleBufferBase(0)
+                sampleBufferBase(NULL),
+                sampleBufferAligned(NULL),
+                sampleBuffer(NULL)
             {
                 packet.data = 0;
                 
@@ -95,17 +98,17 @@ namespace Audio {
                 #endif
                 
                 // Find audio stream
-                pCodecCtx = 0;
+                pCodecCtx = NULL;
                 streamIndex = -1;
-                for (int i=0; (pCodecCtx==0) && (i < pFormatCtx->nb_streams); ++i)
+                for (int i=0; (pCodecCtx==NULL) && (i < pFormatCtx->nb_streams); ++i)
                     if ((pFormatCtx->streams[i]->codec->codec_type == CODEC_TYPE_AUDIO) && (streamIdx-- == 0))
                         pCodecCtx = (pStream = pFormatCtx->streams[streamIndex = i])->codec;
-                if (pCodecCtx == 0)
+                if (pCodecCtx == NULL)
                     throw FileOpenException(errbase + " (wrong or no audio stream)");
                 
                 // Find codec for the audio stream and open it
                 pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
-                if(pCodec == 0)
+                if(pCodec == NULL)
                     throw CodecNotFoundException(errbase + " (unsupported codec)");
                 
                 if(avcodec_open(pCodecCtx, pCodec) < 0)
@@ -146,22 +149,22 @@ namespace Audio {
                 ptrdiff_t offs = ((reinterpret_cast<ptrdiff_t>(sampleBufferBase)) & (BUFFER_ALIGNMENT-1));
                 sampleBufferAligned = ((char*)sampleBufferBase) + BUFFER_ALIGNMENT - offs;
                 sampleBufferAlloc = sampleSize * BUFFER_SIZE;
-                sampleBuffer = 0;
+                sampleBuffer = NULL;
                 sampleBufferSize = 0;
             }
             
             ~FFData()
             {
                 // Free sample buffer
-                if (sampleBufferBase)
+                if (sampleBufferBase != NULL)
                     free(sampleBufferBase);
             
                 // Close the codec
-                if (pCodecCtx)
+                if (pCodecCtx != NULL)
                     avcodec_close(pCodecCtx);
                 
                 // Close the file
-                if (pFormatCtx)
+                if (pFormatCtx != NULL)
                     av_close_input_file(pFormatCtx);
             }
             
@@ -177,12 +180,12 @@ namespace Audio {
             
             bool hasFrame() const throw()
             {
-                return sampleBuffer && sampleBufferSize;
+                return (sampleBuffer != NULL) && sampleBufferSize;
             }
             
             bool hasPacket() const throw()
             {
-                return packetBuffer && packetBufferSize;
+                return (packetBuffer != NULL) && packetBufferSize;
             }
             
             void readPacket() throw(EndOfStreamException)
