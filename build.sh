@@ -975,7 +975,8 @@ do_delivery_fun() {
 
     done
 
-    for f in "${mainbuilddir}/setup/${mainsubdir}vssetup${exe}" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg${exe}"; do
+    for f in "${mainbuilddir}/setup/${mainsubdir}vssetup${exe}" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg${exe}" \
+             "${mainbuilddir}/launcher/${mainsubdir}vslauncher${exe}"; do
         cp -v "$f" "${bundle_bindir}"
     done
 
@@ -1018,10 +1019,11 @@ do_delivery_fun() {
     "${mydir}/tools/rpath.sh" -X'/opt/local' -L${bundle_librpath} \
         "${bundle_bindir}/vssetup_dlg${exe}" || { printf -- '!! warning: vssetup_dlg (terminal) is not included in this delivery !!'; }
 
-    # handle executables rpaths: vssetup(gtk)
+    # handle executables rpaths: vssetup(gtk) / vslauncher
     "${mydir}/tools/rpath.sh" -X'/opt/local' \
         -L${bundle_gtklibrpath} -R${bundle_librpath} \
-        "${bundle_bindir}/vssetup${exe}" || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
+        "${bundle_bindir}/vssetup${exe}" "${bundle_bindir}/vslauncher${exe}" \
+    || { printf -- '!! warning: vssetup (gtk) is not included in this delivery !!'; }
 
     # handle optional vegastrike tools executables rpaths: tools, objconv, vegaserver, test
     if true; then

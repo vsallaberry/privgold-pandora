@@ -519,7 +519,8 @@ bin_PROGRAMS = \
   unicode-conv \
   test \
   $(GTKUTILS_PROG) \
-  $(DIALOGUTILS_PROG)
+  $(DIALOGUTILS_PROG) \
+  vslauncher
 
 noinst_LIBRARIES_1=\
   libnetlowlevel.a
@@ -1248,6 +1249,27 @@ vssetup_dlg_SOURCES = \
     setup/log.link.cpp \
     src/log.h
 
+
+if VS_MAKE_GTKUTILS
+VSLAUNCHER_SPECIFIC_SOURCES = launcher/saveinterface.cpp
+vslauncher_LDFLAGS = $(GTK_LIBS)
+vslauncher_CXXFLAGS_GTK = $(GTK_CFLAGS)
+else
+VSLAUNCHER_SPECIFIC_SOURCES = launcher/nogui.cpp
+endif
+vslauncher_CXXFLAGS = -DVS_LOG_NO_XML $(vslauncher_CXXFLAGS_GTK)
+launcher/log.link.cpp: $(top_srcdir)/src/log.cpp
+	cp $< $@ || copy $< $@
+
+vslauncher_SOURCES = \
+	launcher/launcher.h \
+	launcher/log.link.cpp \
+	launcher/main.cpp \
+    launcher/general.cpp \
+    launcher/general.h \
+    src/common/common.cpp \
+    src/common/common.h \
+	$(VSLAUNCHER_SPECIFIC_SOURCES)
 
 if USE_PRECOMPILED_HEADERS
 PRECOMPILED_FLAGS = -include $(PRECOMPILED)

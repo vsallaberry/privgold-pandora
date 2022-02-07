@@ -12,38 +12,38 @@
 #ifdef _WIN32
 #include <direct.h>
 #include <process.h>
+extern void GetRidOfConsole ();
+extern void my_sleep (int i);
 #else
 #include <pwd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #include "src/common/common.h"
-#endif
-#ifdef _WIN32
-extern void GetRidOfConsole ();
-extern void my_sleep (int i);
-#endif
+#include "general.h"
+#include "launcher.h"
+
 void LoadMissionDialog (char * Filename,int i);
 void LoadSaveDialog (char *, char *, int);
 void LoadAutoDialog (char *, char *, int);
-#define NUM_TITLES 8
-static const char * titles [NUM_TITLES] = {"Start New Pilot","Play Saved Pilot","Continue Last Game", "Game Settings", "Recover From Autosave","Change Scenario", "Help","Exit Launcher"};
-std::string my_mission ("explore_universe.mission");
-#define NUM_HELPS 6
+
+#define NUM_TITLES 9
+static const char * titles [NUM_TITLES] = {"Start Game", "Start New Game","Play Saved Game","Continue Last Game", "Game Settings", "Recover From Autosave","Change Scenario", "Help","Exit Launcher"};
+std::string my_mission("explore_universe.mission");
+#define NUM_HELPS 7
 static const char * helps [NUM_HELPS] = {
-  "|START A NEW PILOT BUTTON|\nStart a new game in the Vegastrike universe.\nYou start with a dinged up old llama\nand head from the vega sector with the hope of finding\nprofit and adventure on the frontier.\nTo begin afresh you must choose a new saved game.",
-  "|LOAD SAVED PILOT BUTTON|\nThis opens up a saved game you had finished playing before.\nTo save you must dock at the base and\nclick on the save/load button and choose the save option.",
+  "|START GAME BUTTON|\nStart a new game in the Vegastrike universe with the default settings.\n",
+  "|START A NEW GAME BUTTON|\nStart a new game in the Vegastrike universe.\nYou start with a dinged up old llama\nand head from the vega sector with the hope of finding\nprofit and adventure on the frontier.\nTo begin afresh you must choose a new saved game.",
+  "|LOAD SAVED GAME BUTTON|\nThis opens up a saved game you had finished playing before.\nTo save you must dock at the base and\nclick on the save/load button and choose the save option.",
   "|CONTINUE GAME|\nUse this button to launch Vegastrike with from a saved\ngame or mission. If you do not choose a mission, you\nwill start in the standard trading/bounty hunting mission.",
   "|GAME SETTINGS BUTTON|\nThis button will start up the configurator to allow you to\nselect your preferred options.",
   "|RECOVER AUTOSAVE BUTTON|\nThis button allows a player to recover their most recently\nplayed game into the selected save game upon next run.\nIf the player quits or the player docks, and then dies,\nit will restore to the last saved position.",
   "|CHANGE SCENERIO BUTTON|\nThis allows you to select which mission vegastrike\nwill start the next time you press one\nof the keys below it. Most missions do not involve\nsave games and will ignore those options,\nhowever the default, in the mission/exploration folder will\nindeed ustilize the save games you specify.\nIf you ignore this option you begin in the standard\ntrading/bounty hunting mission."
 };
-std::string HOMESUBDIR= ".vegastrike";
 
-
-char * prog_arg=0;
-#ifdef _WIN32
+#if 0 && defined(_WIN32)
 std::string ParentDir () {
   static char * final=NULL;
   std::string mypwd;
@@ -91,7 +91,7 @@ std::string ParentDir () {
   }
   return mypwd;
 }
-void GoToParentDir () {
+void win32_GoToParentDir () {
   std::string par = ParentDir ();
   //  fprintf (stderr,"changing to %s",par.c_str());
   chdir (par.c_str());
@@ -107,7 +107,7 @@ int win_close( GtkWidget *w, void *)
 {
     return FALSE;
 }
-void changehome();
+
 GdkWindow * Help (const char *title, const char *text) {
     GtkWidget *window;
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -123,7 +123,7 @@ GdkWindow * Help (const char *title, const char *text) {
 
 void save_stuff( const char *filename) {
   changehome();
-    FILE *file=fopen("../save.4.x.txt","wt");
+    FILE *file=fopen("save.4.x.txt","wt");
     if (file) {
       fprintf (file, "%s%c", filename,0);
       fclose(file);
@@ -171,73 +171,70 @@ struct stupod {
   }
 };
 DWORD WINAPI DrawStartupDialog(LPVOID lpParameter) {
-	stupod *s= (stupod*)lpParameter;
+	char ** argv = (char **) lpParameter; //stupod *s= (stupod*)lpParameter;
         progress=false;
         Help ("Please wait while vegastrike loads...","Please wait while vegastrike loads...");
-		int pid=spawnl(P_WAIT,"./vegastrike","./vegastrike",s->num?s->num:(std::string("\"")+s->my_mission+"\"").c_str(),s->num?(std::string("\"")+s->my_mission+"\"").c_str():NULL,NULL);
+		//int pid=spawnl(P_WAIT,vegastrikebin.c_str(),vegastrikebin.c_str(),s->num?s->num:(std::string("\"")+s->my_mission+"\"").c_str(),s->num?(std::string("\"")+s->my_mission+"\"").c_str():NULL,NULL);
+        int pid=spawnvp(P_WAIT,vegastrikebin.c_str(),argv);
 		if (pid==-1) {
-			if (chdir("bin")==0) {
-				spawnl(P_WAIT,"./vegastrike","./vegastrike",s->num?s->num:(std::string("\"")+s->my_mission+"\"").c_str(),s->num?(std::string("\"")+s->my_mission+"\"").c_str():NULL,NULL);
-				chdir("..");
-			}
+            fprintf(stderr, "cannot launch %s\n", vegastrikebin.c_str());
 		}
-        if (s->num)
+        /*if (s->num)
           free (s->num);
         free (s->my_mission);
-        delete (s);
+        delete (s);*/
         progress=true;
 	return 0;
 }
 #endif
 
-#ifndef _WIN32
-void changeToData () {
-   chdir ("/usr/games/vegastrike/data");
-   FILE * fp = fopen ("vegastrike.config","r");
-   if (!fp){
-	   chdir ("/usr/local/vegastrike/data");
-	   FILE * fp = fopen ("vegastrike.config","r");
-	   if (!fp){
-
-		   chdir ("/usr/vegastrike/data");
-		   //   FILE * fp = fopen ("vegastrike.config","r");
-	   }
-   }
-}
-#endif
-void launch_mission () {
+void launch_mission (bool load_lastsave = false) {
 #ifdef _WIN32
   if (!progress)
     return;
 #endif
-#ifdef _WIN32
-  GoToParentDir();
-#endif
+  char ** argv;
+  int argc = 1, i_argv = 0, ret = -1;
+  // First get the size of argv
+  if (load_lastsave) {
+      ++argc;
+      if (!my_mission.empty()) {
+          ++argc;
+      }
+  }
   int player = my_mission.rfind ("player");
   if (player>0&&player!=std::string::npos) {
-   char  num [4]={'-','m',(*(my_mission.begin()+(player-1))),'\0'};
-   printf ("vegastrike %s %s",num,my_mission.c_str());
-   fflush (stdout);
-#ifndef _WIN32
-   changeToData();
-   execlp ("vegastrike","/usr/local/bin/vegastrike",num,my_mission.c_str(),NULL);   
-#else
-   DWORD id;
-   HANDLE hThr=CreateThread(NULL,0,DrawStartupDialog,(void *)new stupod (strdup (my_mission.c_str()),strdup (num)),0,&id);
-#endif
-  } else {
-
-   printf ("vegastrike %s",my_mission.c_str());
-   fflush (stdout);
-#ifndef _WIN32
-
-   changeToData();
-   execlp ("vegastrike","/usr/local/bin/vegastrike",my_mission.c_str(),NULL);   
-#else
-   DWORD id;
-   HANDLE hThr=CreateThread(NULL,0,DrawStartupDialog,(void *)new stupod (strdup (my_mission.c_str()),NULL),0,&id);
-#endif
+    ++argc;
   }
+  // Then alloc arv and fill it
+  argv = (char **) malloc((argc+1) * sizeof(*argv));
+  argv[i_argv++] = strdup(vegastrikebin.c_str());  
+  if (player>0&&player!=std::string::npos) {
+    char  num [4]={'-','m',(*(my_mission.begin()+(player-1))),'\0'};
+    argv[i_argv++] = strdup(num);
+  }
+  if (load_lastsave) {
+      argv[i_argv++] = strdup("-Cgeneral/load_last_savegame=true");
+      if (!my_mission.empty()) {
+        argv[i_argv++] = strdup(my_mission.c_str());
+      }
+  }
+  argv[i_argv++] = NULL;
+  // Display argv
+  for(i_argv = 0; i_argv < argc; ++i_argv) {
+    fprintf(stderr, "%s ", argv[i_argv]);
+  }
+  fputc('\n', stderr);
+  fflush (stderr);
+  changeToData();
+#ifndef _WIN32
+  if (execvp(vegastrikebin.c_str(), argv) != 0) {
+      fprintf(stderr, "ERROR: cannot run %s\n", vegastrikebin.c_str());   
+  }
+#else
+  DWORD id;
+  HANDLE hThr=CreateThread(NULL, 0, DrawStartupDialog, (void *) argv, 0, &id);
+#endif
 }
 using std::string;
 void file_mission_sel (GtkWidget *w, GtkFileSelection *fs) {
@@ -275,7 +272,7 @@ void file_ok_sel( GtkWidget        *w,
     if ((gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs)))[0]!='\0') {
       save_stuff(gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs))+lastSlash(gtk_file_selection_get_filename(GTK_FILE_SELECTION(fs))));
     }
-    launch_mission();
+    launch_mission(true);
     GdkWindow * ww=gtk_widget_get_parent_window(w);
     gdk_window_destroy(ww);
     //    gtk_main_quit ();
@@ -290,7 +287,7 @@ void file_ok_auto_sel( GtkWidget        *w,
       name[0]='~';
       save_stuff(name);
     }
-    launch_mission();
+    launch_mission(true);
     GdkWindow * ww = gtk_widget_get_parent_window(w);
     gdk_window_destroy(ww);
 
@@ -301,97 +298,69 @@ void hello( GtkWidget *widget, gpointer   data ) {
     int i=(int)(size_t)data;
     int pid=0;
     switch (i) {
-    case 5:
+    case 0:
+        launch_mission(false);
+        break ;
+    case 6:
       LoadMissionDialog("Select Mission",i);
       break;
-    case 0:
+    case 1:
       save_stuff("New_Game");
-      launch_mission();
+      launch_mission(true);
       //LoadSaveDialog("New Game","Please type or select the name of the pilot that you wish to create.",i);
       break;
-    case 1:
+    case 2:
       LoadSaveDialog("Open Game","Please type or select the name of the pilot that you wish to load.",i);
       break;
-    case 4:
+    case 5:
       LoadAutoDialog("Open Autosave Game","Please type or select the name of the saved game that you wish to autorecover to.",i);
       break;
-    case 2:
-      launch_mission();
-      break;
     case 3:
+      launch_mission(true);
+      break;
+    case 4:
+      changeToData();
 #ifdef _WIN32
-		{
-		char pwd [65535];
-		getcwd(pwd,65533);
-		pwd[65533]=pwd[65534]='\0';
-		int pid=spawnl(P_NOWAIT,"./Setup.exe",(std::string(pwd)+"/Setup.exe").c_str(),NULL);
+		pid=spawnl(P_NOWAIT,vssetupbin.c_str(), vssetupbin.c_str(),NULL);
 		if (pid==-1) {
-			if (chdir("bin")==0) {
-				spawnl(P_NOWAIT,"./Setup.exe",(std::string(pwd)+"/bin/Setup.exe").c_str(),NULL);
-				chdir("..");
-			}
-		}
+            fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
 		}
 #else
-		pid=fork();
-		if (pid==-1) {
-			execlp("vssetup","vssetup",NULL);
+        //gdk_window_destroy(gtk_widget_get_parent_window(widget));
+        //gtk_main_quit();
+
+        //chdir(origpath.c_str());
+        //pid=fork();
+		if (1|| pid==0) {
+			//if (execlp(vssetupbin.c_str(), vssetupbin.c_str(),NULL) < 0) {
+            char ** argv = (char **) malloc((2) * sizeof(*argv));
+            argv[0] = strdup(vssetupbin.c_str()); argv[1] = NULL;
+            GPid gpid;
+            if (gdk_spawn_on_screen(gdk_screen_get_default(), NULL, argv, NULL, (GSpawnFlags)0, NULL, NULL, &gpid, NULL) != TRUE) {
+                fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
+            }
 			return;
-		}
+		} else if (pid < 0) {
+            fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
+        }
 #endif
       break;
-    case 6:
+    case 7:
       help_func(0,-1);
       break;
-    case 7:
+    case 8:
       gtk_main_quit();
       break;
     default:
-      printf ("\nERROR...");
+      fprintf(stderr, "\nERROR...\n");
       gtk_main_quit();
       break;
     }
 }
 
-#if defined(_WINDOWS)&&defined(_WIN32)
-typedef char FileNameCharType [65535];
-#include <windows.h>
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
-	FileNameCharType argvc;
-	FileNameCharType *argv= &argvc;
-	GetModuleFileName(NULL, argvc, 65534);
-	int argc=0;
-#else
-int main( int   argc,
-          char *argv[] )
-{
-#endif
-
-    prog_arg = argv[0];
-#ifdef _WIN32
-    GoToParentDir ();
-#else
-    getdatadir(); // Will change to the data dir which makes selecting missions easier.
-#endif
-	FILE *version=fopen("Version.txt","r");
-	if (!version)
-		version=fopen("../Version.txt","r");
-	if (version) {
-		std::string hsd="";
-		int c;
-		while ((c=fgetc(version))!=EOF) {
-			if (isspace(c))
-				break;
-			hsd+=(char)c;
-		}
-		fclose(version);
-		if (hsd.length()) {
-			HOMESUBDIR=hsd;
-			//fprintf (STD_OUT,"Using %s as the home directory\n",hsd.c_str());
-		}			
-	}
+int RunInterface(int * pargc, char *** pargv) {
     //    chdir ("./.vegastrike/save");
-    gtk_init (&argc, (char***)(&argv));
+    gtk_init (pargc, pargv);
     GtkWidget *window;
     GtkWidget *button;
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -424,7 +393,7 @@ int main( int   argc,
 #if defined(_WIN32)&& (!defined(_WINDOWS)) && !defined(__MINGW32__) && !defined(__CYGWIN__)
 	GetRidOfConsole();
 #else
-	printf (my_mission.c_str());
+	fprintf (stderr, "MISSION = %s\n", my_mission.c_str());
 #endif
     gtk_main();
     return(0);
@@ -857,53 +826,24 @@ void LoadSaveFunction (char *Filename, char *otherstr, int i, GtkSignalFunc func
     gtk_widget_show(filew);
 //	delete []otherstr;
 }
+
 void LoadMissionDialog (char * Filename,int i) {
-#ifdef _WIN32
-  GoToParentDir ();
-#else
-  getdatadir();
-#endif
+  changeToData();
   chdir ("mission");
   char mypwd [1000];
   getcwd (mypwd,1000);
   //  fprintf (stderr,mypwd);
   LoadSaveFunction (Filename,"Select the mission, then run by clicking new or load game.",i,(GtkSignalFunc) file_mission_sel,my_mission.c_str(),true);
 }
-void changehome() {
-  static char pw_dir[2000];
-#ifndef _WIN32
-  struct passwd *pwent;
-  pwent = getpwuid (getuid());
-  chdir (pwent->pw_dir);
-#else
-  GoToParentDir ();
-#endif
-  if (chdir (HOMESUBDIR.c_str())==-1) {
-    mkdir (HOMESUBDIR.c_str()
-#ifndef _WIN32		  
-	     , 0xFFFFFFFF
-#endif		  
-	     );
-    chdir (HOMESUBDIR.c_str());
-  }
-  if (chdir ("save")==-1) {
-    mkdir ("save"
-#ifndef _WIN32
-	   , 0xFFFFFFFF
-#endif		  
-	   );
-    //system ("mkdir " HOMESUBDIR "/generatedbsp");
-    chdir ("save");
-  }
-}
-
 
 void LoadSaveDialog (char *Filename,char *otherstr, int i) {
   changehome();
+  chdir ("save");
   LoadSaveFunction (Filename,otherstr,i,(GtkSignalFunc) file_ok_sel);
 }
 void LoadAutoDialog (char *Filename,char *otherstr, int i) {
   changehome();
+  chdir ("save");
   LoadSaveFunction (Filename,otherstr,i,(GtkSignalFunc)file_ok_auto_sel);
 }
 /* example-end */

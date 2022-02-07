@@ -1042,13 +1042,15 @@ endif()
 
 IF(NOT DISABLE_CLIENT)
 	target_link_libraries(vegastrike ${TST_LIBS})
-    set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}")
+    set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}${VS_WINDOWS_APP_LDFLAGS}")
     #version.h generation
     add_dependencies(vegastrike get_scm_revision)
 ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file
 add_subdirectory(setup)
+# Vslauncher Sub build file
+add_subdirectory(launcher)
 
 #ADD_CUSTOM_TARGET(vssetup DEPENDS setup/vssetup COMMAND ln -fs ${vsUTCS_BINARY_DIR}/setup/vssetup vssetup || true)
 
