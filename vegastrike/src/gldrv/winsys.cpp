@@ -738,7 +738,7 @@ void winsys_process_events()
     	SDL_InitSubSystem(SDL_INIT_AUDIO);
     }
 
-    WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering main loop...", WINSYS_SDL_MAJOR);
+    WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering event loop...", WINSYS_SDL_MAJOR);
     while (true) {
     unsigned int event_count = 0;
     if (sdl_lockaudio) {
@@ -771,9 +771,9 @@ void winsys_process_events()
            #endif
             if (kb_alt_tab
             &&  !released && event.key.keysym.sym == SDLK_TAB && gl_options.fullscreen
-                //SDL_HideWindow(sdl_window);
             &&  (mod & key) != 0 && (mod & ~(key)) == 0) {
                 SDL_MinimizeWindow(sdl_window);
+                //SDL_HideWindow(sdl_window);
                 fullwindow_hidden = true;
                 break ;
             }
@@ -960,9 +960,12 @@ void winsys_process_events()
             }
             if (event.window.event == SDL_WINDOWEVENT_ENTER) {
                 WINSYS_DBG(logvs::DBG, "WINDOW_ENTER");
-                if (fullwindow_hidden) {
+                if (fullwindow_hidden && (SDL_GetWindowFlags(sdl_window) & SDL_WINDOW_SHOWN) != 0) {
                     fullwindow_hidden = false;
+                   #if !defined(__APPLE__) 
                     SDL_MaximizeWindow(sdl_window);
+                   #endif
+                    SDL_ShowWindow(sdl_window);
                     SDL_SetWindowFullscreen(sdl_window, SDL_WINDOW_FULLSCREEN);//not needed if only minimized
                 }
                 winsys_show_cursor(0);
@@ -1378,7 +1381,7 @@ void winsys_process_events()
     SDL_SetCursor(cursor);
     winsys_warp_pointer(g_game.x_resolution/2, g_game.y_resolution/2);
 
-    WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering main loop...", WINSYS_SDL_MAJOR);
+    WINSYS_LOG(logvs::NOTICE, "(SDL%d) Entering event loop...", WINSYS_SDL_MAJOR);
     
     while (true) {
     if (sdl_lockaudio) {
@@ -1647,6 +1650,7 @@ void winsys_exit( int code )
 	  (*atexit_func)();
     }
 
+    fflush(NULL);
     exit( code );
 }
 
@@ -2218,7 +2222,7 @@ void winsys_process_events()
         glutEntryFunc(entry_cb);
     }
 
-    WINSYS_LOG(logvs::NOTICE, "(GLUT) Entering main loop...");
+    WINSYS_LOG(logvs::NOTICE, "(GLUT) Entering event loop...");
     glutMainLoop();
 }
 
@@ -2260,6 +2264,7 @@ void winsys_exit( int code )
       (*atexit_func)();
     }
 
+    fflush(NULL);
     exit(code);
 }
 
