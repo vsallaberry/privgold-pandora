@@ -1212,8 +1212,10 @@ tools/unicode.link.cpp: $(top_srcdir)/src/unicode.cpp
 tools/log.link.cpp: $(top_srcdir)/src/log.cpp
 	cp $< $@ || copy $< $@
 
+setup/log.link.cpp: $(top_srcdir)/src/log.cpp
+	cp $< $@ || copy $< $@
 vssetup_LDFLAGS = $(GTK_LIBS)
-vssetup_CXXFLAGS= $(GTK_CFLAGS)
+vssetup_CXXFLAGS= $(GTK_CFLAGS) -DVS_LOG_NO_XML
 vssetup_SOURCES = \
     setup/src/c/setup.cpp \
     setup/src/include/central.cpp \
@@ -1225,10 +1227,12 @@ vssetup_SOURCES = \
     setup/src/include/general.cpp \
     setup/src/include/general.h \
     src/common/common.cpp \
-    src/common/common.h
+    src/common/common.h \
+    setup/log.link.cpp \
+    src/log.h
 
 vssetup_dlg_LDFLAGS = $(DIALOG_LIBS)
-vssetup_dlg_CXXFLAGS= $(DIALOG_CFLAGS)
+vssetup_dlg_CXXFLAGS= $(DIALOG_CFLAGS) -DVS_LOG_NO_XML
 vssetup_dlg_SOURCES = \
     setup/src/c/setup.cpp \
     setup/src/include/central.cpp \
@@ -1240,7 +1244,9 @@ vssetup_dlg_SOURCES = \
     setup/src/include/general.cpp \
     setup/src/include/general.h \
     src/common/common.cpp \
-    src/common/common.h
+    src/common/common.h \
+    setup/log.link.cpp \
+    src/log.h
 
 
 if USE_PRECOMPILED_HEADERS

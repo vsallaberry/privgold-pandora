@@ -18,38 +18,17 @@
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
 #endif
+#include "common/common.h"
 #include "../include/central.h"
 #include <stdlib.h>
 #ifdef _WIN32
 # include <windows.h>
-# include <shlobj.h>
-# if !defined(VS_HOME_INSIDE_DATA)
-#  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
-#   include <shlwapi.h>
-static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
-	PWSTR pszPath = NULL;
-	HRESULT ret;
-	ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
-	if (pszPath == NULL)
-		return S_OK-1;
-	if (ret == S_OK)
-		StrCpyW(wappdata, pszPath);
-	CoTaskMemFree((LPVOID)pszPath);
-	return ret;
-}
-#  elif defined(CSIDL_LOCAL_APPDATA)
-static HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
-	return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
-}
-#  else
-static HRESULT vs_win32_get_appdata(WCHAR * wappdata) { (void)wappdata; return S_OK-1; }
-#  endif
-# endif
 # if defined(__CYGIN__) || defined(__MINGW32__)
 #  include <io.h>
 # else
 #  include <direct.h>
 # endif
+#include <sys/stat.h>
 #else
 # include <sys/dir.h>
 # include <stdio.h>
@@ -61,9 +40,24 @@ static HRESULT vs_win32_get_appdata(WCHAR * wappdata) { (void)wappdata; return S
 
 #include <vector>
 #include <string>
+
+#include "log.h"
+
 using std::string;
 using std::vector;
+char binpath[65536];
 char origpath[65536];
+char resourcespath[65536];
+
+#if !defined(HAVE_SETENV)
+int setenv(const char * var, const char * value, int override) {	
+	if (!override && getenv(var) != NULL) return 0;
+	char envstr[16384];
+	snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
+	//not working on windows: SetEnvironmentVariableA(var,val);
+	return putenv(envstr);
+}
+#endif
 
 static void changeToProgramDirectory(char *argv0) {
     int ret = -1; /* Should it use argv[0] directly? */
@@ -108,6 +102,7 @@ static void changeToProgramDirectory(char *argv0) {
       c--;
     
     *c = '\0';             /* cut off last part (binary name) */
+
     if (strlen (parentdir)>0) {
       chdir (parentdir);/* chdir to the binary app's parent */
     }
@@ -126,63 +121,66 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nS
 #else
 int main(int argc, char *argv[]) {
 #endif
+    const char * pathorder[] = { binpath, ".", NULL };
 
-	if (argc>1) {
-		if (strcmp(argv[1], "--target")==0 && argc>2) {
-			chdir(argv[2]);
+    logvs::vs_log_setfile(stdout);
+    logvs::vs_log_setflag(logvs::F_QUEUELOGS, true);
+
+    for (int i_argv = 1; i_argv < argc; ++i_argv) {
+		if ((i_argv + 1 < argc && strcmp(argv[i_argv], "--target") == 0) || strncmp(argv[i_argv], "-D", 2) == 0) {
+            if (chdir(argv[i_argv][1] == '-' ? argv[++i_argv] : argv[i_argv]+2) == 0) {
+                pathorder[0] = "."; pathorder[1] = binpath;
+            }
 		} else {
-			fprintf(stderr,"Usage: vssetup [--target DATADIR]\n");
+			VS_LOG("vssetup", logvs::WARN, "Usage: vssetup [--target DATADIR] [-DDATADIR]");
 			return 1;
 		}
 	}
-	getcwd (origpath,65535);
-	origpath[65535]=0;
-	
+	getcwd (origpath,sizeof(origpath)-1);
+	origpath[sizeof(origpath)-1]=0;
+    VS_LOG("vssetup", logvs::NOTICE, " In path %s", origpath);
+
 	changeToProgramDirectory(argv[0]);
-	
+    getcwd (binpath,sizeof(binpath)-1);
+	binpath[sizeof(binpath)-1]=0;
+    VS_LOG("vssetup", logvs::NOTICE, "Binary path %s", binpath);
+
 	{
+        char tmppath[16384];
 		vector<string>	data_paths;
+
+        /* look for resources directory, where we could find data,share,bin,lib */
+        for (const char ** base = pathorder; *base; ++base) {
+            data_paths.push_back( *base );
+	    	data_paths.push_back( string(*base)+"/..");
+            data_paths.push_back( string(*base)+"/../Resources");
+        }
+        for( vector<string>::iterator vsit=data_paths.begin(); vsit!=data_paths.end(); vsit++)
+		{
+			// Test if the dir exist and contains config_file
+			chdir(origpath);
+			chdir((*vsit).c_str());
+            struct stat st;
+            if (stat("share", &st) == 0 || stat("lib", &st) == 0) {
+    			getcwd (resourcespath, sizeof(resourcespath)-1);
+	    		resourcespath[sizeof(resourcespath)-1] = 0;
+    			VS_LOG("vssetup", logvs::NOTICE, "Found resources in %s", resourcespath);
+	    		break;
+            }
+		}
+
+        /* Now look for data directory */
+        data_paths.clear();
+        for (const char ** base = pathorder; *base; ++base) {
+            for (const char ** searchs = VSCommon::datadirs; *searchs; ++searchs) {
+                data_paths.push_back( (std::string(*base) + "/") + *searchs );
+            }
+         }
 #ifdef DATA_DIR
 		data_paths.push_back( DATA_DIR);
 #endif
-		data_paths.push_back( origpath);
-		data_paths.push_back( string(origpath)+"/..");
-		data_paths.push_back( string(origpath)+"/../data4.x");
-		data_paths.push_back( string(origpath)+"/../../data4.x");
-		data_paths.push_back( string(origpath)+"/data4.x");
-		data_paths.push_back( string(origpath)+"/data");
-		data_paths.push_back( string(origpath)+"/../data");
-		data_paths.push_back( string(origpath)+"/../Resources");
-        data_paths.push_back( string(origpath)+"/../Resources/data");
-		getcwd (origpath,65535);
-		origpath[65535]=0;
-		data_paths.push_back( ".");
-		data_paths.push_back( "..");
-		data_paths.push_back( "../data4.x");
-		data_paths.push_back( "../../data4.x");
-		data_paths.push_back( "../data");
-		data_paths.push_back( "../../data");
-		data_paths.push_back( "../Resources");
-		data_paths.push_back( "../Resources/data");
-		data_paths.push_back( "../Resources/data4.x");
-/*
-		data_paths.push_back( "/usr/share/local/vegastrike/data");
-		data_paths.push_back( "/usr/local/share/vegastrike/data");
-		data_paths.push_back( "/usr/local/vegastrike/data");
-		data_paths.push_back( "/usr/share/vegastrike/data");
-		data_paths.push_back( "/usr/local/games/vegastrike/data");
-		data_paths.push_back( "/usr/games/vegastrike/data");
-		data_paths.push_back( "/opt/share/vegastrike/data");
-		data_paths.push_back( "/usr/share/local/vegastrike/data4.x");
-		data_paths.push_back( "/usr/local/share/vegastrike/data4.x");
-		data_paths.push_back( "/usr/local/vegastrike/data4.x");
-		data_paths.push_back( "/usr/share/vegastrike/data4.x");
-		data_paths.push_back( "/usr/local/games/vegastrike/data4.x");
-		data_paths.push_back( "/usr/games/vegastrike/data4.x");
-		data_paths.push_back( "/opt/share/vegastrike/data4.x");
-*/		
+
 		// Win32 data should be "."
-		char tmppath[16384];
 		for( vector<string>::iterator vsit=data_paths.begin(); vsit!=data_paths.end(); vsit++)
 		{
 			// Test if the dir exist and contains config_file
@@ -195,9 +193,9 @@ int main(int argc, char *argv[]) {
 			setupcfg = fopen("Version.txt","r");
 			if (!setupcfg)
 				continue;
-			getcwd (origpath,65535);
-			origpath[65535]=0;
-			printf("Found data in %s\n",origpath);
+			getcwd (origpath,sizeof(origpath)-1);
+			origpath[sizeof(origpath)-1] = 0;
+			VS_LOG("vssetup", logvs::NOTICE, "Found data in %s", origpath);
 			break;
 		}
 	}
@@ -216,11 +214,11 @@ int main(int argc, char *argv[]) {
 		fclose(version);
 		if (hsd.length()) {
 			HOMESUBDIR=hsd;
-			//fprintf (STD_OUT,"Using %s as the home directory\n",hsd.c_str());
+			//VS_LOG("vssetup", logvs::NOTICE, "Using %s as the home directory\n",hsd.c_str());
 		}
 	}
 	if (HOMESUBDIR.empty()) {
-		fprintf(stderr,"Error: Failed to find Version.txt anywhere.\n");
+		VS_LOG("vssetup", logvs::ERROR, "Error: Failed to find Version.txt anywhere.");
 		return 1;
 	}
 #if !defined(VS_HOME_INSIDE_DATA)
@@ -230,7 +228,7 @@ int main(int argc, char *argv[]) {
 	chdir (pwent->pw_dir);
 # else
 	WCHAR wappdata_path[PATH_MAX];
-	if (vs_win32_get_appdata(wappdata_path) != S_OK) {
+	if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {
 		// use datadir as homedir
 	} else {
 		if (HOMESUBDIR.size() && HOMESUBDIR[0] == '.') {
@@ -251,11 +249,15 @@ int main(int argc, char *argv[]) {
     char tmp_path[16384];
     getcwd(tmp_path,16384);
     tmp_path[16383]=0;
-    printf("Now in Home Dir: %s\n",tmp_path);
-	
+    VS_LOG("vssetup", logvs::NOTICE, "Now in Home Dir: %s", tmp_path);
+
+    logvs::log_openfile("", std::string(tmp_path) + "/vssetup.log", /*redirect=*/true, /*append=*/false);
+    atexit(logvs::log_terminate);
+ 
 	Start(&argc,&argv);
 #if defined(_WINDOWS)&&defined(_WIN32)
 	delete []argv0;
 #endif
 	return 0;
 }
+

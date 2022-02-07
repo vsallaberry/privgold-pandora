@@ -27,7 +27,7 @@ int RANDOMIZED = 0;
 
 char *next_parm(char *string) {
 	char *next;
-	if (string[0] == '\0') { return 0; }
+	if (string[0] == '\0') { return NULL; }
 	next = string;
 	while (next[0] != ' ' && next[0] != '\0') {
 		next++;
@@ -79,7 +79,7 @@ char *split_words(char *string, int max_words) {
 char *ptr_copy(char *string) {
 	char *alloc;
 	alloc = (char *)malloc(strlen(string)+1);
-	if (alloc == 0) { fprintf(stderr, "Out of memory\n"); exit(-1); }
+	if (alloc == NULL) { fprintf(stderr, "Out of memory\n"); exit(-1); }
 	strncpy(alloc, string, strlen(string));
 	alloc[strlen(string)] = '\0';
 	return alloc;
@@ -274,13 +274,13 @@ void btoa(char *dest, char *string) {
 
 // Some handy wrappers for glib that help error handling which prevent segfaults
 char *GetString(GString *line) {
-	if (line == 0) { return ""; }
+	if (line == NULL) { return ""; }
 	return line->str;
 }
 
 void SetString(GString **ptr, char *line) {
-	if (ptr <= 0) { return; }
-	if (*ptr <= 0) {
+	if (ptr == NULL) { return; }
+	if (*ptr == NULL) {
 		*ptr = g_string_new(line);
 		return;
 	}
@@ -292,7 +292,7 @@ void SetString(GString **ptr, char *line) {
 char *NewString(const char *line) {
 	char *new_str;
 	new_str = (char *)malloc(strlen(line)+1);
-	if (new_str == 0) { fprintf(stderr, "Out of Memory\n"); exit(-1); }
+	if (new_str == NULL) { fprintf(stderr, "Out of Memory\n"); exit(-1); }
 	strcpy(new_str, line);
 	new_str[strlen(line)] = '\0';
 	return new_str;

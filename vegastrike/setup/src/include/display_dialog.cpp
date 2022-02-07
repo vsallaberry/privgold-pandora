@@ -42,6 +42,12 @@ void InitGraphics (int* argc,char*** argv){
     exit(0);
   }
 #endif
+  char terminfodir[65535];
+  const char * old_terminfodir = getenv("TERMINFO_DIRS");
+  snprintf(terminfodir, sizeof(terminfodir), "%s/share/terminfo%s%s", resourcespath, 
+           old_terminfodir ? ":" : "", old_terminfodir ? old_terminfodir : "");
+  setenv("TERMINFO_DIRS", terminfodir, 1);
+
   init_dialog (stdin, stdout);
   if (*strings == NULL) {
       memset(strings, 0, sizeof(*strings) * STR_NB);

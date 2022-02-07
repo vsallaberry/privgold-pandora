@@ -4,7 +4,8 @@ SET(VSSETUP_COMMON_SOURCES
                     src/include/central.cpp
                     src/include/file.cpp
                     src/include/general.cpp
-                    ../src/common/common.cpp )
+                    ../src/common/common.cpp
+                    ../src/log.cpp )
 
 SET(VSSETUP_GTK_SOURCES
                     src/include/display_gtk.cpp )
@@ -15,8 +16,8 @@ SET(VSSETUP_DLG_SOURCES
 
 #find GTK2
 UNSET(GTK2_FIND_REQUIRED)
-if(NOT DEFINED GTK_FOUND OR GTK_FOUND)
-  find_package(GTK2)
+if(NOT VS_GTK_DISABLE)
+   find_package(GTK2)
 endif()
 IF(GTK2_FOUND)
     SET(GTK_LIBS ${GTK2_LIBRARIES})
@@ -28,8 +29,9 @@ IF(GTK2_FOUND)
         target_compile_options(vssetup PUBLIC "${GTK_CFLAGS}") # works also but set_s.._properties is more precise
     endif()
     target_link_libraries(vssetup ${GTK_LIBS})
+    target_compile_options(vssetup PUBLIC "-DVS_LOG_NO_XML")
 ELSE(GTK2_FOUND)
-     message("!! Cant get GTK2 found")
+     message("!! vssetup: Cant get GTK2 found")
 ENDIF(GTK2_FOUND)
 
 #find LIBDIALOG
@@ -59,7 +61,7 @@ if (DLG_CONFIG_EXECUTABLE)
         else()
             SET(DLG_LIBRARIES ${DLG_CONFIG_EXEC_STRING})
             SET(DIALOG_FOUND 1)
-            message("-- Found libdialog (${DLG_DEFINITIONS}|${DLG_LIBRARIES})")
+            message("-- vssetup: Found libdialog (${DLG_DEFINITIONS}|${DLG_LIBRARIES})")
         endif()
     endif ()
     unset(_DLG_CONFIG_EXEC_RESULT)
@@ -74,8 +76,9 @@ IF(DIALOG_FOUND)
         target_compile_options(vssetup_dlg PUBLIC "${DLG_CFLAGS}") # works also but set_s.._properties is more precise
     endif()
     target_link_libraries(vssetup_dlg ${DLG_LIBS})
+    target_compile_options(vssetup_dlg PUBLIC "-DVS_LOG_NO_XML")
 ELSE(DIALOG_FOUND)
-    message("!! Cant get libdialog found")
+    message("!! vssetup: Cant get libdialog found")
 ENDIF(DIALOG_FOUND)
 
 IF(NOT GTK2_FOUND AND NOT DIALOG_FOUND)
