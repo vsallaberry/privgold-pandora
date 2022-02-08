@@ -856,8 +856,8 @@ do_delivery_fun() {
     checkkeys_dir="${bundle_tools}/checkModifierKeys"
 
     this_bundle="${deliverydir}/bundle/PrivateerGold.this.app"
-    other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs.app"
-    other_bundle_ref="${mydir}/${buildpool}/PrivateerGold.more-archs.app"
+    other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs/PrivateerGold.app"
+    other_bundle_ref_dir="${mydir}/${buildpool}"
 
     xcopy() {
         rsync -ah -t --exclude '.DS_Store' --exclude '*~' --exclude '.*.sw?' --exclude '**/.git' --exclude '**/.svn' "$@"
@@ -886,7 +886,7 @@ do_delivery_fun() {
                 cxxf="-arch x86_64 -arch arm64"
             fi
             find_macos_sdk "${cxxf}"
-            chmod_args='-hv'
+            chmod_args='-h'
             ;;
         *bsd*|linux*)
             bundledir="${deliverydir}/bundle/PrivateerGold"
@@ -898,7 +898,7 @@ do_delivery_fun() {
             package_name="${deliverydir}/PrivateerGold-${priv_version}_linux64.tar.bz2"
 
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
-            case "${target_sysname}" in *bsd*) chmod_args='-hv';; linux*) chmod_args='-c';; esac
+            case "${target_sysname}" in *bsd*) chmod_args='-h';; linux*) chmod_args='';; esac
             for _lib in "${VEGA_PREFIX}/lib/libasound.so"*; do
                 add_bundlelibs "alsa-lib" "${_lib}"
             done
@@ -913,7 +913,8 @@ do_delivery_fun() {
             bundle_tools_librpath="."; bundle_tools_gtklibrpath="${bundle_tools_librpath}"; bundle_tools_misclibrpath="${bundle_tools_librpath}"
             package_name="${deliverydir}/PrivateerGold-${priv_version}_windows64.zip"
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
-            chmod_args='-c'
+            #chmod_args='-c'
+            chmod_args=''
             case "${target_arch}" in x86_64) _archbits=64;; *) _archbits=32;; esac
             export PATH="${VEGA_PREFIX}/bin:${GTK2_PREFIX}/bin:${PATH}:/mingw${_archbits}/bin:/mingw${_archbits}/${target_arch}-w64-mingw32/bin"
             for _lib in "/c/WINDOWS/SYSTEM32/ucrtbase.dll" "/c/WINDOWS/SYSTEM32/downlevel/api-ms-win-crt-"*.dll; do
@@ -925,11 +926,13 @@ do_delivery_fun() {
             ;;
     esac
 
-    test -z "${interactive}" || yesno "? Build engines <$gfxs> with flags '$cxxf' ?" \
+    test -z "${interactive}" || yesno "? Create Bundle ?" \
     && {
         # clean bundle dir
-        echo "+ creating bundle..."
-        rm -Rf "${bundledir}" "${deliverydir}/bundle/destroot" "${this_bundle}" "${other_bundle}"
+        echo "+ creating bundle ${bundledir}... "
+        #rm -Rf "${bundledir}" "${deliverydir}/bundle" "${this_bundle}" "${other_bundle}" "${other_bundle_mountpoint}"
+        rm -Rf "${deliverydir}/bundle"
+        test -d "${deliverydir}/bundle" && { echo "!! error the bundle dir cannot be removed"; exit 1; }
         # copy bundle template
         mkdir -p "${bundledir}" || exit $?
         mkdir -p "${bundle_bindir}" || exit $?
@@ -954,7 +957,8 @@ do_delivery_fun() {
                 xcopy "${mydir}/tools/windows_bundle/PrivateerGold/" "${bundledir}" || exit $?
                 ;;
         esac
-    } \
+    }
+    test -z "${interactive}" || yesno "? Build engines <$gfxs> with flags '$cxxf' ?" \
     && echo "+ building..." \
     && for gfx in ${gfxs}; do
         test "${build_tool}" = auto && build_tool=cmake
@@ -972,14 +976,15 @@ do_delivery_fun() {
 
         gfx=$(printf -- "${gfx}" | tr "[:lower:]" "[:upper:]")
         cp -v "${builddir}/vegastrike${exe}" "${bundle_bindir}/vegastrike.${gfx}${exe}" || exit $?
+    done || { mainbuilddir="${deliverydir}/sdl2"; test "${build_tool}" = "configure" && mainsubdir=../ || mainsubdir=; }
 
-    done
-
+    # copy vssetup* & launcher from mainbuilddir to bundle
     for f in "${mainbuilddir}/setup/${mainsubdir}vssetup${exe}" "${mainbuilddir}/setup/${mainsubdir}vssetup_dlg${exe}" \
              "${mainbuilddir}/launcher/${mainsubdir}vslauncher${exe}"; do
         cp -v "$f" "${bundle_bindir}"
     done
-
+    
+    # add the dynamic python libs
     for _lib in "${mainbuilddir}/lib/pythonlibs"/*; do
         test -L "${_lib}" && _lib="$(readlink "${_lib}")"
         add_bundlelibs "pythonlibs" "${_lib}"
@@ -1027,7 +1032,6 @@ do_delivery_fun() {
 
     # handle optional vegastrike tools executables rpaths: tools, objconv, vegaserver, test
     if true; then
-        test "${build_tool}" = "configure" && subdir=../ || subdir=
         mkdir -p "${bundle_resdir}/bin" && cp -v "${mainbuilddir}"/vegaserver \
             "${mainbuilddir}/tools/${mainsubdir}"{vsrextract,vsrmake,unicode-conv}${exe} \
             "${mainbuilddir}/tests/${mainsubdir}"test${exe} \
@@ -1080,25 +1084,52 @@ do_delivery_fun() {
     #fix perms
     find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod ${chmod_args} 'u+w'
 
+    # Add dirty suffix to package name
+    case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
+    package_ext=${package_name#${package_pref}}
+    case "${git_rev}" in *-dirty)    
+        package_name="${package_pref}-${git_rev}${package_ext}";;
+    esac
+
     # Merge the generated bundle with the ARM64 one if present
-    if test -d "${other_bundle_ref}"; then
-        echo "+ Merging architectures of PrivateerGold.app and ${other_bundle_ref}..."
-        test -d "${other_bundle_ref}/destroot" && exit 1
-        cp -a "${other_bundle_ref}" "${deliverydir}/bundle/destroot" \
-            && mkdir -p "${other_bundle}" && mv "${deliverydir}/bundle/destroot" "${other_bundle}" || exit $?
-        rm -f "${other_bundle}/destroot/Contents/Resources/data"
-        mv "${bundledir}" "${deliverydir}/bundle/destroot" && mkdir -p "${this_bundle}" && mv "${deliverydir}/bundle/destroot" "${this_bundle}" || exit $?
-        "${mydir}/deps/mergelibs.sh" -N -U "${this_bundle}" "${other_bundle}" "${bundledir}" || exit $?
-        rm -Rf "${other_bundle}" "${this_bundle}"
+    other_bundle_ref_archive="${other_bundle_ref_dir}/$(basename "${package_name%${package_ext}}")-MoreArchs${package_ext}"
+    if test -f "${other_bundle_ref_archive}"; then
+        other_bundle_mountpoint="$(dirname "${other_bundle}")"
+        mkdir -p "${other_bundle_mountpoint}"
+        trap_backup=$(trap 2>&1 | awk '/EXIT$/ { print $3 }')
+        archive_cleanup() { true; }
+        trap archive_cleanup EXIT
+        eval trap_backup=${trap_backup:-"-"}
+        case "${package_ext}" in 
+            .[dD][mM][gG]) 
+                archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}"; }
+                hdiutil mount -quiet -readonly -mountpoint "${other_bundle_mountpoint}" "${other_bundle_ref_archive}";;
+            .tar.xz) (cd "${other_bundle_mountpoint}" && tar xJf "${other_bundle_ref_archive}");;
+            *) false;;
+        esac; test $? -eq 0 || { echo "ERROR, cannot extract ${other_bundle_ref_archive}"; exit 1; }
+        printf -- "+\n+ Merging architectures of PrivateerGold.app and ${other_bundle#${deliverydir}}...\n+\n"
+        test -d "${other_bundle}" || exit 1
+        rm -f "${other_bundle}/Contents/Resources/data"
+        mv -v "${bundledir}" "${this_bundle}" || exit $?
+        "${mydir}/deps/mergelibs.sh" -S -N -U -X"${bundle_resdir#${bundledir}}/data" "${this_bundle}" "${other_bundle}" "${bundledir}" || exit $?
+        archive_cleanup; trap "${trap_backup}" EXIT
+        rm -Rf "${other_bundle}" "${this_bundle}" "${other_bundle_mountpoint}"
         echo
+    elif case "${target_sysname}" in darwin*) true;; *) false;; esac; then
+        printf -- "\n!!\n!! WARNING: macOS additional architectures package ${other_bundle_ref_archive} not found\n!!\n\n"
     fi
 
     # Display list of libs
-    case "${target_sysname}" in linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";; esac
+    case "${target_sysname}" in 
+        linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";;
+    esac
     echo "+ Libraries:"
     for f in `find "${bundle_bindir}"/{,${bundle_librpath}} -type f`; do
         test -f "$f" && get_libs "$f" 2> /dev/null | grep -Ev '^[^[:space:]]'
     done | sort | uniq
+    case "${target_sysname}" in
+        darwin*) lipo -info "${bundle_bindir}"/vegastrike.*${exe} | sed -e 's|.*/||';;
+    esac
 
     # Put data in bundle
     if test "${do_delivery}" = dev; then
@@ -1107,7 +1138,7 @@ do_delivery_fun() {
         ln -sv "${priv_data}" "${bundle_resdir}/data" || exit $?
     else
         test -z "${interactive}" || yesno "? Copy whole data in bundle (${priv_data}) ?" \
-        && { echo "+ copying data..."; \
+        && { echo "+ copying data..."; rm -f "${bundle_resdir}/data" || exit 1; \
              xcopy --exclude "/bin" --exclude "/tofix" \
                    --exclude "/generated_factions.xml" --exclude "/0.html" \
                    "${priv_data}/" "${bundle_resdir}/data"; } || exit $?
@@ -1120,10 +1151,6 @@ do_delivery_fun() {
     find "${deliverydir}/bundle" -perm '+u=r' -print0 | xargs -0 chmod ${chmod_args} 'g+r,o+r'
 
     # Create Package
-    case "${git_rev}" in *-dirty)
-        case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
-        package_ext=${package_name#${package_pref}}; package_name="${package_pref}-${git_rev}${package_ext}";;
-    esac
     test -z "${interactive}" || yesno "? Create Package (${package_name}) ?" || exit 1
     echo "+ creating Package (${package_name})"
     rm -f "${package_name}" || exit $?

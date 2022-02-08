@@ -62,7 +62,13 @@ rpaths[0]=${libs_path}
 
 case "${build_sysname}" in
     linux*|*bsd*|mingw*|cygwin*|msys*)
-        install_name_tool() { true; }
+        chrpath=$(which chrpath 2> /dev/null)
+        install_name_tool() { 
+            test -x ${chrpath} || return 0
+            case "$1" in
+                -add_rpath) local rpath=$2 target=$3; chrpath -r "${rpath}" "${target}";;
+            esac
+        }
         get_libs() { ldd "$@" | awk '/[^:]$/ { print $3 }'; }
         ;;
     darwin*)
@@ -70,9 +76,16 @@ case "${build_sysname}" in
         ;;
 esac
 
-echo "*"
-echo "* running $0 - libs:${libs_path} rpaths:${rpaths[@]} excludes:${excludes[@]} strip:${dostrip}"
-echo "*"
+printf -- "\n**********************************************\n"
+printf -- "* running $(basename "$0"), strip:${dostrip}\n"
+printf -- "  + targets:\n"
+printf -- "    %s\n" "${targets[@]}"
+printf -- "  + main lib rpath:\n    ${libs_path}\n"
+printf -- "  + other rpaths:\n"
+printf -- "    %s\n" "${rpaths[@]}"
+printf -- "  + excludes:\n"
+printf -- "    %s\n" "${excludes[@]}"
+printf -- "\n"
 
 ##################################################################################
 unset errors; declare -a errors
@@ -87,13 +100,13 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     if test -z "${target_libdir}"; then
         target_dir=$(dirname "${target}")
         target_libdir="${target_dir}/${libs_path}"
-        mkdir -p "${target_libdir}"
     fi
 
     case "${lowtarget}" in
         *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|*.dll|/frameworks/*)
             ;;
         *)
+            chmod 'u+w,u+r' "${target}"
             for rpath in "${rpaths[@]}"; do
                 case "${rpath}" in /*) new_rpath=${rpath};; *) new_rpath="${exe_rpath}/${rpath}";; esac
                 install_name_tool -add_rpath "${new_rpath}" "${target}" 2> /dev/null \
@@ -125,7 +138,8 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
                 install_name_tool -change "${lib}" "@rpath/${lib_name}" "${target}" \
                     || errors[${#errors[@]}]="[${target_name}] nametool change * (${lib_name})"
                 test -z "${copy}" \
-                || if cp -Lv "${lib}" "${target_libdir}"; then
+                || if mkdir -p "${target_libdir}" && cp -Lv "${lib}" "${target_libdir}"; then
+                    chmod 'u+w,u+r' "${target_libdir}/${lib_name}"
                     install_name_tool -id "@rpath/${lib_name}" "${target_libdir}/${lib_name}" \
                         && { test -z "${dostrip}" || { strip -S "${target_libdir}/${lib_name}" && echo "+ ${lib_name} stripped"; }; } \
                         || errors[${#errors[@]}]="[${target_name}] nametool id (${lib_name})"
