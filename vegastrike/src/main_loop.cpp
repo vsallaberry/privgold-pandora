@@ -711,11 +711,11 @@ bool cockpitfront=true;
           if (!game_options.show_msgcenter) {
               game_options.show_msgcenter = true;
           }
-          unsigned int flags = logvs::vs_log_setflag(0, true) & logvs::F_MSGCENTER;
+          unsigned int flags = logvs::log_setflag(0, true) & logvs::F_MSGCENTER;
           if (flags) {
               GAME_LOG(logvs::NOTICE, "disabling msgcenter logs");
           }
-          logvs::vs_log_setflag(logvs::F_MSGCENTER, !flags);
+          logvs::log_setflag(logvs::F_MSGCENTER, !flags);
           game_options.force_msgcenter_log = !flags;
           game_options.show_msgcenter_base = !flags;
           if (!flags) {

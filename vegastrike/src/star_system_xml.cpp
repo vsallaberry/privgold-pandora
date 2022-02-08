@@ -20,6 +20,7 @@
 #include "cmd/atmosphere.h"
 
 #include "log.h"
+#include "vs_log_modules.h"
 #include "options.h"
 extern vs_options game_options;
 
@@ -879,7 +880,7 @@ void StarSystem::beginElement(const string &name, const AttributeList &attribute
 					if (p)
 						p->setAtmosphere (a);
 					else
-						VSFileSystem::vs_fprintf (stderr,"atmosphere loose. no planet for it");
+						UNIV_LOG(logvs::WARN, "atmosphere loose. no planet for it");
 				}
 			}
 		}
@@ -1552,7 +1553,7 @@ void StarSystem::LoadXML(const char *filename, const Vector & centroid, const fl
 	{
 		string fcontents = f.ReadFull();
         if (STARSYS_LOG(logvs::VERBOSE, "Contents of star system:") > 0) {
-            logvs::vs_printf("%s\n", fcontents.c_str());
+            logvs::log_printf("%s\n", fcontents.c_str());
         }
 		enum XML_Status status = XML_Parse(parser, (fcontents).c_str(), f.Size(), 1);
         STARSYS_LOG(logvs::NOTICE, "starsystem %s loaded - status:%d", filename, status);

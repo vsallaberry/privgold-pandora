@@ -176,7 +176,7 @@ void VSExit( int code)
     GAME_LOG(logvs::NOTICE, "Loop average : %g", avg_loop);
     GAME_LOG(logvs::NOTICE, "FPS average : %g", avg_fps);
     GAME_LOG(logvs::NOTICE, "Number of Mission instances : %u", active_missions.size());
-    unsigned int game_loglvl = logvs::vs_log_level("game");
+    unsigned int game_loglvl = logvs::log_level("game");
     if (game_loglvl >= logvs::INFO) {
     	for (size_t i = 0; i < active_missions.size(); ++i) {
     		GAME_LOG(logvs::INFO, "  mission: %s", active_missions[i]->mission_name.c_str());
@@ -196,10 +196,9 @@ void VSExit( int code)
 
 void cleanup(void)
 {
-  VSFileSystem::vs_fprintf( stdout, "\n\nLoop average : %g\n\n", avg_loop);
-  VSFileSystem::vs_fprintf( stderr, "\n\nLoop average : %g\n\n", avg_loop);
+  GAME_LOG(logvs::NOTICE, "Loop average : %g", avg_loop);
   STATIC_VARS_DESTROYED=true;
-  printf ("Thank you for playing!\n");
+  GAME_LOG(logvs::NOTICE, "Thank you for playing!");
 
   // In network mode, we may not do the save since it is useless
   if( _Universe != NULL && Network==NULL)
@@ -217,7 +216,7 @@ void cleanup(void)
 #endif
   if( Network!=NULL)
   {
-		cout<<"Number of players"<<_Universe->numPlayers()<<endl;
+		GAME_LOG(logvs::NOTICE, "Number of players %d", _Universe->numPlayers());
 		for( int i=0; i<_Universe->numPlayers(); i++)
 			if( Network[i].isInGame())
 				Network[i].logout(false);
@@ -267,8 +266,8 @@ bool isVista=false;
 
 int main( int argc, char *argv[] )
 {
-    logvs::vs_log_setfile(stdout);
-    logvs::vs_log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
+    logvs::log_setfile(stdout);
+    logvs::log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
     
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
     InitTime();
@@ -295,7 +294,7 @@ int main( int argc, char *argv[] )
 
     /* Print copyright notice */
     vs_print_buildinfo(NULL, VPB_VERSION | VPB_SCM);
-    logvs::vs_printf("See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
+    logvs::log_printf("See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
 
     /* Seed the random number generator */
     if(benchmark<0.0){
@@ -313,11 +312,11 @@ int main( int argc, char *argv[] )
       string subdir=ParseCommandLine(argc,argv,NULL);
 
       vs_print_buildinfo(NULL, VPB_ALL & (~(VPB_VERSION | VPB_SCM | VPB_CONFIGURE)));
-      logvs::vs_printf("\n");
+      logvs::log_printf("\n");
 
       /* Restore log default flags */
-      logvs::vs_log_setflags(logvs::F_DEFAULTS | logvs::F_QUEUELOGS);
-      logvs::vs_log_setfile(stderr);
+      logvs::log_setflags(logvs::F_DEFAULTS | logvs::F_QUEUELOGS);
+      logvs::log_setfile(stderr);
 
       VS_LOG("config", logvs::NOTICE, "GOT SUBDIR ARG = %s", subdir.c_str());
       if (CONFIGFILE == NULL) {
@@ -342,18 +341,18 @@ int main( int argc, char *argv[] )
     atexit(logvs::log_terminate);
     atexit(python_terminatelog);
     std::string loglocation = vs_config->getVariable("log", "location", "false");
-    logvs::vs_log_setflag(logvs::F_QUEUELOGS, false);
-    logvs::vs_log_setflag(logvs::F_LOCATION_MASK, false);
+    logvs::log_setflag(logvs::F_QUEUELOGS, false);
+    logvs::log_setflag(logvs::F_LOCATION_MASK, false);
     if (loglocation == "header") {
-        logvs::vs_log_setflag(logvs::F_LOCATION_HEADER, true);
+        logvs::log_setflag(logvs::F_LOCATION_HEADER, true);
     } else if (loglocation == "footer") {
-        logvs::vs_log_setflag(logvs::F_LOCATION_FOOTER, true);
+        logvs::log_setflag(logvs::F_LOCATION_FOOTER, true);
     }
-    logvs::vs_log_setflag(logvs::F_TIMESTAMP,
+    logvs::log_setflag(logvs::F_TIMESTAMP,
                 XMLSupport::parse_bool(vs_config->getVariable("log", "timestamp", "true")));
-    logvs::vs_log_setflag(logvs::F_LOCATION_ALLWAYS,
+    logvs::log_setflag(logvs::F_LOCATION_ALLWAYS,
                 XMLSupport::parse_bool(vs_config->getVariable("log", "location_allways", "false")));
-    logvs::vs_log_setflag(logvs::F_MSGCENTER,
+    logvs::log_setflag(logvs::F_MSGCENTER,
                            XMLSupport::parse_bool(vs_config->getVariable("log", "msgcenter", "false")));
 
 	// This should be put into some common function...
@@ -374,11 +373,11 @@ int main( int argc, char *argv[] )
     //might overwrite the default mission with the command line
     InitUnitTables();
 #ifdef HAVE_PYTHON
-    logvs::vs_printf("\n");
+    logvs::log_printf("\n");
     Python::init();
 
     Python::test();
-    logvs::vs_printf("\n");
+    logvs::log_printf("\n");
 #endif
     std::vector<std::vector <char > > temp = ROLES::getAllRolePriorities();
     // signal( SIGSEGV, SIG_DFL );
@@ -844,7 +843,7 @@ int ParseConfigOverrides(int argc, char ** argv, VSFileSystem::ConfigOverrides_t
     return 0;
 }
 
-#define wr_fprintf(out, ...) ((out) == NULL ? /*VS_LOG("main", 0, */logvs::vs_printf(__VA_ARGS__) \
+#define wr_fprintf(out, ...) ((out) == NULL ? /*VS_LOG("main", 0, */logvs::log_printf(__VA_ARGS__) \
                                             : fprintf(out, __VA_ARGS__))
 
 const char helpmessage[] =
@@ -966,7 +965,7 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine, FILE * out) {
           ignore_network=false;
         }
         else if(strcmp(lpCmdLine[i], "--help")==0) {
-            logvs::vs_printf(helpmessage);
+            logvs::log_printf(helpmessage);
           exit(0);
         }
         else if(strcmp(lpCmdLine[i], "--version")==0) {

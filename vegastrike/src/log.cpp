@@ -132,16 +132,17 @@ struct LogEntry {
 typedef vsUMap<std::string, unsigned int> LogMap;
 typedef std::queue<LogEntry> LogQueue;
 
-static unsigned int log_flags = F_DEFAULTS; // | F_LOCATION_ALLWAYS;
-static LogMap       log_map;
-static LogQueue     log_queue;
-static FILE *       vslog_out = stderr;
-static int          vslog_stdout_fd = -1, vslog_stderr_fd = -1;
-static bool         vslog_out_istty = false;
-static int          log_level_default = -1;
-static int          log_colorize = -1;
+static unsigned int s_log_flags = F_DEFAULTS; // | F_LOCATION_ALLWAYS;
+static LogMap       s_log_map;
+static LogQueue     s_log_queue;
+static FILE *       s_log_out = stderr;
+static int          s_log_stdout_fd = -1;
+static int          s_log_stderr_fd = -1;
+static bool         s_log_out_istty = false;
+static int          s_log_level_default = -1;
+static int          s_log_colorize = -1;
 
-static const char * log_level_names[logvs::LVL_NB+1] = {
+static const char * s_log_level_names[logvs::LVL_NB+1] = {
     "none",
     "error",
     "warning",
@@ -153,8 +154,8 @@ static const char * log_level_names[logvs::LVL_NB+1] = {
 };
 
 #ifndef _WIN32
-static const char * const log_level_color_reset = "\e[00m";
-static const char * const log_level_color[logvs::LVL_NB] = {
+static const char * const s_log_level_color_reset = "\e[00m";
+static const char * const s_log_level_color[logvs::LVL_NB] = {
     "",
     "\e[01;31m",
     "\e[01;33m",
@@ -192,7 +193,7 @@ static void vs_log_msgcenter_v_(const std::string & category, unsigned int level
     if (islast || off == sizeof(buf) || eol) {
         std::string message(buf, off - (eol ? 1 : 0));
         if ((flags & F_QUEUELOGS) != 0) {
-            log_queue.push(LogEntry(category, level, (flags | log_flags), logGetTime(), message));
+            s_log_queue.push(LogEntry(category, level, (flags | s_log_flags), logGetTime(), message));
         }
 #ifndef VS_LOG_NO_MSGCENTER
         if ((flags & F_MSGCENTER) != 0 && mission != NULL && mission->msgcenter != NULL) {
@@ -213,11 +214,11 @@ static void vs_log_msgcenter_(const std::string & category, unsigned int level, 
 }
 
 #ifdef VS_LOG_NO_XML
-void vs_log_setlevel(const std::string & category, unsigned int level) {
+void log_setlevel(const std::string & category, unsigned int level) {
 	if (category.empty()) {
-		log_level_default = level;
+		s_log_level_default = level;
 	} else {
-		log_map.insert(std::make_pair(category, level));
+		s_log_map.insert(std::make_pair(category, level));
 	}
 }
 #endif
@@ -249,7 +250,7 @@ static int log_print_location(FILE * out, unsigned int flags, const std::string 
 }
 
 const char * log_level_name(unsigned int level) {
-    return log_level_names[level < logvs::LVL_NB ? level : logvs::LVL_NB];
+    return s_log_level_names[level < logvs::LVL_NB ? level : logvs::LVL_NB];
 }
 
 unsigned int log_level_byname(const char * name) {
@@ -267,36 +268,36 @@ unsigned int log_level_byname(const char * name) {
     }
 
     for (unsigned int i = 0; i < logvs::LVL_NB; ++i) {
-        if (!strcasecmp(name, log_level_names[i])) {
+        if (!strcasecmp(name, s_log_level_names[i])) {
             return i;
         }
     }
 
-    return log_level_default > 0 ? log_level_default : VSLOG_LEVEL_DEFAULT;
+    return s_log_level_default > 0 ? s_log_level_default : VSLOG_LEVEL_DEFAULT;
 }
 
-FILE * vs_log_getfile(const std::string & module) {
+FILE * log_getfile(const std::string & module) {
     (void)module;
-    return vslog_out;
+    return s_log_out;
 }
 
-size_t vs_log_flushqueue() {
-    vs_log_setflag(F_QUEUELOGS, false);
-    unsigned int saved_flags = log_flags;
-    size_t queue_sz = log_queue.size();
-    while (log_queue.size()) {
-        vs_log_setflags(log_queue.front().flags & ~F_QUEUELOGS);
-        vs_log(log_queue.front().category, log_queue.front().level, F_NONE, 
-                __FILE__, __func__, __LINE__, "%s", log_queue.front().message.c_str());
-        log_queue.pop();
+size_t log_flushqueue() {
+    log_setflag(F_QUEUELOGS, false);
+    unsigned int saved_flags = s_log_flags;
+    size_t queue_sz = s_log_queue.size();
+    while (s_log_queue.size()) {
+        log_setflags(s_log_queue.front().flags & ~F_QUEUELOGS);
+        log(s_log_queue.front().category, s_log_queue.front().level, F_NONE, 
+             __FILE__, __func__, __LINE__, "%s", s_log_queue.front().message.c_str());
+        s_log_queue.pop();
     }
-    vs_log_setflags(saved_flags);
+    log_setflags(saved_flags);
     return queue_sz;
 }
 
-FILE * vs_log_setfile(FILE * out, const std::string & module) {
+FILE * log_setfile(FILE * out, const std::string & module) {
     (void)module;
-    FILE * old = vslog_out;
+    FILE * old = s_log_out;
     if (out != NULL) flockfile(out);
     if (old != NULL) {
         flockfile(old);
@@ -304,12 +305,12 @@ FILE * vs_log_setfile(FILE * out, const std::string & module) {
         if (old == stdout) fflush(stderr);
         else if (old == stderr) fflush(stdout);
     }
-    vslog_out = out;
-    vslog_out_istty = isatty(fileno(out));
+    s_log_out = out;
+    s_log_out_istty = isatty(fileno(out));
 
     bool same_file = out == old || ((out == stderr || out == stdout) && (old == stderr || old == stdout));
-    if (out != NULL && (!same_file || (vslog_stderr_fd >= 0 && fileno(out) != vslog_stderr_fd && fileno(out) != vslog_stdout_fd))) { 
-        vs_log_flushqueue();
+    if (out != NULL && (!same_file || (s_log_stderr_fd >= 0 && fileno(out) != s_log_stderr_fd && fileno(out) != s_log_stdout_fd))) { 
+        log_flushqueue();
     }
 
     if (out != NULL) funlockfile(out);
@@ -317,69 +318,69 @@ FILE * vs_log_setfile(FILE * out, const std::string & module) {
     return old;
 }
 
-unsigned int vs_log_setflag(unsigned int flag, bool value) {
-    unsigned int oldflags = log_flags;
+unsigned int log_setflag(unsigned int flag, bool value) {
+    unsigned int oldflags = s_log_flags;
     if (value) {
-        log_flags |= flag;
+        s_log_flags |= flag;
     } else {
-        log_flags &= (~(flag));
+        s_log_flags &= (~(flag));
     }
     return oldflags;
 }
 
-unsigned int vs_log_setflags(unsigned int flags) {
-    unsigned int oldflags = log_flags;
-    log_flags = flags;
+unsigned int log_setflags(unsigned int flags) {
+    unsigned int oldflags = s_log_flags;
+    s_log_flags = flags;
     return oldflags;
 }
 
-unsigned int vs_log_level(const std::string & category, bool store) {
-    FILE * out = vslog_out;
+unsigned int log_level(const std::string & category, bool store) {
+    FILE * out = s_log_out;
     if (out == NULL) {
         return 0;
     }
 
     unsigned int loglevel;
     flockfile(out);
-    LogMap::const_iterator it = log_map.find(category);
+    LogMap::const_iterator it = s_log_map.find(category);
 
-    if (it == log_map.end()) {
+    if (it == s_log_map.end()) {
 #ifdef VS_LOG_NO_XML
-    	if (log_level_default == -1) {
-    		log_level_default = VSLOG_LEVEL_DEFAULT;
-    		log_colorize = -1;
+    	if (s_log_level_default == -1) {
+    		s_log_level_default = VSLOG_LEVEL_DEFAULT;
+    		s_log_colorize = -1;
     	}
-    	loglevel = log_level_default;
+    	loglevel = s_log_level_default;
 #else
     	if (vs_config == NULL) {
-            if (log_level_default == -1) {
+            if (s_log_level_default == -1) {
             	loglevel = VSLOG_LEVEL_DEFAULT;
-                log_colorize = -1;
+                s_log_colorize = -1;
             } else {
-            	loglevel = log_level_default;
+            	loglevel = s_log_level_default;
             }
             store = false;
         } else {
-            if (log_level_default == -1) {
+            if (s_log_level_default == -1) {
 
-                log_level_default = log_level_byname(vs_config->getVariable("log","default_level",
-                                                                            STR2(VSLOG_LEVEL_DEFAULT)).c_str());
+                s_log_level_default = log_level_byname(vs_config->getVariable("log","default_level",
+                                                                              STR2(VSLOG_LEVEL_DEFAULT)).c_str());
                 std::string str_colorize = vs_config->getVariable("log","colorize", "auto");
-                if (str_colorize == "no") log_colorize = 0;
-                else if (str_colorize == "yes") log_colorize = 1;
-                else log_colorize = -1;
-                vslog_out_istty = isatty(fileno(vslog_out));
+                if (str_colorize == "no") s_log_colorize = 0;
+                else if (str_colorize == "yes") s_log_colorize = 1;
+                else s_log_colorize = -1;
+                s_log_out_istty = isatty(fileno(s_log_out));
             }
             loglevel = log_level_byname(
                                         vs_config->getVariable("log/modules",category,
-                                        XMLSupport::tostring(log_level_default)).c_str());
+                                        XMLSupport::tostring(s_log_level_default)).c_str());
         }
 #endif
         if (store) {
-            log_map.insert(std::make_pair(category, loglevel));
+            s_log_map.insert(std::make_pair(category, loglevel));
         }
 
-        if (store || log_level_default >= 0) {
+        if (store || s_log_level_default >= 0) {
         	VS_LOG("log", logvs::NOTICE, "%s log entry '%s' = %s (%u)",
         		   store ? "creating" : "getting",
                    category.c_str(), log_level_name(loglevel), loglevel);
@@ -391,44 +392,44 @@ unsigned int vs_log_level(const std::string & category, bool store) {
     return loglevel;
 }
 
-int vs_log_header(const std::string & category, unsigned int level, unsigned int flags,
-                  const char * file, const char * func, int line, const char * fmt, ...) {
+int log_header(const std::string & category, unsigned int level, unsigned int flags,
+               const char * file, const char * func, int line, const char * fmt, ...) {
     int ret = 0, n;
     FILE * out;
 
-    if (vslog_out == NULL) {
+    if (s_log_out == NULL) {
         return 0;
     }
 
-    flockfile((out = vslog_out));
+    flockfile((out = s_log_out));
     if (level > 0 && (flags & logvs::F_NO_LVL_CHECK) == 0) { // no need to use the hashmap if requested level is 0 (always displayed)
-        unsigned int loglevel = vs_log_level(category, true);
+        unsigned int loglevel = log_level(category, true);
 
         if (loglevel < level) {
             funlockfile(out);
             return 0;
         }
     }
-    if (((log_flags | flags) & logvs::F_HEADER) == 0) {
-        if ((flags & logvs::F_AUTO_LOCK) == 0) // done by vs_log_footer() if flag ON
+    if (((s_log_flags | flags) & logvs::F_HEADER) == 0) {
+        if ((flags & logvs::F_AUTO_LOCK) == 0) // done by log_footer() if flag ON
             funlockfile(out);
         return 1; //return 0 would cause the log to be discarded.
     }
 
 #ifndef _WIN32
-    const char * const color = log_colorize &&
-        (vslog_out_istty||log_colorize==1) ? log_level_color[level > logvs::DBG ? logvs::DBG : level] : "";
-    const char * const color_reset = *color ? log_level_color_reset : "";
+    const char * const color = s_log_colorize &&
+        (s_log_out_istty||s_log_colorize==1) ? s_log_level_color[level > logvs::DBG ? logvs::DBG : level] : "";
+    const char * const color_reset = *color ? s_log_level_color_reset : "";
 #else
     static const char * const color = "", * color_reset = "";
 #endif
 
-    if (((flags | log_flags) & logvs::F_TIMESTAMP) != 0 && (n = fprintf(out, "%.03lf ", logGetTime())) > 0) {
+    if (((flags | s_log_flags) & logvs::F_TIMESTAMP) != 0 && (n = fprintf(out, "%.03lf ", logGetTime())) > 0) {
         ret += n;
     }
     if ((n = fprintf(out, "[%s%s%s] ", color, category.c_str(), color_reset)) > 0) {
         ret += n;
-        flags = (flags | log_flags) & (~F_LOCATION_FOOTER);
+        flags = (flags | s_log_flags) & (~F_LOCATION_FOOTER);
         ret += log_print_location(out, flags, category, level, file, func, line);
 
         if (fmt != NULL) {
@@ -436,22 +437,22 @@ int vs_log_header(const std::string & category, unsigned int level, unsigned int
             va_start(valist, fmt);
             ret += vfprintf(out, fmt, valist);
             va_end(valist);
-            vs_log_msgcenter_v(category, level, flags | log_flags, false, file, func, line, fmt, valist);
+            vs_log_msgcenter_v(category, level, flags | s_log_flags, false, file, func, line, fmt, valist);
         }
     }
 
-    if ((flags & logvs::F_AUTO_LOCK) == 0) // done by vs_log_footer() if flag ON
+    if ((flags & logvs::F_AUTO_LOCK) == 0) // done by log_footer() if flag ON
         funlockfile(out);
 
     return ret;
 }
 
-int vs_log_footer(const std::string & category, unsigned int level, unsigned int flags,
-                  const char * file, const char * func, int line,
-                  const char * fmt, ...)
+int log_footer(const std::string & category, unsigned int level, unsigned int flags,
+               const char * file, const char * func, int line,
+               const char * fmt, ...)
 {
     (void) category;
-    FILE * out = vslog_out;
+    FILE * out = s_log_out;
     int ret = 0;
     va_list valist;
 
@@ -459,7 +460,7 @@ int vs_log_footer(const std::string & category, unsigned int level, unsigned int
         return 0;
     }
 
-    flags = (flags | log_flags) & (~F_LOCATION_HEADER);
+    flags = (flags | s_log_flags) & (~F_LOCATION_HEADER);
     if (fmt != NULL) {
         va_start(valist, fmt);
         ret += vfprintf(out, fmt, valist);
@@ -479,35 +480,35 @@ int vs_log_footer(const std::string & category, unsigned int level, unsigned int
     return ret;
 }
 
-int vs_log(const std::string & category, unsigned int level, unsigned int flags,
-           const char * file, const char * func, int line, const char * fmt, ...) {
+int log(const std::string & category, unsigned int level, unsigned int flags,
+        const char * file, const char * func, int line, const char * fmt, ...) {
     int ret;
 
-    if ((ret = vs_log_header(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL)) <= 0) {
+    if ((ret = log_header(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL)) <= 0) {
         return 0;
     }
 
     if (fmt != NULL) {
         va_list valist;
         va_start(valist, fmt);
-        ret += vfprintf(vslog_out, fmt, valist);
+        ret += vfprintf(s_log_out, fmt, valist);
         va_end(valist);
-        vs_log_msgcenter_v(category, level, flags | log_flags, false, file, func, line, fmt, valist);
+        vs_log_msgcenter_v(category, level, flags | s_log_flags, false, file, func, line, fmt, valist);
     }
 
-    return ret + vs_log_footer(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL);
+    return ret + log_footer(category, level, flags | logvs::F_AUTO_LOCK, file, func, line, NULL);
 }
 
-int vs_printf(const char * fmt, ...) {
-    if (vslog_out == NULL || fmt == NULL) {
+int log_printf(const char * fmt, ...) {
+    if (s_log_out == NULL || fmt == NULL) {
         return 0;
     }
     int ret;
     va_list valist;
     va_start(valist, fmt);
-    ret = vfprintf(vslog_out, fmt, valist);
+    ret = vfprintf(s_log_out, fmt, valist);
     va_end(valist);
-    vs_log_msgcenter_v("", 0, log_flags, false, "", "", 0, fmt, valist);
+    vs_log_msgcenter_v("", 0, s_log_flags, false, "", "", 0, fmt, valist);
     return ret;
 }
 
@@ -535,20 +536,20 @@ int log_openfile(const std::string & module,
     } else {
         if (!redirect) {
             logout = fopen(filename.c_str(), append ? "a" : "w");
-            vslog_stdout_fd = vslog_stderr_fd = -1;
+            s_log_stdout_fd = s_log_stderr_fd = -1;
         } else {
-            vslog_stderr_fd = dup(fileno(stderr));
-            vslog_stdout_fd = dup(fileno(stdout));
+            s_log_stderr_fd = dup(fileno(stderr));
+            s_log_stdout_fd = dup(fileno(stdout));
             if ((logout = freopen(filename.c_str(), append ? "a" : "w", stderr)) == NULL) {
-                close(vslog_stderr_fd);
-                close(vslog_stdout_fd);
-                vslog_stdout_fd = vslog_stderr_fd = -1;
+                close(s_log_stderr_fd);
+                close(s_log_stdout_fd);
+                s_log_stdout_fd = s_log_stderr_fd = -1;
                 //VS_LOG("log", logvs::WARN, "error while reopening stderr as %s.", filename.c_str());
             } else {
-                if (vslog_out == stdout || vslog_out == stderr) {
+                if (s_log_out == stdout || s_log_out == stderr) {
                     fflush(stdout); 
                     fflush(stderr); 
-                    vslog_out = NULL; // we will close streams, so set it to NULL;
+                    s_log_out = NULL; // we will close streams, so set it to NULL;
                 }
                 fclose(stdout);
                 stdout = stderr; // Portable ?
@@ -563,7 +564,7 @@ int log_openfile(const std::string & module,
         }
     }
     if (logout != NULL) {
-        if ((logout != stderr && logout != stdout) || (vslog_stderr_fd >= 0 && fileno(stderr) != vslog_stderr_fd)) {
+        if ((logout != stderr && logout != stdout) || (s_log_stderr_fd >= 0 && fileno(stderr) != s_log_stderr_fd)) {
             const int bufsz = 8192; //BUFSIZ;
             const int iobuffering = _IOFBF; // _IOFBF: full buffered, _IOLBF: line buffered, setbuf(file,NULL):no buffering.
             setvbuf(logout, NULL, iobuffering, bufsz);
@@ -572,24 +573,24 @@ int log_openfile(const std::string & module,
             setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
         }
     }
-    logvs::vs_log_setflag(logvs::F_QUEUELOGS, false);
-    logvs::vs_log_setfile(logout);
-    return (vslog_out != NULL);
+    logvs::log_setflag(logvs::F_QUEUELOGS, false);
+    logvs::log_setfile(logout);
+    return (s_log_out != NULL);
 }
 
 void log_terminate() {
-    if (vslog_out!= NULL) {
-        if ((vslog_out != stdout && vslog_out != stderr) || (vslog_stderr_fd >= 0 && fileno(stderr) != vslog_stderr_fd)) {
-            if (vslog_stdout_fd >= 0) {
-                stdout = fdopen(vslog_stdout_fd, "w");
-                stderr = fdopen(vslog_stderr_fd, "w");
+    if (s_log_out!= NULL) {
+        if ((s_log_out != stdout && s_log_out != stderr) || (s_log_stderr_fd >= 0 && fileno(stderr) != s_log_stderr_fd)) {
+            if (s_log_stdout_fd >= 0) {
+                stdout = fdopen(s_log_stdout_fd, "w");
+                stderr = fdopen(s_log_stderr_fd, "w");
                 setvbuf(stdout, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
                 setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
-                vslog_stdout_fd = vslog_stderr_fd = -1;
+                s_log_stdout_fd = s_log_stderr_fd = -1;
             }
-            fclose(vslog_out);
-            vslog_out = NULL;
-            vs_log_setfile(stderr);
+            fclose(s_log_out);
+            s_log_out = NULL;
+            log_setfile(stderr);
         } else {
             fflush(stdout);
             fflush(stderr);

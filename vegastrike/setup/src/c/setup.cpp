@@ -123,8 +123,8 @@ int main(int argc, char *argv[]) {
 #endif
     const char * pathorder[] = { binpath, ".", NULL };
 
-    logvs::vs_log_setfile(stdout);
-    logvs::vs_log_setflag(logvs::F_QUEUELOGS, true);
+    logvs::log_setfile(stdout);
+    logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
     for (int i_argv = 1; i_argv < argc; ++i_argv) {
 		if ((i_argv + 1 < argc && strcmp(argv[i_argv], "--target") == 0) || strncmp(argv[i_argv], "-D", 2) == 0) {

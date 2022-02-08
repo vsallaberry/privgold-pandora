@@ -836,8 +836,8 @@ void winsys_process_events()
             }
 
             if (WINSYS_LOG_START(logvs::VERBOSE, "SDL%d: processing key '", WINSYS_SDL_MAJOR) > 0) {
-                if (key < 128 && isprint(event.key.keysym.sym)) logvs::vs_printf("%c", key);
-                else logvs::vs_printf("%s", SDL_GetKeyName(event.key.keysym.sym));
+                if (key < 128 && isprint(event.key.keysym.sym)) logvs::log_printf("%c", key);
+                else logvs::log_printf("%s", SDL_GetKeyName(event.key.keysym.sym));
                 WINSYS_LOG_END(logvs::VERBOSE, "' (%x) (release:%d mod:%x)",
                                event.key.keysym.sym, released, mod);
             }
@@ -887,7 +887,7 @@ void winsys_process_events()
                 SDL_GetMouseState( &x, &y );
 
                 if (WINSYS_LOG_START(logvs::VERBOSE, "SDL%d: Processing UNICODE '", WINSYS_SDL_MAJOR) > 0) {
-                    logvs::vs_printf("%lc", u32);
+                    logvs::log_printf("%lc", u32);
                     WINSYS_LOG_END(logvs::VERBOSE, "' (%x, code:%x, release:%d, mod:%x)", u32, key, 0, mod);
                 }
                 // send only the DOWN event, KEYUP will handle the UP event
@@ -1200,7 +1200,7 @@ static void setup_sdl_video_mode()
 
     if (WINSYS_LOG(logvs::NOTICE, "(SDL%d) pixel-format: alpha:%d",
                    WINSYS_SDL_MAJOR, screen->format->alpha) > 0) {
-        logvs::vs_printf(
+        logvs::log_printf(
                    "               mask R:%x G:%x B:%x A:%x \n"
                    "               loss R:%d G:%d B:%d A:%d \n"
                    "               shift R:%d G:%d B:%d A:%d \n",
@@ -1464,9 +1464,9 @@ void winsys_process_events()
 
             if (WINSYS_LOG_START(logvs::VERBOSE, "SDL%d: processing key '", WINSYS_SDL_MAJOR) > 0) {
                 if (is_unicode || (isprintable && isascii(key))) {
-                    logvs::vs_printf("%lc", is_unicode ? event.key.keysym.unicode : event.key.keysym.sym);
+                    logvs::log_printf("%lc", is_unicode ? event.key.keysym.unicode : event.key.keysym.sym);
                 } else {
-                    logvs::vs_printf("%s", SDL_GetKeyName(event.key.keysym.sym));
+                    logvs::log_printf("%s", SDL_GetKeyName(event.key.keysym.sym));
                 }
                 WINSYS_LOG_END(logvs::VERBOSE, "' (sym:%x,uni(%d):%x,scan:%x,code:%x) (mod:%x release:%d)",
                         event.key.keysym.sym, is_unicode, event.key.keysym.unicode, event.key.keysym.scancode,

@@ -130,8 +130,8 @@ int main( int   argc,
 #endif
     char tmppwd[65535];
 
-    logvs::vs_log_setfile(stderr);
-    logvs::vs_log_setflag(logvs::F_QUEUELOGS, true);
+    logvs::log_setfile(stderr);
+    logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
     getcwd(tmppwd,sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     VS_LOG("vslauncher", logvs::NOTICE, " In path %s", tmppwd);

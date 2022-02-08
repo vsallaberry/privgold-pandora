@@ -59,9 +59,9 @@
 //
 # define VS_LOG(category, level, ...)                                       \
 \
-            ((level) <= logvs::vs_log_level(category)                       \
-            ? logvs::vs_log(category, level, logvs::F_NO_LVL_CHECK,         \
-                            __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
+            ((level) <= logvs::log_level(category)                          \
+            ? logvs::log(category, level, logvs::F_NO_LVL_CHECK,            \
+                         __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
 
 //
 // VS_LOG_START(category, level, format, ...)
@@ -70,9 +70,9 @@
 //
 # define VS_LOG_START(category, level, ...)                                 \
 \
-    ((level) <= logvs::vs_log_level(category)                               \
-    ? logvs::vs_log_header(category, level, logvs::F_AUTO_LOCK | logvs::F_NO_LVL_CHECK, \
-                           __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
+    ((level) <= logvs::log_level(category)                                  \
+    ? logvs::log_header(category, level, logvs::F_AUTO_LOCK | logvs::F_NO_LVL_CHECK, \
+                        __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
 
 
 #else
@@ -83,8 +83,8 @@
 //
 # define VS_LOG(category, level, ...)                                       \
 \
-            logvs::vs_log(category, level, logvs::F_NONE,                   \
-                          __FILE__, __func__, __LINE__, __VA_ARGS__)
+            logvs::log(category, level, logvs::F_NONE,                   \
+                       __FILE__, __func__, __LINE__, __VA_ARGS__)
 
 //
 // VS_LOG_START(category, level, format, ...)
@@ -92,8 +92,8 @@
 //    This MUST have a corresponding VS_LOG_END().
 //
 # define VS_LOG_START(category, level, ...)                                 \
-            logvs::vs_log_header(category, level, logvs::F_AUTO_LOCK,       \
-                                 __FILE__, __func__, __LINE__, __VA_ARGS__)
+            logvs::log_header(category, level, logvs::F_AUTO_LOCK,       \
+                              __FILE__, __func__, __LINE__, __VA_ARGS__)
 
 #endif
 
@@ -105,8 +105,8 @@
 //
 #define VS_LOG_CACHED(allowed, category, level,...) \
 \
-    ((level) <= (allowed) ? logvs::vs_log(category, level, logvs::F_NO_LVL_CHECK, \
-                                          __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
+    ((level) <= (allowed) ? logvs::log(category, level, logvs::F_NO_LVL_CHECK, \
+                                       __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
 
 
 //
@@ -117,8 +117,8 @@
 #define VS_LOG_START_CACHED(allowed, category, level, ...)                  \
 \
     ((level) <= (allowed)                                                   \
-    ? logvs::vs_log_header(category, level, logvs::F_AUTO_LOCK | logvs::F_NO_LVL_CHECK, \
-                           __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
+    ? logvs::log_header(category, level, logvs::F_AUTO_LOCK | logvs::F_NO_LVL_CHECK, \
+                        __FILE__, __func__, __LINE__, __VA_ARGS__) : 0)
 
 //
 // VS_LOG_END(category, level, format, ...)
@@ -127,8 +127,8 @@
 //
 #define VS_LOG_END(category, level, ...)                            \
 \
-    logvs::vs_log_footer(category, level, logvs::F_AUTO_LOCK,       \
-                         __FILE__, __func__, __LINE__, __VA_ARGS__)
+    logvs::log_footer(category, level, logvs::F_AUTO_LOCK,       \
+                      __FILE__, __func__, __LINE__, __VA_ARGS__)
 
 //
 // DEBUG MACROS
@@ -165,7 +165,7 @@ namespace logvs { inline int logdummy() { return 0;} };
 	namespace logvs { VSLOG_CACHE_FUN_PROTO(name); };
 #define VSLOG_DEF_CACHE(name) \
 	namespace logvs { VSLOG_CACHE_FUN_PROTO(name) { \
-		static const unsigned int level = logvs::vs_log_level(VSLOG_STR(name)); return level; \
+		static const unsigned int level = logvs::log_level(VSLOG_STR(name)); return level; \
 	} };
 
 #ifdef VS_LOG_NO_XML
@@ -174,7 +174,7 @@ namespace logvs { inline int logdummy() { return 0;} };
 class VegaConfig;
 extern VegaConfig * vs_config;
 # define VS_LOG_CACHED_LEVEL(name) \
-    ((vs_config == NULL) ? (logvs::vs_log_level(VSLOG_STR(name))) \
+    ((vs_config == NULL) ? (logvs::log_level(VSLOG_STR(name))) \
                          : (logvs::VSLOG_CACHE_FUN_NAME(name)()))
 #endif
 
@@ -219,35 +219,35 @@ namespace logvs {
     };
     
     /** returns number of bytes written or 0 on error or when log is disabled */
-    int vs_log(const std::string & category, unsigned int level, unsigned int flags,
-               const char * file, const char * func, int line,
-               const char *fmt, ...) __attribute__((format(printf, 7, 8)));
+    int log(const std::string & category, unsigned int level, unsigned int flags,
+            const char * file, const char * func, int line,
+            const char *fmt, ...) __attribute__((format(printf, 7, 8)));
 
     /** returns the allowed level for a given category (check in XML and cache it if store is true) */
-    unsigned int vs_log_level(const std::string & category, bool store = true);
+    unsigned int log_level(const std::string & category, bool store = true);
 
     /** get current logging file */
-    FILE * vs_log_getfile(const std::string & module = "");
+    FILE * log_getfile(const std::string & module = "");
 
     /** changes logging file, returns old one */
-    FILE * vs_log_setfile(FILE * out, const std::string & module = "");
+    FILE * log_setfile(FILE * out, const std::string & module = "");
 
     /** update log flags, return old ones */
-    unsigned int vs_log_setflag(unsigned int flag, bool value);
-    unsigned int vs_log_setflags(unsigned int flags);
+    unsigned int log_setflag(unsigned int flag, bool value);
+    unsigned int log_setflags(unsigned int flags);
 
     /** Starts a log line */
-    int vs_log_header(const std::string & category, unsigned int level, unsigned int flags,
-                      const char * file, const char * func, int line,
-                      const char * fmt, ...) __attribute__((format(printf, 7, 8)));
+    int log_header(const std::string & category, unsigned int level, unsigned int flags,
+                   const char * file, const char * func, int line,
+                   const char * fmt, ...) __attribute__((format(printf, 7, 8)));
 
     /** printf like in the log file */
-    int vs_printf(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
+    int log_printf(const char * fmt, ...) __attribute__((format(printf, 1, 2)));
 
     /** terminates a log line started with log_header */
-    int vs_log_footer(const std::string & category, unsigned int level, unsigned int flags,
-                      const char * file, const char * func, int line,
-                      const char * fmt, ...) __attribute__((format(printf, 7, 8)));
+    int log_footer(const std::string & category, unsigned int level, unsigned int flags,
+                   const char * file, const char * func, int line,
+                   const char * fmt, ...) __attribute__((format(printf, 7, 8)));
 
     const char * log_level_name(unsigned int level);
     unsigned int log_level_byname(const char * name);
@@ -261,7 +261,7 @@ namespace logvs {
     void log_terminate();
 
 #ifdef VS_LOG_NO_XML
-    void vs_log_setlevel(const std::string & category, unsigned int level);
+    void log_setlevel(const std::string & category, unsigned int level);
 #endif
 }
 

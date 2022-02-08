@@ -26,17 +26,17 @@
 
 /* ************************************************************************* */
 namespace logvs {
-    unsigned int vs_log_level(const std::string & module, bool store) {
+    unsigned int log_level(const std::string & module, bool store) {
         (void) store; (void) module;
         return logvs::NOTICE;
     }
-    int vs_log(const std::string & module, unsigned int level, unsigned int flags,
-              const char * file, const char * func, int line, const char * fmt, ...) {
+    int log(const std::string & module, unsigned int level, unsigned int flags,
+            const char * file, const char * func, int line, const char * fmt, ...) {
         (void) file; (void) line; (void) line;
         (void) flags;
         int ret = 0;
 
-        if (level <= logvs::vs_log_level(module, false)) {
+        if (level <= logvs::log_level(module, false)) {
             va_list valist;
             va_start(valist, fmt);
             ret = vfprintf(stderr, fmt, valist);

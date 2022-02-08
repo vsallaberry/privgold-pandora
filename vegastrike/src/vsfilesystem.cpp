@@ -300,7 +300,7 @@ std::string vegastrike_cwd;
 
 	void	DisplayType( VSFileSystem::VSFileType type)
 	{
-	    DisplayType( type, logvs::vs_log_getfile());
+	    DisplayType( type, logvs::log_getfile());
 	}
 
 	#define CASE(a) case a: ostr<<#a; break;
@@ -1405,7 +1405,7 @@ std::string vegastrike_cwd;
 	{
 			VSFS_LOG_START(logvs::WARN, "!!! ERROR/WARNING VSFile : ");
 			if( str)
-				logvs::vs_printf("on %s : ", str);
+				logvs::log_printf("on %s : ", str);
 			if( errno==ENOENT)
 			{
 				VSFS_LOG_END(logvs::NOTICE, "File not found");
@@ -1986,16 +1986,16 @@ std::string vegastrike_cwd;
 						nl_found = true;
 						if (VSFS_DEBUG()>1) {
 							if( pk3_extracted_file[offset]=='\n')
-								logvs::vs_printf("\\n ");
+								logvs::log_printf("\\n ");
 							if( pk3_extracted_file[offset]=='\r')
-								logvs::vs_printf("\\r ");
+								logvs::log_printf("\\r ");
 						}
 					}
 					else
 					{
 						ret[i] = pk3_extracted_file[offset];
 						if (VSFS_DEBUG()>1) {
-							logvs::vs_printf("%x ", ret[i]&0xff);
+							logvs::log_printf("%x ", ret[i]&0xff);
 						}
 					}
 				}

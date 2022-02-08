@@ -66,7 +66,7 @@ int main(int argc, char ** argv) {
     				strlevel = argv[i] + 2;
     			}
     			unsigned int loglevel = strtol(strlevel, NULL, 10);
-    			logvs::vs_log_setlevel(module, loglevel);
+                       logvs::log_setlevel(module, loglevel);
     		}
     	}
        #endif

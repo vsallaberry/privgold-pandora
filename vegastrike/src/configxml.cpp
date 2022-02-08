@@ -154,7 +154,7 @@ void VegaConfig::doSection(string prefix, configNode *node, enum section_t secti
 void VegaConfig::checkSection(configNode *node, enum section_t section_type){
     if(node->Name()!="section"){
       CONFIG_LOG(logvs::WARN, "not a section");
-      node->printNode(logvs::vs_log_getfile(),0,1);
+      node->printNode(logvs::log_getfile(),0,1);
 
       return;
   }

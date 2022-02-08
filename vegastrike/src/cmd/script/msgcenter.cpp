@@ -66,13 +66,13 @@ void MessageCenter::add(std::string from, std::string to, std::string message, d
     }
 
 #ifdef VS_DEBUG_LOG
-    static unsigned int msgcenter_lvl = logvs::vs_log_level("msgcenter");
+    static unsigned int msgcenter_lvl = logvs::log_level("msgcenter");
     if (msgcenter_lvl >= logvs::DBG+1) {
-		unsigned int flags = logvs::vs_log_setflag(logvs::F_MSGCENTER, false);
-		logvs::vs_log("msgcenter", logvs::DBG+1, logvs::F_NO_LVL_CHECK, __FILE__, __func__, __LINE__,
+		unsigned int flags = logvs::log_setflag(logvs::F_MSGCENTER, false);
+		logvs::log("msgcenter", logvs::DBG+1, logvs::F_NO_LVL_CHECK, __FILE__, __func__, __LINE__,
 					  "pushing message (%s>%s) %s",
 					  msg.from.get().c_str(), msg.to.get().c_str(), msg.message.get().c_str());
-		logvs::vs_log_setflags(flags);
+		logvs::log_setflags(flags);
     }
 #endif
 

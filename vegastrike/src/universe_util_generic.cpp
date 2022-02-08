@@ -775,7 +775,7 @@ namespace UniverseUtil
 			", r\'" + cmd + "\', r\'" + args + "\', r\'" + id + "\')\n";
 		const char * cpycode = pythonCode.c_str();
         if (VS_LOG("universe", logvs::VERBOSE, "Executing python command: ") > 0) {
-            logvs::vs_printf("    %s\n", cpycode);
+            logvs::log_printf("    %s\n", cpycode);
         } else {
             VS_LOG("universe", logvs::NOTICE, "Executing python command...");
         }
@@ -1050,11 +1050,11 @@ namespace UniverseUtil
 	}
 
     int Log(const std::string & module, unsigned int level, const std::string & message) {
-        return logvs::vs_log(module, level, logvs::F_NONE, "<python>", "<python-api>", 0, "%s", message.c_str());
+        return logvs::log(module, level, logvs::F_NONE, "<python>", "<python-api>", 0, "%s", message.c_str());
     }
 
     unsigned int LogLevel(const std::string & module, bool store) {
-        return logvs::vs_log_level(module, store);
+        return logvs::log_level(module, store);
     }
 
     std::string LogFile(const std::string & module) {
@@ -1082,7 +1082,7 @@ namespace UniverseUtil
     }
 
     int LogPrint(const std::string & message, const std::string & module) {
-        FILE * out = logvs::vs_log_getfile(module);
+        FILE * out = logvs::log_getfile(module);
         if (out != NULL) {
             return (fputs(message.c_str(), out)) >= 0 ? message.length() : 0;
         }

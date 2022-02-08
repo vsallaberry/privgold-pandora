@@ -6059,7 +6059,7 @@ template<bool FORWARD> class WeaponComparator
 			for (iter=myset.begin();iter!=myset.end();++iter) {
                 if (UNIT_LOG_START(logvs::INFO, "WeaponGroup: ") > 0) {
                     for (WeaponGroup::const_iterator iter2=(*iter).begin();iter2!=(*iter).end();++iter2) {
-                        logvs::vs_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
+                        logvs::log_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
                     }
                     UNIT_LOG_END(logvs::INFO, NULL);
                 }
@@ -6069,7 +6069,7 @@ template<bool FORWARD> class WeaponComparator
 			for (i=0;i<un->mounts.size();++i) {
 				if (un->mounts[i].status==Mount::ACTIVE&&checkmount(un,i,missile)) {
 					activeWeapons.insert(i);
-					if (logging) logvs::vs_printf("%d:%s ", i, un->mounts[i].type->weapon_name.c_str());
+					if (logging) logvs::log_printf("%d:%s ", i, un->mounts[i].type->weapon_name.c_str());
 				}
 			}
 			if (logging) UNIT_LOG_END(logvs::INFO, NULL);
@@ -6085,7 +6085,7 @@ template<bool FORWARD> class WeaponComparator
 			}
 			logging = UNIT_LOG_START(logvs::INFO, "ACTIVE: ");
 			for (WeaponGroup::const_iterator iter2=(*iter).begin();iter2!=(*iter).end();++iter2) {
-				if (logging) logvs::vs_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
+				if (logging) logvs::log_printf("%d:%s ", *iter2, un->mounts[*iter2].type->weapon_name.c_str());
 				un->mounts[*iter2].Activate(missile);
 			}
 			if (logging) UNIT_LOG_END(logvs::INFO, NULL);

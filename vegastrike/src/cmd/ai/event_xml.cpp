@@ -43,8 +43,8 @@ namespace AIEvents {
              }
            }
            if (PYAI_LOG(logvs::WARN, "SERIOUS WARNING in AI script: no fast method to perform %s", this->script.c_str()) > 0) {
-             logvs::vs_printf("  when type %d is at least %f and at most %f with priority %f for %f time\n",
-                              type,min,max,priority,timetofinish);
+             logvs::log_printf("  when type %d is at least %f and at most %f with priority %f for %f time\n",
+                               type,min,max,priority,timetofinish);
            }
          }
   }
