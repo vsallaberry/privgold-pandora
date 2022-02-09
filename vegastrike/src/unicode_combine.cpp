@@ -36,18 +36,26 @@
  /*
  	Includes Unicode 3.2 decomposition code derived from Core Foundation
  */
+#include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #if defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
-#elif !defined(__LITTLE_ENDIAN__) \
+#else
+# if !defined(__LITTLE_ENDIAN__) \
       && (defined(_WIN32) || defined(__x86_64__) || defined(__amd64__) || defined(__arm64__) \
           || defined(__x86__) || defined(__i386__) || defined(__i686__)  \
           || defined(__arm__) || defined (__alpha__) || defined(__MIPSEL__))
-# define __LITTLE_ENDIAN__ 1
+#  define __LITTLE_ENDIAN__ 1
+# endif
+# if defined(_WIN32)
+#  define OSSwapInt16(i16) _byteswap_ushort(i16)
+# else //if defined(__linux__)
+#  include <byteswap.h>
+#  define OSSwapInt16(i16) bswap_16(i16)
+# endif
 #endif
-
-#include <stdint.h>
-#include <stddef.h>
 
 # define u_int16_t  uint16_t
 # define u_int8_t   uint8_t
