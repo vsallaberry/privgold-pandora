@@ -3164,11 +3164,15 @@ void BaseComputer::loadLoadSaveControls(void) {
 	Unit* playerUnit = m_player.GetUnit();
 	if(playerUnit) {
 		const int playerNum=UnitUtil::isPlayerStarship(playerUnit);
-		struct dirent ** dirlist;
+		struct dirent ** dirlist = NULL;
 		std::string savedir = VSFileSystem::homedir+"/save/";
 		int ret = scandir (savedir.c_str(),&dirlist,nodirs,(scancompare)&datesort);
 		while( ret-->0) {
 			picker->addCell(new SimplePickerCell(UniverseUtil::getEscapedGuiLabel(std::string(dirlist[ret]->d_name))));
+			free(dirlist[ret]);
+		}
+		if (dirlist != NULL) {
+			free(dirlist);
 		}
 	}
 

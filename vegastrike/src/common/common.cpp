@@ -29,16 +29,30 @@ using std::string;
 
 #include "common.h"
 
-namespace VSCommon {
-
 #ifdef _WIN32
 # include <windows.h>
 # include <shlobj.h>
+# include <shlwapi.h>
+# if defined(__CYGIN__) || defined(__MINGW32__)
+#  include <io.h>
+# else
+#  include <direct.h>
+# endif
+# include <sys/stat.h>
+#else // ! _WIN32
+# include <sys/dir.h>
+# include <unistd.h>
+# include <pwd.h>
+# include <sys/stat.h>
+# include <sys/types.h>
+#endif // ! _WIN32
 
+namespace VSCommon {
+
+#ifdef _WIN32
 # if !defined(VS_HOME_INSIDE_DATA)
 #  if defined(HAVE_SHGETKNOWNFOLDERPATH) && defined(HAVE_FOLDERID_LOCALAPPDATA)
-#   include <shlwapi.h>
-HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+HRESULT win32_get_appdata(WCHAR * wappdata) {
     PWSTR pszPath = NULL;
     HRESULT ret;
     ret = SHGetKnownFolderPath(FOLDERID_LocalAppData, 0, NULL, &pszPath);
@@ -50,24 +64,11 @@ HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
     return ret;
 }
 #  else // ! HAVE_SHGETKNOWNFOLDERPATH
-HRESULT vs_win32_get_appdata(WCHAR * wappdata) {
+HRESULT win32_get_appdata(WCHAR * wappdata) {
     return SHGetFolderPathW(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, wappdata);
 }
 #  endif // ! HAVE_SHGETKNOWNFOLDERPATH
 # endif // ! VS_HOME_INSIDE_DATA
-
-# if defined(__CYGIN__) || defined(__MINGW32__)
-#  include <io.h>
-# else
-#  include <direct.h>
-# endif
-#include <sys/stat.h>
-#else // ! _WIN32
-# include <sys/dir.h>
-# include <unistd.h>
-# include <pwd.h>
-# include <sys/stat.h>
-# include <sys/types.h>
 #endif // ! _WIN32
 
 // Directories to look for data
@@ -230,7 +231,7 @@ std::pair<std::string,std::string> getbindir(const char *argv0, const char * bas
     if (bindir.empty() || (bindir[0] != '/'
 #if defined(_WIN32)      
     && bindir[0] != '\\' && (tolower(bindir[0]) < 'a' || tolower(bindir[0]) > 'z'
-                             || (strncmp(logfile.c_str()+1, ":\\",2) && strncmp(logfile.c_str()+1, ":/", 2)))
+                             || (strncmp(bindir.c_str()+1, ":\\",2) && strncmp(bindir.c_str()+1, ":/", 2)))
 #endif
     )) {
        bindir = (std::string(base != NULL ? base : origpath.c_str()) + "/") + bindir;

@@ -52,6 +52,7 @@ struct dirent { char d_name[1]; };
 #include "vs_log_modules.h"
 
 #ifdef _WIN32
+namespace VSFileSystem {
 wchar_t * utf8_to_wchar(const char * s) {
 	if (!s) 
 		return NULL;
@@ -920,50 +921,49 @@ std::string vegastrike_cwd;
 			// HQ Texture dir sits alongside data dir.
 			selectcurrentdir = datadir+"/..";
 			int ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
-			if(ret >=0){
-				while( ret--) {
-					string dname (dirlist[ret]->d_name);
-					if (dname == hq) {
-						curpath = selectcurrentdir+"/"+dname;
-						CONFIG_LOG(logvs::NOTICE, "Adding HQ Textures Pack");
-						Rootdir.push_back( curpath);
-					}
+			while( ret-- > 0) {
+				string dname (dirlist[ret]->d_name);
+				if (dname == hq) {
+					curpath = selectcurrentdir+"/"+dname;
+					CONFIG_LOG(logvs::NOTICE, "Adding HQ Textures Pack");
+					Rootdir.push_back( curpath);
 				}
+				free(dirlist[ret]);
 			}
 			if (dirlist) free(dirlist);
 		}
 
 		selectcurrentdir = moddir;
-        dirlist = NULL;
+ 		dirlist = NULL;
 		int ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 		if( ret <0)
 			return;
-		else
-			while( ret--) {
-				string dname (dirlist[ret]->d_name);
-				if (dname == modname) {
-					curpath = moddir+"/"+dname;
-					CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
-					Rootdir.push_back( curpath);
-				}
+		while(ret-- > 0) {
+			string dname (dirlist[ret]->d_name);
+			if (dname == modname) {
+				curpath = moddir+"/"+dname;
+				CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
+				Rootdir.push_back( curpath);
 			}
+			free(dirlist[ret]);
+		}
 		if (dirlist) free(dirlist);
 		// Scan for mods with standard data subtree
 		curmodpath = homedir+"/mods/";
 		selectcurrentdir = curmodpath;
-        dirlist = NULL;
+ 		dirlist = NULL;
 		ret = scandir( selectcurrentdir.c_str(), &dirlist, selectdirs, 0);
 		if( ret <0)
 			return;
-		else
-			while( ret--) {
-				string dname (dirlist[ret]->d_name);
-				if (dname == modname) {
-					curpath = curmodpath+dname;
-					CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
-					Rootdir.push_back( curpath);
-				}
+		while(ret-- > 0) {
+			string dname (dirlist[ret]->d_name);
+			if (dname == modname) {
+				curpath = curmodpath+dname;
+				CONFIG_LOG(logvs::NOTICE, "Adding mod path : %s", curpath.c_str());
+				Rootdir.push_back( curpath);
 			}
+			free(dirlist[ret]);
+		}
 		if (dirlist) free(dirlist);
 	}
 
@@ -979,11 +979,15 @@ std::string vegastrike_cwd;
                 while( ret-- > 0) {
                     std::string dname;
                     for (const char * s = dirlist[ret]->d_name; *s; ++s) dname.append(1, (char)tolower(*s));
+                    free(dirlist[ret]);
                     if (!strcmp(dname.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH)
                     || ((!strncmp(dname.c_str(), "sdl", 3) || !strncmp(dname.c_str(), "libsdl", 6))
                         &&  (strstr(dname.c_str(), ".so") || strstr(dname.c_str(), ".dll") || strstr(dname.c_str(), ".dylib")))) {
                         libdir = libpath;
                         while (*(path + 1) != NULL) ++path;
+                        while(ret-- > 0) {
+                            free(dirlist[ret]);
+                        }
                         break ;
                     }
                 }
@@ -2462,28 +2466,33 @@ int scandir(const char *dirname, struct dirent ***namelist,
   WIN32_FIND_DATA find;
   HANDLE h;
   int nDir = 0, NDir = 0;
-  struct dirent **dir = 0, *selectDir;
+  struct dirent **dir = NULL, *selectDir;
   unsigned long ret;
 
   len    = strlen(dirname);
   findIn = (char *) malloc(len+5);
   strcpy(findIn, dirname);
   for (d = findIn; *d; d++) if (*d=='/') *d='\\';
-  if ((len==0)) { strcpy(findIn, ".\\*"); }
+  if (len==0) { strcpy(findIn, ".\\*"); }
   if ((len==1)&& (d[-1]=='.')) { strcpy(findIn, ".\\*"); }
-  if ((len>0) && (d[-1]=='\\')) { *d++ = '*'; *d = 0; }
+  if (len>0) {
+     if (d[-1]=='\\') { *d++ = '*'; *d = 0; }
+     else if (VSFileSystem::DirectoryExists(findIn)) {
+         *d++ = '\\'; *d++ = '*'; *d = 0;
+     }
+  }
   if ((len>1) && (d[-1]=='.') && (d[-2]=='\\')) { d[-1] = '*'; }
-
   if ((h=FindFirstFile(findIn, &find))==INVALID_HANDLE_VALUE) {
     ret = GetLastError();
     if (ret != ERROR_NO_MORE_FILES) {
       // TODO: return some error code
     }
     *namelist = dir;
+    free(findIn);
     return nDir;
   }
   do {
-    selectDir=(struct dirent*)malloc(sizeof(struct dirent)+strlen(find.cFileName));
+    selectDir=(struct dirent*)malloc(sizeof(struct dirent)+strlen(find.cFileName)+1);
     strcpy(selectDir->d_name, find.cFileName);
     if (!select || (*select)(selectDir)) {
       if (nDir==NDir) {

@@ -20,7 +20,12 @@
 #ifndef _VS_COMMON_COMMON_H
 #define _VS_COMMON_COMMON_H
 
+#include <stdlib.h>
 #include <string>
+
+#if defined(_WIN32)
+# include <windows.h>
+#endif
 
 namespace VSCommon {
 
@@ -39,7 +44,6 @@ std::string gethomedir(const char * base = NULL);
 std::pair<std::string,std::string> getbindir(const char *argv0, const char * base = NULL);
 
 #if defined(_WIN32)
-#include <windows.h>
 HRESULT win32_get_appdata(WCHAR * wappdata);
 #endif // ! _WIN32
 
