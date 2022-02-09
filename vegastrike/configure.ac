@@ -551,8 +551,8 @@ vs_pythonlibs_buildir="lib/${vs_pythonlibs_path}"
 mkdir -p "${vs_pythonlibs_buildir}"
 tmp_found=
 for dir in $("${PYTHON_BINARY}" -E -c "import sys; print('\n'.join(sys.path))"); do
-    for lib in "unicodedata" "time" "_struct" "_io"; do
-        for ext in ".so" ".dylib" ".dll"; do
+    for lib in "unicodedata" "time" "datetime" "_struct" "_io"; do
+        for ext in ".so" ".dylib" ".dll" ".pyd"; do
             if test -f "${dir}/${lib}${ext}"; then
                 tmp_found="${tmp_found} ${lib}${ext}"
                 ln -sf "${dir}/${lib}${ext}" "${vs_pythonlibs_buildir}/${lib}${ext}" \
@@ -560,7 +560,7 @@ for dir in $("${PYTHON_BINARY}" -E -c "import sys; print('\n'.join(sys.path))");
             fi
         done
     done
-    test -n "${tmp_found}" && break 
+    test -n "${tmp_found}" && break
 done
 AC_MSG_RESULT([Found pythonlibs:${tmp_found}])
 ###############################
