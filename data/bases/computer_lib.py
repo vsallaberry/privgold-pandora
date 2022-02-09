@@ -99,24 +99,31 @@ def file_exists(filename):
 	except:
 		return False
 
-# unicodedata not needed for now as engine handles decomposed utf8 chars
-try:
-	from unicodedata import normalize as unicodedata_normalize__
-except:
-	debug.debug('python unicodedata extension not found')
-def unicodedata_normalize(method, string):
-	return string
-
 def time_sorted_listdir(dir):
 	import os
 	def time_key(filename):
 		return (-os.stat(dir+'/'+filename).st_mtime, filename)
-	return sorted((unicode(x).encode('utf-8') for x in os.listdir(unicode(dir))), key=time_key)
+	return sorted(os.listdir(dir), key=time_key)
+
+# unicodedata not needed for now as engine handles decomposed utf8 chars
+try:
+	from unicodedata import normalize__ as unicodedata_normalize
+except:
+	debug.debug('python unicodedata extension not found')
+	def unicodedata_normalize(method, unistr):
+		return unistr
+
+def normalize(string):
+	return string #not needed for now
+	try:
+		return unicodedata_normalize('NFC', unicode(string, errors='strict')).encode('utf-8', errors='backskashreplace')
+	except:
+		return string
 
 def savelist():
 	global savefilters
 	# here path is accessed with item.data, item.string contains escape sequence for GUI object
-	return [ GUI.GUISimpleListPicker.listitem(unicodedata_normalize('NFC', unicode(path.replace('#','##').replace('_','#_'))),path)
+	return [ GUI.GUISimpleListPicker.listitem(normalize(path.replace('#','##').replace('_','#_')),path)
 		for path in time_sorted_listdir(VS.getSaveDir())
 		if path[:1] != '.' and path not in savefilters ]
 
