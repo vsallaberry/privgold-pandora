@@ -32,7 +32,7 @@ ELSE(GTK2_FOUND)
 ENDIF(GTK2_FOUND)
 
 if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
-    target_link_libraries(vslauncher, "-mwindows")
+    target_link_libraries(vslauncher "-mwindows")
 endif()
 
 target_compile_options(vslauncher PUBLIC "-DVS_LOG_NO_XML")

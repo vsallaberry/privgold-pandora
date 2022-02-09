@@ -10,6 +10,7 @@
 #ifdef _WIN32
 #include <direct.h>
 #include <process.h>
+#include <sys/stat.h>
 #else
 #include <pwd.h>
 #include <sys/stat.h>
