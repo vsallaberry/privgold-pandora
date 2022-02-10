@@ -732,8 +732,8 @@ std::string vegastrike_cwd;
 
 				if( vs_chdir( datadir.c_str())<0)
 				{
-					CONFIG_LOG(logvs::ERROR, "Error changing to datadir");
-					exit(1);
+					CONFIG_LOG(logvs::ERROR, "Error changing to datadir %s", datadir.c_str());
+					continue ;
 				}
 				vs_getcwd( tmppath, 16384);
 				datadir = string( tmppath);
@@ -767,13 +767,9 @@ std::string vegastrike_cwd;
 			}
 		}
 
-		// Load default VS config file
-		char * conffile = new char[config_file.length()+1];
-		conffile[config_file.length()] = 0;
-		memcpy( conffile, config_file.c_str(), config_file.length());
 		// Get the mods path
 		moddir = datadir+"/"+string( "mods");
-		CONFIG_LOG(logvs::NOTICE, "Found MODDIR = %s", moddir.c_str());
+		CONFIG_LOG(logvs::NOTICE, "Using MODDIR = %s", moddir.c_str());
 	}
 
 	// Config file has been loaded from data dir but now we look at the specified moddir in order
@@ -889,14 +885,17 @@ std::string vegastrike_cwd;
 		char * conffile = new char[config_file.length()+1];
 		conffile[config_file.length()] = 0;
 		memcpy( conffile, config_file.c_str(), config_file.length());
-		vs_config = createVegaConfig( conffile);
+		VegaConfig * new_config = createVegaConfig( conffile);
 		delete []conffile;
 
-        if (overrides != NULL && vs_config != NULL) {
+        if (overrides != NULL && new_config != NULL) {
             for (ConfigOverrides_type::const_iterator it = overrides->begin(); it != overrides->end(); ++it) {
-                vs_config->setVariable(it->first.first, it->first.second, it->second);
+                new_config->setVariable(it->first.first, it->first.second, it->second);
             }
         }
+        // Now that the config is loaded and overrided we can set the global vs_config
+        vs_config = new_config;
+
 		// Now check if there is a data directory specified in it
 		// NOTE : THIS IS NOT A GOOD IDEA TO HAVE A DATADIR SPECIFIED IN THE CONFIG FILE
 		static string data_path( vs_config->getVariable( "data", "datadir", ""));

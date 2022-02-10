@@ -268,6 +268,7 @@ int main( int argc, char *argv[] )
 {
     logvs::log_setfile(stdout);
     logvs::log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
+    atexit(logvs::log_terminate);
     
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
     InitTime();
@@ -338,7 +339,6 @@ int main( int argc, char *argv[] )
     static bool redirect = XMLSupport::parse_bool(vs_config->getVariable("log", "redirect", "true"));
     static bool append = XMLSupport::parse_bool(vs_config->getVariable("log", "append", "false"));
     logvs::log_openfile("", UniverseUtil::LogFile(""), redirect, append);
-    atexit(logvs::log_terminate);
     atexit(python_terminatelog);
     std::string loglocation = vs_config->getVariable("log", "location", "false");
     logvs::log_setflag(logvs::F_QUEUELOGS, false);

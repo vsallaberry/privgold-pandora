@@ -60,7 +60,9 @@ VegaConfig::VegaConfig(const char *configfile){
   variables=NULL;
   colors=NULL;
 
-  checkConfig(top);
+  if (!checkConfig(top)) {
+    CONFIG_LOG(logvs::WARN, "WARNING, configuration could be incomplete");
+  }
 }
 
 VegaConfig::~VegaConfig()
