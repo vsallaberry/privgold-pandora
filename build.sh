@@ -22,7 +22,7 @@ mydirname=$(basename "${mydir}")
 mypwd=$(pwd)
 
 # project settings
-priv_version="1.2.3"
+priv_version="1.2.4"
 priv_data="${mydir}/data"
 target="${mydir}/vegastrike"
 build_preferred="cmake configure"
