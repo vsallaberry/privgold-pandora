@@ -621,6 +621,9 @@ void winsys_init( int *argc, char **argv, const char *window_title,
     winsys_sdl_print_gl_attributes();
 
     SDL_RaiseWindow(sdl_window);
+
+    // Workaround to avoid some WM (such as gnome) complaining because the application does not respond.
+    SDL_PumpEvents();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -721,7 +724,7 @@ void winsys_process_events()
     int x, y;
     bool released;
     bool fullwindow_hidden = false;
-    
+
     static bool sdl_lockaudio = XMLSupport::parse_bool(vs_config->getVariable("graphics/sdl2","lockaudio_workaround","true"));
     static bool kb_sendlower = XMLSupport::parse_bool(vs_config->getVariable("keyboard","lower_keys","true"));
     static bool kb_alt_tab = XMLSupport::parse_bool(vs_config->getVariable("keyboard","alt_tab_override","true"));
@@ -849,6 +852,8 @@ void winsys_process_events()
 
         case SDL_TEXTEDITING:
             WINSYS_DBG(logvs::DBG, "SDL%d EDIT %s", WINSYS_SDL_MAJOR, event.edit.text);
+            break ;
+
         case SDL_TEXTINPUT:
             if (unicode_keysym_queue.empty()) {
                 break ;
@@ -1284,6 +1289,9 @@ void winsys_init( int *argc, char **argv, const char *window_title,
     }
 
     winsys_sdl_print_gl_attributes();
+
+    // Workaround to avoid some WMs (such as gnome) complaining because the application does not respond.
+    SDL_PumpEvents();
 }
 
 /*---------------------------------------------------------------------------*/

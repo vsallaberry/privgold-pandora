@@ -558,13 +558,20 @@ void bootstrap_first_loop() {
   }
   bootstrap_draw ("Vegastrike Loading...",SplashScreen);
 
-  if (i++>4 && _Universe) {
+  const int load_loop_nr = 5; // loop nr times before to run main loop
+  if (i++ >= load_loop_nr && _Universe) {
       if (isgamemenu) {
         UniverseUtil::startMenuInterface(true);
       } else {
         _Universe->Loop(bootstrap_main_loop);
       }
   }
+#ifdef SDL_WINDOWING
+  else if (i <= 2) {
+    GAME_LOG(logvs::NOTICE, "WAITING FOR SDL (loop %d)", i);
+    SDL_PumpEvents(); // Workaround for linux/gnome complaining the app is not responding while loading
+  }
+#endif
 }
 void SetStartupView(Cockpit * cp) {
       static std::string startupview = vs_config->getVariable("graphics","startup_cockpit_view","front");
