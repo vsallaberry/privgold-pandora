@@ -445,6 +445,7 @@
 		<configuration configurationName="Release">
 			<resource resourceType="PROJECT" workspacePath="/PrivateerGold"/>
 		</configuration>
+		<configuration configurationName="Debug_GLUT1"/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>

@@ -496,6 +496,9 @@
 /* Use POSIX threads */
 #undef USE_NET_THREAD_POSIX
 
+/* python_dynlibs */
+#undef VEGASTRIKE_PYTHON_DYNLIB_PATH
+
 /* VEGASTRIKE_VERSION */
 #undef VEGASTRIKE_VERSION
 
