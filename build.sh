@@ -260,6 +260,9 @@ case "${target_sysname}" in
         build_dllext="dylib";;
     mingw*|cygwin*|msys*)
         build_dllext="dll.a"; cc_suff="${cc_suff}.exe"; exe=".exe";;
+    linux*)
+        cxx_ldflags="${cxx_ldflags:+ }-Wl,-rpath=${VEGA_PREFIX}/lib,-rpath=${GTK2_PREFIX}/lib"
+        build_dllext="so";;
     *)
         build_dllext="so";;
 esac
@@ -509,6 +512,11 @@ do_build_fun() {
                 -DVS_DEBUG_LEVEL="-g3" \
                 -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}"
 
+                #rpaths="${VEGA_PREFIX}/lib;${GTK2_PREFIX}/lib"
+                #add_config_args -DCMAKE_INSTALL_RPATH="${rpaths}" -DCMAKE_BUILD_RPATH="${rpaths}"
+                #
+                #;${VEGA_PREFIX}/lib/libvorbisenc.${build_dllext}
+                
                 case "${target_sysname}" in
                     darwin*)
                         add_config_args \
@@ -554,8 +562,6 @@ do_build_fun() {
                         ;;
                 esac
 
-                #-DCMAKE_CXX_FLAGS="${CXXFLAGS}"
-                #;${VEGA_PREFIX}/lib/libvorbisenc.${build_dllext}
                 case "${gfx}" in
                     glut1) export SDLDIR=${VEGA_PREFIX}
                           add_config_args "-DSDL_WINDOWING_DISABLE=1";;
