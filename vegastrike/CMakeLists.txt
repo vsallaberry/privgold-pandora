@@ -1045,6 +1045,9 @@ IF(NOT DISABLE_CLIENT)
     set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}${VS_WINDOWS_APP_LDFLAGS}")
     #version.h generation
     add_dependencies(vegastrike get_scm_revision)
+    if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
+        target_link_libraries(vegastrike "-mwindows")
+    endif()
 ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file

@@ -30,8 +30,9 @@ A big credit and thanks to [Vegastrike Team](https://www.vega-strike.org),
 and [macports](https://www.macports.org) for useful hints and patches, 
 [MSYS2](https://sourceforge.net/projects/msys2) for open-source libraries ports on windows.  
   
-See [source-control](#source-control-management) 
-and [licenses](#about-licenses) for more details.
+See [source-control](#source-control-management), 
+[licenses](#about-licenses),
+and [credits](#credits) for more details.
 
 
 ## Installation
@@ -86,6 +87,7 @@ is SVN revision 257, the 258 contains one single fix in Privateer data.
 
 * Extract from Privateer Gemini Gold Manual (1.03)
   
+______  
 __Important__    
 We offer our thanks to the authors of the original Privateer for their 
 inspirational game that drove us to recreate it so that it works on our 
@@ -114,7 +116,8 @@ for macOS or linux. See [credits](#credits) for more details.
 the Windows release is shipped with open sources libraries provided
 by [MSYS2](https://sourceforge.net/projects/msys2), which is LGPL itself, and 
 the libraries it uses are open sources with various licences (mit,bsd,gpl,lgpl,...)
-There are currently two exceptions: I rebuilt ffmpeg and libpng (need old versions).
+There are currently three exceptions: I rebuilt myself ffmpeg, libpng 
+(need old versions), and SDL 1 (msys2 has gcc build, needed a clang build).
 
 ## Updates Overview
 
@@ -353,5 +356,6 @@ https://github.com/vsallaberry/privgold-pandora
 * [LibDialog](https://invisible-island.net/dialog)
 * [Xorg](https://www.x.org)
 * [Mesa](https://www.mesa3d.org)
+* [VirtualBox](https://www.virtualbox.org)
 * and more...
 

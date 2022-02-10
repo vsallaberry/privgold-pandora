@@ -572,7 +572,7 @@ do_build_fun() {
                     sdl1)
                         case "${target_sysname}" in
                             mingw*|cygwin*|msys*)
-                                export SDLDIR="/mingw64"
+                                export SDLDIR="/usr/local64"
                                 add_config_args "-DSDL_WINDOWING_DISABLE=0" \
                                     -DSDL_INCLUDE_DIR="${SDLDIR}/include/SDL" \
                                     -DSDL_LIBRARY="${SDLDIR}/lib/libSDLmain.a;${SDLDIR}/lib/libSDL.${build_dllext}";;
@@ -989,7 +989,7 @@ do_delivery_fun() {
              "${mainbuilddir}/launcher/${mainsubdir}vslauncher${exe}"; do
         cp -v "$f" "${bundle_bindir}"
     done
-    
+
     # add the dynamic python libs
     for _lib in "${mainbuilddir}/lib/pythonlibs"/*; do
         test -L "${_lib}" && _lib="$(readlink "${_lib}")"
@@ -1093,7 +1093,7 @@ do_delivery_fun() {
     # Add dirty suffix to package name
     case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
     package_ext=${package_name#${package_pref}}
-    case "${git_rev}" in *-dirty)    
+    case "${git_rev}" in *-dirty)
         package_name="${package_pref}-${git_rev}${package_ext}";;
     esac
 
@@ -1106,8 +1106,8 @@ do_delivery_fun() {
         archive_cleanup() { true; }
         trap archive_cleanup EXIT
         eval trap_backup=${trap_backup:-"-"}
-        case "${package_ext}" in 
-            .[dD][mM][gG]) 
+        case "${package_ext}" in
+            .[dD][mM][gG])
                 archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}"; }
                 hdiutil mount -quiet -readonly -mountpoint "${other_bundle_mountpoint}" "${other_bundle_ref_archive}";;
             .tar.xz) (cd "${other_bundle_mountpoint}" && tar xJf "${other_bundle_ref_archive}");;
@@ -1126,7 +1126,7 @@ do_delivery_fun() {
     fi
 
     # Display list of libs
-    case "${target_sysname}" in 
+    case "${target_sysname}" in
         linux*|*bsd*) export LD_LIBRARY_PATH="${bundle_bindir}/${bundle_librpath}:${bundle_bindir}/${bundle_librpath}/gtk:${bundle_bindir}/${bundle_librpath}/misc";;
     esac
     echo "+ Libraries:"
