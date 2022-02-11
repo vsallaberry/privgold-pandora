@@ -10,6 +10,10 @@ SET(VSSETUP_COMMON_SOURCES
 SET(VSSETUP_GTK_SOURCES
                     src/include/display_gtk.cpp )
 
+if (WIN32 AND NOT VS_WIN32_CONSOLE)
+    set(VSSETUP_GTK_SOURCES ${VSSETUP_GTK_SOURCES} vega.rc)
+endif()
+
 SET(VSSETUP_DLG_SOURCES
                     src/include/display_dialog.cpp )
 
@@ -31,6 +35,7 @@ IF(GTK2_FOUND)
     target_link_libraries(vssetup ${GTK_LIBS})
     target_compile_options(vssetup PUBLIC "-DVS_LOG_NO_XML")
     if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
+        find_program(WINDRES windres)
         target_link_libraries(vssetup "-mwindows")
     endif()
 ELSE(GTK2_FOUND)

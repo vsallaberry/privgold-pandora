@@ -1021,7 +1021,7 @@ static void vs_print_buildinfo(FILE * out, int flags) {
         wr_fprintf(out, "Vegastrike v%s\n", VERSION);
     }
     if ((flags & VPB_SCM)) {
-        wr_fprintf(out, "revision %s from %s\n", SCM_VERSION, SCM_REMOTE);
+        wr_fprintf(out, "revision %s from %s\n", SCM_REVISION, SCM_REMOTE);
     }
     if ((flags & VPB_ARCH)) {
         wr_fprintf(out, "%s\n", POSH_GetArchString());

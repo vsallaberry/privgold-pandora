@@ -8,6 +8,11 @@ SET(VSLAUNCHER_COMMON_SOURCES
 SET(VSLAUNCHER_GTK_SOURCES
                     saveinterface.cpp)
 
+if (WIN32 AND NOT VS_WIN32_CONSOLE)
+    set(VSLAUNCHER_GTK_SOURCES ${VSLAUNCHER_GTK_SOURCES} launcher.rc)
+endif()
+
+
 SET(VSLAUNCHER_NOGUI_SOURCES
                     nogui.cpp)
 
@@ -33,6 +38,7 @@ ENDIF(GTK2_FOUND)
 
 if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
     target_link_libraries(vslauncher "-mwindows")
+    find_program(WINDRES windres)
 endif()
 
 target_compile_options(vslauncher PUBLIC "-DVS_LOG_NO_XML")

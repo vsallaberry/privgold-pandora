@@ -467,6 +467,10 @@ SET(VEGASTRIKE_SOURCES ${LIBGUI_SOURCES}
 					   src/main.cpp
 					   src/python/briefing_wrapper.cpp )
 
+if (WIN32 AND NOT VS_WIN32_CONSOLE)
+    set(VEGASTRIKE_SOURCES ${VEGASTRIKE_SOURCES} Resources.rc)
+endif()
+
 SET(VEGASERVER_SOURCES ${LIBCMDSERVER_SOURCES}
 					   ${LIBNETSERVER_SOURCES}
 					   ${LIBROOTSERVER_SOURCES}
@@ -1018,10 +1022,12 @@ find_library(PTHREAD_LIBRARY NAMES pthread)
 CONFIGURE_FILE(${vsUTCS_SOURCE_DIR}/cmake/config.h.in ${vsUTCS_BINARY_DIR}/config.h)
 
 #version.h generation
+add_definitions("-DHAVE_VERSION_H")
 add_custom_target(get_scm_revision ALL DEPENDS get_scm_revision_output)
 add_custom_command(OUTPUT get_scm_revision_output # trick so that make considers as PHONY and always run it
                    COMMAND ${CMAKE_COMMAND} -DGETSCM_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
                                             -DGETSCM_VERSION_FILE="${CMAKE_CURRENT_BINARY_DIR}/version.h"
+                                            -DGETSCM_PRODUCT_VERSION="${VERSION}"
                                             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GetSCMrevision.cmake")
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
 
@@ -1049,13 +1055,18 @@ IF(NOT DISABLE_CLIENT)
     add_dependencies(vegastrike get_scm_revision)
     if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
         target_link_libraries(vegastrike "-mwindows")
+        find_program(WINDRES windres)
     endif()
 ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file
 add_subdirectory(setup)
+if (GTK2_FOUND)
+    add_dependencies(vssetup get_scm_revision)
+endif()
 # Vslauncher Sub build file
 add_subdirectory(launcher)
+add_dependencies(vslauncher get_scm_revision)
 
 #ADD_CUSTOM_TARGET(vssetup DEPENDS setup/vssetup COMMAND ln -fs ${vsUTCS_BINARY_DIR}/setup/vssetup vssetup || true)
 

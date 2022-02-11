@@ -969,6 +969,9 @@ fi
 dnl Specify data directory
 AC_ARG_WITH(data-dir, AC_HELP_STRING([--with-data-dir=PATH], [Default vegastrike data directory]),VS_CPPFLAGS="${VS_CPPFLAGS} -DDATA_DIR=\\\"$withval\\\"")
 
+dnl use version.h
+VS_CPPFLAGS="${VS_CPPFLAGS} -DHAVE_VERSION_H"
+
 AC_SUBST(VS_CPPFLAGS)
 AC_SUBST(VS_CXXFLAGS)
 AC_SUBST(VS_LIBS)
