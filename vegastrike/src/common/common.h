@@ -47,6 +47,11 @@ std::pair<std::string,std::string> getbindir(const char *argv0, const char * bas
 HRESULT win32_get_appdata(WCHAR * wappdata);
 #endif // ! _WIN32
 
+// Essentially for windozws applications built in GUI mode (-mwindows)
+// This will attach application to console if it is run from it.
+// On macOS, linux, unix the libc handle it automatically (except the forcealloc==true).
+bool InitConsole(bool forcealloc = false);
+
 } // ! namespace VSCommon
 
 #endif // ! _VS_COMMON_COMMON_H

@@ -123,6 +123,7 @@ int main(int argc, char *argv[]) {
 #endif
     const char * pathorder[] = { binpath, ".", NULL };
 
+    VSCommon::InitConsole();
     logvs::log_setfile(stdout);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 

@@ -39,6 +39,7 @@ using std::string;
 #  include <direct.h>
 # endif
 # include <sys/stat.h>
+# include <wincon.h>
 #else // ! _WIN32
 # include <sys/dir.h>
 # include <unistd.h>
@@ -46,6 +47,7 @@ using std::string;
 # include <sys/stat.h>
 # include <sys/types.h>
 #endif // ! _WIN32
+
 
 namespace VSCommon {
 
@@ -219,7 +221,7 @@ std::pair<std::string,std::string> getbindir(const char *argv0, const char * bas
     char tmppwd[65535];
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     std::string origpath = tmppwd;
-     
+
     for (const char * dir = argv0 + strlen(argv0) - 1; *dir && dir >= argv0; --dir) {
         if (*dir == '/' || *dir == '\\') {
             bindir = (dir == argv0) ? "/" : std::string(argv0, 0, dir - argv0);
@@ -227,22 +229,64 @@ std::pair<std::string,std::string> getbindir(const char *argv0, const char * bas
             break ;
         }
     }
-    
+
     if (bindir.empty() || (bindir[0] != '/'
-#if defined(_WIN32)      
+#if defined(_WIN32)
     && bindir[0] != '\\' && (tolower(bindir[0]) < 'a' || tolower(bindir[0]) > 'z'
                              || (strncmp(bindir.c_str()+1, ":\\",2) && strncmp(bindir.c_str()+1, ":/", 2)))
 #endif
     )) {
        bindir = (std::string(base != NULL ? base : origpath.c_str()) + "/") + bindir;
     }
-    
+
     chdir(bindir.c_str());
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     chdir(origpath.c_str());
 
     return std::make_pair(std::string(tmppwd), basename);
 }
+
+// InitConsole()
+// *************
+#if !defined(_WIN32)
+bool InitConsole(bool forcealloc) {
+    return true;
+}
+#else
+bool InitConsole(bool forcealloc) {
+    int hascons = 0;
+    HWND cons=GetConsoleWindow();
+    if (cons == (HWND)0) {
+        hascons = AttachConsole(ATTACH_PARENT_PROCESS);
+        cons=GetConsoleWindow();
+        if (cons == (HWND)0 && forcealloc) {
+            hascons = AllocConsole();
+            cons=GetConsoleWindow();
+        }
+        if (cons == (HWND)0) {
+            return false;
+        }
+        //fprintf(f, "Attach console\n");
+        //fprintf(stdout, "stdout after Attach\r\n");
+        //fprintf(stderr, "stderr after Attach\r\n");
+        fflush(NULL);
+        if (fileno(stdout) < 0 && fileno(stderr) < 0) {
+            if (freopen("CONOUT$", "w", stdout) == NULL) {
+                fprintf(stderr, "freopen(stdout) error\n");
+            }
+            if (freopen("CONOUT$", "w", stderr) == NULL) {
+                fprintf(stderr, "freopen(stderr) error\n");
+            }
+            if (freopen("CONIN$", "w", stdin) == NULL) {
+                fprintf(stderr, "freopen(stdin) error\n");
+            }
+            //fprintf(stdout, "\r\nstdout hello\n");
+            //fprintf(stderr, "stderr hello \n");
+        }
+    }
+    return true;
+}
+#endif // ! _WIN32
 
 } // ! namespace VSCommon
 

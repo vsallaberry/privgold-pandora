@@ -130,7 +130,8 @@ int main( int   argc,
 {
 #endif
     char tmppwd[65535];
-
+    
+    VSCommon::InitConsole();
     logvs::log_setfile(stderr);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 

@@ -68,6 +68,7 @@
 #include "gamemenu.h"
 #include "log.h"
 #include "vs_log_modules.h"
+#include "common/common.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -266,10 +267,11 @@ bool isVista=false;
 
 int main( int argc, char *argv[] )
 {
+    VSCommon::InitConsole(); // Essentially for win32: application built in GUI mode (-mwindows) attaches to console when it is run from it
     logvs::log_setfile(stdout);
     logvs::log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
     atexit(logvs::log_terminate);
-    
+
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
     InitTime();
     UpdateTime();
@@ -283,19 +285,22 @@ int main( int argc, char *argv[] )
           VS_LOG("main", logvs::NOTICE, " In path %s",pwd);
         }
 
-#ifdef _WIN32
-	OSVERSIONINFO osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-	GetVersionEx(&osvi);
-	isVista=(osvi.dwMajorVersion==6);
-	VS_LOG("main", logvs::NOTICE, "Windows version %d %d", osvi.dwMajorVersion, osvi.dwMinorVersion);
-#endif
 
     /* Print copyright notice */
     vs_print_buildinfo(NULL, VPB_VERSION | VPB_SCM);
     logvs::log_printf("See http://www.gnu.org/copyleft/gpl.html for license details.\n\n");
+
+#ifdef _WIN32
+    {
+        OSVERSIONINFO osvi;
+        ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+        GetVersionEx(&osvi);
+        isVista=(osvi.dwMajorVersion==6);
+        VS_LOG("main", logvs::NOTICE, "Windows version %lu %lu\n", osvi.dwMajorVersion, osvi.dwMinorVersion);
+    }
+#endif
 
     /* Seed the random number generator */
     if(benchmark<0.0){
