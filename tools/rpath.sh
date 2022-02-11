@@ -20,8 +20,8 @@
 unset targets; declare -a targets
 unset excludes; declare -a excludes
 unset rpaths; declare -a rpaths
-libs_path=../Resources/lib
-exe_rpath=@executable_path
+libs_path="../Resources/lib"
+exe_rpath="@executable_path/"
 rpaths[0]=${libs_path}
 dostrip=
 
@@ -62,6 +62,7 @@ rpaths[0]=${libs_path}
 
 case "${build_sysname}" in
     linux*|*bsd*|mingw*|cygwin*|msys*)
+        exe_rpath=
         chrpath=$(which chrpath 2> /dev/null)
         install_name_tool() { 
             test -x ${chrpath} || return 0
@@ -108,7 +109,7 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
         *)
             chmod 'u+w,u+r' "${target}"
             for rpath in "${rpaths[@]}"; do
-                case "${rpath}" in /*) new_rpath=${rpath};; *) new_rpath="${exe_rpath}/${rpath}";; esac
+                case "${rpath}" in /*) new_rpath=${rpath};; *) new_rpath="${exe_rpath}${rpath}";; esac
                 install_name_tool -add_rpath "${new_rpath}" "${target}" 2> /dev/null \
                 || install_name_tool -rpath "${new_rpath}" "${new_rpath}" "${target}" \
                 || errors[${#errors[@]}]="[${target_name}] exe rpath add/update"
