@@ -80,7 +80,7 @@ show_help() {
     echo "    [-T,--type=<build-type] [-j,--jobs=<make-jobs>] [-G,--gfx=glut|sdl1|sdl2]"
     echo "    [--cc=<c-compiler>] [--target=<src-root-dir>] [--cxx-flags=<flags>]"
     echo "    [--cxx-std=98|11|..] [--cxx-ldflags=<flags>] [--sdk=<macos_sdk>] [-O,--optimize=-O?]"
-    echo "    [-C,--clean] [-c,--clean-keep] [-i,--interactive] [--[full-]dist] [--delivery[-data]]"
+    echo "    [-C,--clean] [-c,--clean-keep] [-i,--interactive] [--[full-]dist] [--delivery[-dev|-nodata]"
     echo "    [-s,--setup] [-r,--run] [-d,--debug[=stop]] [-D,--data=<datadir>] [-P,--{check,compile}-python]"
     echo "    [-- [<Configure/CMake args] [-- [<RUN_ARGS>]]]"
     echo ""
@@ -132,8 +132,9 @@ parse_opts() {
             --clean|-C)     force_clean=yes;;
             --clean-keep|-c)force_clean=a_little;;
             --interactive|-i)interactive=yes;;
-            --delivery)     do_delivery=dev;;
-            --delivery-data)do_delivery=yes;;
+            --delivery)     do_delivery=yes;;
+            --delivery-dev) do_delivery=dev;;
+            --delivery-nodata)do_delivery=nodata;;
             --dist)         do_dist=yes;;
             --full-dist)    do_dist=full;;
             -*) echo "error: unknown option '${_arg}'."; show_help 1;;
@@ -1093,9 +1094,9 @@ do_delivery_fun() {
     # Add dirty suffix to package name
     case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
     package_ext=${package_name#${package_pref}}
-    case "${git_rev}" in *-dirty)
-        package_name="${package_pref}-${git_rev}${package_ext}";;
-    esac
+    if test "${do_delivery}" != "yes" || case "${git_rev}" in *-dirty) true;; *) false;; esac; then
+        package_name="${package_pref}-${git_rev}${package_ext}";
+    fi
 
     # Merge the generated bundle with the ARM64 one if present
     other_bundle_ref_archive="${other_bundle_ref_dir}/$(basename "${package_name%${package_ext}}")-MoreArchs${package_ext}"
@@ -1138,7 +1139,7 @@ do_delivery_fun() {
     esac
 
     # Put data in bundle
-    if test "${do_delivery}" = dev; then
+    if test "${do_delivery}" = "nodata"; then
         echo "+ creating data link"
         rm -f "${bundle_resdir}/data" || exit 1
         ln -sv "${priv_data}" "${bundle_resdir}/data" || exit $?
