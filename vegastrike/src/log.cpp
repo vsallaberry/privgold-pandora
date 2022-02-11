@@ -137,6 +137,7 @@ static unsigned int s_log_flags = F_DEFAULTS; // | F_LOCATION_ALLWAYS;
 static LogMap       s_log_map;
 static LogQueue     s_log_queue;
 static FILE *       s_log_out = stderr;
+static bool         s_log_redirected = false;
 static int          s_log_stdout_fd = -1;
 static int          s_log_stderr_fd = -1;
 static bool         s_log_out_istty = false;
@@ -310,7 +311,7 @@ FILE * log_setfile(FILE * out, const std::string & module) {
     s_log_out_istty = isatty(fileno(out));
 
     bool same_file = out == old || ((out == stderr || out == stdout) && (old == stderr || old == stdout));
-    if (out != NULL && (!same_file || (s_log_stderr_fd >= 0 && fileno(out) != s_log_stderr_fd && fileno(out) != s_log_stdout_fd))) { 
+    if (out != NULL && (!same_file || s_log_redirected)) {
         log_flushqueue();
     }
 
@@ -527,7 +528,9 @@ int log_openfile(const std::string & module,
         buftime[i] = 0;
     }
     VS_LOG("log", logvs::NOTICE, "(%s) Logging to %s", buftime, filename.c_str());
+    
     FILE * logout;
+    s_log_redirected = false;
     if (filename == "") {
         logout = NULL;
     } else if (strcasecmp(filename.c_str(), "stdout") == 0) {
@@ -536,9 +539,6 @@ int log_openfile(const std::string & module,
         logout = stderr;
     } else {
         if (!redirect) {
-            close(s_log_stderr_fd);
-            close(s_log_stdout_fd);
-            s_log_stdout_fd = s_log_stderr_fd = -1;
             logout = fopen(filename.c_str(), append ? "a" : "w");
         } else {
         	if (s_log_stderr_fd < 0)
@@ -547,24 +547,26 @@ int log_openfile(const std::string & module,
             	s_log_stdout_fd = dup(fileno(stdout));
             if ((logout = freopen(filename.c_str(), append ? "a" : "w", stderr)) == NULL) {
                 if ((logout = fopen(filename.c_str(), append ? "a" : "w")) != NULL) {
-                	if (dup2(fileno(logout), fileno(stderr)) < 0) {
+                	fflush(stderr);
+                    if (dup2(fileno(logout), fileno(stderr)) < 0) {
                 		VS_LOG("log", logvs::WARN, "Warning: cannot redirect stderr");
-                	} else {
-                		fflush(stderr);
-                		setvbuf(stderr, NULL, _IOLBF, BUFSIZ); // line bufferred for stderr if no freopen
-                	}
-                } else {
-                	close(s_log_stderr_fd);
-                	close(s_log_stdout_fd);
-                	s_log_stdout_fd = s_log_stderr_fd = -1;
+#ifdef _WIN32
+                        *stderr = *logout;
+#endif
+                    }
+                	setvbuf(stderr, NULL, _IOLBF, BUFSIZ); // line bufferred for stderr if no freopen
                 }
             }
             if (logout != NULL) {
+                s_log_redirected = true;
+                fflush(stdout);
                 if (dup2(fileno(logout), fileno(stdout)) < 0) {
                 	VS_LOG("log", logvs::WARN, "Warning: cannot redirect stdout");
-                } else {
-                	setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // line buffered for stdout
+#ifdef _WIN32
+                        *stdout = *logout;
+#endif
                 }
+                setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // line buffered for stdout
             }
         }
         if (logout == NULL) {
@@ -573,7 +575,7 @@ int log_openfile(const std::string & module,
         }
     }
     if (logout != NULL) {
-        if ((logout != stderr && logout != stdout) || (s_log_stderr_fd >= 0 && fileno(stderr) != s_log_stderr_fd)) {
+        if ((logout != stderr && logout != stdout) || s_log_redirected) {
             const int bufsz = 8192; //BUFSIZ;
             const int iobuffering = _IOFBF; // _IOFBF: full buffered, _IOLBF: line buffered, setbuf(file,NULL):no buffering.
             setvbuf(logout, NULL, iobuffering, bufsz);
@@ -598,27 +600,32 @@ void log_terminate() {
 		log_openfile("", ((VSFileSystem::homedir + VSFS_PATHSEP) + "vegastrike.log").c_str(), false, false);
 	}
 #endif
-    if (s_log_out!= NULL) {
-        if ((s_log_out != stdout && s_log_out != stderr) || (s_log_stderr_fd >= 0 && fileno(stderr) != s_log_stderr_fd)) {
-            if (s_log_stdout_fd >= 0) {
-                if (dup2(s_log_stdout_fd, fileno(stdout)) < 0) {
-                	VS_LOG("log", logvs::WARN, "Warning: cannot restore stdout");
-                }
-                if (dup2(s_log_stderr_fd, fileno(stderr)) < 0) {
-                	VS_LOG("log", logvs::WARN, "Warning: cannot restore stderr");
-                }
-                setvbuf(stdout, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
-                setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
-                s_log_stdout_fd = s_log_stderr_fd = -1;
-            }
-            fclose(s_log_out);
-            s_log_out = NULL;
-            log_setfile(stderr);
-        } else {
-            fflush(stdout);
-            fflush(stderr);
-        }
+    fflush(stdout);
+    fflush(stderr);
+    if (s_log_out != NULL) {
+        fflush(s_log_out);
     }
+    if (s_log_stdout_fd >= 0) {
+        if (dup2(s_log_stdout_fd, fileno(stdout)) < 0) {
+            VS_LOG("log", logvs::WARN, "Warning: cannot restore stdout");
+        }
+        close(s_log_stdout_fd);
+        s_log_stdout_fd = -1;
+    }
+    if (s_log_stderr_fd >= 0) {
+        if (dup2(s_log_stderr_fd, fileno(stderr)) < 0) {
+            VS_LOG("log", logvs::WARN, "Warning: cannot restore stderr");
+        }
+        close(s_log_stderr_fd);
+        s_log_stderr_fd = -1;
+    }
+    setvbuf(stdout, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+    setvbuf(stderr, NULL, _IOLBF, BUFSIZ);  /* Line buffered. FULL buffered: _IOFBF */
+    FILE * old = log_setfile(stderr);
+    if (old != NULL && old != stdout && old != stderr) {
+        fclose(old);
+    }
+    s_log_redirected = false;
 }
 
 } // ! namespace vslog
