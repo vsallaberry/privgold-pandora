@@ -56,34 +56,55 @@ while test -n "$1"; do
     shift
 done
 
+printf -- "\n*******************************************************\n"
+printf -- "+ $(basename "$0")\n"
+printf -- "    builddirs:\n"
+printf -- "        %s\n" "${builddirs[@]}"
+printf -- "    destroot:\n        ${destroot}\n"
+printf -- "    excludes:\n"
+printf -- "        %s\n" "${excludes[@]}"
+printf -- "    install:${do_install:-no} destroot:${do_destroot:-no} takeall:${take_all:-no} suffix:${destroot_suffix} verbose:${verbose}\n"
+printf -- "\n"
+
+# -N / -S options checking
 test -n "${destroot_suffix}" -o -z "${do_install}" \
     || { echo "!! options -S (nosuffix) must be used with option -N (no install)"; exit 1; }
 
+# check if destroot given
 test -n "$destroot" || { echo "!! no destroot specified"; usage 1; }
 
+# check existence of builddirs
 for d in "${builddirs[@]}"; do
     test -d "$d" || { echo "!! wrong builddir '$d'"; usage 1; }
 done
 
+# File creation mask -> 755
 umask 022
 
+# if any, create <destroot_suffix> in builddirs
 for d in "${builddirs[@]}"; do
     mkdir -p "${d}${destroot_suffix}" || { echo "!! cannot create '${d}${destroot_suffix}"; usage 2; }
 done
 
+# create destroot
 mkdir -p "$destroot" || { echo "!! cannot create destroot '${destroot}'"; usage 2; }
 
+# expand destroot path
 pushd >/dev/null 2>&1 "$destroot" && destroot=`pwd` && popd >/dev/null 2>&1 \
 || { echo "!! bad destroot directory '$destroot'"; usage 3; }
 
+# check lipo program
 lipo=lipo
 for f in $(which -a lipo /opt/local/bin/lipo 2> /dev/null); do
     "${f}" -archs "${f}" >/dev/null 2>&1 && { lipo=$f; break ; }
 done
 
+# cp -a utility
 xcopy() {
     rsync -ah -t "${excludes[@]}" "$@"
 }
+
+# expand builddirs paths and add <destroot_suffix> if any
 declare -a build_destroot
 for ((i=0; i < ${#builddirs[@]}; i=i+1)); do
     pushd >/dev/null 2>&1 "${builddirs[$i]}" && builddirs[$i]=`pwd` && popd >/dev/null 2>&1 \
@@ -92,6 +113,7 @@ for ((i=0; i < ${#builddirs[@]}; i=i+1)); do
     build_destroot[${#build_destroot[@]}]="${builddirs[$i]}${destroot_suffix}"
 done
 
+# Install builddirs if requested (!! only make supported, install it yourself and use -N if make is not used)
 if test -n "$do_install"; then
     for d in "${builddirs[@]}"; do
         echo "+ installing '$d'"
@@ -99,21 +121,23 @@ if test -n "$do_install"; then
     done
 fi
 
-test "${verbose}" -gt 1 && { echo "** DIFF"; diff -qru "${build_destroot[@]}"; echo; }
+test "${verbose}" -gt 2 && { echo "** DIFF"; diff -qru "${build_destroot[@]}"; echo; }
 
+# Copy builddirs into destroot, the first builddir is copied last so as it prevails on others
 if test -n "${do_destroot}"; then
-    echo "+ ${builddirs[@]} installed. copying into $destroot..."
+    echo "+ builddirs installed, copying into $destroot..."
     echo
-
     first=
     for d in "${builddirs[@]}"; do
         test -z "${first}" && { first="${d}${destroot_suffix}/"; continue; }
         xcopy "${d}${destroot_suffix}/" "$destroot"
     done
-    test -n "${first}" && { echo "+ Finally copying main_arch: '${first}'"; xcopy "${first}" "$destroot"; }
+    test -n "${first}" && { echo "+ Finally copying main_arch: '${first}'"; echo; xcopy "${first}" "$destroot"; }
 fi
 
+# Merge. create list of files
 echo "+ $destroot created, Merging libs..."
+echo
 
 declare -a patterns
 for b in "${builddirs[@]}"; do
@@ -121,13 +145,13 @@ for b in "${builddirs[@]}"; do
 done
 files=`find "${build_destroot[@]}" \
             -not -type l \
-            -and \( -iname '*.dylib' -o -iname '*.a' -o -iname '*.so' -o -iname '*.dll' \
+            -and \( -iname '*.dylib' -o -iname '*.a' -o -iname '*.so' -o -iname '*.dll' -o -iname '*.pyd' \
                     -o -iname '*.dylib.[0-9]*' -o -iname '*.so.[0-9]*' \
                     -o \( -not -type d -and -perm '+u=x' \) \
                  \) \
                  | sed "${patterns[@]}" | sort | uniq`
 
-test "${verbose}" -gt 1 && printf "FILES:\n$files\n\n"
+test "${verbose}" -gt 2 && printf "FILES:\n$files\n\n"
 
 for f in $files; do
     filedst="${destroot}/$f"
@@ -137,10 +161,11 @@ for f in $files; do
     add_lipo() { for a in "$@"; do lipo_args[${#lipo_args[@]}]="$a"; done }
 
     for b in "${builddirs[@]}"; do
+        shortdir="$(basename "`dirname "${b%${destroot_suffix}}"`")/$(basename "${b%${destroot_suffix}}")"
         filesrc="${b}${destroot_suffix}/${f}"
-        test -e "${filesrc}" || { echo "!! ${f} not found in build $(basename "`dirname "${b}"`")/$(basename "${b}")"; continue; }
+        test -e "${filesrc}" || { echo "!! ${f} not found in build ${shortdir}"; continue; }
         arch=$("${lipo}" -archs "${filesrc}" 2> /dev/null)
-        test -n "${arch}" || { echo "!! $f: not a valid binary"; continue; }
+        test -n "${arch}" || { echo "!! $f: not a valid binary in ${shortdir}"; continue; }
         #lipo "$file32" -verify_arch i386 >/dev/null 2>&1 && lipo "$file64" -verify_arch x86_64 >/dev/null 2>&1 || { echo "!! one of 32/64 file has not requested arch"; exit 6; }
 
         mkdir -p "`dirname "${filedst}"`" || { echo "!! cannot create dir for $filedst"; exit 7; }
@@ -148,6 +173,7 @@ for f in $files; do
         if test -n "${take_all}" -a -z "${ref_archs}"; then
             ref_archs=${arch}; arch=all
             cp -a "${filesrc}" "${filedst}.tmp.${arch}"
+            test "${verbose}" -gt 0 && echo "  >> copy all (${ref_archs}) for '${f}' from ${shortdir}"
         else
             if test -n "${ref_archs}"; then
                 curarch=${arch}; arch=
@@ -157,12 +183,16 @@ for f in $files; do
                 test -z "${arch}" && continue
             fi
             for a in ${arch}; do
-                test "${verbose}" -gt 0 && echo "extract '$arch' for '${filesrc}'"
+                test "${verbose}" -gt 1 && echo "  >> extract '$arch' for '${filesrc}'" \
+                || test "${verbose}" -gt 0 && echo "  >> extract '$arch' for '${f}' from ${shortdir}"
                 "${lipo}" -extract "${a}" "${filesrc}" -output "${filedst}.tmp.${a}" >/dev/null 2>&1 || cp -a "${filesrc}" "${filedst}.tmp.${a}"
             done
         fi
         test "${arch}" = "all" && add_lipo "${filedst}.tmp.${arch}" \
-        || for a in ${arch}; do add_lipo "-arch" "${a}" "${filedst}.tmp.${a}"; done
+        || for a in ${arch}; do 
+            #add_lipo "-arch" "${a}" "${filedst}.tmp.${a}"
+            add_lipo "${filedst}.tmp.${a}"
+        done
     done
     test "${#lipo_args[@]}" -eq 0 && continue
 
@@ -170,8 +200,10 @@ for f in $files; do
     #    i=0; suf=; while test -e "${filedst}$suf"; do suf=".$i"; i=$((i+1)); done
     #    cp -a "$filedst" "${filedst}$suf"
     #fi
+    shortdir="$(basename "`dirname "${destroot}"`")/$(basename "${destroot}")"
 
-    test "${verbose}" -gt 1 && echo ">> ${lipo}" "${lipo_args[@]}" -create -output "${filedst}"
+    test "${verbose}" -gt 1 && echo "  >> ${lipo}" "${lipo_args[@]}" -create -output "${filedst}" \
+        || test "${verbose}" -gt 0 && printf -- "  >> ${lipo} $(echo "${lipo_args[@]}" | sed -e 's|[^[:space:]]*/|.../|g') -create -output ${shortdir}/${f}\n"
     "${lipo}" "${lipo_args[@]}" -create -output "${filedst}" \
         && { printf -- "+ ${filedst#${destroot}}: "; "${lipo}" -archs "${filedst}"; } && rm -f "${filedst}.tmp."*  \
         || { echo "!! lipo could not create '${filedst}'"; exit 8; }

@@ -379,8 +379,8 @@ export GTK2_HOME="${GTK2_PREFIX}/include/gtk-2.0"
 # PATH, tools, dependencies settings
 export PATH="/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX2:+${VEGA_PREFIX2}/bin:${VEGA_PREFIX2}/sbin:}${VEGA_PREFIX}/bin:${VEGA_PREFIX}/sbin:${GTK2_PREFIX}/bin:${GTK2_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/gcc/gcc-6.5.0_ada/bin:/usr/local/bin"
 #export PATH="${VEGA_PREFIX}/bin:/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX}/sbin:/opt/local/bin:/opt/local/sbin"
-export MAKE=$(which -a gmake make | head -n 1)
-export CMAKE=$(which -a cmake | head -n1)
+export MAKE=$(which -a gmake make 2> /dev/null | head -n 1)
+export CMAKE=$(which -a cmake 2> /dev/null | head -n1)
 
 #export PKG_CONFIG_PATH=/usr/local/libpng12/lib/pkgconfig:/usr/lib/pkgconfig:/opt/X11/lib/pkgconfig:/opt/local/lib/pkgconfig
 export PKGCONFIG="${VEGA_PREFIX}/bin/pkg-config"
@@ -1135,7 +1135,7 @@ do_delivery_fun() {
         test -f "$f" && get_libs "$f" 2> /dev/null | grep -Ev '^[^[:space:]]'
     done | sort | uniq
     case "${target_sysname}" in
-        darwin*) lipo -info "${bundle_bindir}"/vegastrike.*${exe} | sed -e 's|.*/||';;
+        darwin*) for f in "${bundle_bindir}"/{vegastrike.*${exe},vssetup*${exe},vslauncher*${exe}}; do lipo -info "$f" 2> /dev/null | sed -e 's|.*/||'; done;;
     esac
 
     # Put data in bundle
