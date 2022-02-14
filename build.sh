@@ -262,7 +262,8 @@ case "${target_sysname}" in
     mingw*|cygwin*|msys*)
         build_dllext="dll.a"; cc_suff="${cc_suff}.exe"; exe=".exe";;
     linux*)
-        cxx_ldflags="${cxx_ldflags:+ }-Wl,-rpath=${VEGA_PREFIX}/lib,-rpath=${GTK2_PREFIX}/lib"
+        # make the rpath long because chrpath cannot extend length
+        cxx_ldflags="${cxx_ldflags:+ }-Wl,-rpath=${VEGA_PREFIX}/lib,-rpath=${GTK2_PREFIX}/lib,-rpath=/usr/lib,-rpath=/usr/local/lib,-rpath=/opt/local/lib"
         build_dllext="so";;
     *)
         build_dllext="so";;

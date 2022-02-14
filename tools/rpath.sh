@@ -62,12 +62,19 @@ rpaths[0]=${libs_path}
 
 case "${build_sysname}" in
     linux*|*bsd*|mingw*|cygwin*|msys*)
-        exe_rpath=
+        exe_rpath='$ORIGIN/'
         chrpath=$(which chrpath 2> /dev/null)
+        rp_current_target=
+        rp_current_rpath=
         install_name_tool() { 
             test -x ${chrpath} || return 0
             case "$1" in
-                -add_rpath) local rpath=$2 target=$3; chrpath -r "${rpath}" "${target}";;
+                -add_rpath) local rpath=$2 target=$3; test "${target}" = "${rp_current_target}" || rp_current_rpath=
+                            rp_current_rpath="${rp_current_rpath}${rp_current_rpath:+:}${rpath}"
+                            chrpath -r "${rp_current_rpath}" "${target}"
+                            rp_current_target=${target};;
+                -id) local libname=$2 target=$3; chrpath -r "${rp_current_rpath}" "${target}";;
+                -change) local olddep=$2 newdep=$3 target=$4;;
             esac
         }
         get_libs() { ldd "$@" | awk '/[^:]$/ { print $3 }'; }
@@ -104,7 +111,7 @@ i=0; while test $i -lt ${#targets[@]}; do target=${targets[$i]}; i=$((i+1))
     fi
 
     case "${lowtarget}" in
-        *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|*.dll|/frameworks/*)
+        *.dylib|*.dylib.[0-9]*|*.so|*.so.[0-9]*|*.dll|/frameworks/*|*.pyd)
             ;;
         *)
             chmod 'u+w,u+r' "${target}"
