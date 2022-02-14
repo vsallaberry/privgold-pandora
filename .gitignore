@@ -26,6 +26,11 @@
 /tools/macos_bundle/checkModifierKeys/checkKeys
 /tools/macos_bundle/checkModifierKeys/checkModifierKeys
 
+/tools/hardshortcut/*.o
+/tools/hardshortcut/hardshortcut
+/tools/hardshortcut/*.res
+/tools/hardshortcut/Resources.rc
+
 /vegastrike*/INSTALL
 /vegastrike*/configure
 /vegastrike*/compile
