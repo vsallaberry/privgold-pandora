@@ -26,10 +26,10 @@ for f in $build_list; do
         auto) tool=configure;;
         univ) case "${build_sysname}" in darwin*) ;; *) continue;; esac
               newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-arch i386 -arch x86_64"; args="--optimize=-Os";;
-        gcc6) mcc=gcc6; args=--cxx-std=98;;
-        gcc6dbg) mcc=gcc6; args="--cxx-std=98 --optimize=-O1"; type=RelWithDebInfo;;
-        gcc5) mcc=gcc-mp-5; args=--cxx-std=98; tool=configure;;
-        gcc11) mcc=gcc-mp-11;;
+        gcc6) mcc=gcc6; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing";;
+        gcc6dbg) mcc=gcc6; args="--cxx-std=98 --optimize=-O1 --cxx-flags=-Wno-strict-aliasing"; type=RelWithDebInfo;;
+        gcc5) mcc=gcc-mp-5; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing"; tool=configure;;
+        gcc11) mcc=gcc-mp-11; args=="--cxx-flags=-Wno-strict-aliasing";;
         clang12) mcc=clang-mp-12;;
         gcc8) mcc=gcc-mp-8; tool=configure;;
         *) gfx=$f;;
