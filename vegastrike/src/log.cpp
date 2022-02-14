@@ -1,6 +1,6 @@
 /*
 * Vega Strike
-* Copyright (C) 2021 Vincent Sallaberry
+* Copyright (C) 2021-2022 Vincent Sallaberry
 *
 * http://vegastrike.sourceforge.net/
 *
