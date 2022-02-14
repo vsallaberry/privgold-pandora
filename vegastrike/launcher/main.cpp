@@ -100,7 +100,9 @@ bool InitConfig() {
     } else {
         configfile = homedir + "/" + configfile;
     }
-    if (fp != NULL) {
+    if (fp == NULL) {
+        VS_LOG("config", logvs::WARN, "Warning cannot find configfile %s", configfile.c_str());
+    } else {
         VS_LOG("config", logvs::NOTICE, "Found configfile %s", configfile.c_str());
         while ((p = fgets(line, MAX_READ, fp)) != NULL) {
             if (line[0] != '#') { continue; }
@@ -151,25 +153,34 @@ int main( int   argc,
     VS_LOG("vslauncher", logvs::NOTICE, " In path %s", tmppwd);
     origpath = tmppwd;
     prog_arg = argv[0];
-    
+
     // command line options
     for (int i_argv = 1; i_argv < argc; ++i_argv) {
         if (!strcmp(argv[i_argv], "--run")) {
             flags |= F_RUN_VEGASTRIKE;
         } else if (!strcmp(argv[i_argv], "--setup")) {
             flags |= F_RUN_VSSETUP;
+        } else if (!strncmp(argv[i_argv], "-D", 2)) {
+            datadir = std::string(argv[i_argv] + 2);
         } else if (has_console) {
-            logvs::log_printf("Usage: %s [--run|--setup]\n", argv[0]);
+            logvs::log_printf("Usage: %s [--run|--setup] [-D<DATADIR>]\n", argv[0]);
             exit(0);
         }
     }
 
+    // Binary dir
+    std::pair<std::string,std::string> bindir = VSCommon::getfiledir(argv[0], origpath.c_str());
+    if (bindir.first.empty()) {
+        bindir.first = origpath;
+        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find binary dir, using %s", bindir.first.c_str());
+    } else {
+        VS_LOG("vslauncher", logvs::NOTICE, "Found binary directory in %s (executable is %s)", bindir.first.c_str(), bindir.second.c_str());
+    }
+
     // Init DATADIR
     // Will change to the data dir which makes selecting missions easier.
-    if ((datadir = VSCommon::getdatadir(origpath.c_str())).empty()) { 
-        datadir = origpath; 
-        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find data, using %s", datadir.c_str());
-    } else {
+    if ((!datadir.empty() && !(datadir = VSCommon::getdatadir(datadir.c_str())).empty()) 
+    ||  !(datadir = VSCommon::getdatadir(bindir.first.c_str())).empty()) { 
         VS_LOG("vslauncher", logvs::NOTICE, "Found data in %s", datadir.c_str());
     }
     // Init HOMEDIR
@@ -179,20 +190,16 @@ int main( int   argc,
     } else {
         VS_LOG("vslauncher", logvs::NOTICE, "Found home in %s", homedir.c_str());
     }
+    if (datadir.empty()) {
+        datadir = homedir; 
+        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find data, using %s", datadir.c_str());
+    }
     // Init CONFIGFILE
     InitConfig();
     // Init Log. TODO read config to see we where we want to log
     logvs::log_openfile("", homedir + "/vslauncher.log", /*redirect=*/true, /*append=*/false);
     atexit(logvs::log_terminate);
 
-    // Binary dir
-    std::pair<std::string,std::string> bindir = VSCommon::getbindir(argv[0], origpath.c_str());
-    if (bindir.first.empty()) {
-        bindir.first = origpath;
-        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find binary dir, using %s", bindir.first.c_str());
-    } else {
-        VS_LOG("vslauncher", logvs::NOTICE, "Found binary directory in %s (executable is %s)", bindir.first.c_str(), bindir.second.c_str());
-    }
     VSCommon::file_id_t myid;
     getFileId((bindir.first + "/" + bindir.second).c_str(), &myid);
 

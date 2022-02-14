@@ -220,8 +220,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	if (HOMESUBDIR.empty()) {
-		VS_LOG("vssetup", logvs::ERROR, "Error: Failed to find Version.txt anywhere.");
-		return 1;
+        HOMESUBDIR = ".vegastrike";
+		VS_LOG("vssetup", logvs::WARN, "Warning: Failed to find Version.txt anywhere, using %s as home.", HOMESUBDIR.c_str());
 	}
 #if !defined(VS_HOME_INSIDE_DATA)
 # if !defined(_WIN32)
@@ -259,6 +259,7 @@ int main(int argc, char *argv[]) {
 #if defined(_WINDOWS)&&defined(_WIN32)
 	VSCommon::ParseCmdLineFree(argv);
 #endif
+    VS_LOG("vssetup", logvs::NOTICE, "exiting...");
 	return 0;
 }
 
