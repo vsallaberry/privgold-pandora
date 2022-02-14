@@ -288,7 +288,7 @@ size_t log_flushqueue() {
     unsigned int saved_flags = s_log_flags;
     size_t queue_sz = s_log_queue.size();
     while (s_log_queue.size()) {
-        log_setflags(s_log_queue.front().flags & ~F_QUEUELOGS);
+        log_setflags(s_log_queue.front().flags & ~(F_QUEUELOGS|F_FOOTER|F_LOCATION_MASK));
         log(s_log_queue.front().category, s_log_queue.front().level, F_NONE, 
              __FILE__, __func__, __LINE__, "%s", s_log_queue.front().message.c_str());
         s_log_queue.pop();
@@ -460,20 +460,22 @@ int log_footer(const std::string & category, unsigned int level, unsigned int fl
     FILE * out = s_log_out;
     int ret = 0;
     va_list valist;
+    bool footer = ((flags | s_log_flags) & F_FOOTER) != 0;
 
     if (out == NULL) {
         return 0;
     }
 
     flags = (flags | s_log_flags) & (~F_LOCATION_HEADER);
-    if (fmt != NULL) {
+    if (fmt != NULL && footer) {
         va_start(valist, fmt);
         ret += vfprintf(out, fmt, valist);
         va_end(valist);
         vs_log_msgcenter_v(category, level, flags, false, file, func, line, fmt, valist);
     }
 
-    ret += log_print_location(out, flags, category, level, file, func, line);
+    if (footer)
+        ret += log_print_location(out, flags, category, level, file, func, line);
 
     ret += fprintf(out, "\n");
 

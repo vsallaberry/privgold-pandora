@@ -214,8 +214,9 @@ namespace logvs {
         F_TIMESTAMP       = 1 << 6,
         F_HEADER          = 1 << 7,
         F_QUEUELOGS       = 1 << 8,
+        F_FOOTER          = 1 << 9,
         F_LOCATION_MASK = F_LOCATION_HEADER | F_LOCATION_FOOTER,
-        F_DEFAULTS = F_HEADER | F_LOCATION_FOOTER,
+        F_DEFAULTS = F_HEADER | F_FOOTER | F_LOCATION_FOOTER,
     };
     
     /** returns number of bytes written or 0 on error or when log is disabled */
