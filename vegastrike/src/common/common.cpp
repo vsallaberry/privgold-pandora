@@ -25,8 +25,6 @@
 
 #include <string>
 
-using std::string;
-
 #include "common.h"
 
 #ifdef _WIN32
@@ -40,12 +38,14 @@ using std::string;
 # endif
 # include <sys/stat.h>
 # include <wincon.h>
+# define PATHSEP "\\"
 #else // ! _WIN32
 # include <sys/dir.h>
 # include <unistd.h>
 # include <pwd.h>
 # include <sys/stat.h>
 # include <sys/types.h>
+# define PATHSEP "/"
 #endif // ! _WIN32
 
 
@@ -108,33 +108,36 @@ const char * datadirs[] = {
  NULL
 };
 
-string getdatadir(const char * base)
+std::string getdatadir(const char * base)
 {
     char tmppwd[65536];
     getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
     const char * found = NULL;
-    for(const char ** searchs = datadirs; *searchs; ++searchs) {
-        chdir(tmppwd);
-        if (base != NULL) {
-            chdir(base);
+    const char * const bases[] = { base ? base : "", base ? "" : NULL, NULL };
+    for (const char * const * basetmp = bases; !found && *basetmp; ++basetmp) {
+        for(const char ** searchs = datadirs; *searchs; ++searchs) {
+            chdir(tmppwd);
+            if (*basetmp != 0) {
+                chdir(*basetmp);
+            }
+            chdir(*searchs);
+            FILE *tfp = fopen("setup.config", "r");
+            if (tfp == NULL)
+                continue ;
+            fclose(tfp);
+            tfp = fopen("Version.txt", "r");
+            if (tfp == NULL)
+                continue ;
+            fclose(tfp);
+            // We have found the data directory
+            found = *searchs;
+            break;
         }
-        chdir(*searchs);
-        FILE *tfp = fopen("setup.config", "r");
-        if (tfp == NULL)
-            continue ;
-        fclose(tfp);
-        tfp = fopen("Version.txt", "r");
-        if (tfp == NULL)
-            continue ;
-        fclose(tfp);
-        // We have found the data directory
-        found = *searchs;
-        break;
     }
 
     if(found == NULL) {
-        fprintf(stderr, "Unable to find data directory\n");
+        fprintf(stderr, "Unable to find data directory from %s%s%s\n", base?base:"", base ? " or ":"",tmppwd);
         for(const char ** searchs = datadirs; *searchs; ++searchs) {
             fprintf(stderr, "Tried %s\n", *searchs);
         }
@@ -147,11 +150,11 @@ string getdatadir(const char * base)
     return std::string(tmppwd);
 }
 
-string gethomedir(const char * base) {
+std::string gethomedir(const char * base) {
     char tmppwd[65535];
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
-    string HOMESUBDIR;
+    std::string HOMESUBDIR;
     if (base != NULL) {
         chdir(base);
     }
@@ -172,9 +175,8 @@ string gethomedir(const char * base) {
 		}
 	}
 	if (HOMESUBDIR.empty()) {
-		fprintf(stderr,"Error: Failed to find Version.txt anywhere.\n");
-        chdir(tmppwd);
-		return "";
+        HOMESUBDIR = ".vegastrike";
+		fprintf(stderr,"Warning: Failed to find Version.txt anywhere, using %s as home.\n", HOMESUBDIR.c_str());
 	}
 #if !defined(VS_HOME_INSIDE_DATA)
 # if !defined(_WIN32)
@@ -214,30 +216,26 @@ string gethomedir(const char * base) {
     return std::string(homepath);
 }
 
-std::pair<std::string,std::string> getbindir(const char *argv0, const char * base) {
+std::pair<std::string,std::string> getfiledir(const char *argv0, const char * base) {
     std::string bindir;
     std::string basename = argv0;
 
     char tmppwd[65535];
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     std::string origpath = tmppwd;
+    if (base)
+        chdir(base);
 
-    for (const char * dir = argv0 + strlen(argv0) - 1; *dir && dir >= argv0; --dir) {
-        if (*dir == '/' || *dir == '\\') {
-            bindir = (dir == argv0) ? "/" : std::string(argv0, 0, dir - argv0);
-            basename = std::string(dir + 1);
-            break ;
-        }
-    }
+    const char * tmp = argv0 + strlen(argv0) - 1;
 
-    if (bindir.empty() || (bindir[0] != '/'
-#if defined(_WIN32)
-    && bindir[0] != '\\' && (tolower(bindir[0]) < 'a' || tolower(bindir[0]) > 'z'
-                             || (strncmp(bindir.c_str()+1, ":\\",2) && strncmp(bindir.c_str()+1, ":/", 2)))
-#endif
-    )) {
-       bindir = (std::string(base != NULL ? base : origpath.c_str()) + "/") + bindir;
+    while (tmp >= argv0 && *tmp != '/' && *tmp != *PATHSEP) {
+        --tmp;
     }
+    basename = std::string(tmp+1);
+    if (tmp >= argv0) 
+        bindir = std::string(argv0, tmp - argv0) + PATHSEP; 
+    else 
+        bindir = ".";
 
     chdir(bindir.c_str());
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;

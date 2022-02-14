@@ -34,14 +34,15 @@ extern const char * datadirs[];
 
 // Returns where the data directory is. Returns the "" if it can't find the data dir.
 // Note: When it returns it has already changed dir to where the data directory is
+//       if base is given, it will search into first, then in current directory.
 std::string getdatadir(const char * base = NULL);
 
 // Returns where the home directory is. Returns the "" if it can't find the home dir.
 // Note: cwd is not changed, but directory is created if not existing.
 std::string gethomedir(const char * base = NULL);
 
-// Return a pair <binary_dir,exec_name> for argv0, without changing current directory
-std::pair<std::string,std::string> getbindir(const char *argv0, const char * base = NULL);
+// Return a pair <file_dir,file_name> for argv0, without changing current directory
+std::pair<std::string,std::string> getfiledir(const char *argv0, const char * base = NULL);
 
 #if defined(_WIN32)
 // Get user LocalAppData folder

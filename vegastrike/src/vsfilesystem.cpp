@@ -655,7 +655,11 @@ std::string vegastrike_cwd;
 		WCHAR wappdata_path[PATH_MAX];
 		CHAR appdata_path[PATH_MAX];
 		if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {
-			homedir = datadir + "/" + HOMESUBDIR;
+		    if (datadir.empty()) {
+                CONFIG_LOG(logvs::ERROR, "DATADIR NOT FOUND !!!");
+			    VSExit(1);
+            }
+            homedir = datadir + "/" + HOMESUBDIR;
 		} else {
             size_t i8 = 0;
 			for (size_t i16 = 0; wappdata_path[i16]; ++i16) {
@@ -667,12 +671,24 @@ std::string vegastrike_cwd;
 		}
 # endif
 #else
+        if (datadir.empty()) {
+            CONFIG_LOG(logvs::ERROR, "DATADIR NOT FOUND !!!");
+			VSExit(1);
+        }
 		homedir = datadir + "/" + HOMESUBDIR;
 #endif
 		CONFIG_LOG(logvs::NOTICE, "USING HOMEDIR : %s As the home directory ", homedir.c_str());
 		if (CreateDirectoryAbs(homedir) > Ok) {
 			VSExit(1);
 		}
+        if (datadir.empty()) {
+            datadir = homedir;
+            CONFIG_LOG(logvs::WARN, "Warning: DATADIR not found, using HOMEDIR as the data directory");
+        }
+
+        // Get the mods path
+		moddir = datadir+"/"+string( "mods");
+		CONFIG_LOG(logvs::NOTICE, "Using MODDIR = %s", moddir.c_str());
 	}
 
 	void	InitDataDirectory()
@@ -766,10 +782,6 @@ std::string vegastrike_cwd;
 				CONFIG_LOG(logvs::NOTICE, "Using %s as the home directory",hsd.c_str());
 			}
 		}
-
-		// Get the mods path
-		moddir = datadir+"/"+string( "mods");
-		CONFIG_LOG(logvs::NOTICE, "Using MODDIR = %s", moddir.c_str());
 	}
 
 	// Config file has been loaded from data dir but now we look at the specified moddir in order

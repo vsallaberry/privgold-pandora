@@ -34,6 +34,7 @@
 #include <Python.h>
 #include "options.h"
 #include "log.h"
+#include "common/common.h"
 
 extern vs_options game_options;
 
@@ -1069,16 +1070,9 @@ namespace UniverseUtil
         if (strcasecmp(logfile.c_str(), "stdout") == 0 || strcasecmp(logfile.c_str(), "stderr") == 0) {
             return logfile;
         }
-        if (logfile[0] != '/'
-#if defined(WIN32)
-                && logfile[0] != '\\' && (tolower(logfile[0]) < 'a' || tolower(logfile[0]) > 'z'
-                    || (strncmp(logfile.c_str()+1, ":\\",2) && strncmp(logfile.c_str()+1, ":/", 2)))
-#endif
-        ) {
-            // This is a relative path, making it from home dir
-            logfile = (VSFileSystem::homedir + VSFS_PATHSEP) + logfile;
-        }
-        return logfile; // currently only stderr and none supported
+        std::pair<std::string,std::string> logdir = VSCommon::getfiledir(logfile.c_str(), VSFileSystem::homedir.c_str());
+        logfile = (logdir.first + VSFS_PATHSEP) + logdir.second;
+        return logfile;
     }
 
     int LogPrint(const std::string & message, const std::string & module) {
