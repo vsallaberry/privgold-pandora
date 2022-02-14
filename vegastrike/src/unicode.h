@@ -83,13 +83,6 @@ typedef int wchar_t;
  //
  -------------------------------------------------*/
 
-#if 0
-# define UTF8_ITERATOR_DEBUG(...) fprintf(stderr, __VA_ARGS__)
-#else
-static inline int utf8_debug_dummy() { return 0; }
-# define UTF8_ITERATOR_DEBUG(...) utf8_debug_dummy()
-#endif
-
 
 /* *****************************************
  * global methods

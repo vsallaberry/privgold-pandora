@@ -70,6 +70,8 @@
 
 #include "log.h"
 
+#define UTF8_ITERATOR_DEBUG(...) VS_DBG("unicode", logvs::DBG+3, __VA_ARGS__)
+
 // -----------------------------
 // utf8/utf32 simple conversions
 // -----------------------------
@@ -117,6 +119,9 @@ size_t utf32_to_utf8(char * dst, wchar_t utf32) {
 // -----------------------------
 unsigned int Utf8Iterator::_default_flags = U8F_COMBINE;
 
+// In order to handle old HFS deccomposed unicode form, we read a character in
+// advance to check if it needs to be recomposed (NFD->NFC).
+
 void Utf8Iterator::init() {
     memset(&_mbstate, 0, sizeof(_mbstate));
     _incr = _nextincr = _pos = 0;
@@ -126,13 +131,17 @@ void Utf8Iterator::init() {
 }
 
 Utf8Iterator & Utf8Iterator::operator++() {
-    _pos += _incr;
-    next();
+    if (_pos < _size) {
+        _pos += _incr;
+        next();
+    }
     return *this;
 }
 
 //#define UTF8_ITERATOR_DEBUG(...) (fprintf(stderr, __VA_ARGS__) + fputc('\n', stderr) * 0)
 Utf8Iterator & Utf8Iterator::operator--() {
+  if (_pos == 0)
+      return *this;
   wchar_t save_next = _value;
   size_t save_incr = _incr, combine_incr;
   _nextvalue = (size_t)(1<<16); // to disable combination, on first pass.
@@ -168,7 +177,6 @@ Utf8Iterator & Utf8Iterator::operator--() {
                       _pos, _str[_pos]&0xff, _value, _nextvalue);
   return *this;
 }
-//#undef UTF8_ITERATOR_DEBUG
 
 void Utf8Iterator::next() {
     size_t nextpos = _pos + _nextincr;
@@ -379,7 +387,8 @@ static wchar_t u8towc(const std::string & s, size_t u8index, size_t * pu8len) {
     const char * cstr = s.c_str() + u8index;
     wchar_t wc, comb_wc; 
     ssize_t u8len = mbtowc(&wc, cstr, MB_CUR_MAX), comb8len;
-    TEST(HDR, u8len >= 0);
+    TEST(HDR, u8len >= 0 && u8len != (size_t)-1);
+    if (u8len == (size_t)-1) mbtowc(&wc, NULL, 0);
     if (u8len <= 0)
         return 0;
     if (u8index + u8len < s.length() 
@@ -398,12 +407,16 @@ static wchar_t u8itowc_l(const std::string & s, size_t wcindex, size_t * u8index
     wchar_t wc;
     size_t u8i = 0; 
     ssize_t u8len;
-    for (size_t wci = 0; wci < wcindex; ++wci, u8i += u8len) {
-        u8len = mbtowc(&wc, cstr + u8i, (size_t)-1);
+    for (size_t wci = 0; wci <= wcindex; ++wci, u8i += u8len) {
+        u8len = mbtowc(&wc, cstr + u8i, s.length() - u8i + 1);
+        TEST(HDR, u8len >= 0 && u8len != (size_t)-1);
+        if (!u8len) break ;
+        if (u8len == (size_t)-1) mbtowc(&wc, NULL, 0);
         if (wci > 0 && unicode_combinable(wc)) {
             --wci;
         }
-        TEST(HDR, u8len >= 0);
+        if (wci >= wcindex)
+            break ;
     }
     if (u8index) 
         *u8index = u8i;
@@ -422,11 +435,9 @@ static inline size_t u8index(const std::string & s, size_t wcindex) {
 }
 
 template <typename charT>
-static unsigned int big_u8it_test(std::basic_ostream<charT> & out) { //, const Utf8Iterator _end) {
+static unsigned int big_u8it_test(std::basic_ostream<charT> & out, const std::string & s) {
     unsigned int errs = 0;
-    std::string s("abcdefghijklmnopqrstuvwxyzéAe");//\xcc\x81ài\xcc\x81");
-    const Utf8Iterator begin = Utf8Iterator::begin(s);
-    const Utf8Iterator end=begin.end();
+    const Utf8Iterator begin = Utf8Iterator::begin(s), end=begin.end();
 
     out << "u8string(big operator tests): '";
     for (Utf8Iterator it = begin; it != end; ++it) {
@@ -452,22 +463,23 @@ static unsigned int big_u8it_test(std::basic_ostream<charT> & out) { //, const U
         Utf8Iterator itmin_pre = it; Utf8Iterator itmin_pre_val = --itmin_pre;
         Utf8Iterator itplus_post = it; size_t itplus_oldpos = (itplus_post++).pos();
         Utf8Iterator itmin_post = it; size_t itmin_oldpos = (itmin_post--).pos();
+        size_t idx;
 
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itplus_pre_val == itplus_pre, it_counter, itplus_pre_val.pos(),*itplus_pre_val);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itplus_pre.pos() == srange(s, ustr_counter + mbl), it_counter, itplus_pre.pos(),*itplus_pre);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",*itplus_pre == u8towc(s, srange(s, ustr_counter + mbl), NULL), it_counter, itplus_pre.pos(),*itplus_pre);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itplus_pre_val == itplus_pre, it_counter, itplus_pre_val.pos(),*itplus_pre_val);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itplus_pre.pos() == srange(s, ustr_counter + mbl), it_counter, itplus_pre.pos(),*itplus_pre);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",*itplus_pre == u8towc(s, srange(s, ustr_counter + mbl), NULL), it_counter, itplus_pre.pos(),*itplus_pre);
 
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itmin_pre_val == itmin_pre, it_counter, itmin_pre_val.pos(),*itmin_pre_val);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itmin_pre.pos() == srange(s, ustr_counter_prev), it_counter, itmin_pre.pos(),*itmin_pre);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",*itmin_pre == u8towc(s, srange(s, ustr_counter_prev), NULL), it_counter, itmin_pre.pos(),*itmin_pre);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itmin_pre_val == itmin_pre, it_counter, itmin_pre_val.pos(),*itmin_pre_val);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itmin_pre.pos() == srange(s, ustr_counter_prev), it_counter, itmin_pre.pos(),*itmin_pre);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc,%x)",*itmin_pre == u8towc(s, srange(s, ustr_counter_prev), NULL), it_counter, itmin_pre.pos(),*itmin_pre,*itmin_pre);
 
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itplus_post.pos() == srange(s, ustr_counter + mbl), it_counter, itplus_post.pos(),*itplus_post);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",*itplus_post == u8towc(s,srange(s,ustr_counter + mbl), NULL), it_counter, itplus_post.pos(),*itplus_post);
-        errs += TESTV(HDR "(idx:%zd,opos:%zu,ov:%c)",itplus_oldpos == it.pos(), ustr_counter, itplus_oldpos,*it);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itplus_post.pos() == srange(s, ustr_counter + mbl), it_counter, itplus_post.pos(),*itplus_post);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",*itplus_post == u8towc(s,srange(s,ustr_counter + mbl), NULL), it_counter, itplus_post.pos(),*itplus_post);
+        errs += TESTV(HDR "(idx:%zd,opos:%zu,ov:%lc)",itplus_oldpos == it.pos(), ustr_counter, itplus_oldpos,*it);
 
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",itmin_post.pos() == srange(s, ustr_counter_prev), it_counter, itmin_post.pos(),*itmin_post);
-        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%c)",*itmin_post == u8towc(s, srange(s, ustr_counter_prev), NULL), it_counter, itmin_post.pos(),*itmin_post);
-        errs += TESTV(HDR "(idx:%zd,opos:%zu,ov:%c)",itmin_oldpos == it.pos(), ustr_counter, itmin_oldpos,*it);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",itmin_post.pos() == srange(s, ustr_counter_prev), it_counter, itmin_post.pos(),*itmin_post);
+        errs += TESTV(HDR "(idx:%zd,pos:%zu,v:%lc)",*itmin_post == u8towc(s, srange(s, ustr_counter_prev), NULL), it_counter, itmin_post.pos(),*itmin_post);
+        errs += TESTV(HDR "(idx:%zd,opos:%zu,ov:%lc)",itmin_oldpos == it.pos(), ustr_counter, itmin_oldpos,*it);
 
         for (ssize_t i = -s.size() - 5; i < (ssize_t)(s.size() + 5); ++i) {
             Utf8Iterator itplus = it + i;
@@ -475,19 +487,37 @@ static unsigned int big_u8it_test(std::basic_ostream<charT> & out) { //, const U
             Utf8Iterator itplus_eq = it; Utf8Iterator itplus_eq_val = (itplus_eq += i);
             Utf8Iterator itmin_eq = it; Utf8Iterator itmin_eq_val = (itmin_eq -= i);
 
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itplus.pos() == u8index(s, srange(s, it_counter +i)), i, it_counter, itplus.pos(),*itplus);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",*itplus == u8itowc(s, srange(s, it_counter + i)), i, it_counter, itplus.pos(),*itplus);
+            size_t u8index_plusi = MAX(0, (ssize_t)it_counter+i);
+            size_t u8index_minusi = MAX(0, (ssize_t)it_counter-i);
 
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itmin.pos() == u8index(s, srange(s, it_counter - i)), i, it_counter, itmin.pos(),*itmin);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",*itmin == u8itowc(s, srange(s, it_counter - i)), i, it_counter, itmin.pos(),*itmin);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itplus.pos() == (idx=u8index(s, u8index_plusi)), i,it_counter,it.pos(),itplus.pos(),*itplus,idx);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itplus == u8itowc(s, u8index_plusi), i,it_counter,it.pos(),itplus.pos(),*itplus);
 
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itplus_eq.pos() == u8index(s, srange(s,it_counter+i)),i,it_counter, itplus_eq.pos(),*itplus_eq);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",*itplus_eq == u8itowc(s, srange(s,it_counter+i)), i, it_counter, itplus_eq.pos(),*itplus_eq);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itplus_eq == itplus_eq_val, i, it_counter, itplus_eq_val.pos(),*itplus_eq_val);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itmin.pos() == (idx=u8index(s, u8index_minusi)), i,it_counter,it.pos(),itmin.pos(),*itmin, idx);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itmin == u8itowc(s, u8index_minusi), i,it_counter,it.pos(),itmin.pos(),*itmin);
 
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itmin_eq.pos() == u8index(s, srange(s, it_counter-i)), i, it_counter, itmin_eq.pos(),*itmin_eq);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",*itmin_eq == u8itowc(s, srange(s, it_counter - i)), i, it_counter, itmin_eq.pos(),*itmin_eq);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu,v:%c)",itmin_eq == itmin_eq_val, i, it_counter, itmin_eq_val.pos(),*itmin_eq_val);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itplus_eq.pos() == (idx=u8index(s, u8index_plusi)), i,it_counter,it.pos(),itplus_eq.pos(),*itplus_eq,idx);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itplus_eq == u8itowc(s, u8index_plusi), i,it_counter,it.pos(),itplus_eq.pos(),*itplus_eq);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",itplus_eq == itplus_eq_val, i,it_counter,it.pos(),itplus_eq_val.pos(),*itplus_eq_val);
+
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itmin_eq.pos() == (idx=u8index(s, u8index_minusi)), i,it_counter,it.pos(),itmin_eq.pos(),*itmin_eq,idx);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itmin_eq == u8itowc(s, u8index_minusi), i,it_counter,it.pos(),itmin_eq.pos(),*itmin_eq);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",itmin_eq == itmin_eq_val, i,it_counter,it.pos(),itmin_eq_val.pos(),*itmin_eq_val);
+        }
+    }
+
+    // go up to end, then go backward and re-go forward once. each loop it,it+1,it-1 are checked. 
+    it_counter = mbl = 0;
+    for (Utf8Iterator it = begin; mbl < 2 && it != end; ++it, ++it_counter) {
+        TEST(HDR, *it == u8itowc(s, it_counter));
+        if (it + 1 == end) {
+            for (++it_counter, it+=2; it != begin; --it, --it_counter) {
+                TEST(HDR, *it == u8itowc(s, it_counter));
+                TEST(HDR, *(it+1) == u8itowc(s, it_counter + 1));
+                TEST(HDR, *(it-1) == u8itowc(s, it_counter - 1));
+            }
+            --it;
+            ++mbl;
         }
     }
 
@@ -570,7 +600,14 @@ int utf8_iterator_test() {
     errs += test_one_str(out, std::string(strlen(cs)>=5?cs+5:"").substr(0,s.size()-1), Utf8Iterator::begin(cs + 5, s.size()-5-1));
 
     errs += little_u8it_test(out);
-    errs += big_u8it_test(out);
+
+    s = "abcdefghijklmnopqrstuvwxyzéAe\xcc\x81ài\xcc\x81";
+    errs += big_u8it_test(out, s);
+    errs += big_u8it_test(out, s.substr(0,s.length()-2)); // skip last combinable
+    errs += big_u8it_test(out, s.substr(1,s.length()-3-1)); // from 'b' to the last 'à'
+    errs += big_u8it_test(out, s.substr(1,s.length()-5-1)); // from 'b' to the first \xcc\x81
+    errs += big_u8it_test(out, s.substr(29,s.length()-5-29)); // from 2nd 'e'(combi) up to the first \xcc\x81
+    errs += big_u8it_test(out, s.substr(30,s.length()-2-30)); // from first \xcc\x81 
 
     out << "Utf8Iterator: " << n_tests << " test(s), " << errs << " error(s)." << std::endl;
 
