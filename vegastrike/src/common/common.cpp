@@ -254,10 +254,9 @@ bool InitConsole(bool forcealloc) {
 }
 #else
 bool InitConsole(bool forcealloc) {
-    int hascons = 0;
     HWND cons=GetConsoleWindow();
     if (cons == (HWND)0) {
-        hascons = AttachConsole(ATTACH_PARENT_PROCESS);
+        int hascons = AttachConsole(ATTACH_PARENT_PROCESS);
         cons=GetConsoleWindow();
         if (cons == (HWND)0 && forcealloc) {
             hascons = AllocConsole();
@@ -287,6 +286,91 @@ bool InitConsole(bool forcealloc) {
     return true;
 }
 #endif // ! _WIN32
+
+// ---------------------------------------------------------------------
+bool getFileId(const char * file, file_id_t * id) {
+    if (id != NULL)
+        memset(id, 0, sizeof(*id));
+    if (file == NULL || id == NULL)
+        return false;
+#ifdef _WIN32
+    // inspired by gnu coreutils stat win32 lib
+    BY_HANDLE_FILE_INFORMATION info;
+    HANDLE h;
+    bool ret = false;
+    h = CreateFile (file, FILE_READ_ATTRIBUTES,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                    NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (h == INVALID_HANDLE_VALUE)
+        return ret;
+    if (GetFileInformationByHandle (h, &info)) {
+        id->dev = info.dwVolumeSerialNumber;
+        id->ino = ((ULONGLONG) info.nFileIndexHigh << 32) | (ULONGLONG) info.nFileIndexLow;
+        ret = true;
+    }
+    CloseHandle(h);
+    return ret;
+#else
+    struct stat st;
+    if (stat(file, &st) < 0)
+        return false;
+    id->dev = st.st_dev;
+    id->ino = st.st_ino;
+    return true;
+#endif
+}
+
+ssize_t fileIdCompare(file_id_t * id, file_id_t * other) {
+    if (id == other)
+        return 0;
+    if (!id || !other)
+        return (ssize_t) (id - other);
+    return (ssize_t) memcmp(id, other, sizeof(*id));
+}
+
+#if !defined(_WIN32)
+# define GetModuleFileName(x, dst, size) snprintf(dst, size, "vegastrike")
+#endif
+bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned int flags) {
+    char *argv0 = (char*) malloc(65535);
+    int argc = 1;
+    char ** argv = (char**) malloc((argc + 1) * sizeof(*argv)); 
+    *argv = argv0;
+    GetModuleFileName(NULL, argv0, 65534);
+    char * lpCmdLine = argv0 + strlen(argv0) + 1; // use remaining space in argv0 for cmdline
+    snprintf(lpCmdLine, 65535 - (lpCmdLine - argv0), "%s", cmdline);
+    while (*lpCmdLine) {
+        int escape = 0;
+        argv = (char**) realloc(argv, (argc+2)*sizeof(*argv));
+        char * arg = argv[argc++] = lpCmdLine;
+        while (*lpCmdLine && (escape || *lpCmdLine != ' ')) {
+            if ((flags & (WCMDF_ESCAPE_DQUOTES|WCMDF_ESCAPE_BACKSLASH)) != 0
+                    &&  *lpCmdLine == '\\' && (lpCmdLine[1] == '"' || (flags & WCMDF_ESCAPE_BACKSLASH)) != 0) { 
+                *arg++ = *(++lpCmdLine); 
+                ++lpCmdLine; 
+            }
+            else if ((flags & WCMDF_ESCAPE_DQUOTES) != 0 && *lpCmdLine == '"') { 
+                lpCmdLine++; 
+                escape = !escape; 
+            } else {
+                *arg++ = *lpCmdLine++;
+            }
+        }
+        *arg = *lpCmdLine++ = 0;
+    }
+    argv[argc] = NULL;
+    *pargv = argv;
+    *pargc = argc;
+    return true;
+}
+
+void ParseCmdLineFree(char ** argv) {
+    if (argv) {
+        if (argv[0])
+            free(argv[0]);
+        free(argv);
+    }
+}
 
 } // ! namespace VSCommon
 

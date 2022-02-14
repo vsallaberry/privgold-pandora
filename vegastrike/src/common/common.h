@@ -44,6 +44,7 @@ std::string gethomedir(const char * base = NULL);
 std::pair<std::string,std::string> getbindir(const char *argv0, const char * base = NULL);
 
 #if defined(_WIN32)
+// Get user LocalAppData folder
 HRESULT win32_get_appdata(WCHAR * wappdata);
 #endif // ! _WIN32
 
@@ -51,6 +52,19 @@ HRESULT win32_get_appdata(WCHAR * wappdata);
 // This will attach application to console if it is run from it.
 // On macOS, linux, unix the libc handle it automatically (except the forcealloc==true).
 bool InitConsole(bool forcealloc = false);
+
+// -- file comparisons
+typedef struct {
+    uint64_t dev;
+    uint64_t ino;
+} file_id_t;
+bool getFileId(const char * file, file_id_t * id);
+ssize_t fileIdCompare(file_id_t * id, file_id_t * other);
+
+// Translate lpCmdLine to argc, argv (for WinMain). If not win32, argv[0] has not signification. 
+enum wcmd_flags { WCMDF_NONE = 0, WCMDF_ESCAPE_DQUOTES = 1 << 0, WCMDF_ESCAPE_BACKSLASH = 1 << 1 };
+bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES);
+void ParseCmdLineFree(char ** argv);
 
 } // ! namespace VSCommon
 
