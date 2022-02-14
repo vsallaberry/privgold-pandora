@@ -90,7 +90,7 @@ bool InitConfig() {
         configfile = VSLAUNCH_CONFFILE; 
         VS_LOG("config", logvs::WARN, "Warning: cannot get configfile name, using %s", configfile.c_str());
     } else {
-        VS_LOG("config", logvs::WARN, "Using configfile %s", configfile.c_str());
+        VS_LOG("config", logvs::NOTICE, "Using configfile %s", configfile.c_str());
     }
     chdir(homedir.c_str());
     if ((fp = fopen(configfile.c_str(), "r")) == NULL) {
@@ -234,7 +234,7 @@ int main( int   argc,
     // Quick launch mode if the launcher has the name of vegastrike or vssetup
     if ((flags & F_RUN_VEGASTRIKE) != 0 || ((flags & F_RUN_VSSETUP) == 0 &&
         strncmp(bindir.second.c_str(), VSLAUNCH_BINARY, sizeof(VSLAUNCH_BINARY)-1) == 0)) {
-        std::string program = !checkModifier() ? vegastrikebin : vssetupbin;
+        std::string program = ((flags & F_RUN_VEGASTRIKE) != 0 || !checkModifier()) ? vegastrikebin : vssetupbin;
         changeToData();
         if (VSLAUNCH_RUN_PROCESS(program.c_str(), program.c_str(), NULL) == -1) {
             VS_LOG("vslauncher", logvs::ERROR, "ERROR: cannot launch %s", program.c_str());

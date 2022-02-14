@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     if (*shortcut == NULL) 
         shortcut = shortcuts;
     fprintf(stderr, "run %s %s\n", shortcut[1], shortcut[2]);
-    if (doexec(shortcut[1], shortcut+1) < 0) {
+    if (doexec(shortcut[1], shortcut+1) == -1) {
         fprintf(stderr, "error launching %s\n", shortcut[1]);
         return -1;
     }
