@@ -269,7 +269,7 @@ int main( int argc, char *argv[] )
 {
     VSCommon::InitConsole(); // Essentially for win32: application built in GUI mode (-mwindows) attaches to console when it is run from it
     logvs::log_setfile(stdout);
-    logvs::log_setflags(logvs::F_NONE | logvs::F_QUEUELOGS);
+    logvs::log_setflags(logvs::F_NONE | logvs::F_FOOTER | logvs::F_QUEUELOGS);
     atexit(logvs::log_terminate);
 
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
