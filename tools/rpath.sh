@@ -66,14 +66,14 @@ case "${build_sysname}" in
         chrpath=$(which chrpath 2> /dev/null)
         rp_current_target=
         rp_current_rpath=
-        install_name_tool() { 
-            test -x ${chrpath} || return 0
+        install_name_tool() {
+            test -x "${chrpath}" || return 0
             case "$1" in
                 -add_rpath) local rpath=$2 target=$3; test "${target}" = "${rp_current_target}" || rp_current_rpath=
                             rp_current_rpath="${rp_current_rpath}${rp_current_rpath:+:}${rpath}"
-                            chrpath -r "${rp_current_rpath}" "${target}"
+                            "${chrpath}" -r "${rp_current_rpath}" "${target}"
                             rp_current_target=${target};;
-                -id) local libname=$2 target=$3; chrpath -r "${rp_current_rpath}" "${target}";;
+                -id) local libname=$2 target=$3; "${chrpath}" -r "${rp_current_rpath}" "${target}";;
                 -change) local olddep=$2 newdep=$3 target=$4;;
             esac
         }
