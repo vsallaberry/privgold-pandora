@@ -9,7 +9,7 @@ int RunInterface(int * pargc, char *** pargv) {
     (void)pargv;
 
     changeToData();
-    std::string program = checkModifiers() ? vssetupbin : vegastrikebin;
+    std::string program = checkModifier() ? vssetupbin : vegastrikebin;
 
     if (VSLAUNCH_RUN_PROCESS(program.c_str(), program.c_str(), NULL) == -1) {
         fprintf(stderr, "ERROR: cannot launch %s\n", program.c_str());
