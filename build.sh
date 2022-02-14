@@ -861,6 +861,7 @@ do_delivery_fun() {
     bundle_tools="${mydir}/tools/macos_bundle"
     bundle_src="${bundle_tools}/PrivateerGold.app"
     checkkeys_dir="${bundle_tools}/checkModifierKeys"
+    hardshortcut_dir="${mydir}/tools/hardshortcut"
 
     this_bundle="${deliverydir}/bundle/PrivateerGold.this.app"
     other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs/PrivateerGold.app"
@@ -961,7 +962,7 @@ do_delivery_fun() {
                 mkdir -p "${bundledir}/etc" && cp -a "${VEGA_PREFIX}/share/alsa" "${bundledir}/etc/alsa" || exit $?
                 ;;
             mingw*|msys*|cygwin*)
-                xcopy "${mydir}/tools/windows_bundle/PrivateerGold/" "${bundledir}" || exit $?
+                #xcopy "${mydir}/tools/windows_bundle/PrivateerGold/" "${bundledir}" || exit $?
                 ;;
         esac
     }
@@ -1021,6 +1022,18 @@ do_delivery_fun() {
             "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
             xcopy "${checkkeys_dir}/checkModifierKeys${exe}" "${bundle_bindir}" || exit $?
             ;;
+        mingw*|cygwin*|msys*|win*)
+            relbin=${bundle_bindir#${bundledir}/}
+            os=${target_sysname}
+            shortcuts="\{\\\"privgold\\\",\\\"${relbin}/vslauncher${exe}\\\",\\\"--run\\\",NULL,\\\"privsetup\\\",\\\"${relbin}/vssetup${exe}\\\",NULL,NULL\}"
+            case "${target_sysname}" in mingw*|cygwin*|msys*|win*) os=WIN32;; esac
+            "${MAKE}" distclean OS="${os}" -C "${hardshortcut_dir}"  \
+            && "${MAKE}" -C "${hardshortcut_dir}" OS="${os}" SHORTCUT_CPPFLAGS="-I${mainbuilddir} -I${target} -DHAVE_VERSION_H" \
+                         SHORTCUT_CFLAGS="-DSHORTCUTS=${shortcuts}" || exit $?
+            xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privgold${exe}" || exit $?
+            xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privsetup${exe}" || exit $?
+            ;;
+
     esac
 
     # handle executables rpaths: vegastrike*
@@ -1172,7 +1185,7 @@ do_delivery_fun() {
             (cd "${deliverydir}/bundle" && tar cjf "${package_name}" "PrivateerGold" ) || exit 1
             ;;
         *.[zZ][iI][pP])
-            (cd "${deliverydir}/bundle" && zip -r "${package_name}" "PrivateerGold" ) || exit 1
+            (cd "${deliverydir}/bundle" && zip -q -r "${package_name}" "PrivateerGold" ) || exit 1
             ;;
     esac
     (cd "$(dirname "${package_name}")" && shasum -a256 "$(basename "${package_name}")" > "${package_name}.sha256" \
