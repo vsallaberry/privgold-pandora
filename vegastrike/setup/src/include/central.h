@@ -84,6 +84,7 @@ extern struct global_settings CONFIG;
 extern char origpath[65536];
 extern char binpath[65536];
 extern char resourcespath[65536];
+extern char homepath[65536];
 
 #if !defined(HAVE_SETENV)
 int setenv(const char * var, const char * value, int override);

@@ -7,6 +7,7 @@
 #ifndef _WIN32
 # include <unistd.h>
 #endif
+#include "log.h"
 
 //#define COLS 80
 //#define ROWS 24
@@ -47,6 +48,9 @@ void InitGraphics (int* argc,char*** argv){
   snprintf(terminfodir, sizeof(terminfodir), "%s/share/terminfo%s%s", resourcespath, 
            old_terminfodir ? ":" : "", old_terminfodir ? old_terminfodir : "");
   setenv("TERMINFO_DIRS", terminfodir, 1);
+
+  // disable redirections that disturb ncurses
+  logvs::log_openfile("", std::string(homepath) + "/vssetup.log", /*redirect=*/false, /*append=*/true);
 
   init_dialog (stdin, stdout);
   if (*strings == NULL) {
@@ -241,6 +245,7 @@ void ShowMain() {
   if (ret == DLG_EXIT_CANCEL) {
     ShowReadme();
   }
+  logvs::log_terminate(); // atexit(logsvs::log_terminate) does not work with dlg_exit()
   dlg_exit(0);
 }
 #endif

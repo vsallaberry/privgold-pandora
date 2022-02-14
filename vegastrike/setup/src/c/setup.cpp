@@ -48,6 +48,7 @@ using std::vector;
 char binpath[65536];
 char origpath[65536];
 char resourcespath[65536];
+char homepath[65536];
 
 #if !defined(HAVE_SETENV)
 int setenv(const char * var, const char * value, int override) {	
@@ -111,19 +112,17 @@ static void changeToProgramDirectory(char *argv0) {
 
 
 #if defined(_WINDOWS)&&defined(_WIN32)
-typedef char FileNameCharType [65536];
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
-	char*argv0= new char[65535];
-	char **argv=&argv0;
-	int argc=0;
-	strcpy(argv0,origpath);
-	GetModuleFileName(NULL, argv0, 65534);
+    char ** argv;
+    int argc;
+    VSCommon::ParseCmdLine(lpCmdLine, &argc, &argv);
+    char*argv0 = argv[0];
 #else
 int main(int argc, char *argv[]) {
 #endif
     const char * pathorder[] = { binpath, ".", NULL };
 
-    VSCommon::InitConsole();
+    bool has_console = VSCommon::InitConsole();
     logvs::log_setfile(stdout);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
@@ -134,10 +133,12 @@ int main(int argc, char *argv[]) {
             }
 		} else {
 			VS_LOG("vssetup", logvs::WARN, "Usage: vssetup [--target DATADIR] [-DDATADIR]");
-			return 1;
+			if (has_console)
+                return 1;
 		}
 	}
-	getcwd (origpath,sizeof(origpath)-1);
+
+    getcwd (origpath,sizeof(origpath)-1);
 	origpath[sizeof(origpath)-1]=0;
     VS_LOG("vssetup", logvs::NOTICE, " In path %s", origpath);
 
@@ -247,17 +248,16 @@ int main(int argc, char *argv[]) {
               );
 	chdir (HOMESUBDIR.c_str());
     
-    char tmp_path[16384];
-    getcwd(tmp_path,16384);
-    tmp_path[16383]=0;
-    VS_LOG("vssetup", logvs::NOTICE, "Now in Home Dir: %s", tmp_path);
+    getcwd(homepath,sizeof(homepath));
+    homepath[sizeof(homepath)-1]=0;
+    VS_LOG("vssetup", logvs::NOTICE, "Now in Home Dir: %s", homepath);
 
-    logvs::log_openfile("", std::string(tmp_path) + "/vssetup.log", /*redirect=*/true, /*append=*/false);
+    logvs::log_openfile("", std::string(homepath) + "/vssetup.log", /*redirect=*/true, /*append=*/false);
     atexit(logvs::log_terminate);
- 
+
 	Start(&argc,&argv);
 #if defined(_WINDOWS)&&defined(_WIN32)
-	delete []argv0;
+	VSCommon::ParseCmdLineFree(argv);
 #endif
 	return 0;
 }
