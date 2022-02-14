@@ -1,7 +1,11 @@
 #if defined(_WIN32) //|| defined(WIN32) || defined(WINDOWS) || defined(_WINDOWS) 
 # include <windows.h>
 # include <process.h>
-# define doexec(name, ...) _spawnv(P_NOWAIT, name, __VA_ARGS__)
+# ifdef SHORTCUT_EXECPATH
+#  define doexec(name, ...) _spawnvp(P_NOWAIT, name, __VA_ARGS__)
+# else
+#  define doexec(name, ...) _spawnv(P_NOWAIT, name, __VA_ARGS__)
+#endif
 # define EXEC_CONST const
 # define PATHSEP ("\\")
 # if defined(__CYGWIN__) || defined(__MINGW__)
@@ -11,7 +15,11 @@
 # endif
 #else
 # include <unistd.h>
-# define doexec(name, ...) execv(name, __VA_ARGS__)
+# ifdef SHORTCUT_EXECPATH
+#  define doexec(name, ...) execvp(name, __VA_ARGS__)
+# else
+#  define doexec(name, ...) execv(name, __VA_ARGS__)
+# endif
 # define EXEC_CONST
 # define PATHSEP ("/")
 #endif

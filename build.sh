@@ -518,7 +518,7 @@ do_build_fun() {
                 #add_config_args -DCMAKE_INSTALL_RPATH="${rpaths}" -DCMAKE_BUILD_RPATH="${rpaths}"
                 #
                 #;${VEGA_PREFIX}/lib/libvorbisenc.${build_dllext}
-                
+
                 case "${target_sysname}" in
                     darwin*)
                         add_config_args \
@@ -1025,11 +1025,9 @@ do_delivery_fun() {
             ;;
         mingw*|cygwin*|msys*|win*)
             relbin=${bundle_bindir#${bundledir}/}
-            os=${target_sysname}
             shortcuts="\{\\\"privgold\\\",\\\"${relbin}/vslauncher${exe}\\\",\\\"--run\\\",NULL,\\\"privsetup\\\",\\\"${relbin}/vssetup${exe}\\\",NULL,NULL\}"
-            case "${target_sysname}" in mingw*|cygwin*|msys*|win*) os=WIN32;; esac
-            "${MAKE}" distclean OS="${os}" -C "${hardshortcut_dir}"  \
-            && "${MAKE}" -C "${hardshortcut_dir}" OS="${os}" SHORTCUT_CPPFLAGS="-I${mainbuilddir} -I${target} -DHAVE_VERSION_H" \
+            "${MAKE}" distclean -C "${hardshortcut_dir}"  \
+            && "${MAKE}" -C "${hardshortcut_dir}" SHORTCUT_CPPFLAGS="-I${mainbuilddir} -I${target} -DHAVE_VERSION_H" \
                          SHORTCUT_CFLAGS="-DSHORTCUTS=${shortcuts}" || exit $?
             xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privgold${exe}" || exit $?
             xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privsetup${exe}" || exit $?
@@ -1121,6 +1119,7 @@ do_delivery_fun() {
         archive_cleanup() { true; }
         trap archive_cleanup EXIT
         eval trap_backup=${trap_backup:-"-"}
+        printf -- "+ extracting ${other_bundle_ref_archive}...\n\n"
         case "${package_ext}" in
             .[dD][mM][gG])
                 archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}"; }
