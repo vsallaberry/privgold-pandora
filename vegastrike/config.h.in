@@ -40,6 +40,9 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
+/* apple_carbon */
+#undef HAVE_CARBON
+
 /* Define to 1 if you have the <climits> header file. */
 #undef HAVE_CLIMITS
 

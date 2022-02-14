@@ -1255,7 +1255,7 @@ vssetup_dlg_SOURCES = \
 
 if VS_MAKE_GTKUTILS
 VSLAUNCHER_SPECIFIC_SOURCES = launcher/saveinterface.cpp
-vslauncher_LDFLAGS = $(GTK_LIBS)
+vslauncher_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
 vslauncher_CXXFLAGS_GTK = $(GTK_CFLAGS)
 else
 VSLAUNCHER_SPECIFIC_SOURCES = launcher/nogui.cpp

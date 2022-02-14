@@ -8,10 +8,23 @@ SET(VSLAUNCHER_COMMON_SOURCES
 SET(VSLAUNCHER_GTK_SOURCES
                     saveinterface.cpp)
 
+SET(VSLAUNCHER_LIBS)
+SET(VSLAUNCHER_CPPFLAGS "-DVS_LOG_NO_XML")
+
 if (WIN32 AND NOT VS_WIN32_CONSOLE)
-    set(VSLAUNCHER_GTK_SOURCES ${VSLAUNCHER_GTK_SOURCES} launcher.rc)
+    find_program(WINDRES windres)
+    set(VSLAUNCHER_COMMON_SOURCES ${VSLAUNCHER_COMMON_SOURCES} launcher.rc)
+    set(VSLAUNCHER_LIBS ${VSLAUNCHER_LIBS} "-mwindows")
 endif()
 
+if(MACOSX OR APPLE)
+    find_library(APPLE_CARBON_LIBRARY Carbon)
+    if (APPLE_CARBON_LIBRARY)
+        message(STATUS "linking vslauncher with Carbon")
+        set(VSLAUNCHER_LIBS ${VSLAUNCHER_LIBS} ${APPLE_CARBON_LIBRARY})
+        set(VSLAUNCHER_CPPFLAGS ${VSLAUNCHER_CPPFLAGS} -DHAVE_CARBON)
+    endif()
+endif()
 
 SET(VSLAUNCHER_NOGUI_SOURCES
                     nogui.cpp)
@@ -36,12 +49,8 @@ ELSE(GTK2_FOUND)
     add_executable(vslauncher ${VSLAUNCHER_COMMON_SOURCES} ${VSLAUNCHER_NOGUI_SOURCES})
 ENDIF(GTK2_FOUND)
 
-if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)
-    target_link_libraries(vslauncher "-mwindows")
-    find_program(WINDRES windres)
-endif()
-
-target_compile_options(vslauncher PUBLIC "-DVS_LOG_NO_XML")
+target_link_libraries(vslauncher ${VSLAUNCHER_LIBS})
+target_compile_options(vslauncher PUBLIC ${VSLAUNCHER_CPPFLAGS})
 
 #add_definitions(${GTK_CFLAGS} ${DLG_CFLAGS})
 include_directories(${vsUTCS_SOURCE_DIR}/launcher ${vsUTCS_SOURCE_DIR}/src/common ${vsUTCS_SOURCE_DIR} ${vsUTCS_BINARY_DIR} ${GTK2_INCLUDE_DIRS})

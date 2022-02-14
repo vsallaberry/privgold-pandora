@@ -538,6 +538,18 @@ if test "x$is_macosx" = "xyes" ; then
     else
         VS_LIBS="${VS_LIBS}-L$with_python_libs "
     fi
+
+    saved_LIBS="${LIBS}"
+    LIBS="-framework Carbon"
+    AC_MSG_CHECKING([for ${LIBS}])
+    AC_TRY_LINK(, , [have_apple_carbon=yes], [have_apple_carbon=no])
+    if test "x$have_apple_carbon" = "xyes"; then
+        VS_APPLE_CARBON_LIBRARY="${LIBS}"
+        AC_DEFINE_UNQUOTED([HAVE_CARBON], [1], [apple_carbon])
+    fi
+    AC_SUBST(VS_APPLE_CARBON_LIBRARY)
+    LIBS="${saved_LIBS}"
+    AC_MSG_RESULT(${have_apple_carbon})
 fi
 
 

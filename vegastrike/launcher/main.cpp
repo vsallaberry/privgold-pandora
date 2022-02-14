@@ -2,6 +2,9 @@
 #if defined(_WIN32) && _MSC_VER > 1300 
 #define __restrict
 #endif
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,22 +119,31 @@ bool InitConfig() {
     return true;
 }
 
+static bool notFoundOrSame(const char * file, VSCommon::file_id_t * id_other) {
+    VSCommon::file_id_t id;
+    if (!VSCommon::getFileId(file, &id))
+        return true;
+    if (!id_other)
+        return false;
+    return VSCommon::fileIdCompare(&id, id_other) == 0;
+}
+
+enum vsl_flags { F_NONE = 0, F_RUN_VEGASTRIKE = 1 << 0, F_RUN_VSSETUP = 1 << 1 };
+
 #if defined(_WINDOWS)&&defined(_WIN32)
-typedef char FileNameCharType [65535];
-#include <windows.h>
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
-	FileNameCharType argvc;
-	FileNameCharType *argv= &argvc;
-	GetModuleFileName(NULL, argvc, 65534);
-	int argc=0;
+    char ** argv;
+    int argc;
+    VSCommon::ParseCmdLine(lpCmdLine, &argc, &argv);
 #else
 int main( int   argc,
           char *argv[] )
 {
 #endif
     char tmppwd[65535];
-    
-    VSCommon::InitConsole();
+    unsigned int flags = F_NONE;
+
+    bool has_console = VSCommon::InitConsole();
     logvs::log_setfile(stderr);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
@@ -139,9 +151,22 @@ int main( int   argc,
     VS_LOG("vslauncher", logvs::NOTICE, " In path %s", tmppwd);
     origpath = tmppwd;
     prog_arg = argv[0];
- 
+    
+    // command line options
+    for (int i_argv = 1; i_argv < argc; ++i_argv) {
+        if (!strcmp(argv[i_argv], "--run")) {
+            flags |= F_RUN_VEGASTRIKE;
+        } else if (!strcmp(argv[i_argv], "--setup")) {
+            flags |= F_RUN_VSSETUP;
+        } else if (has_console) {
+            logvs::log_printf("Usage: %s [--run|--setup]\n", argv[0]);
+            exit(0);
+        }
+    }
+
     // Init DATADIR
-    if ((datadir = VSCommon::getdatadir(origpath.c_str())).empty()) { // Will change to the data dir which makes selecting missions easier.
+    // Will change to the data dir which makes selecting missions easier.
+    if ((datadir = VSCommon::getdatadir(origpath.c_str())).empty()) { 
         datadir = origpath; 
         VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find data, using %s", datadir.c_str());
     } else {
@@ -168,20 +193,19 @@ int main( int   argc,
     } else {
         VS_LOG("vslauncher", logvs::NOTICE, "Found binary directory in %s (executable is %s)", bindir.first.c_str(), bindir.second.c_str());
     }
-    struct stat myst;
-    stat((bindir.first + "/" + bindir.second).c_str(), &myst);
+    VSCommon::file_id_t myid;
+    getFileId((bindir.first + "/" + bindir.second).c_str(), &myid);
 
     // Vegastrike binary
     for (const char ** bin = vslaunch_binsearchs; *bin; ++bin) {
         std::string vega_base((bindir.first + "/" + *bin) + "/" VSLAUNCH_BINARY);
         std::string vega = (vega_base + ".") + glengine + VSLAUNCH_EXE_EXT;
-        struct stat st;
-        if (stat(vega.c_str(), &st) < 0 || (st.st_dev == myst.st_dev && st.st_ino == myst.st_ino)) {
-            vega = (vega_base + "." VSLAUNCH_GLENGINE_DEF) + VSLAUNCH_EXE_EXT;
-            if (stat(vega.c_str(), &st) < 0 || (st.st_dev == myst.st_dev && st.st_ino == myst.st_ino)) {
+        if (notFoundOrSame(vega.c_str(), &myid)) {
+            vega = (vega_base + "." VSLAUNCH_GLENGINE_DEF VSLAUNCH_EXE_EXT);
+            if (notFoundOrSame(vega.c_str(), &myid)) {
                 vega = vega_base + VSLAUNCH_EXE_EXT;
-                if (stat(vega.c_str(), &st) < 0 || (st.st_dev == myst.st_dev && st.st_ino == myst.st_ino)) {
-                    continue ; // same as my on not found
+                if (notFoundOrSame(vega.c_str(), &myid)) {
+                    continue ; // same as me or not found
                 }
             }
         }
@@ -195,9 +219,8 @@ int main( int   argc,
 
     // vssetup binary
     for (const char ** bin = vslaunch_setupbinsearchs; *bin; ++bin) {
-        std::string vega((bindir.first + "/" + *bin) + "/" VSLAUNCH_SETUP_BINARY);
-        struct stat st;
-        if (stat(vega.c_str(), &st) < 0 || (st.st_dev == myst.st_dev && st.st_ino == myst.st_ino)) {
+        std::string vega((bindir.first + "/" + *bin) + "/" VSLAUNCH_SETUP_BINARY VSLAUNCH_EXE_EXT);
+        if (notFoundOrSame(vega.c_str(), &myid)) {
             continue ; // same as my on not found
         }
         vssetupbin = vega;
@@ -209,18 +232,52 @@ int main( int   argc,
     }
 
     // Quick launch mode if the launcher has the name of vegastrike or vssetup
-    if (strncmp(bindir.second.c_str(), VSLAUNCH_BINARY, sizeof(VSLAUNCH_BINARY)-1) == 0) {
+    if ((flags & F_RUN_VEGASTRIKE) != 0 || ((flags & F_RUN_VSSETUP) == 0 &&
+        strncmp(bindir.second.c_str(), VSLAUNCH_BINARY, sizeof(VSLAUNCH_BINARY)-1) == 0)) {
+        std::string program = !checkModifier() ? vegastrikebin : vssetupbin;
         changeToData();
-        if (VSLAUNCH_RUN_PROCESS(vegastrikebin.c_str(), vegastrikebin.c_str(), NULL) != 0) {
-            VS_LOG("vslauncher", logvs::ERROR, "ERROR: cannot launch %s", vegastrikebin.c_str());
-        } else return -1; // should not happen
-    } else if (strncmp(bindir.second.c_str(), VSLAUNCH_SETUP_BINARY, sizeof(VSLAUNCH_SETUP_BINARY)-1) == 0) {
+        if (VSLAUNCH_RUN_PROCESS(program.c_str(), program.c_str(), NULL) == -1) {
+            VS_LOG("vslauncher", logvs::ERROR, "ERROR: cannot launch %s", program.c_str());
+        } else return 0; // should not happen on macos/bsd/linux
+    } else if ((flags & F_RUN_VSSETUP) != 0 
+               || strncmp(bindir.second.c_str(), VSLAUNCH_SETUP_BINARY, sizeof(VSLAUNCH_SETUP_BINARY)-1) == 0) {
         changeToData();
-        if (VSLAUNCH_RUN_PROCESS(vssetupbin.c_str(), vssetupbin.c_str(), NULL) != 0) {
+        if (VSLAUNCH_RUN_PROCESS(vssetupbin.c_str(), vssetupbin.c_str(), NULL) == -1) {
             VS_LOG("vslauncher", logvs::ERROR, "ERROR: cannot launch %s", vssetupbin.c_str());
-        } else return -1; // should not happen
+        } else return 0; // should not happen on macos/bsd/linux
     }
 
-    return RunInterface(&argc, &argv);
+    int ret = RunInterface(&argc, &argv);
+#if defined(_WINDOWS)&&defined(_WIN32)
+    VSCommon::ParseCmdLineFree(argv);
+#endif
+    return ret;
 }
+
+// alt/option key detection
+#if defined(__APPLE__) && defined(HAVE_CARBON)
+# ifdef __clang__
+#  include <Carbon/Carbon.h>
+# else
+# define optionKey (1 << 11)
+extern "C" unsigned int GetCurrentKeyModifiers();
+# endif
+bool checkModifier() {
+    unsigned int modifiers = GetCurrentKeyModifiers();
+    //EventRef eventRef = GetCurrentEvent();
+    //int class = GetEventClass(eventRef);
+    //int kind = GetEventKind(eventRef);
+    //fprintf(stderr, "%d.%d\n", class, kind);
+    //(modifiers & shiftKey)    // (1 << 9)     // (right 13)
+    //(modifiers & optionKey)   // (1 << 11)    // (right 14)
+    //(modifiers & cmdKey)      // (1 << 8)   
+    //(modifiers & controlKey)  // (1 << 12)    // (right 15)
+    //(modifiers & alphaLock)   // (1 << 10)
+    return (modifiers & optionKey) != 0;
+}
+#else
+bool checkModifier() {
+    return false;
+}
+#endif
 
