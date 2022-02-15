@@ -859,13 +859,29 @@ do_delivery_fun() {
 
     pushd "${deliverydir}" > /dev/null || exit 1
 
+    get_git_rev() {
+        git --git-dir="${target}/../.git" --no-pager describe --abbrev=8 --dirty --always
+        #local git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
+        #local git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
+        #test -n "${git_status}" && git_rev="${git_rev}-dirty"
+        #echo "${git_rev}"
+    }
+    git_rev=$(get_git_rev)
+    if test "${do_delivery}" != "yes" || case "${git_rev}" in *-dirty) true;; *) false;; esac; then
+        bundle_version="${priv_version}-${git_rev}"
+    else
+        bundle_version=${priv_version}
+    fi
+
     bundle_tools="${mydir}/tools/macos_bundle"
     bundle_src="${bundle_tools}/PrivateerGold.app"
     checkkeys_dir="${bundle_tools}/checkModifierKeys"
     hardshortcut_dir="${mydir}/tools/hardshortcut"
 
+    bundle_basename="PrivateerGold-${bundle_version}"
+    bundle_pkgbasename="${bundle_basename}"
     this_bundle="${deliverydir}/bundle/PrivateerGold.this.app"
-    other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs/PrivateerGold.app"
+    other_bundle="${deliverydir}/bundle/PrivateerGold.more-archs/${bundle_basename}"
     other_bundle_ref_dir="${mydir}/${buildpool}"
 
     xcopy() {
@@ -880,13 +896,13 @@ do_delivery_fun() {
 
     case "${target_sysname}" in
         darwin*)
-            bundledir="${deliverydir}/bundle/PrivateerGold.app"
+            bundledir="${deliverydir}/bundle/${bundle_basename}.app"
             bundle_bindir="${bundledir}/Contents/MacOS"
             bundle_resdir="${bundledir}/Contents/Resources"
             bundle_toolsdir="${bundle_resdir}/bin"
             bundle_librpath="../Resources/lib"; bundle_gtklibrpath="${bundle_librpath}/gtk"; bundle_misclibrpath="${bundle_librpath}/misc"
             bundle_tools_librpath="../lib"; bundle_tools_gtklibrpath="${bundle_tools_librpath}/gtk"; bundle_tools_misclibrpath="${bundle_tools_librpath}/misc"
-            package_name="${deliverydir}/PrivateerGold-${priv_version}_macOS.dmg"
+            package_name="${deliverydir}/${bundle_pkgbasename}_macOS.dmg"
 
             get_libs() { otool -L "$@"; }
             if test "${build_sysmajor}" -lt 19; then
@@ -898,13 +914,13 @@ do_delivery_fun() {
             chmod_args='-h'
             ;;
         *bsd*|linux*)
-            bundledir="${deliverydir}/bundle/PrivateerGold"
+            bundledir="${deliverydir}/bundle/${bundle_basename}"
             bundle_bindir="${bundledir}/bin"
             bundle_resdir="${bundledir}"
             bundle_toolsdir="${bundle_resdir}/bin"
             bundle_librpath="../lib"; bundle_gtklibrpath="${bundle_librpath}/gtk"; bundle_misclibrpath="${bundle_librpath}/misc"
             bundle_tools_librpath="../lib"; bundle_tools_gtklibrpath="${bundle_tools_librpath}/gtk"; bundle_tools_misclibrpath="${bundle_tools_librpath}/misc"
-            package_name="${deliverydir}/PrivateerGold-${priv_version}_linux64.tar.bz2"
+            package_name="${deliverydir}/${bundle_pkgbasename}_linux64.tar.bz2"
 
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
             case "${target_sysname}" in *bsd*) chmod_args='-h';; linux*) chmod_args='';; esac
@@ -914,13 +930,13 @@ do_delivery_fun() {
             export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${GTK2_PREFIX}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
             ;;
         mingw*|msys*|cygwin*)
-            bundledir="${deliverydir}/bundle/PrivateerGold"
+            bundledir="${deliverydir}/bundle/${bundle_basename}"
             bundle_bindir="${bundledir}/bin"
             bundle_resdir="${bundledir}"
             bundle_toolsdir="${bundle_resdir}/bin"
             bundle_librpath="."; bundle_gtklibrpath="."; bundle_mlisclibrpath="."
             bundle_tools_librpath="."; bundle_tools_gtklibrpath="${bundle_tools_librpath}"; bundle_tools_misclibrpath="${bundle_tools_librpath}"
-            package_name="${deliverydir}/PrivateerGold-${priv_version}_windows64.zip"
+            package_name="${deliverydir}/${bundle_pkgbasename}_windows64.zip"
             get_libs() { ldd "$@" | sed -e 's/[[:space:]](0x[0-9a-fA-F]*)$//'; }
             #chmod_args='-c'
             chmod_args=''
@@ -931,7 +947,7 @@ do_delivery_fun() {
             done
             ;;
         *)  chmod_args=''
-            package_name="${deliverydir}/PrivateerGold-{priv_version}.zip"
+            package_name="${deliverydir}/${bundle_pkgbasename}.zip"
             ;;
     esac
 
@@ -1002,9 +1018,9 @@ do_delivery_fun() {
     test -z "${interactive}" || { yesno "? Finalize bundle (update libs, version, tools, ...) ?" || exit 1; }
 
     # Update Version in bundle
-    git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
-    git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
-    test -n "${git_status}" && git_rev="${git_rev}-dirty"
+    git_rev2=$(get_git_rev); if test "${git_rev2}" != "${git_rev}"; then
+        printf -- '\n!! ERROR Git revision ${git_rev} has changed to ${git_rev2} since build. Aborting...\n'; exit 1
+    fi
     vega_version=$(sed -n -e 's/^[[:space:]]*#[[:space:]]*define[[:space:]][[:space:]]*VERSION[[:space:]][[:space:]]*"\([^"]*\).*/\1/p' \
                    ${mainbuilddir}/config.h)
     for f in "${bundledir}"/Contents/*.plist; do
@@ -1103,15 +1119,15 @@ do_delivery_fun() {
     #fix perms
     find "${deliverydir}/bundle" \! -perm '+u=w' -print0 | xargs -0 chmod ${chmod_args} 'u+w'
 
-    # Add dirty suffix to package name
+    # package pref / suff
     case "${package_name}" in *.tar.*) package_pref=${package_name%.tar.*};; *) package_pref=${package_name%.*};; esac
     package_ext=${package_name#${package_pref}}
-    if test "${do_delivery}" != "yes" || case "${git_rev}" in *-dirty) true;; *) false;; esac; then
-        package_name="${package_pref}-${git_rev}${package_ext}";
-    fi
 
     # Merge the generated bundle with the ARM64 one if present
     other_bundle_ref_archive="${other_bundle_ref_dir}/$(basename "${package_name%${package_ext}}")-MoreArchs${package_ext}"
+    if ! test -f "${other_bundle_ref_archive}" -a "${do_delivery}" = "dev"; then
+        other_bundle_ref_archive=$(ls -d -t "${other_bundle_ref_dir}/${package_basename%-*}"*"-MoreArchs${package_ext}" 2>/dev/null | head -n1)
+    fi
     if test -f "${other_bundle_ref_archive}"; then
         other_bundle_mountpoint="$(dirname "${other_bundle}")"
         mkdir -p "${other_bundle_mountpoint}"
@@ -1122,12 +1138,15 @@ do_delivery_fun() {
         printf -- "+ extracting ${other_bundle_ref_archive}...\n\n"
         case "${package_ext}" in
             .[dD][mM][gG])
-                archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}"; }
+                archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}" && echo "+ ${other_bundle_mountpoint} unmounted"; }
                 hdiutil mount -quiet -readonly -mountpoint "${other_bundle_mountpoint}" "${other_bundle_ref_archive}";;
             .tar.xz) (cd "${other_bundle_mountpoint}" && tar xJf "${other_bundle_ref_archive}");;
             *) false;;
         esac; test $? -eq 0 || { echo "ERROR, cannot extract ${other_bundle_ref_archive}"; exit 1; }
-        printf -- "+\n+ Merging architectures of PrivateerGold.app and ${other_bundle#${deliverydir}}...\n+\n"
+        if ! test -d "${other_bundle}" -a "${do_delivery}" = "dev"; then
+            other_bundle=$(ls -d -t "$(dirname "${other_bundle}")/${bundle_basename%%-*}"* 2>/dev/null | head -n1)
+        fi
+        printf -- "+\n+ Merging architectures of ${bundle_basename} and ${other_bundle#${deliverydir}}...\n+\n"
         test -d "${other_bundle}" || exit 1
         rm -f "${other_bundle}/Contents/Resources/data"
         mv -v "${bundledir}" "${this_bundle}" || exit $?
@@ -1178,14 +1197,14 @@ do_delivery_fun() {
         *.[Dd][Mm][Gg])
             # Create DMG
             #formats UDBZ(bz2,10.4) UDCO ULFO(lzfe,10.11) # -fs HFS+ # -type UDIF|SPARSE|SPARSEBUNDLE
-            hdiutil create -fs "HFS+" -format "UDBZ" -volname "PrivateerGold" \
-                -srcfolder "${deliverydir}/bundle" "${package_name}" || exit $?
+            hdiutil create -fs "HFS+" -format "UDBZ" -volname "${bundle_pkgbasename}" \
+                -srcfolder "$(dirname "${bundledir}")" "${package_name}" || exit $?
             ;;
         *.[bB][zZ]2)
-            (cd "${deliverydir}/bundle" && tar cjf "${package_name}" "PrivateerGold" ) || exit 1
+            (cd "$(dirname "${bundledir}")" && tar cjf "${package_name}" "$(basename "${bundledir}")" ) || exit 1
             ;;
         *.[zZ][iI][pP])
-            (cd "${deliverydir}/bundle" && zip -q -r "${package_name}" "PrivateerGold" ) || exit 1
+            (cd "$(dirname "${bundledir}")" && zip -q -r "${package_name}" "$(basename "${bundledir}")" ) || exit 1
             ;;
     esac
     (cd "$(dirname "${package_name}")" && shasum -a256 "$(basename "${package_name}")" > "${package_name}.sha256" \
