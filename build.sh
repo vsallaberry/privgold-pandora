@@ -56,6 +56,7 @@ build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
 build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
 
 # Compiler settings
+macos_developer_dir="/Library/Developer/CommandLineTools"
 unset CFLAGS CXXFLAGS LDFLAGS CPPFLAGS OBJCFLAGS OBJCPPFLAGS IPATH CPATH INCLUDE_PATH LIBRARY_PATH
 #compiler=/usr/local/gcc/gcc-6.5.0_ada/bin/gcc
 #compiler=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang
@@ -71,6 +72,9 @@ clang_cxx_flags="-Wno-unused-local-typedef -Wno-deprecated-register"
 cxx_ldflags=
 
 py_version=2.7
+
+tar=$(which -a gnutar tar 2> /dev/null | head -n1)
+zip=$(which -a zip 2> /dev/null | head -n1)
 
 # ----------------------------------------------------------------------------------------------
 show_help() {
@@ -164,7 +168,7 @@ yesno() {
 # make jobs according to cpu number
 #
 case "${build_sysname}" in
-    linux) make_jobs=$(grep -E '^processor[[:space:]]*:' /proc/cpuinfo | wc -l);;
+    linux*|cygwin*|msys*|mingw*) make_jobs=$(grep -E '^processor[[:space:]]*:' /proc/cpuinfo | wc -l);;
     *) make_jobs=$(sysctl hw.ncpu 2> /dev/null | awk '{ print $2 }');;
 esac
 if test -n "${make_jobs}"; then
@@ -316,10 +320,10 @@ find_macos_sdk() {
             macos_sdk_fwk=${_test_sdk}
         else
             archs=$(get_archs ${_cxxflags})
-            macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+            macos_sdk_fwk="${macos_developer_dir}/SDKs/MacOSX.sdk"
             if test -n "${archs}"; then
                 # try to find a SDK supporting requested archs
-                for sdk in /Library/Developer/CommandLineTools/SDKs/MacOSX*.sdk; do
+                for sdk in "${macos_developer_dir}/SDKs"/MacOSX*.sdk; do
                     if lipo $(find "${sdk}/usr/lib" -name '*.o' -o -name '*.a' | head -n1) -verify_arch ${archs}; then
                         macos_sdk_fwk=${sdk}
                         break
@@ -331,7 +335,7 @@ find_macos_sdk() {
     else
         # capitan or earlier
         #macos_sdk_fwk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
-        macos_sdk_fwk="/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"
+        macos_sdk_fwk="${macos_developer_dir}/SDKs/MacOSX.sdk"
         macos_sdk=""
     fi
 }
@@ -825,7 +829,7 @@ do_dist_fun() {
             tar_args[${#tar_args[@]}]="${arg}"
         done
     fi
-    tar cJ \
+    "${tar}" cJ \
         "${tar_args[@]}" \
         -f "${archive}" "${mydirname}" \
     && echo "+ archive created: ${archive} (`format_size "${archive}"`)"
@@ -860,7 +864,7 @@ do_delivery_fun() {
     pushd "${deliverydir}" > /dev/null || exit 1
 
     get_git_rev() {
-        git --git-dir="${target}/../.git" --no-pager describe --abbrev=8 --dirty --always
+        (cd "${target}/.." && git --no-pager describe --abbrev=8 --dirty --always || echo "unknown")
         #local git_rev=$(git --git-dir="${target}/../.git" show --quiet --ignore-submodules=untracked --format="%h" HEAD)
         #local git_status=$(git --git-dir="${target}/../.git" -C "${target}/.." status --untracked-files=no --ignore-submodules=untracked --short --porcelain)
         #test -n "${git_status}" && git_rev="${git_rev}-dirty"
@@ -1125,7 +1129,7 @@ do_delivery_fun() {
 
     # Merge the generated bundle with the ARM64 one if present
     other_bundle_ref_archive="${other_bundle_ref_dir}/$(basename "${package_name%${package_ext}}")-MoreArchs${package_ext}"
-    if ! test -f "${other_bundle_ref_archive}" -a "${do_delivery}" = "dev"; then
+    if ! test -f "${other_bundle_ref_archive}" && test "${do_delivery}" = "dev"; then
         other_bundle_ref_archive=$(ls -d -t "${other_bundle_ref_dir}/${package_basename%-*}"*"-MoreArchs${package_ext}" 2>/dev/null | head -n1)
     fi
     if test -f "${other_bundle_ref_archive}"; then
@@ -1140,10 +1144,10 @@ do_delivery_fun() {
             .[dD][mM][gG])
                 archive_cleanup() { hdiutil unmount -quiet "${other_bundle_mountpoint}" && echo "+ ${other_bundle_mountpoint} unmounted"; }
                 hdiutil mount -quiet -readonly -mountpoint "${other_bundle_mountpoint}" "${other_bundle_ref_archive}";;
-            .tar.xz) (cd "${other_bundle_mountpoint}" && tar xJf "${other_bundle_ref_archive}");;
+            .tar.xz) (cd "${other_bundle_mountpoint}" && "${tar}" xJf "${other_bundle_ref_archive}");;
             *) false;;
         esac; test $? -eq 0 || { echo "ERROR, cannot extract ${other_bundle_ref_archive}"; exit 1; }
-        if ! test -d "${other_bundle}" -a "${do_delivery}" = "dev"; then
+        if ! test -d "${other_bundle}" && test "${do_delivery}" = "dev"; then
             other_bundle=$(ls -d -t "$(dirname "${other_bundle}")/${bundle_basename%%-*}"* 2>/dev/null | head -n1)
         fi
         printf -- "+\n+ Merging architectures of ${bundle_basename} and ${other_bundle#${deliverydir}}...\n+\n"
@@ -1201,10 +1205,10 @@ do_delivery_fun() {
                 -srcfolder "$(dirname "${bundledir}")" "${package_name}" || exit $?
             ;;
         *.[bB][zZ]2)
-            (cd "$(dirname "${bundledir}")" && tar cjf "${package_name}" "$(basename "${bundledir}")" ) || exit 1
+            (cd "$(dirname "${bundledir}")" && "${tar}" cjf "${package_name}" "$(basename "${bundledir}")" ) || exit 1
             ;;
         *.[zZ][iI][pP])
-            (cd "$(dirname "${bundledir}")" && zip -q -r "${package_name}" "$(basename "${bundledir}")" ) || exit 1
+            (cd "$(dirname "${bundledir}")" && ${zip} -q -r "${package_name}" "$(basename "${bundledir}")" ) || exit 1
             ;;
     esac
     (cd "$(dirname "${package_name}")" && shasum -a256 "$(basename "${package_name}")" > "${package_name}.sha256" \
