@@ -1,8 +1,9 @@
 /*
  * Vega Strike MultiMap
- * Copyright (C) 2021 Vincent Sallaberry
+ * Copyright (C) 2021-2022 Vincent Sallaberry
  *
  * http://vegastrike.sourceforge.net/
+ * https://github.com/vsallaberry/privgold-pandora
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License

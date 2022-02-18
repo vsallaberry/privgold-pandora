@@ -2,6 +2,7 @@
  * Copyright (C) 2021-2022 Vincent Sallaberry
  * unicode Utf8Iterator class, for vegastrike (GPL) / version PrivateerGold
  *   http://vegastrike.sourceforge.net/, privateer.solsector.net
+ *   https://github.com/vsallaberry/privgold-pandora
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
