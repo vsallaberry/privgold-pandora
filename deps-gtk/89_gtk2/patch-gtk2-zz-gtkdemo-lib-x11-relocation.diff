@@ -1,0 +1,330 @@
+--- ./gtk/gtkmain.c.orig	2022-02-27 11:49:48.397901041 +0100
++++ ./gtk/gtkmain.c	2022-02-27 22:17:57.905883456 +0100
+@@ -25,6 +25,12 @@
+  */
+ #include "config.h"
+ 
++const char * GTK_DATADIR_BUILTIN = GTK_DATADIR;
++const char * GTK_DATA_PREFIX_BUILTIN = GTK_DATA_PREFIX;
++const char * GTK_LIBDIR_BUILTIN = GTK_LIBDIR;
++const char * GTK_SYSCONFDIR_BUILTIN = GTK_SYSCONFDIR;
++const char * GTK_LOCALEDIR_BUILTIN = GTK_LOCALEDIR;
++
+ #include "gtkmain.h"
+ 
+ #include <glib.h>
+@@ -339,7 +339,7 @@
+   return TRUE;
+ }
+ 
+-#ifdef G_OS_WIN32
++#if defined(G_OS_WIN32)
+ 
+ const gchar *
+ _gtk_get_datadir (void)
+@@ -379,6 +379,153 @@
+   return gtk_data_prefix;
+ }
+ 
++#elif defined(GDK_WINDOWING_X11) && defined(X11_RELOCATION)
++# include <sys/stat.h>
++
++static char *
++get_bundle_path (void)
++{
++    static char * path = NULL;
++
++    if (path == NULL)
++    {
++        char buf[16384];
++        char linkname[128] = { 0, }; /* /proc/<pid>/exe */
++        pid_t pid;
++        int ret;
++
++        /* Get our PID and build the name of the link in /proc */
++        pid = getpid();
++        snprintf(linkname, sizeof(linkname), "/proc/%d/exe", pid);
++        ret = readlink(linkname, buf, sizeof(buf));
++
++        if (ret <= 0) {
++                snprintf(linkname, sizeof(linkname), "/proc/%d/file", pid);
++                ret = readlink(linkname, buf, sizeof(buf));
++        }
++        if (ret <= 0) {
++                snprintf(linkname, sizeof(linkname), "/proc/%d/cmdline", pid);
++                FILE * fp = fopen(linkname, "r");
++                if (fp != NULL) {
++                    ret = fread(buf, 1, sizeof(buf)-1, fp);
++                    fclose(fp); 
++                    buf[sizeof(buf)-1] = 0;
++                    if (ret >= 0) {
++                        buf[ret] = 0;
++                        if (*buf != '/') {
++                            gchar * argv0 = g_strdup(buf);
++                            *buf = 0;
++                            getcwd(buf, sizeof(buf)-1);
++                            ret = strlen(buf); 
++                            snprintf(buf + ret, sizeof(buf)-ret, "/%s", argv0);
++                            g_free(argv0);
++                        }
++                    }
++                }
++        }
++        gchar *base, * exec_path, * ret_path;
++        exec_path = g_path_get_dirname (buf);
++        base = g_path_get_basename (exec_path);
++        if (strcmp (base, "bin") == 0)
++            ret_path = g_path_get_dirname (exec_path);
++        else
++            ret_path = strdup (exec_path);
++        g_free (exec_path);
++        g_free (base);
++
++        if (ret_path == NULL) {
++            ret_path = "";
++        } else {
++            struct stat st;
++            snprintf(buf, sizeof(buf), "%s/%s", ret_path, "share");
++            if (stat(buf, &st) < 0 || (st.st_mode & S_IFDIR) == 0) {
++                g_free(ret_path);
++                ret_path = "";
++            }
++        }
++        path = ret_path;
++    }
++
++    return path;
++}
++
++const gchar * _gtk_get_datadir (void) {
++  static gchar *path = NULL;
++
++  if (path == NULL) {
++    gchar * bundle_path = get_bundle_path ();
++    if (bundle_path == NULL || *bundle_path == 0)
++        path = GTK_DATADIR_BUILTIN;
++    else
++        path = g_build_filename (bundle_path, "share", NULL);
++  }
++
++  return path;
++}
++
++const gchar *
++_gtk_get_libdir (void)
++{
++  static gchar *path = NULL;
++
++  if (path == NULL) {
++    gchar * bundle_path = get_bundle_path ();
++    if (bundle_path == NULL || *bundle_path == 0)
++        path = GTK_LIBDIR_BUILTIN;
++    else
++        path = g_build_filename (bundle_path, "lib", NULL);
++  }
++
++  return path;
++}
++
++const gchar *
++_gtk_get_localedir (void)
++{
++  static gchar *path = NULL;
++
++  if (path == NULL) {
++    gchar * bundle_path = get_bundle_path ();
++    if (bundle_path == NULL || *bundle_path == 0)
++        path = GTK_LOCALEDIR_BUILTIN;
++    else
++        path = g_build_filename (bundle_path, "share", "locale", NULL);
++  }
++
++  return path;
++}
++
++const gchar *
++_gtk_get_sysconfdir (void)
++{
++  static gchar *path = NULL;
++
++  if (path == NULL) {
++    gchar * bundle_path = get_bundle_path ();
++    if (bundle_path == NULL || *bundle_path == 0)
++        path = GTK_SYSCONFDIR_BUILTIN;
++    else
++        path = g_build_filename (bundle_path, "etc", NULL);
++  }
++
++  return path;
++}
++
++const gchar *
++_gtk_get_data_prefix (void)
++{
++  static gchar * path = NULL;
++
++  if (path == NULL) {
++    gchar * bundle_path = get_bundle_path ();
++    if (bundle_path == NULL || *bundle_path == 0)
++        path = GTK_DATA_PREFIX_BUILTIN;
++    else
++        path = bundle_path;
++  }
++
++  return path;
++}
+ #endif /* G_OS_WIN32 */
+ 
+ static gboolean do_setlocale = TRUE;
+--- ./configure.ac.orig	2022-02-27 20:02:15.007005001 +0100
++++ ./configure.ac	2022-02-27 21:24:01.115005001 +0100
+@@ -941,6 +941,13 @@
+ GTK_DEP_PACKAGES_FOR_X=
+ GTK_DEP_LIBS_FOR_X=
+ 
++AC_ARG_ENABLE(x11-relocation,
++              [AS_HELP_STRING([--enable-x11-relocation],
++                              [enable bundle-based relocation functions])],
++                              [x11_relocation=yes])
++
++AM_CONDITIONAL(GTK_RELOCATION, false)
++
+ if test "x$gdktarget" = "xx11"; then
+   X_PACKAGES=fontconfig
+ 
+@@ -1243,6 +1250,12 @@
+   LIBS="$gtk_save_libs"
+ 
+   AM_CONDITIONAL(USE_X11, true)
++
++  if test "x$x11_relocation" = xyes; then
++    AM_CONDITIONAL(GTK_RELOCATION, true)
++    AC_DEFINE([X11_RELOCATION], [1], [Use /proc/self/exe to determine load paths for libraries, translations, etc.])
++  fi
++
+ else
+   XPACKAGES=
+ 
+@@ -1267,9 +1280,9 @@
+   GDK_EXTRA_LIBS="$GDK_EXTRA_LIBS -framework Cocoa"
+   AM_CONDITIONAL(USE_QUARTZ, true)
+   if test "x$quartz_relocation" = xyes; then
++    AM_CONDITIONAL(GTK_RELOCATION, true)
+     AC_DEFINE([QUARTZ_RELOCATION], [1], [Use NSBundle functions to determine load paths for libraries, translations, etc.])
+   fi
+-
+ else
+   AM_CONDITIONAL(USE_QUARTZ, false)
+ fi
+--- ./demos/gtk-demo/main.c.orig	2022-02-27 22:26:43.705883456 +0100
++++ ./demos/gtk-demo/main.c	2022-02-27 21:10:32.651005001 +0100
+@@ -87,6 +87,69 @@
+ }
+ # undef DEMOCODEDIR
+ # define DEMOCODEDIR get_democodedir ()
++
++#elif defined __linux__ && defined(GDK_WINDOWING_X11) && defined(X11_RELOCATION)
++static char *
++get_democodedir (void)
++{
++    static char * path = NULL;
++
++    if (path == NULL)
++    {
++        char buf[16384];
++        char linkname[128] = { 0, }; /* /proc/<pid>/exe */
++        pid_t pid;
++        int ret;
++
++        /* Get our PID and build the name of the link in /proc */
++        pid = getpid();
++
++        snprintf(linkname, sizeof(linkname), "/proc/%d/exe", pid);
++        ret = readlink(linkname, buf, sizeof(buf));
++        if (ret <= 0) {
++                snprintf(linkname, sizeof(linkname), "/proc/%d/file", pid);
++                ret = readlink(linkname, buf, sizeof(buf));
++        }
++        if (ret <= 0) {
++                snprintf(linkname, sizeof(linkname), "/proc/%d/cmdline", pid);
++                FILE * fp = fopen(linkname, "r");
++                if (fp != NULL) {
++                    ret = fread(buf, 1, sizeof(buf), fp);
++                    fclose(fp); 
++                    buf[sizeof(buf)-1] = 0;
++                    if (ret >= 0) {
++                        buf[ret] = 0;
++                        if (*buf != '/') {
++                            gchar * argv0 = g_strdup(buf);
++                            *buf = 0;
++                            getcwd(buf, sizeof(buf)-1);
++                            ret = strlen(buf); 
++                            snprintf(buf + ret, sizeof(buf)-ret, "/%s", argv0);
++                            g_free(argv0);
++                        }
++                    }
++                }
++        }
++        gchar *base, * exec_path;
++        exec_path = g_path_get_dirname (buf);
++        base = g_path_get_basename (exec_path);
++        if (strcmp (base, "bin") == 0)
++            path = g_path_get_dirname (exec_path);
++        else
++            path = strdup (exec_path);
++        g_free (exec_path);
++        g_free (base);
++
++        if (path == NULL)
++            path = "unknown-location";
++
++        path = g_strconcat (path, DEMOCODEDIR, NULL);
++    }
++
++    return path;
++}
++# undef DEMOCODEDIR
++# define DEMOCODEDIR get_democodedir ()
+ #endif
+ 
+ /**
+--- demos/gtk-demo/Makefile.am.orig     1970-01-01 01:00:00.000000000 +0100
++++ demos/gtk-demo/Makefile.am  2022-02-27 23:24:31.749518673 +0100
+@@ -1,9 +1,11 @@
+ ## Makefile.am for gtk+/demos
+ include $(top_srcdir)/Makefile.decl
+ 
+-if USE_QUARTZ
++if GTK_RELOCATION
+ democodedir=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
++if USE_QUARTZ
+ main.o: CFLAGS += -xobjective-c
++endif
+ else
+ democodedir=$(datadir)/gtk-2.0/demo
+ endif
+--- ./gtk/gtkprivate.h.orig	2016-10-22 06:11:13.000000000 +0200
++++ ./gtk/gtkprivate.h 2022-02-27 23:08:43.537883456 +0100
+@@ -75,7 +75,8 @@
+ #define GTK_PRIVATE_UNSET_FLAG(wid,flag)  G_STMT_START{ (GTK_PRIVATE_FLAGS (wid) &= ~(PRIVATE_ ## flag)); }G_STMT_END
+ 
+ #if defined G_OS_WIN32 \
+-  || (defined GDK_WINDOWING_QUARTZ && defined QUARTZ_RELOCATION)
++  || (defined (GDK_WINDOWING_QUARTZ) && defined(QUARTZ_RELOCATION)) \
++  || (defined (GDK_WINDOWING_X11) && defined(X11_RELOCATION))
+ 
+ const gchar *_gtk_get_datadir ();
+ const gchar *_gtk_get_libdir ();
+@@ -83,6 +84,12 @@
+ const gchar *_gtk_get_localedir ();
+ const gchar *_gtk_get_data_prefix ();
+ 
++extern const char * GTK_DATADIR_BUILTIN;
++extern const char * GTK_DATA_PREFIX_BUILTIN;
++extern const char * GTK_LIBDIR_BUILTIN;
++extern const char * GTK_SYSCONFDIR_BUILTIN;
++extern const char * GTK_LOCALEDIR_BUILTIN;
++
+ #undef GTK_DATADIR
+ #define GTK_DATADIR _gtk_get_datadir ()
+ #undef GTK_LIBDIR

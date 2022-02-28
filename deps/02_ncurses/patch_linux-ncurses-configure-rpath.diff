@@ -1,0 +1,11 @@
+--- configure.orig	2022-02-24 20:38:30.321001000 +0100
++++ configure	2022-02-24 20:48:39.373001000 +0100
+@@ -5971,7 +5971,7 @@
+ 	fi
+ 	;;
+ (linux*|gnu*|k*bsd*-gnu|freebsd*)
+-	LD_RPATH_OPT="-Wl,-rpath,"
++	LD_RPATH_OPT="${LINUX_RPATH_HACK3} -Wl,-rpath,"
+ 	;;
+ (openbsd[2-9].*|mirbsd*)
+ 	LD_RPATH_OPT="-Wl,-rpath,"
