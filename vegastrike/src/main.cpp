@@ -34,7 +34,7 @@
 #endif
 #include "cmd/role_bitmask.h"
 #if defined(WITH_MACOSX_BUNDLE)
-#import <sys/param.h>
+#include <sys/param.h>
 #endif
 #ifdef _WIN32
 #include <direct.h>
