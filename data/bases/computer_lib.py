@@ -107,7 +107,7 @@ def time_sorted_listdir(dir):
 
 # unicodedata not needed for now as engine handles decomposed utf8 chars
 try:
-	from unicodedata import normalize__ as unicodedata_normalize
+	from unicodedata import normalize as unicodedata_normalize
 except:
 	debug.debug('python unicodedata extension not found')
 	def unicodedata_normalize(method, unistr):
