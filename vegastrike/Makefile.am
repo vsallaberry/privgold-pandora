@@ -522,6 +522,8 @@ bin_PROGRAMS = \
   $(DIALOGUTILS_PROG) \
   vslauncher
 
+$(bin_PROGRAMS): version.h #get_scm_revision
+
 noinst_LIBRARIES_1=\
   libnetlowlevel.a
 if !BOOSTSYSTEM
@@ -757,7 +759,10 @@ else
 endif
 
 .PHONY: get_scm_revision
+version.h: get_scm_revision
+	@true
 get_scm_revision:
+	@echo "-- checking scm revision..."
 	@scm_rev="$$(cd "$(top_srcdir)" && git --no-pager describe --abbrev=8 --dirty --always 2>/dev/null || printf -- 'unknown')"; \
 	scm_remote="$$(cd "$(top_srcdir)" && git --no-pager remote get-url origin 2>/dev/null || printf -- 'unknown')"; \
 	scm_ver_rcnum=$$(echo "$(PACKAGE_VERSION)" | sed -e 's/^[^0-9]*\([0-9.]*\).*$$/\1/' -e 's/[.]/,/g'); \
@@ -767,7 +772,6 @@ get_scm_revision:
 					 "# define SCM_REVISION \"$${scm_rev}\"" \
 					 "# define SCM_REMOTE \"$${scm_remote}\"" \
 					 "#endif" > version.h.txt && diff -q version.h.txt version.h 2>/dev/null || cp version.h.txt version.h
-all: get_scm_revision
 
 vegastrike_DEPENDENCIES = $(noinst_LIBRARIES)
 
@@ -781,7 +785,6 @@ else
 endif
 
 vegaserver_DEPENDENCIES = $(noinst_LIBRARIES)
-
 
 librootclient = \
   src/audiolib.h \
