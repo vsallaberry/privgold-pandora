@@ -1,0 +1,20 @@
+--- configure.ac.orig	2022-03-09 17:21:38.000000000 +0100
++++ configure.ac	2022-03-09 18:47:18.000000000 +0100
+@@ -353,8 +353,15 @@
+     AC_CHECK_LIB(m, pow, [LIBS="$LIBS -lm"; EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lm"])
+     AC_CHECK_FUNCS(acos acosf asin asinf atan atanf atan2 atan2f ceil ceilf copysign copysignf cos cosf exp expf fabs fabsf floor floorf trunc truncf fmod fmodf log logf log10 log10f lround lroundf pow powf round roundf scalbn scalbnf sin sinf sqrt sqrtf tan tanf)
+ 
+-    AC_CHECK_LIB(iconv, iconv_open, [LIBS="$LIBS -liconv"; EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"])
+-    AC_CHECK_FUNCS(iconv)
++    saved_LIBS=$LIBS; LIBS="$LIBS -liconv"; AC_TRY_LINK([#ifdef HAVE_ICONV_H
++                                                         # include <iconv.h>
++                                                         #else
++                                                         #void * iconv_open(void*,void*);
++                                                         #endif], [(void)iconv_open(0,
++                                                         0);], 
++                                                        [AC_DEFINE_UNQUOTED([HAVE_ICONV], [1], [have iconv open])] EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv", LIBS=$saved_LIBS)
++    dnl AC_CHECK_LIB(iconv, iconv_open, [LIBS="$LIBS -liconv"; EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"])
++    dnl AC_CHECK_FUNCS(iconv)
+ 
+     AC_CHECK_MEMBER(struct sigaction.sa_sigaction,[AC_DEFINE([HAVE_SA_SIGACTION], 1, [ ])], ,[#include <signal.h>])
+ 

@@ -1,0 +1,18 @@
+--- configure.ac.orig	2022-03-04 18:55:41.000000000 +0100
++++ configure.ac	2022-03-04 19:03:16.000000000 +0100
+@@ -1043,6 +1043,7 @@
+ [AS_HELP_STRING([--enable-pulseaudio-shared], [dynamically load PulseAudio support [default=yes]])],
+                           , enable_pulseaudio_shared=yes)
+             pulseaudio_lib=[`find_lib "libpulse-simple.so.*" "$PULSEAUDIO_LIBS" | sed 's/.*\/\(.*\)/\1/; q'`]
++            test x$pulseaudio_lib = x && pulseaudio_lib=[`find_lib "libpulse-simple*.dylib" "$PULSEAUDIO_LIBS" | sed 's/.*\/\(.*\)/\1/; q'`]
+ 
+             AC_DEFINE(SDL_AUDIO_DRIVER_PULSEAUDIO, 1, [ ])
+             SOURCES="$SOURCES $srcdir/src/audio/pulseaudio/*.c"
+@@ -4138,6 +4139,7 @@
+             EXTRA_LDFLAGS="$EXTRA_LDFLAGS -Wl,-framework,CoreAudio -Wl,-framework,AudioToolbox"
+             SUMMARY_audio="${SUMMARY_audio} coreaudio"
+             have_audio=yes
++            CheckPulseAudio
+         fi
+         # Set up files for the joystick library
+         if test x$enable_joystick = xyes; then

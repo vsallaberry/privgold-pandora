@@ -1,18 +1,28 @@
 --- demos/gtk-demo/Makefile.am.orig	2021-10-07 23:08:04.000000000 +0200
 +++ demos/gtk-demo/Makefile.am	2021-10-08 00:12:16.000000000 +0200
-@@ -1,7 +1,12 @@
+@@ -1,7 +1,13 @@
  ## Makefile.am for gtk+/demos
  include $(top_srcdir)/Makefile.decl
  
+ democodedir=$(datadir)/gtk-2.0/demo
 +if USE_QUARTZ
-+democodedir=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
++democodedir_define=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
 +main.o: CFLAGS += -xobjective-c
 +else
- democodedir=$(datadir)/gtk-2.0/demo
++democodedir_define=$(datadir)/gtk-2.0/demo
 +endif
  
  ## These should be in the order you want them to appear in the
  ## demo app, which means alphabetized by demo title, not filename
+@@ -46,7 +54,7 @@
+ 	ui_manager.c
+
+ INCLUDES = \
+-	-DDEMOCODEDIR="\"$(democodedir)\""	\
++	-DDEMOCODEDIR="\"$(democodedir_define)\""\
+ 	-I$(top_srcdir) 			\
+ 	-I$(top_builddir)/gdk			\
+ 	-DGDK_DISABLE_DEPRECATED		\
 --- demos/gtk-demo/main.c.orig	2021-10-07 23:09:05.000000000 +0200
 +++ demos/gtk-demo/main.c	2021-10-08 00:26:34.000000000 +0200
 @@ -53,6 +53,40 @@

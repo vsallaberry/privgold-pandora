@@ -1,0 +1,141 @@
+
+--- src/core/android/SDL_android.c.orig	2022-03-02 14:28:21.140001000 +0100
++++ src/core/android/SDL_android.c	2022-03-02 14:38:01.292001000 +0100
+@@ -715,7 +715,7 @@
+     Android_JNI_SetEnv(env);
+ 
+     library_file = (*env)->GetStringUTFChars(env, library, NULL);
+-    library_handle = dlopen(library_file, RTLD_GLOBAL);
++    library_handle = sdl_dlopen(library_file, RTLD_GLOBAL);
+ 
+     if (!library_handle) {
+         /* When deploying android app bundle format uncompressed native libs may not extract from apk to filesystem.
+@@ -723,7 +723,7 @@
+         const char *library_name = SDL_strrchr(library_file, '/');
+         if (library_name && *library_name) {
+             library_name += 1;
+-            library_handle = dlopen(library_name, RTLD_GLOBAL);
++            library_handle = sdl_dlopen(library_name, RTLD_GLOBAL);
+         }
+     }
+ 
+--- src/SDL_internal.h.orig	2022-03-02 14:34:25.052001000 +0100
++++ src/SDL_internal.h	2022-03-02 14:35:35.436001000 +0100
+@@ -49,6 +49,8 @@
+ #define SDLCALL
+ #endif
+ 
++void * sdl_dlopen(const char * sofile, int flags);
++
+ #include "SDL_config.h"
+ 
+ /* A few #defines to reduce SDL2 footprint.
+--- src/video/directfb/SDL_DirectFB_opengl.c.orig	2022-03-02 14:28:35.240001000 +0100
++++ src/video/directfb/SDL_DirectFB_opengl.c	2022-03-02 14:38:40.996001000 +0100
+@@ -49,7 +49,7 @@
+ #define OPENGL_REQUIRS_DLOPEN
+ #if defined(OPENGL_REQUIRS_DLOPEN) && defined(SDL_LOADSO_DLOPEN)
+ #include <dlfcn.h>
+-#define GL_LoadObject(X)    dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
++#define GL_LoadObject(X)    sdl_dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
+ #define GL_LoadFunction     dlsym
+ #define GL_UnloadObject     dlclose
+ #else
+--- src/video/khronos/vulkan/vulkan.hpp.orig	2022-03-02 14:28:52.644001000 +0100
++++ src/video/khronos/vulkan/vulkan.hpp	2022-03-02 14:44:31.908001000 +0100
+@@ -68,6 +68,7 @@
+ #if VULKAN_HPP_ENABLE_DYNAMIC_LOADER_TOOL == 1
+ #  if defined( __linux__ ) || defined( __APPLE__ )
+ #    include <dlfcn.h>
++extern "C" void * sdl_dlopen(const char * sofile, int flags);
+ #  elif defined( _WIN32 )
+ typedef struct HINSTANCE__ * HINSTANCE;
+ #    if defined( _WIN64 )
+@@ -91494,7 +91495,7 @@
+       if ( !vulkanLibraryName.empty() )
+       {
+ #  if defined( __linux__ ) || defined( __APPLE__ )
+-        m_library = dlopen( vulkanLibraryName.c_str(), RTLD_NOW | RTLD_LOCAL );
++        m_library = sdl_dlopen( vulkanLibraryName.c_str(), RTLD_NOW | RTLD_LOCAL );
+ #  elif defined( _WIN32 )
+         m_library = ::LoadLibraryA( vulkanLibraryName.c_str() );
+ #  else
+@@ -91504,13 +91505,13 @@
+       else
+       {
+ #  if defined( __linux__ )
+-        m_library = dlopen( "libvulkan.so", RTLD_NOW | RTLD_LOCAL );
++        m_library = sdl_dlopen( "libvulkan.so", RTLD_NOW | RTLD_LOCAL );
+         if ( m_library == nullptr )
+         {
+-          m_library = dlopen( "libvulkan.so.1", RTLD_NOW | RTLD_LOCAL );
++          m_library = sdl_dlopen( "libvulkan.so.1", RTLD_NOW | RTLD_LOCAL );
+         }
+ #  elif defined( __APPLE__ )
+-        m_library = dlopen( "libvulkan.dylib", RTLD_NOW | RTLD_LOCAL );
++        m_library = sdl_dlopen( "libvulkan.dylib", RTLD_NOW | RTLD_LOCAL );
+ #  elif defined( _WIN32 )
+         m_library = ::LoadLibraryA( "vulkan-1.dll" );
+ #  else
+--- src/video/x11/SDL_x11opengl.c.orig	2022-03-02 14:29:16.736001000 +0100
++++ src/video/x11/SDL_x11opengl.c	2022-03-02 14:44:59.992001000 +0100
+@@ -144,7 +144,7 @@
+ #define OPENGL_REQUIRES_DLOPEN
+ #if defined(OPENGL_REQUIRES_DLOPEN) && defined(SDL_LOADSO_DLOPEN)
+ #include <dlfcn.h>
+-#define GL_LoadObject(X)    dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
++#define GL_LoadObject(X)    sdl_dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
+ #define GL_LoadFunction     dlsym
+ #define GL_UnloadObject     dlclose
+ #else
+--- src/loadso/dlopen/SDL_sysloadso.c.orig	2022-03-02 13:45:34.304001000 +0100
++++ src/loadso/dlopen/SDL_sysloadso.c	2022-03-02 14:24:41.896001000 +0100
+@@ -34,6 +34,39 @@
+ #include "../../video/uikit/SDL_uikitvideo.h"
+ #endif
+ 
++#include <ctype.h>
++// if lib not found, ignore version (<name>[-.]X.Y.Z.{dylib,so} / <name>.{dylib,so}.X.Y.Z
++static int issep(int c) { return c == '.' || c == '-' || c == '_'; }
++void * sdl_dlopen(const char * sofile, int flags) {
++    void * handle = dlopen(sofile, flags);
++    char * shortso = NULL;
++    if (handle == NULL && sofile != NULL) {
++        size_t i = strlen(sofile);
++        while (i-- > 0) {
++            size_t ext_sz;
++            if (sofile[i] != '.' || (strncasecmp(sofile + i, ".so", (ext_sz=3)) && strncasecmp(sofile + i, ".dylib", (ext_sz=6)))) continue ;
++            shortso = malloc(i + ext_sz + 1);
++            if (shortso == NULL)
++                return NULL;
++            strncpy(shortso, sofile, i+ext_sz);
++            shortso[i + ext_sz] = 0; // trunk lib version after lib extension
++            if (sofile[i+ext_sz] == 0) { // lib version is before lib extension
++                size_t j;
++                if (i == 0) break ;
++                for (j=i-1; j > 0 && (issep(sofile[j])
++                                      || (isdigit(sofile[j]) && (isdigit(sofile[j-1]) || issep(sofile[j-1])) )); --j) /*loop*/ ;
++                if (j + 1 == i) break ;
++                strcpy(shortso + j + 1, sofile + i); // ignore lib version and add lib extension
++            }
++            fprintf(stderr, "SDL2: cannot load %s, trying %s ...\n", sofile, shortso);
++            handle = dlopen(shortso, flags);
++            break ;
++        }
++    }
++    if (shortso != NULL) free(shortso);
++    return handle;
++}
++
+ void *
+ SDL_LoadObject(const char *sofile)
+ {
+@@ -47,7 +69,7 @@
+     }
+ #endif
+ 
+-    handle = dlopen(sofile, RTLD_NOW|RTLD_LOCAL);
++    handle = sdl_dlopen(sofile, RTLD_NOW|RTLD_LOCAL);
+     loaderror = dlerror();
+     if (handle == NULL) {
+         SDL_SetError("Failed loading %s: %s", sofile, loaderror);

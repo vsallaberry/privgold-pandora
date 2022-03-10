@@ -1,0 +1,22 @@
+--- configure.ac.orig	2022-03-08 13:56:42.000000000 +0100
++++ configure.ac	2022-03-08 13:58:13.000000000 +0100
+@@ -2779,7 +2779,7 @@
+ 		# to ensure that tests don't crash
+ 		# Note: This matches the value of THREAD_STACK_SIZE in
+ 		# thread_pthread.h
+-		LINKFORSHARED="-Wl,-stack_size,1000000 $LINKFORSHARED"
++		LINKFORSHARED="-Wl,-stack_size,0 $LINKFORSHARED"
+ 
+ 		if test "$enable_framework"
+ 		then
+--- Python/thread_pthread.h.orig	2022-03-08 13:57:16.000000000 +0100
++++ Python/thread_pthread.h	2022-03-08 13:57:42.000000000 +0100
+@@ -42,7 +42,7 @@
+ #if defined(__APPLE__) && defined(THREAD_STACK_SIZE) && THREAD_STACK_SIZE == 0
+ #undef  THREAD_STACK_SIZE
+ /* Note: This matches the value of -Wl,-stack_size in configure.ac */
+-#define THREAD_STACK_SIZE       0x1000000
++#define THREAD_STACK_SIZE       0x1000000
+ #endif
+ #if defined(__FreeBSD__) && defined(THREAD_STACK_SIZE) && THREAD_STACK_SIZE == 0
+ #undef  THREAD_STACK_SIZE

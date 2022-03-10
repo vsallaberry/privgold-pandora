@@ -1,0 +1,28 @@
+--- configure.in.orig	2022-03-09 19:21:17.000000000 +0100
++++ configure.in	2022-03-09 19:21:29.000000000 +0100
+@@ -178,7 +178,15 @@
+     )
+     AC_CHECK_FUNCS(malloc calloc realloc free getenv putenv unsetenv qsort abs bcopy memset memcpy memmove strlen strlcpy strlcat strdup _strrev _strupr _strlwr strchr strrchr strstr itoa _ltoa _uitoa _ultoa strtol strtoul _i64toa _ui64toa strtoll strtoull atoi atof strcmp strncmp _stricmp strcasecmp _strnicmp strncasecmp sscanf snprintf vsnprintf iconv sigaction setjmp nanosleep)
+ 
+-    AC_CHECK_LIB(iconv, libiconv_open, [EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"])
++    dnl AC_CHECK_LIB(iconv, libiconv_open, [EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"])
++    saved_LIBS=$LIBS; LIBS="$LIBS -liconv"; AC_TRY_LINK([#ifdef HAVE_ICONV_H
++                                                         # include <iconv.h>
++                                                         #else
++                                                         #void * iconv_open(void*,void*);
++                                                         #endif], [(void)iconv_open(0, 0);],
++                                                        [AC_DEFINE_UNQUOTED([HAVE_ICONV], [1], [have iconv open]) 
++                                                        EXTRA_LDFLAGS="$EXTRA_LDFLAGS -liconv"], ); LIBS=$saved_LIBS
++
+     AC_CHECK_LIB(m, pow, [EXTRA_LDFLAGS="$EXTRA_LDFLAGS -lm"])
+ 
+     AC_CHECK_MEMBER(struct sigaction.sa_sigaction,[AC_DEFINE(HAVE_SA_SIGACTION)], ,[#include <signal.h>])
+@@ -2845,7 +2853,7 @@
+         # is -lm which is not needed under Mac OS X. But for some reasons it
+         # also tends to contain spurious -L switches, which we don't want to
+         # use here or in sdl-config. Hence we reset it.
+-        EXTRA_LDFLAGS=""
++        #EXTRA_LDFLAGS=""
+ 
+         CheckVisibilityHidden
+         CheckDummyVideo

@@ -1,0 +1,78 @@
+--- ./src/video/photon/SDL_ph_gl.c.orig	2022-03-03 20:35:04.316437128 +0100
++++ ./src/video/photon/SDL_ph_gl.c	2022-03-03 20:29:23.800437128 +0100
+@@ -103,6 +103,8 @@
+     return 0;
+ }
+ #else
++void * sdl_dlopen(const char * sofile, int flags);
++
+ int ph_GL_LoadLibrary(_THIS, const char* path)
+ {
+     void* handle;
+@@ -113,7 +115,7 @@
+         return 0;
+     }
+ 
+-    handle = dlopen(path, dlopen_flags);
++    handle = sdl_dlopen(path, dlopen_flags);
+ 
+     if (handle==NULL)
+     {
+--- ./src/video/x11/SDL_x11gl.c.orig	2022-03-03 20:35:04.316437128 +0100
++++ ./src/video/x11/SDL_x11gl.c	2022-03-03 20:29:56.692437128 +0100
+@@ -450,7 +450,8 @@
+ #define OPENGL_REQUIRS_DLOPEN
+ #if defined(OPENGL_REQUIRS_DLOPEN) && defined(SDL_LOADSO_DLOPEN)
+ #include <dlfcn.h>
+-#define GL_LoadObject(X)	dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
++void * sdl_dlopen(const char * sofile, int flags);
++#define GL_LoadObject(X)	sdl_dlopen(X, (RTLD_NOW|RTLD_GLOBAL))
+ #define GL_LoadFunction		dlsym
+ #define GL_UnloadObject		dlclose
+ #else
+--- ./src/loadso/dlopen/SDL_sysloadso.c.orig	2022-03-03 20:35:04.316437128 +0100
++++ ./src/loadso/dlopen/SDL_sysloadso.c	2022-03-03 20:31:13.624437128 +0100
+@@ -31,9 +31,42 @@
+ 
+ #include "SDL_loadso.h"
+ 
++#include <ctype.h>
++// if lib not found, ignore version (<name>[-.]X.Y.Z.{dylib,so} / <name>.{dylib,so}.X.Y.Z
++static int issep(int c) { return c == '.' || c == '-' || c == '_'; }
++void * sdl_dlopen(const char * sofile, int flags) {
++    void * handle = dlopen(sofile, flags);
++    char * shortso = NULL;
++    if (handle == NULL && sofile != NULL) {
++        size_t i = strlen(sofile);
++        while (i-- > 0) {
++            size_t ext_sz;
++            if (sofile[i] != '.' || (strncasecmp(sofile + i, ".so", (ext_sz=3)) && strncasecmp(sofile + i, ".dylib", (ext_sz=6)))) continue ;
++            shortso = malloc(i + ext_sz + 1);
++            if (shortso == NULL)
++                return NULL;
++            strncpy(shortso, sofile, i+ext_sz);
++            shortso[i + ext_sz] = 0; // trunk lib version after lib extension
++            if (sofile[i+ext_sz] == 0) { // lib version is before lib extension
++                size_t j;
++                if (i == 0) break ;
++                for (j=i-1; j > 0 && (issep(sofile[j])
++                                      || (isdigit(sofile[j]) && (isdigit(sofile[j-1]) || issep(sofile[j-1])) )); --j) /*loop*/ ;
++                if (j + 1 == i) break ;
++                strcpy(shortso + j + 1, sofile + i); // ignore lib version and add lib extension
++            }
++            fprintf(stderr, "SDL1: cannot load %s, trying %s ...\n", sofile, shortso);
++            handle = dlopen(shortso, flags);
++            break ;
++        }
++    }
++    if (shortso != NULL) free(shortso);
++    return handle;
++}
++
+ void *SDL_LoadObject(const char *sofile)
+ {
+-	void *handle = dlopen(sofile, RTLD_NOW);
++	void *handle = sdl_dlopen(sofile, RTLD_NOW);
+ 	const char *loaderror = (char *)dlerror();
+ 	if ( handle == NULL ) {
+ 		SDL_SetError("Failed loading %s: %s", sofile, loaderror);

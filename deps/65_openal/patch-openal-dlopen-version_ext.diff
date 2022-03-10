@@ -1,0 +1,53 @@
+--- common/dynload.cpp.orig	2022-03-03 18:50:14.568001000 +0100
++++ common/dynload.cpp	2022-03-03 19:49:48.980437128 +0100
+@@ -23,10 +23,49 @@
+ 
+ #include <dlfcn.h>
+ 
++// dlopen wrapper triying tp load so without version extension
++#include <stdlib.h>
++#include <string.h>
++#include <stdio.h>
++#include <ctype.h>
++
++// if lib not found, ignore version (<name>[-.]X.Y.Z.{dylib,so} / <name>.{dylib,so}.X.Y.Z
++static int issep(int c) { return c == '.' || c == '-' || c == '_'; }
++static void * wrap_dlopen(const char * sofile, int flags) {
++    void * handle = dlopen(sofile, flags);
++    char * shortso = NULL;
++    if (handle == NULL && sofile != NULL) {
++        size_t i = strlen(sofile);
++        while (i-- > 0) {
++            size_t ext_sz;
++            if (sofile[i] != '.' || (strncasecmp(sofile + i, ".so", (ext_sz=3)) && strncasecmp(sofile + i, ".dylib", (ext_sz=6)))) continue ;
++            shortso = static_cast<char*>(malloc(i + ext_sz + 1));
++            if (shortso == NULL)
++                return NULL;
++            strncpy(shortso, sofile, i+ext_sz);
++            shortso[i + ext_sz] = 0; // trunk lib version after lib extension
++            if (sofile[i+ext_sz] == 0) { // lib version is before lib extension
++                size_t j;
++                if (i == 0) break ;
++                for (j=i-1; j > 0 && (issep(sofile[j])
++                                      || (isdigit(sofile[j]) && (isdigit(sofile[j-1]) || issep(sofile[j-1])) )); --j) /*loop*/ ;
++                if (j + 1 == i) break ;
++                strcpy(shortso + j + 1, sofile + i); // ignore lib version and add lib extension
++            }
++            fprintf(stderr, "OpenAL: cannot load %s, trying %s ...\n", sofile, shortso);
++            handle = dlopen(shortso, flags);
++            break ;
++        }
++    }
++    if (shortso != NULL) free(shortso);
++    return handle;
++}
++// !dlopen-wrapper
++
+ void *LoadLib(const char *name)
+ {
+     dlerror();
+-    void *handle{dlopen(name, RTLD_NOW)};
++    void *handle{wrap_dlopen(name, RTLD_NOW)};
+     const char *err{dlerror()};
+     if(err) handle = nullptr;
+     return handle;

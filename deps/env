@@ -180,6 +180,8 @@ test -x "${cc_dir}/nmedit"  && export NMEDIT="${cc_dir}/nmedit"
 test -x "${cc_dir}/nm"      && export NM="${cc_dir}/nm"
 test -x "${cc_dir}/objdump" && export OBJDUMP="${cc_dir}/objdump"
 
+cc_version=$("${CC}" --version | sed -n -e 's/^/ /' -e 's/^[^gGaA]*\([Gg][Cc][Cc]\)*\([Aa][Pp][Pp][Ll][Ee]\)*.*[[:space:]]\([0-9][0-9]*\.[0-9.]*\).*/\3 \1\2/p')
+
 cc_flags="${spec_cc_flags}${spec_cc_flags:+ }${cc_flags}"
 cxx_flags="${spec_cxx_flags}${spec_cxx_flags:+ }${cxx_flags}"
 cxx_ldflags="${spec_cxx_ldflags}${spec_cxx_ldflags:+ }${cxx_ldflags}"
@@ -188,9 +190,13 @@ objc_flags="${spec_objc_flags}${spec_objc_flags:+ }${objc_flags}"
 build_flags() {
     local optflags=$1
     if test "${build_sysname}" = "darwin"; then
-        test \( ${build_sysmajor} -le 19 -a "${arch}" != "arm64" \) \
-            && optflags="${optflags} -mmacosx-version-min=10.7" \
-            || optflags="${optflags} -mmacosx-version-min=11.0"
+        if test ${build_sysmajor} -lt 19; then
+            optflags="${optflags} -mmacosx-version-min=10.7"
+        elif test "${arch}" != "arm64"; then
+            optflags="${optflags} -mmacosx-version-min=10.11"
+        else
+            optflags="${optflags} -mmacosx-version-min=11.0"
+        fi
     fi
     export CPPFLAGS="-I${prefix}/include${MORE_PREFIXES:+ -I${MORE_PREFIXES}/include}"
     export CPATH=${prefix}/include
@@ -355,12 +361,13 @@ configure_fun() {
             -INSTALL=*) shift; if test -z "${archive}"; then
                 archive=${_arg#-INSTALL=}; _pkgdir=
                 for f in $(find "${resources}" "${resources}/../deps-gtk" -type f -and -iwholename "*/[0-9][0-9]*_${archive}/*.tar.*" \
-                                    -and \( -iname '*.tar.bz2' -or -iname '*.tar.gz' -or -iname '*.tar.xz' \) ); do
+                                    -and \( -iname '*.tar.bz2' -or -iname '*.tar.gz' -or -iname '*.tar.xz' \) | sort); do
                     { test -n "${silent}" && true; } || { yesno "'$f' : this one ?"; } && {
                         test -L "${mydir}/build" || mkdir -p "${mydir}/build" && cd "${mydir}/build"  \
-                        && _pkgdir=$(tar tJf "$f" | grep -Ev '^\.' | head -n1) && _pkgdir=${_pkgdir%%/*} \
+                        && case "$f" in *.tar.xz|*.txz) taropt=J;; *.tar.gz|*.tgz) taropt=z;; *.tar.bz2|*.tbz2) taropt=j;; esac \
+                        && _pkgdir=$(tar t${taropt}f "$f" | grep -Ev '^\.' | head -n1) && _pkgdir=${_pkgdir%%/*} \
                         && test -z "${do_clean}" || { echo "+ deleting ${_pkgdir}..."; rm -Rf "${_pkgdir}" && echo "+ ${_pkgdir} deleted"; } \
-                        && { echo "+ extracting '$f'..."; tar xJf "$f"; } \
+                        && { echo "+ extracting '$f'..."; tar x${taropt}f "$f"; } \
                         && cd "${_pkgdir}" \
                         || { finish 1; return 1; }
                         break;
@@ -478,6 +485,7 @@ configure_fun() {
         fi
         export NINJA=$(which -a "${buildtools_prefix}/bin/ninja" "ninja" | head -n1)
         configure="$MESON"
+        test "${arch}" = "arm64" && add_args --cross-file "$(dirname "${MESON}")/../share/meson/cross/arm64-darwin"
         export PERL_PATH=/usr/bin/perl
         more_pkg=$(cd "${resources}/../deps-gtk"/[0-9][0-9]*_"${prog}/pkgconfig"; pwd)
         #export PKG_CONFIG_PATH="${PKG_CONFIG_PATH}:${more_pkg}"
@@ -601,6 +609,21 @@ configure_fun() {
         expat)
             build_one_arch
             add_args --without-docbook;;
+        libiconv)
+            add_args --enable-extra-encodings \
+                --docdir=${prefix}/share/doc/libiconv \
+                --enable-static \
+                --without-libiconv-prefix \
+                --without-libintl-prefix
+            case "${build_sysname}" in darwin*) add_args \
+                            ac_cv_prog_AWK=/usr/bin/awk \
+                            ac_cv_path_GREP=/usr/bin/grep \
+                            ac_cv_path_SED=/usr/bin/sed;;
+            esac
+            do_patch
+            buildcmd=build_fun
+            build_fun() { "make" CC="${CC}" -C "${rootdir}" -f Makefile.devel && make "$@"; }
+            ;;
         pkg-config)
             do_patch
             add_args --with-internal-glib --with-pc-path=${prefix}/lib/pkgconfig
@@ -608,10 +631,29 @@ configure_fun() {
                 "linux") add_args --with-libiconv=gnu;;
             esac
             ;;
-        libpng) do_autocmd ./autogen.sh;;
+        libpng)
+            do_patch
+            if test "$(echo "${prog_version}" | awk -F'.' '{ print $1*1000000+$2*1000 }')" -ge $((1*1000000+4*1000)); then
+                build_one_arch
+            fi 
+            do_autocmd ./autogen.sh;;
         Python)
+            #case "${build_sysname}" in darwin*) test ${build_sysmajor} -lt 19;; *) true;; esac && build_one_arch
+            do_optim=yes; case "${build_sysname}" in 
+                darwin*)
+                    lipo_out=$(lipo -info /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/*/lib/darwin/libclang_rt.profile_osx.a 2>/dev/null)
+                    for a in $(test "${arch}" = "all" && echo "${all_archs}" || echo "${arch}"); do
+                        echo "${lipo_out}" | grep -Eq " ${a}" || do_optim=
+                    done
+                    test -z "${do_optim}" && echo "${lipo_out}" | grep -Eq "$(echo "${all_archs}" | sed -e 's/[[:space:]][[:space:]]*/|/g')" \
+                    && test ${build_sysmajor} -lt 19 && { build_one_arch; echo "${lipo_out}" | grep -Eq " ${arch}" && do_optim=yes; }
+                    ;;
+                *) which llvm-profdata >/dev/null 2>&1 || do_optim=;;
+            esac
+            test -n "${do_optim}" && add_args --enable-optimizations
+
             case "${prog_version}" in
-                2.*)
+                2.*)   
                     test "${build_sysname}" = "darwin" && \
                     for f in "${resources}/"[0-9][0-9]*_"python/patch-27-"*.diff; do patch -N -p0 < "$f"; done
                     #--enable-ipv6
@@ -622,10 +664,10 @@ configure_fun() {
                         --enable-ipv6
                     case "${build_sysname}" in
                         darwin*) add_args --enable-framework="${prefix}/Library/Frameworks";;
-                        linux) add_args --enable-shared;;
+                        *) add_args --enable-shared;;
                     esac
-                    arch=all; archs=all
-                    del_args "--build=*" "--host=*"
+                    #arch=all; archs=all
+                    #del_args "--build=*" "--host=*"
 
                     if test \( "${arch}" = "arm64" -a "$(uname -m)" != "arm64" \) \
                     -o \( "${build_sysname}" = "darwin" -a ${build_sysmajor} -eq 19 \); then
@@ -648,26 +690,33 @@ configure_fun() {
                     unset CPATH IPATH INCLUDE_PATH
                     unset LIBRARY_PATH
                     unset PYTHON_HOME
-                    export CFLAGS="$(echo "${CFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
-                    export OBJCFLAGS="$(echo "${OBJCFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
-                    export CPPFLAGS="$(echo "${CPPFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
-                    export CXXFLAGS="$(echo "${CXXFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
-                    export CXXLDFLAGS="$(echo "${CXXLDFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
-                    export LDFLAGS="$(echo "${LDFLAGS}" | sed -e 's/-L[^[:space:]]*//g')"
+                    #export CFLAGS="$(echo "${CFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    #export OBJCFLAGS="$(echo "${OBJCFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    #export CPPFLAGS="$(echo "${CPPFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    #export CXXFLAGS="$(echo "${CXXFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    #export CXXLDFLAGS="$(echo "${CXXLDFLAGS}" | sed -e 's/-I[^[:space:]]*//g')"
+                    #export LDFLAGS="$(echo "${LDFLAGS}" | sed -e 's/-L[^[:space:]]*//g')"
+                    #export LDFLAGS="${LDFLAGS} -L${macos_sdl}/usr/lib"
+                    do_patch "python3" "${resources}/../deps-gtk"
+                    do_autoreconf
                     #export PYTHON=${buildtools_prefix}/bin/python3.9
-                    export PATH="${PATH}:${buildtools_prefix}/bin"
-                    for f in "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/patch-"*.diff; do patch -N -p0 < "$f"; done
+                    #export PATH="${PATH}:${buildtools_prefix}/bin"
+                    for f in "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/patch_postautoconf-"*.diff; do patch -N -p0 < "$f"; done
                     applications_dir="${prefix}/Library/Applications"
                     for f in Lib/cgi.py Lib/ctypes/macholib/dyld.py; do sed -e "s|@@PREFIX@@|${prefix}|g" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     for f in Makefile.pre.in; do sed -e "s|/setup.py|/setup.py --no-user-cfg|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     for f in configure; do sed -e "s|@@APPLICATIONS_DIR@@|${applications_dir}|" "${f}" > "${f}.tmp" && mv -v "${f}.tmp" "${f}"; done
                     do_postconfigure() {
+                        files=$(echo "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/patch_postconfigure-"*.diff 2> /dev/null) || true;
+                        for f in $(echo $files); do patch -N -p0 < "$f"; done
+                        grep -Eq '^[[:space:]]*#[[:space:]]*define[[:space:]][[:space:]]*HAVE_LIBREADLINE_EDIT' "${builddir}/pyconfig.h" \
+                        && for f in "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/patch_postconfigure_libedit-setup.py"*.diff; do (cd "${rootdir}" && patch -N -p0 < "$f"); done
                         ed - "${builddir}/pyconfig.h" < "${resources}/../deps-gtk/"[0-9][0-9]*_"python3/pyconfig.h-universal.ed"
                     }
-                    #export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
+                    export PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1
                     chmod +x "${configure}"
                     add_args \
-                        --with-ensurepip=no
+                        --with-ensurepip=no --with-computed-gotos
                     case "${build_sysname}" in
                         darwin*) add_args --enable-framework="${prefix}/Library/Frameworks";;
                         *)       add_args --with-shared;;
@@ -679,6 +728,8 @@ configure_fun() {
             esac
             ;;
         SDL|sdl)
+            do_patch "libsdl"
+            do_autocmd ./autogen.sh
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
                 linux*)  add_args --with-x;;
@@ -707,13 +758,18 @@ configure_fun() {
             #build_flags "${optflags}"
             #--enable-joystick --enable-audio
             do_patch "libsdl2"
+            do_autocmd ./autogen.sh
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
                 linux*)  add_args --with-x;;
             esac
             add_args \
-                --enable-joystick --enable-audio \
-                --disable-video-metal --disable-render-metal
+                --enable-joystick --enable-audio
+
+            macos_vermin=$(echo "${CFLAGS}" | sed -ne 's/.*-mmacosx-version-min=\([^ ]*\).*/\1/p' | awk -F'.' '{ print $1*1000000 + $2*1000 }')
+            if test -n "${macos_vermin}" && test ${macos_vermin} -lt $((10*1000000+11*1000)); then # no metal before 10.11
+                add_args --disable-video-metal --disable-render-metal
+            fi
             add_buildargs V=1
             ;;
         dialog)
@@ -754,7 +810,7 @@ configure_fun() {
             del_args "--build=*" "--host=*"
             test "$arch" = "arm64" && add_args "--enable-cross-compile" "--target-os=darwin" "--disable-asm"
             ###build_optimize_size; add_args --enable-small
-            build_optimize_size; add_args --enable-optimizations=-Os
+            #build_optimize_size; add_args --enable-optimizations=-Os
             test -x "${buildtools_prefix}/bin/pod2man" && export POD2MAN=${buildtools_prefix}/bin/pod2man
             add_buildargs POD2MAN="${POD2MAN}"
             PATH=$PATH:${buildtools_prefix}/bin #for nasm,yasm
@@ -847,14 +903,68 @@ configure_fun() {
             del_args "-DCMAKE*RPATH*" "-DCMAKE*NAME_DIR*"
             add_args "-DFREEGLUT_WAYLAND=OFF" "-DFREEGLUT_BUILD_DEMOS=OFF" "-DFREEGLUT_BUILD_STATIC_LIBS=ON" "-DFREEGLUT_BUILD_SHARED_LIBS=ON" "-DFREEGLUT_GLES=OFF"
             ;;
+        pulseaudio)
+            case "${build_sysname}" in linux*) add_args --without-caps;; esac
+            ;;
+        *libsndfile)
+            build_one_arch
+            ;;
+        *libmysofa)
+            build_cmake
+            add_args -DBUILD_TESTS=no
+            case "${build_sysname}" in
+                darwin*)
+                    #add_args    -DZLIB_INCLUDE_DIR="${macos_sdk_fwk}/usr/include" \
+                    #            -DZLIB_LIBRARY_RELEASE="$(ls "${macos_sdk_fwk}/usr/lib/libz."{tbd,dylib} | head -n1)"
+                    ;;
+                *) ;;
+            esac
+            ;;
+        libsamplerate)
+            do_patch
+            add_args --enable-option-checking --disable-fftw --disable-cpu-clip --enable-sndfile
+            ;;
+        PortAudio*)
+            del_buildargs "-j*" # make // not working with this one
+            do_patch "portaudio"
+            add_args \
+                    --disable-mac-universal \
+                    --enable-cxx \
+                    --enable-option-checking \
+                    --without-alsa \
+                    --without-oss \
+                    --without-asihpi \
+                    --without-winapi
+            ;;
         openal-soft)
-            build_cmake ALSOFT_REQUIRE_SDL2=OFF
+            do_patch "openal"
+
+            test "$(echo "${cc_version}" | grep -Ei 'apple' | awk -F'.' '{ print $1 }')" -lt 9 \
+            && newcc=$(export PATH="$PATH:/opt/local/bin:/usr/local/bin"; which "clang-mp-9.0" "clang++-mp-9.0" | tr '\n' ':') \
+            && newcc=${newcc%:} && test -x "${newcc%%:*}" && export CC=${newcc%%:*} CXX="${newcc#*:}"
+
+            build_cmake
+            case "${build_sysname}" in
+                darwin*)
+                    add_args -DALSOFT_NO_CONFIG_UTIL=1 \
+                        -DALSOFT_REQUIRE_SDL2=OFF # -DPORTAUDIO_FOUND=0 # -DPULSEAUDIO_FOUND=0 #-DALSOFT_UTILS=0
+                    ;;
+                linux*) test -f /usr/include/getopt.h && mv -v utils/getopt.h utils/getopt.h.out || true
+                        add_args "-DALSOFT_REQUIRE_SDL2=OFF";;
+                *)
+                    add_args "-DALSOFT_REQUIRE_SDL2=OFF";;
+            esac
             ;;
         alsa-lib)
             add_args --enable-shared=yes --enable-static=no #--with-libdl=no
             ;;
         alsa-utils)
             add_args "--disable-nls";;
+        alsa-plugins)
+            do_patch "linux_alsa-plugins"
+            do_autoreconf
+            add_args --disable-lavrate
+            ;;
         mpg123)
             build_one_arch
             case "${build_sysname}" in darwin*) add_args --with-audio=coreaudio;; esac
@@ -1092,6 +1202,7 @@ configure_fun() {
             ;;
         libjpeg-turbo)
             build_one_arch
+            test "${arch}" = "arm64" && add_args "-DASM=OFF"
             build_cmake
             add_args "-DWITH_JPEG8=1"
             export ASM_NASM=$(which -a ${buildtools_prefix}/bin/nasm nasm | head -n1)
@@ -1149,12 +1260,14 @@ configure_fun() {
                 --with-docdir=${prefix}/share/doc/tiff \
                 --with-jpeg-include-dir=${MORE_PREFIXES}/include \
                 --with-jpeg-lib-dir=${MORE_PREFIXES}/lib \
+                --with-zlib-include-dir=${MORE_PREFIXES}/include \
+                --with-zlib-lib-dir=${MORE_PREFIXES}/lib \
                 --with-lzma-include-dir=${MORE_PREFIXES}/include \
                 --with-lzma-lib-dir=${MORE_PREFIXES}/lib \
-                --with-zlib-include-dir=${macos_sdk}/usr/include \
-                --with-zlib-lib-dir=${macos_sdk}/lib \
                 --with-zstd-include-dir=${prefix}/include \
                 --with-zstd-lib-dir=${prefix}/lib
+                #--with-zlib-include-dir=${macos_sdk}/usr/include \
+                #--with-zlib-lib-dir=${macos_sdk}/lib 
             mv -v "${rootdir}/VERSION" "${rootdir}/VERSION.txt"
             do_patch '' "${resources}/../deps-gtk"
             ;;
@@ -1263,7 +1376,7 @@ configure_fun() {
             ;;
         gtk+)
             build_one_arch
-            #PATH=$PATH:${buildtools_prefix}/bin
+            PATH=$PATH:${buildtools_prefix}/bin
             do_patch 'gtk2' "${resources}/../deps-gtk"
             rm -v "${rootdir}"/{gdk/gdkalias.h,gdk/gdkaliasdef.c,gtk/gtkalias.h,gtk/gtkaliasdef.c}
             do_autoreconf
@@ -1291,6 +1404,12 @@ configure_fun() {
             export CPPFLAGS="${CPPFLAGS} -DX_LOCALE -D_IPP_PRIVATE_STRUCTURES=1"
             export CFLAGS="${CFLAGS} -fstrict-aliasing"
             build_optimize_size
+            ;;
+        *gtk-quartz-engine*)
+            export LIBTOOL="${MORE_PREFIXES}/bin/libtool"
+            export PATH="${PATH}:/opt/local/bin" # do_autocmd "./autogen.sh"
+            do_patch "gtk-quartz-engine" "${resources}/../deps-gtk"
+	    configure="${rootdir}/autogen.sh"
             ;;
         meson)
             unset PYTHON PYTHONHOME PYTHONPATH
@@ -1345,6 +1464,22 @@ configure_fun() {
               export DYLD_FALLBACK_LIBRARY_PATH="${PYTHONHOME}/lib:${DYLD_FALLBACK_LIBRARY_PATH}"
               ;;
 
+        libtool)
+            do_patch
+            # Stop build from trying to regenerate these after patching.
+            worksrcpath=.
+            touch ${worksrcpath}/doc/libtool.1 ${worksrcpath}/doc/libtoolize.1
+            touch ${worksrcpath}/aclocal.m4 ${worksrcpath}/libltdl/aclocal.m4
+            touch ${worksrcpath}/Makefile.in ${worksrcpath}/libltdl/Makefile.in
+            touch ${worksrcpath}/config-h.in ${worksrcpath}/libltdl/config-h.in
+            touch ${worksrcpath}/configure ${worksrcpath}/libltdl/configure
+            case "${build_sysname}" in darwin*) 
+                export M4=/usr/bin/m4 GREP=/usr/bin/grep SED=/usr/bin/sed
+                do_postinstall() {
+                    xattr -r -d com.dropbox.attributes "${destroot}"
+                };;
+            esac
+            ;;
         *)
             echo "+ configure: using GENERIC configuration for '$prog'" > /dev/stderr ;;
     esac
@@ -1361,6 +1496,30 @@ configure_fun() {
 
     # Handle INSTALL mode
     if test -n "${do_install}"; then
+        tmpscript=$(mktemp /tmp/vpkg.sh.XXXXXX); script="${prefix}/bin/vpkg.sh"
+        cat > "${tmpscript}" << EOF
+#!/bin/sh
+mydir=\$(cd \$(dirname "\$0") && pwd); prefix=\$(dirname "\${mydir}"); action="\$1"; pkg="\$2"
+case "\${action}" in list|remove) ;; 
+                     *) echo "Usage: \$(basename "\$0") remove|list [<package>]"; exit 1;; 
+esac
+test "\${action}" = "list" -a -z "\${pkg}" && { cd "\${prefix}/var/vpkg" && find . -iname '*.list' | sed -e 's|^\./||' -e 's|\.list$||'; exit \$?; }
+test -f "\${prefix}/var/vpkg/\${pkg}.list" || { echo "!! \${prefix}/var/vpkg/\${pkg}.list not found"; exit 1; }
+test "\${action}" = "remove" && { printf -- "Are you sure you want to delete '\${pkg}' ? [y/n] "; read c; case "\${c}" in y|Y) ;; *) exit 0;; esac; } 
+(mode=0; cd / && while test \${mode} -lt 2; do cat "\${prefix}/var/vpkg/\${pkg}.list" | { line=; while read line || test -n "\${line}"; do 
+    test "\${action}" = "list" && { echo "\${line}"; mode=9999; continue; }
+    case "\${line}" in 
+        ".\${prefix}/var/vpkg/\${pkg}.list") ;; 
+        ".\${prefix}"/*) 
+            case "\${mode}" in 1) test -d "\${line}" && test -z "\$(find "\${line}" -depth 1)" && rmdir "\${line}";;
+                               0) test -d "\${line}" || rm -fv "\${line}";;
+            esac;; 
+    esac
+ done; }; mode=\$((mode+1)); done)
+EOF
+        if diff -q "${tmpscript}" "${script}" >/dev/null 2>&1; then rm -f "${tmpscript}"
+        else  mkdir -p "$(dirname "${script}")" && mv -v "${tmpscript}" "${script}" && chmod 755 "${script}"; fi
+
         echo "+ ${destrootcmd} ${destrootargs[@]}"
         "${destrootcmd}" "${destrootargs[@]}"
         ret=$?
@@ -1399,6 +1558,7 @@ configure_fun() {
     ### INSTALL in destroot
     #
     create_pkginfo() {
+        printf -- " creating ${prog} package archive, "
         pushd "${destroot}" >/dev/null 2>&1 && {
             mkdir -p "./${prefix}/var/vpkg" && {
                 find . > "./${prefix}/var/vpkg/${prog}.list"
@@ -1454,5 +1614,4 @@ configure_fun() {
     ## END
     finish $?; return $?
 }
-
 

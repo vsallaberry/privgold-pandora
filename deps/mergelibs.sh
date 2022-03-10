@@ -61,8 +61,9 @@ printf -- "+ $(basename "$0")\n"
 printf -- "    builddirs:\n"
 printf -- "        %s\n" "${builddirs[@]}"
 printf -- "    destroot:\n        ${destroot}\n"
-printf -- "    excludes:\n"
-printf -- "        %s\n" "${excludes[@]}"
+test ${#excludes[@]} -gt 0 \
+&& printf -- "    excludes:\n" \
+&& printf -- "        %s\n" "${excludes[@]}"
 printf -- "    install:${do_install:-no} destroot:${do_destroot:-no} takeall:${take_all:-no} suffix:${destroot_suffix} verbose:${verbose}\n"
 printf -- "\n"
 
@@ -143,17 +144,18 @@ declare -a patterns
 for b in "${builddirs[@]}"; do
     patterns[${#patterns[@]}]="-e"; patterns[${#patterns[@]}]="s|^${b}${destroot_suffix}/||"
 done
-files=`find "${build_destroot[@]}" \
+unset files; declare -a files; IFSbak=$IFS; IFS=$'\n'
+for f in $(find "${build_destroot[@]}" \
             -not -type l \
             -and \( -iname '*.dylib' -o -iname '*.a' -o -iname '*.so' -o -iname '*.dll' -o -iname '*.pyd' \
                     -o -iname '*.dylib.[0-9]*' -o -iname '*.so.[0-9]*' \
                     -o \( -not -type d -and -perm '+u=x' \) \
                  \) \
-                 | sed "${patterns[@]}" | sort | uniq`
+                 | sed "${patterns[@]}" | sort | uniq); do files[${#files[@]}]="$f"; done
+IFS=${IFSbak}
+test "${verbose}" -gt 2 && printf "FILES:\n${files[@]}\n\n"
 
-test "${verbose}" -gt 2 && printf "FILES:\n$files\n\n"
-
-for f in $files; do
+for f in "${files[@]}"; do
     filedst="${destroot}/$f"
     ref_archs=
 

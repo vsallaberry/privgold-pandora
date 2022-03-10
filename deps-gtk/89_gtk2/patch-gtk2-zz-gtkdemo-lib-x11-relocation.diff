@@ -290,18 +290,18 @@
  /**
 --- demos/gtk-demo/Makefile.am.orig     1970-01-01 01:00:00.000000000 +0100
 +++ demos/gtk-demo/Makefile.am  2022-02-27 23:24:31.749518673 +0100
-@@ -1,9 +1,11 @@
- ## Makefile.am for gtk+/demos
+@@ -2,9 +1,11 @@
  include $(top_srcdir)/Makefile.decl
  
+ democodedir=$(datadir)/gtk-2.0/demo
 -if USE_QUARTZ
 +if GTK_RELOCATION
- democodedir=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
+ democodedir_define=$(subst $(prefix),,$(datadir))/gtk-2.0/demo
 +if USE_QUARTZ
  main.o: CFLAGS += -xobjective-c
 +endif
  else
- democodedir=$(datadir)/gtk-2.0/demo
+ democodedir_define=$(datadir)/gtk-2.0/demo
  endif
 --- ./gtk/gtkprivate.h.orig	2016-10-22 06:11:13.000000000 +0200
 +++ ./gtk/gtkprivate.h 2022-02-27 23:08:43.537883456 +0100
