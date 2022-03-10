@@ -26,6 +26,51 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>launcher/CMakeLists.txt</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/CMakeLists.txt</locationURI>
+		</link>
+		<link>
+			<name>launcher/general.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/general.cpp</locationURI>
+		</link>
+		<link>
+			<name>launcher/general.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/general.h</locationURI>
+		</link>
+		<link>
+			<name>launcher/launcher.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/launcher.h</locationURI>
+		</link>
+		<link>
+			<name>launcher/launcher.rc</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/launcher.rc</locationURI>
+		</link>
+		<link>
+			<name>launcher/main.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/main.cpp</locationURI>
+		</link>
+		<link>
+			<name>launcher/nogui.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/nogui.cpp</locationURI>
+		</link>
+		<link>
+			<name>launcher/resource.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/resource.h</locationURI>
+		</link>
+		<link>
+			<name>launcher/saveinterface.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/launcher/saveinterface.cpp</locationURI>
+		</link>
+		<link>
 			<name>setup/icon1.ico</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/vegastrike/setup/icon1.ico</locationURI>

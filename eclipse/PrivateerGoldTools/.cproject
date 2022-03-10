@@ -46,6 +46,7 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/include/atk-1.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/glib-2.0/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/gtk-2.0/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.116555897" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -60,6 +61,7 @@
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/../../vegastrike/boost/1_50&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/SDL2&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
@@ -79,6 +81,8 @@
 									<listOptionValue builtIn="false" value="VS_LOG_NO_XML=1"/>
 									<listOptionValue builtIn="false" value="GTK=1"/>
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="CONSOLE=1"/>
+									<listOptionValue builtIn="false" value="HAVE_VERSION_H=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1924198496" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -94,10 +98,13 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/include/atk-1.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/glib-2.0/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/gtk-2.0/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.332794213" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GTK=1"/>
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="CONSOLE=1"/>
+									<listOptionValue builtIn="false" value="HAVE_VERSION_H=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.227841452" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -159,6 +166,7 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/include/atk-1.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/glib-2.0/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/gtk-2.0/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1785169509" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -185,6 +193,7 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/include/atk-1.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/glib-2.0/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/gtk-2.0/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.797052751" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="VS_UNIT_TESTS=1"/>
@@ -192,6 +201,8 @@
 									<listOptionValue builtIn="false" value="VS_LOG_NO_XML=1"/>
 									<listOptionValue builtIn="false" value="GTK=1"/>
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="CONSOLE=1"/>
+									<listOptionValue builtIn="false" value="HAVE_VERSION_H=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1149878143" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
@@ -207,10 +218,13 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/include/atk-1.0&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/glib-2.0/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GTK_PREFIX}/lib/gtk-2.0/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.727655040" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="GTK=1"/>
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
+									<listOptionValue builtIn="false" value="CONSOLE=1"/>
+									<listOptionValue builtIn="false" value="HAVE_VERSION_H=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1997903440" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
