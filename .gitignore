@@ -11,7 +11,7 @@
 **/*.sw?
 **/*~
 **/.\#*
-**/*.pyc
+**/*.py[co]
 
 /logs/log
 /build
@@ -28,6 +28,7 @@
 
 /tools/hardshortcut/*.o
 /tools/hardshortcut/hardshortcut
+/tools/hardshortcut/hardshortcut.exe
 /tools/hardshortcut/*.res
 /tools/hardshortcut/Resources.rc
 

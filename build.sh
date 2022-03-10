@@ -893,7 +893,7 @@ do_delivery_fun() {
         #echo "${git_rev}"
     }
     git_rev=$(get_git_rev)
-    if test "${do_delivery}" != "yes" || case "${git_rev}" in *-dirty) true;; *) false;; esac; then
+    if test "${do_delivery}" != "yes" -a "${do_delivery}" != "nodata" || case "${git_rev}" in *-dirty) true;; *) false;; esac; then
         bundle_version="${priv_version}-${git_rev}"
     else
         bundle_version=${priv_version}
@@ -911,7 +911,8 @@ do_delivery_fun() {
     other_bundle_ref_dir="${mydir}/${buildpool}"
 
     xcopy() {
-        rsync -ah -t --exclude '.DS_Store' --exclude '*~' --exclude '.*.sw?' --exclude '**/.git' --exclude '**/.svn' "$@"
+        rsync -ah -t --exclude '.DS_Store' --exclude '*~' --exclude '.*.sw?' --exclude '._*' \
+                     --exclude '**/.git' --exclude '**/.svn' "$@"
     }
 
     gfxs="sdl2 glut sdl1"
@@ -1345,9 +1346,9 @@ do_generate_python_cpp_api() {
 do_checkpython_fun() { (
     # CHECK PYTHON IN PROGRESS
     # Need VS builtins: BASE, VS, ...
-    local pymods="modules/builtin quests missions modules/ai modules bases"
+    local pymods="modules/builtin modules/builtin/encodings quests missions modules/ai modules bases"
     local python_prefix=$(python2.7-config --prefix)
-    local _m _p err _pyargs
+    local _m _p err _pyargs _check_filter _compile
     export PYTHONPATH= PYTHONHOME=
     for _m in ${pymods}; do
         _m="${priv_data}/$_m"
@@ -1355,6 +1356,7 @@ do_checkpython_fun() { (
         PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}$_m"
         PYTHONHOME="${PYTHONHOME}${PYTHONHOME:+:}$_m"
     done
+    PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}${builddir}/lib/pythonlibs"
     local _cpp_api_dir="${builddir}/Python_CppApi_Mock"
     #do_generate_python_cpp_api ${_cpp_api_dir}
     do_generate_python_cpp_api ${_cpp_api_dir} ${PYTHON} \
@@ -1372,24 +1374,31 @@ do_checkpython_fun() { (
     pythoncmd=
     local -a errors
     local -a warnings
+    local check_filter
     case "${do_checkpython}" in
-        "bytecode"|"bytecode:"*) _pyargs=""; do_checkpython=${do_checkpython#bytecode:};;
-        *) _pyargs="-B";;
+        "bytecode"|"bytecode:"*) _pyargs=""; _check_filter=${do_checkpython#bytecode:}; _compile=yes;;
+        *) _pyargs="-B"; _check_filter=${do_checkpython};;
     esac
     for _m in $pymods; do
-        test "${_m}" = "modules/builtin" && continue
         for _p in ${priv_data}/${_m}/*.py; do
             # the redirection stuff with fd 3 inverts stderr and stdout in order to put stderr in variable while displaying stdout
-            if test -r "${_p}" -a \( "${do_checkpython}" = "yes" -o "${do_checkpython}" = "bytecode" -o "${do_checkpython}" = "$(basename "$_p")" \); then
+            if test -r "${_p}" -a \( "${_check_filter}" = "yes" -o "${_check_filter}" = "bytecode" -o "${_check_filter}" = "$(basename "$_p")" \); then
                 # python compile/run check
                 # PYTHONPATH="$(dirname "${_p}"):${PYTHONPATH}"
-                cd "${priv_data}" \
-                    && err=$( { { ${PYTHON} ${_pyargs} -c "import $(basename "${_p%.py}")"; } 2>&1 >&3; } 3>&2 ) \
-                && printf -- "${err}+ OK : $_p\n" \
-                || { printf -- "${err}\n******* ERROR $_p\n"; errors[${#errors[@]}]="$_p"$'\n'"${err}"$'\n'; }
-
+                false && case "${_m}" in "modules/builtin"|"modules/builtin"/*) true;; *) false;; esac \
+                || { cd "${priv_data}" \
+                     && err=$( { { ${PYTHON} ${_pyargs} -c "import $(basename "${_p%.py}")"; } 2>&1 >&3; } 3>&2 ) \
+                     && { test -z "${_compile}" || err=$( { { ${PYTHON} ${_pyargs} -O -c "import $(basename "${_p%.py}")"; } 2>&1 >&3; } 3>&2 ); } \
+                     && printf -- "${err}+ OK : $_p\n" \
+                     || { printf -- "${err}\n******* ERROR $_p\n"; \
+                          test "${_m}" = "modules/builtin" && warnings[${#warnings[@]}]="$_p"$'\n'"${err}"$'\n' \
+                                                           || errors[${#errors[@]}]="$_p"$'\n'"${err}"$'\n'; }; }
                 # PYC check
-                test -r "${_p}c" || warnings[${#warnings[@]}]="${_p}: no PYC"
+                if test -r "${_p}c"; then test "${_p}" -nt "${_p}c" && warnings[${#warnings[@]}]="${_p}: PYC older than PY";
+                else warnings[${#warnings[@]}]="${_p}: no PYC"; fi
+                test $(echo "${py_version}" | awk -F'.' '{ print $1*1000000 + $2*1000 }') -lt $((3*1000000+5*1000)) \
+                && if test -r "${_p}o"; then test "${_p}" -nt "${_p}o" && warnings[${#warnings[@]}]="${_p}: PYO older than PY";
+                else warnings[${#warnings[@]}]="${_p}: no PYO"; fi
 
                 # spaces/tabs check
                 gawk_bin=$(which -a gawk awk 2>/dev/null | head -n1)

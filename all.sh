@@ -12,7 +12,7 @@ for arg in "$@"; do
         *) build_list="${build_list}${build_list:+ }${arg}";;
     esac
 done
-test -z "${build_list}" && build_list="sdl2 sdl2dbg sdl2fulldbg sdl1 glut auto univ gcc11 gcc8 gcc6 gcc5 native clang12 gcc6dbg glut1"
+test -z "${build_list}" && build_list="sdl2 sdl2dbg sdl2fulldbg sdl1 glut auto univ gcc11 gcc8 gcc6 gcc5 native clang12 gcc6dbg glut1 png12"
 for f in $build_list; do
     tool=auto;cxxf=;args=;mcc=;gfx=sdl2;type=release
     unset newbuildargs; declare -a newbuildargs
@@ -29,9 +29,18 @@ for f in $build_list; do
         gcc6) mcc=gcc6; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing";;
         gcc6dbg) mcc=gcc6; args="--cxx-std=98 --optimize=-O1 --cxx-flags=-Wno-strict-aliasing"; type=RelWithDebInfo;;
         gcc5) mcc=gcc-mp-5; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing"; tool=configure;;
-        gcc11) mcc=gcc-mp-11; args=="--cxx-flags=-Wno-strict-aliasing";;
+        gcc11) mcc=gcc-mp-11; args="--cxx-flags=-Wno-strict-aliasing";;
         clang12) mcc=clang-mp-12;;
         gcc8) mcc=gcc-mp-8; tool=configure;;
+        png12) pngpref="/usr/local/specific/libpng12"; test -d "${pngpref}" || continue
+               args="--optimize=-Os";gfx=sdl2; buildargs[${#buildargs[@]}]="--"
+               buildargs[${#buildargs[@]}]="-DFFMPEG_INCLUDE_DIRS=${pngpref}/include/libpng12;/usr/local/vega05/include"
+               buildargs[${#buildargs[@]}]="-DFFMPEG_LIBRARIES=/usr/local/vega05/lib/libavutil.dylib;/usr/local/vega05/lib/libavcodec.dylib;/usr/local/vega05/lib/libavformat.dylib;/usr/local/vega05/lib/libswscale.dylib;/usr/local/vega05/lib/libbz2.dylib"
+               for define in HAVE_LIBAVCODEC_AVCODEC_H HAVE_LIBAVCODEC_AVUTIL_H HAVE_LIBAVFORMAT_AVFORMAT_H HAVE_LIBSWSCALE_SWSCALE_H HAVE_LIBAVFILTER_AVFILTER_H HAVE_LIBAVFORMAT_AVIO_H HAVE_LIBAVDEVICE_AVDEVICE_H HAVE_LIBSWRESAMPLE_SWRESAMPLE_H; do
+                   buildargs[${#buildargs[@]}]="-D${define}=1"
+               done
+               buildargs[${#buildargs[@]}]="-DPNG_INCLUDE_DIRS=${pngpref}/include/libpng12"
+               buildargs[${#buildargs[@]}]="-DPNG_LIBRARIES=${pngpref}/lib/libpng12.dylib";;
         *) gfx=$f;;
     esac
     test -z "${mcc}" -o -x "$(which "${mcc}")" || { echo "!! compiler '${mcc}' not available on this system, skipping..."; continue; }
