@@ -1027,32 +1027,32 @@ do_delivery_fun() {
     fi
     vega_version=$(sed -n -e 's/^[[:space:]]*#[[:space:]]*define[[:space:]][[:space:]]*VERSION[[:space:]][[:space:]]*"\([^"]*\).*/\1/p' \
                    ${mainbuilddir}/config.h)
-    for f in "${bundledir}"/Contents/*.plist; do
+    IFSbak=$IFS; IFS=$'\n'; for f in $(find "${deliverydir}/bundle" -iname '*.plist' 2>/dev/null); do
         awk 'BEGIN { ignore=1; }; /<key>(.*[vV]ersion.*|CFBundleGetInfoString)<\/key>/ { ignore=0; version="'${priv_version}'"; }; \
              />CFBundleGetInfoString<|>CFBundleVersion</ { if (!ignore) version="'${priv_version}' (Vegastrike '${vega_version}', git:'${git_rev}')"; } \
              />BuildVersion<|>SourceVersion</ { if (!ignore) version="'${vega_version}'"; } \
              /<string>/ { if (!ignore) { sub(/<string>[^<]*<\/string>/, "<string>" version "</string>"); ignore=1; }; }; \
              /CFBundleInfoDictionaryVersion/ { ignore=1;}; // { print $0; };' \
              "${f}" > "${f}.tmp" && mv "${f}.tmp" "${f}"
-    done
+    done; IFS=$IFSbak
 
-    # build checkModifierKeys tool and copy it to bundle bin dir
+    # build checkModifierKeys/harshortcut tools and copy it to bundle bin dir
     case "${target_sysname}" in
         darwin*)
             test -n "${macos_sdk}" && checkmod_archs="-isysroot${macos_sdk} " || checkmod_archs=
-            "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="10.7" ARCHS="${checkmod_archs}${cxxf}" || exit $?
+            "${MAKE}" clean -C "${checkkeys_dir}" && "${MAKE}" -C "${checkkeys_dir}" OSX_VERSION_MIN="${target_osx_version_min}" ARCHS="${checkmod_archs}${cxxf}" || exit $?
             xcopy "${checkkeys_dir}/checkModifierKeys${exe}" "${bundle_bindir}" || exit $?
             ;;
-        mingw*|cygwin*|msys*|win*)
+        mingw*|cygwin*|msys*|win*|linux*|*bsd*)
             relbin=${bundle_bindir#${bundledir}/}
-            shortcuts="\{\\\"privgold\\\",\\\"${relbin}/vslauncher${exe}\\\",\\\"--run\\\",NULL,\\\"privsetup\\\",\\\"${relbin}/vssetup${exe}\\\",NULL,NULL\}"
-            "${MAKE}" distclean -C "${hardshortcut_dir}"  \
-            && "${MAKE}" -C "${hardshortcut_dir}" SHORTCUT_CPPFLAGS="-I${mainbuilddir} -I${target} -DHAVE_VERSION_H" \
+            shortcuts="\{\\\"privgold\\\",\\\"${relbin}/vslauncher${exe}\\\",\\\"--game\\\",NULL,\\\"privsetup\\\",\\\"${relbin}/vslauncher${exe}\\\",\\\"--setup\\\",NULL,NULL\}"
+            for bin_icon in "privgold:${priv_data}/priv-icon4.ico" "privsetup:${priv_data}/priv-setup.ico"; do
+                "${MAKE}" distclean -C "${hardshortcut_dir}"  \
+                && "${MAKE}" -C "${hardshortcut_dir}" SHORTCUT_CPPFLAGS="-I${mainbuilddir} -I${target} -DHAVE_VERSION_H -DSCM_PRODUCT_VERSION=\\\"${priv_version}\\\" -DSCM_PRODUCT_VERSION_RCNUM=$(echo "${priv_version}" | sed -e 's/\./,/g') -DVS_RESOURCE_ICON4_FILE=\\\"${bin_icon#*:}\\\"" \
                          SHORTCUT_CFLAGS="-DSHORTCUTS=${shortcuts}" || exit $?
-            xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privgold${exe}" || exit $?
-            xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/privsetup${exe}" || exit $?
+                xcopy "${hardshortcut_dir}/hardshortcut${exe}" "${bundledir}/${bin_icon%%:*}${exe}" || exit $?
+            done
             ;;
-
     esac
 
     # handle executables rpaths: vegastrike*

@@ -17,6 +17,15 @@
 #ifndef SCM_VERSION
 # define SCM_VERSION "0.5.0"
 #endif
+#ifndef SCM_PRODUCT_VERSION_RCNUM
+# define SCM_PRODUCT_VERSION_RCNUM SCM_VERSION_RCNUM
+#endif
+#ifndef SCM_PRODUCT_VERSION
+# define SCM_PRODUCT_VERSION SCM_VERSION
+#endif
+#ifndef VS_RESOURCE_ICON4_FILE
+# define VS_RESOURCE_ICON4_FILE "icon4.ico"
+#endif
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -70,7 +79,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON4               ICON                    "icon4.ico"
+IDI_ICON4               ICON                    VS_RESOURCE_ICON4_FILE
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -79,7 +88,7 @@ IDI_ICON4               ICON                    "icon4.ico"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION SCM_VERSION_RCNUM
- PRODUCTVERSION SCM_VERSION_RCNUM
+ PRODUCTVERSION SCM_PRODUCT_VERSION_RCNUM
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -102,7 +111,7 @@ BEGIN
             VALUE "LegalCopyright", "© Copyright 1998-2008 Vega Strike Project, 2021-2022 vsa.  All rights reserved.  See the vega-licence.txt for details."
             VALUE "OriginalFilename", "vegastrike.exe"
             VALUE "ProductName", "Vega Strike"
-            VALUE "ProductVersion", SCM_VERSION " rev " SCM_REVISION " from " SCM_REMOTE
+            VALUE "ProductVersion", SCM_PRODUCT_VERSION " rev " SCM_REVISION " from " SCM_REMOTE
         END
     END
     BLOCK "VarFileInfo"
