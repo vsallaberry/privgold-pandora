@@ -2,6 +2,7 @@
 #include "base_maker_texture.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <png.h>
 #ifdef _WIN32
 #define XMD_H
@@ -74,7 +75,11 @@ static inline bool readPng (FILE *fp, Texture::FileData *data, Texture::TextureT
 		png_set_palette_to_rgb(png_ptr);
 
 	if (ctype == PNG_COLOR_TYPE_GRAY && data->bpp < 8)
-		png_set_gray_1_2_4_to_8(png_ptr);
+#if PNG_LIBPNG_VER_MAJOR <= 1 && PNG_LIBPNG_VER_MINOR < 4
+        png_set_gray_1_2_4_to_8(png_ptr);
+#else
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+#endif
 
 	png_set_expand (png_ptr);
 	png_read_update_info (png_ptr,info_ptr);

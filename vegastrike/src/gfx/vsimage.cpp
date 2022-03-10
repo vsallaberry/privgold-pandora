@@ -12,6 +12,8 @@
 #include "vs_globals.h"
 #include <png.h>
 #include "posh.h"
+#include "vs_log_modules.h"
+
 #ifndef png_jmpbuf
 #  define png_jmpbuf(png_ptr) ((png_ptr)->jmpbuf)
 #endif
@@ -54,9 +56,9 @@ typedef int INT32;
 
 #ifdef _DEBUG
 //#define VSIMAGE_FAILURE(code) VSExit(code)
-#define VSIMAGE_FAILURE(code,file) VSFileSystem::vs_fprintf(stderr,"VSImage FAILURE! - trying graceful recovery... (while reading \"%s\")\n",file)
+#define VSIMAGE_FAILURE(code,file) GFX_LOG(logvs::ERROR, "VSImage FAILURE! - trying graceful recovery... (while reading \"%s\")\n",file)
 #else
-#define VSIMAGE_FAILURE(code,file) VSFileSystem::vs_fprintf(stderr,"VSImage FAILURE! - trying graceful recovery... (while reading \"%s\")\n",file)
+#define VSIMAGE_FAILURE(code,file) GFX_LOG(logvs::ERROR, "VSImage FAILURE! - trying graceful recovery... (while reading \"%s\")\n",file)
 #endif
 
 #include <iostream>
@@ -139,7 +141,7 @@ unsigned char *	VSImage::ReadImage( VSFile * f, textureTransform * t, bool strip
 			ret = this->ReadBMP();
 		break;
 		default :
-			cerr<<"::VSImage ERROR : Unknown image format"<<endl;
+			GFX_LOG(logvs::WARN, "::VSImage ERROR : Unknown image format");
 			VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 			ret = NULL;
 	}
@@ -160,9 +162,14 @@ VSError	VSImage::CheckPNGSignature( VSFile * file)
 	unsigned char sig[8];
 	file->Begin();
 	file->Read(sig, 8);
-	if (!png_check_sig(sig, 8))
+
+#if PNG_LIBPNG_VER_MAJOR <= 1 && PNG_LIBPNG_VER_MINOR < 4
+    if (!png_check_sig(sig, 8))
+#else
+    if (png_sig_cmp(sig, 0, 8))
+#endif
 		ret = BadFormat;
-	
+
 	return ret;
 }
 
@@ -297,7 +304,7 @@ unsigned char *	VSImage::ReadPNG()
 	img_file->Begin();
 	if( !CheckPNGSignature( img_file))
 	{
-		cerr<<"VSImage::ReadPNG() ERROR : NOT A PNG FILE"<<endl;
+		GFX_LOG(logvs::WARN, "VSImage::ReadPNG() ERROR : NOT A PNG FILE");
 		VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 		throw(1);
 	}
@@ -319,7 +326,7 @@ unsigned char *	VSImage::ReadPNG()
 	if (info_ptr == NULL)
 	{
 		png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
-		cerr<<"VSImage ERROR : PNG info_ptr == NULL !!!"<<endl;
+		GFX_LOG(logvs::WARN, "VSImage ERROR : PNG info_ptr == NULL !!!");
 		VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 		throw(1);
 	}
@@ -328,7 +335,7 @@ unsigned char *	VSImage::ReadPNG()
 		/* Free all of the memory associated with the png_ptr and info_ptr */
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 		/* If we get here, we had a problem reading the file */
-		cerr<<"VSImage ERROR : problem reading file/buffer -> setjmp !!!"<<endl;
+		GFX_LOG(logvs::WARN, "VSImage ERROR : problem reading file/buffer -> setjmp !!!");
 		VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 		throw(1);
 	}
@@ -366,9 +373,15 @@ unsigned char *	VSImage::ReadPNG()
 		png_set_strip_16(png_ptr);
 	if (strip_16&&this->img_color_type == PNG_COLOR_TYPE_PALETTE)
 		png_set_palette_to_rgb(png_ptr);
-		   
+
 	if (this->img_color_type == PNG_COLOR_TYPE_GRAY && this->img_depth < 8)
-		png_set_gray_1_2_4_to_8(png_ptr);
+#if PNG_LIBPNG_VER_MAJOR <= 1 && PNG_LIBPNG_VER_MINOR < 4
+        png_set_gray_1_2_4_to_8(png_ptr);
+#else
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
+#endif
+
+	png_set_interlace_handling(png_ptr);
 
 	png_set_expand (png_ptr);
 	png_read_update_info (png_ptr,info_ptr);
@@ -559,7 +572,7 @@ unsigned char *	VSImage::ReadBMP()
 
 	if( CheckBMPSignature( img_file)!=Ok)
 	{
-		cerr<<"VSImage ERROR : BMP signature check failed : this should not happen !!!"<<endl;
+		GFX_LOG(logvs::WARN, "VSImage ERROR : BMP signature check failed : this should not happen !!!");
 		VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 		throw(1);
 	}
@@ -776,7 +789,7 @@ unsigned char *VSImage::ReadDDS()
                   }
                   break;
                 default:
-                  cerr <<"VSImage ERROR : DDS Compression Scheme, impossible.[" <<(int)header.pixelFormat.fourcc[0]<<";"<<(int)header.pixelFormat.fourcc[1]<<";"<<(int)header.pixelFormat.fourcc[2]<<";"<<(int)header.pixelFormat.fourcc[3]<<";!\n";
+                  GFX_LOG(logvs::WARN, "VSImage ERROR : DDS Compression Scheme, impossible.[%d;%d;%d;%d;]!",(int)header.pixelFormat.fourcc[0],(int)header.pixelFormat.fourcc[1],(int)header.pixelFormat.fourcc[2],(int)header.pixelFormat.fourcc[3]);
                   VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
                   throw(1);
 		}
@@ -797,7 +810,7 @@ unsigned char *VSImage::ReadDDS()
 				height >>=1;
 		}
 		if(header.dcaps2 & (DDS_CUBEMAP | DDS_CUBEMAP_ALLFACES) ) {
-		    fprintf(stderr, "Reading Cubemap %s\n", img_file->GetFilename().c_str());
+		    GFX_LOG(logvs::INFO, "Reading Cubemap %s", img_file->GetFilename().c_str());
 			inputSize = inputSize * 6;
 			this->img_sides = 
 			     SIDE_POS_X | SIDE_NEG_X |
@@ -848,7 +861,7 @@ VSError	VSImage::WriteImage( char * filename, unsigned char * data, VSImageType 
 	VSError err = f.OpenCreateWrite( filename, ft);
 	if( err>Ok)
 	{
-		cerr<<"VSImage ERROR : failed to open "<<filename<<" for writing"<<endl;
+		GFX_LOG(logvs::WARN, "VSImage ERROR : failed to open %s for writing", filename);
 		VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 		return VSFileSystem::FileNotFound;
 	}
@@ -880,7 +893,7 @@ VSError	VSImage::WriteImage( VSFile * pf, unsigned char * data, VSImageType type
 			ret = this->WriteBMP( data);
 		break;
 		default :
-			cerr<<"VSImage ERROR : Unknown image format"<<endl;
+			GFX_LOG(logvs::WARN, "VSImage ERROR : Unknown image format");
 			VSIMAGE_FAILURE(1,img_file->GetFilename().c_str());
 			return VSFileSystem::BadFormat;
 	}
@@ -898,13 +911,17 @@ VSError	VSImage::WritePNG( unsigned char * data)
     (PNG_LIBPNG_VER_STRING, (png_voidp)NULL,NULL,NULL);
   if (!png_ptr)
     return BadFormat;
-  
+
   png_infop info_ptr = png_create_info_struct(png_ptr);
   if (!info_ptr) {
     png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
     return BadFormat;
   }
+#if PNG_LIBPNG_VER_MAJOR <= 1 && PNG_LIBPNG_VER_MINOR < 5
   if (setjmp(png_ptr->jmpbuf)) {
+#else
+  if (setjmp(png_jmpbuf(png_ptr))) {
+#endif
     png_destroy_write_struct(&png_ptr, &info_ptr);
     return BadFormat;
   }

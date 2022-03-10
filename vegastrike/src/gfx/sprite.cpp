@@ -39,7 +39,7 @@
 #ifndef M_PI_2
 # define M_PI_2		1.57079632679489661923	/* pi/2 */
 #endif
-static float *mview = NULL;
+//static float *mview = NULL;
 
 using namespace VSFileSystem;
 
@@ -67,7 +67,9 @@ VSSprite::VSSprite(Texture *_surface, float _xcenter, float _ycenter, float _wid
     widtho2(_width/2),
     heighto2(_height/2),
     maxs(_s),
-    maxt(_t)
+    maxt(_t),
+	rotation(0.0),
+	isAnimation(false)
 {
     surface = _surface;
 }
