@@ -18,6 +18,13 @@
 #if defined(HAVE_CONFIG_H)
 # include "config.h"
 #endif
+#if defined(HAVE_VERSION_H)
+# include "version.h"
+#else
+# define SCM_VERSION "unknown"
+# define SCM_REVISION "unknown"
+# define SCM_REMOTE "unknown"
+#endif
 #include "common/common.h"
 #include "../include/central.h"
 #include <stdlib.h>
@@ -131,10 +138,14 @@ int main(int argc, char *argv[]) {
             if (chdir(argv[i_argv][1] == '-' ? argv[++i_argv] : argv[i_argv]+2) == 0) {
                 pathorder[0] = "."; pathorder[1] = binpath;
             }
-		} else {
-			VS_LOG("vssetup", logvs::WARN, "Usage: vssetup [--target DATADIR] [-DDATADIR]");
-			if (has_console)
-                return 1;
+		} else if (has_console) {
+			if (!strcmp(argv[i_argv], "--version")) {
+				logvs::log_printf("vssetup for vegastrike %s revision %s from %s\n",
+								  SCM_VERSION, SCM_REVISION, SCM_REMOTE);
+				return 0;
+			}
+			VS_LOG("vssetup", logvs::WARN, "Usage: vssetup [--target DATADIR] [-DDATADIR] [--version]");
+            return 1;
 		}
 	}
 
@@ -174,7 +185,8 @@ int main(int argc, char *argv[]) {
         /* Now look for data directory */
         data_paths.clear();
         for (const char ** base = pathorder; *base; ++base) {
-            for (const char ** searchs = VSCommon::datadirs; *searchs; ++searchs) {
+        	if (**base == 0) continue ;
+            for (const char * const * searchs = VSCommon::datadirs; *searchs; ++searchs) {
                 data_paths.push_back( (std::string(*base) + "/") + *searchs );
             }
          }

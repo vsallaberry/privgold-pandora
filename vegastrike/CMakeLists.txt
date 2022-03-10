@@ -680,9 +680,10 @@ IF(PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY)
     message(STATUS "  Python includes:${PYTHON_INCLUDE_DIR}, libs:${PYTHON_LIBRARY}, bin:${PYTHON_EXECUTABLE}")
     # As we don't want to use all python libs in dev mode, we need to specify them one by one.
     # In release(bundle) mode, no issue, as we provide only the libs we want.
-    SET(VEGASTRIKE_PYTHON_DYNLIB_PATH "pythonlibs")
-    SET(VS_PYTHON_DYNLIB_BUILDDIR "${CMAKE_BINARY_DIR}/lib/${VEGASTRIKE_PYTHON_DYNLIB_PATH}")
-    SET(VS_PYTHON_DYNLIB_NAMES unicodedata time datetime _struct _io)
+    SET(VEGASTRIKE_PYTHON_DYNLIB_PATH "lib/pythonlibs")
+    SET(VS_PYTHON_DYNLIB_BUILDDIR "${CMAKE_BINARY_DIR}/${VEGASTRIKE_PYTHON_DYNLIB_PATH}")
+    SET(VS_PYTHON_DYNLIB_NAMES _collections _io _socket _symtable datetime fcntl operator select
+        time _functools _scproxy _struct binascii dbm itertools math readline termios unicodedata)
     unset(tmp_pythonlibs)
     file (MAKE_DIRECTORY "${VS_PYTHON_DYNLIB_BUILDDIR}")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -E -c "import sys; print(\";\".join(sys.path))"
@@ -1029,7 +1030,7 @@ add_custom_command(OUTPUT get_scm_revision_output # trick so that make considers
                                             -DGETSCM_VERSION_FILE="${CMAKE_CURRENT_BINARY_DIR}/version.h"
                                             -DGETSCM_PRODUCT_VERSION="${VERSION}"
                                             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GetSCMrevision.cmake")
-set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/version.h" PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE DEPENDS get_scm_revision)
 
 #end config.h generation
 #SET(CMAKE_CXX_FLAGS "-include config.h;-pipe;"${CMAKE_CXX_FLAGS})
@@ -1061,12 +1062,8 @@ ENDIF(NOT DISABLE_CLIENT)
 
 # Vssetup Sub build file
 add_subdirectory(setup)
-if (GTK2_FOUND)
-    add_dependencies(vssetup get_scm_revision)
-endif()
 # Vslauncher Sub build file
 add_subdirectory(launcher)
-add_dependencies(vslauncher get_scm_revision)
 
 #ADD_CUSTOM_TARGET(vssetup DEPENDS setup/vssetup COMMAND ln -fs ${vsUTCS_BINARY_DIR}/setup/vssetup vssetup || true)
 
@@ -1080,9 +1077,10 @@ add_subdirectory(tests)
 target_link_libraries(vegaserver ${TST_SERVER_LIBS})
 set_target_properties(vegaserver PROPERTIES LINK_FLAGS "-L/usr/lib -L${vsUTCS_BINARY_DIR}${PTHREAD_LDFLAGS}")
 add_dependencies(vegaserver mesh_tool)
+add_dependencies(vegaserver get_scm_revision)
 if (GTK2_FOUND)
     add_dependencies(vegaserver vssetup)
-else(GTK2_FOUND)
+elseif (DIALOG_FOUND)
     add_dependencies(vegaserver vssetup_dlg)
 endif(GTK2_FOUND)
 

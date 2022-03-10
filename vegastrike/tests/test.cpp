@@ -27,6 +27,13 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#if defined(HAVE_VERSION_H)
+# include "version.h"
+#else
+# define SCM_VERSION "unknown"
+# define SCM_REVISION "unknown"
+# define SCM_REMOTE "unknown"
+#endif
 
 #include "unicode.h"
 #include "multimap.h"
@@ -36,7 +43,7 @@
 static int usage(int status, int argc, char ** argv) {
 	(void) argc;
 	FILE * out = status == 0 ? stdout : stderr;
-	fprintf(out, "Usage: %s [-h,--help]"
+	fprintf(out, "Usage: %s [-h,--help] [--version]"
 			    #ifdef VS_LOG_NO_XML
 				 " [-L[<module>=]<level>"
 			    #endif
@@ -52,7 +59,11 @@ int main(int argc, char ** argv) {
     	bool err = false;
     	if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
     		return usage (0, argc, argv);
-    	}
+    	} else if (!strcmp(argv[i], "--version")) {
+			logvs::log_printf("tests for vegastrike %s revision %s from %s\n",
+							  SCM_VERSION, SCM_REVISION, SCM_REMOTE);
+			return 0;
+		}
 	   #ifdef VS_LOG_NO_XML
     	else if (strncmp(argv[i], "-L", 2) == 0) {
     		if (argv[i][2] == 0) {

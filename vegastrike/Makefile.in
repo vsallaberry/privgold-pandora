@@ -128,7 +128,8 @@ CONFIG_CLEAN_FILES = src/Makefile
 CONFIG_CLEAN_VPATH_FILES =
 @VS_MAKE_NO_CLIENT_FALSE@am__EXEEXT_1 = vegastrike$(EXEEXT) \
 @VS_MAKE_NO_CLIENT_FALSE@	base_maker$(EXEEXT)
-@VS_MAKE_GTKUTILS_TRUE@am__EXEEXT_2 = vssetup$(EXEEXT)
+@VS_MAKE_GTKUTILS_TRUE@am__EXEEXT_2 = vssetup$(EXEEXT) \
+@VS_MAKE_GTKUTILS_TRUE@	vslauncher-gui$(EXEEXT)
 @VS_MAKE_DIALOGUTILS_TRUE@am__EXEEXT_3 = vssetup_dlg$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgdatadir)"
 PROGRAMS = $(bin_PROGRAMS)
@@ -662,21 +663,26 @@ am_vegastrike_OBJECTS = $(am__objects_12) $(am__objects_21) \
 	src/gldrv/gl_vertex_list.$(OBJEXT) src/gldrv/winsys.$(OBJEXT) \
 	src/main.$(OBJEXT) src/python/briefing_wrapper.$(OBJEXT)
 vegastrike_OBJECTS = $(am_vegastrike_OBJECTS)
-am__vslauncher_SOURCES_DIST = launcher/launcher.h \
-	launcher/log.link.cpp launcher/main.cpp launcher/general.cpp \
-	launcher/general.h src/common/common.cpp src/common/common.h \
-	launcher/nogui.cpp launcher/saveinterface.cpp
-@VS_MAKE_GTKUTILS_FALSE@am__objects_26 =  \
-@VS_MAKE_GTKUTILS_FALSE@	launcher/vslauncher-nogui.$(OBJEXT)
-@VS_MAKE_GTKUTILS_TRUE@am__objects_26 = launcher/vslauncher-saveinterface.$(OBJEXT)
-am_vslauncher_OBJECTS = launcher/vslauncher-log.link.$(OBJEXT) \
+am__objects_26 = launcher/vslauncher-log.link.$(OBJEXT) \
 	launcher/vslauncher-main.$(OBJEXT) \
 	launcher/vslauncher-general.$(OBJEXT) \
-	src/common/vslauncher-common.$(OBJEXT) $(am__objects_26)
+	src/common/vslauncher-common.$(OBJEXT)
+am__objects_27 = launcher/vslauncher-nogui.$(OBJEXT)
+am_vslauncher_OBJECTS = $(am__objects_26) $(am__objects_27)
 vslauncher_OBJECTS = $(am_vslauncher_OBJECTS)
 vslauncher_LDADD = $(LDADD)
 vslauncher_LINK = $(CXXLD) $(vslauncher_CXXFLAGS) $(CXXFLAGS) \
 	$(vslauncher_LDFLAGS) $(LDFLAGS) -o $@
+am__objects_28 = launcher/vslauncher_gui-log.link.$(OBJEXT) \
+	launcher/vslauncher_gui-main.$(OBJEXT) \
+	launcher/vslauncher_gui-general.$(OBJEXT) \
+	src/common/vslauncher_gui-common.$(OBJEXT)
+am__objects_29 = launcher/vslauncher_gui-saveinterface.$(OBJEXT)
+am_vslauncher_gui_OBJECTS = $(am__objects_28) $(am__objects_29)
+vslauncher_gui_OBJECTS = $(am_vslauncher_gui_OBJECTS)
+vslauncher_gui_LDADD = $(LDADD)
+vslauncher_gui_LINK = $(CXXLD) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) \
+	$(vslauncher_gui_LDFLAGS) $(LDFLAGS) -o $@
 am_vsrextract_OBJECTS = tools/common.$(OBJEXT) \
 	tools/vsrextract.$(OBJEXT)
 vsrextract_OBJECTS = $(am_vsrextract_OBJECTS)
@@ -793,7 +799,10 @@ am__depfiles_remade = boost/1_28/src/$(DEPDIR)/classes.Po \
 	launcher/$(DEPDIR)/vslauncher-log.link.Po \
 	launcher/$(DEPDIR)/vslauncher-main.Po \
 	launcher/$(DEPDIR)/vslauncher-nogui.Po \
-	launcher/$(DEPDIR)/vslauncher-saveinterface.Po \
+	launcher/$(DEPDIR)/vslauncher_gui-general.Po \
+	launcher/$(DEPDIR)/vslauncher_gui-log.link.Po \
+	launcher/$(DEPDIR)/vslauncher_gui-main.Po \
+	launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po \
 	objconv/$(DEPDIR)/asteroidgen.Po objconv/$(DEPDIR)/replace.Po \
 	objconv/$(DEPDIR)/trisort.Po \
 	objconv/MeshParse/$(DEPDIR)/mesh_xml-template_generator.Po \
@@ -1024,6 +1033,7 @@ am__depfiles_remade = boost/1_28/src/$(DEPDIR)/classes.Po \
 	src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po \
 	src/common/$(DEPDIR)/common.Po \
 	src/common/$(DEPDIR)/vslauncher-common.Po \
+	src/common/$(DEPDIR)/vslauncher_gui-common.Po \
 	src/common/$(DEPDIR)/vssetup-common.Po \
 	src/common/$(DEPDIR)/vssetup_dlg-common.Po \
 	src/gfx/$(DEPDIR)/ani_texture.Po \
@@ -1206,17 +1216,17 @@ SOURCES = $(libboost_python_a_SOURCES) $(libnetlowlevel_a_SOURCES) \
 	$(tempgen_SOURCES) $(test_SOURCES) $(trisort_SOURCES) \
 	$(unicode_conv_SOURCES) $(vegaserver_SOURCES) \
 	$(vegastrike_SOURCES) $(vslauncher_SOURCES) \
-	$(vsrextract_SOURCES) $(vsrmake_SOURCES) $(vssetup_SOURCES) \
-	$(vssetup_dlg_SOURCES)
+	$(vslauncher_gui_SOURCES) $(vsrextract_SOURCES) \
+	$(vsrmake_SOURCES) $(vssetup_SOURCES) $(vssetup_dlg_SOURCES)
 DIST_SOURCES = $(am__libboost_python_a_SOURCES_DIST) \
 	$(libnetlowlevel_a_SOURCES) $(asteroidgen_SOURCES) \
 	$(base_maker_SOURCES) $(mesh_xml_SOURCES) \
 	$(am__mesher_SOURCES_DIST) $(replace_SOURCES) \
 	$(tempgen_SOURCES) $(test_SOURCES) $(trisort_SOURCES) \
 	$(unicode_conv_SOURCES) $(vegaserver_SOURCES) \
-	$(vegastrike_SOURCES) $(am__vslauncher_SOURCES_DIST) \
-	$(vsrextract_SOURCES) $(vsrmake_SOURCES) $(vssetup_SOURCES) \
-	$(vssetup_dlg_SOURCES)
+	$(vegastrike_SOURCES) $(vslauncher_SOURCES) \
+	$(vslauncher_gui_SOURCES) $(vsrextract_SOURCES) \
+	$(vsrmake_SOURCES) $(vssetup_SOURCES) $(vssetup_dlg_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1887,7 +1897,7 @@ LIBCMD = \
   src/cmd/weapon_xml.h
 
 @VS_MAKE_GTKUTILS_FALSE@GTKUTILS_PROG = 
-@VS_MAKE_GTKUTILS_TRUE@GTKUTILS_PROG = vssetup
+@VS_MAKE_GTKUTILS_TRUE@GTKUTILS_PROG = vssetup vslauncher-gui
 @VS_MAKE_DIALOGUTILS_FALSE@DIALOGUTILS_PROG = 
 @VS_MAKE_DIALOGUTILS_TRUE@DIALOGUTILS_PROG = vssetup_dlg
 @VS_MAKE_NO_CLIENT_FALSE@CLIENT_PROG = \
@@ -2574,20 +2584,28 @@ vssetup_dlg_SOURCES = \
     setup/log.link.cpp \
     src/log.h
 
-@VS_MAKE_GTKUTILS_FALSE@VSLAUNCHER_SPECIFIC_SOURCES = launcher/nogui.cpp
-@VS_MAKE_GTKUTILS_TRUE@VSLAUNCHER_SPECIFIC_SOURCES = launcher/saveinterface.cpp
-@VS_MAKE_GTKUTILS_TRUE@vslauncher_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
-@VS_MAKE_GTKUTILS_TRUE@vslauncher_CXXFLAGS_GTK = $(GTK_CFLAGS)
-vslauncher_CXXFLAGS = -DVS_LOG_NO_XML $(vslauncher_CXXFLAGS_GTK)
-vslauncher_SOURCES = \
+VSLAUNCHER_COMMON_SOURCES = \
 	launcher/launcher.h \
 	launcher/log.link.cpp \
 	launcher/main.cpp \
     launcher/general.cpp \
     launcher/general.h \
     src/common/common.cpp \
-    src/common/common.h \
-	$(VSLAUNCHER_SPECIFIC_SOURCES)
+    src/common/common.h
+
+VSLAUNCHER_GUI_SOURCES = launcher/saveinterface.cpp
+VSLAUNCHER_NOGUI_SOURCES = launcher/nogui.cpp
+vslauncher_gui_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
+vslauncher_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
+vslauncher_gui_CXXFLAGS = -DVS_LOG_NO_XML $(GTK_CFLAGS)
+vslauncher_CXXFLAGS = -DVS_LOG_NO_XML
+vslauncher_gui_SOURCES = \
+	$(VSLAUNCHER_COMMON_SOURCES) \
+	$(VSLAUNCHER_GUI_SOURCES)
+
+vslauncher_SOURCES = \
+	$(VSLAUNCHER_COMMON_SOURCES) \
+	$(VSLAUNCHER_NOGUI_SOURCES)
 
 @USE_PRECOMPILED_HEADERS_FALSE@PRECOMPILED_FLAGS = 
 @USE_PRECOMPILED_HEADERS_TRUE@PRECOMPILED_FLAGS = -include $(PRECOMPILED)
@@ -4130,12 +4148,25 @@ src/common/vslauncher-common.$(OBJEXT): src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 launcher/vslauncher-nogui.$(OBJEXT): launcher/$(am__dirstamp) \
 	launcher/$(DEPDIR)/$(am__dirstamp)
-launcher/vslauncher-saveinterface.$(OBJEXT): launcher/$(am__dirstamp) \
-	launcher/$(DEPDIR)/$(am__dirstamp)
 
 vslauncher$(EXEEXT): $(vslauncher_OBJECTS) $(vslauncher_DEPENDENCIES) $(EXTRA_vslauncher_DEPENDENCIES) 
 	@rm -f vslauncher$(EXEEXT)
 	$(AM_V_CXXLD)$(vslauncher_LINK) $(vslauncher_OBJECTS) $(vslauncher_LDADD) $(LIBS)
+launcher/vslauncher_gui-log.link.$(OBJEXT): launcher/$(am__dirstamp) \
+	launcher/$(DEPDIR)/$(am__dirstamp)
+launcher/vslauncher_gui-main.$(OBJEXT): launcher/$(am__dirstamp) \
+	launcher/$(DEPDIR)/$(am__dirstamp)
+launcher/vslauncher_gui-general.$(OBJEXT): launcher/$(am__dirstamp) \
+	launcher/$(DEPDIR)/$(am__dirstamp)
+src/common/vslauncher_gui-common.$(OBJEXT):  \
+	src/common/$(am__dirstamp) \
+	src/common/$(DEPDIR)/$(am__dirstamp)
+launcher/vslauncher_gui-saveinterface.$(OBJEXT):  \
+	launcher/$(am__dirstamp) launcher/$(DEPDIR)/$(am__dirstamp)
+
+vslauncher-gui$(EXEEXT): $(vslauncher_gui_OBJECTS) $(vslauncher_gui_DEPENDENCIES) $(EXTRA_vslauncher_gui_DEPENDENCIES) 
+	@rm -f vslauncher-gui$(EXEEXT)
+	$(AM_V_CXXLD)$(vslauncher_gui_LINK) $(vslauncher_gui_OBJECTS) $(vslauncher_gui_LDADD) $(LIBS)
 tools/common.$(OBJEXT): tools/$(am__dirstamp) \
 	tools/$(DEPDIR)/$(am__dirstamp)
 tools/vsrextract.$(OBJEXT): tools/$(am__dirstamp) \
@@ -4331,7 +4362,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher-log.link.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher-main.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher-nogui.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher-saveinterface.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher_gui-general.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher_gui-log.link.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher_gui-main.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@objconv/$(DEPDIR)/asteroidgen.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@objconv/$(DEPDIR)/replace.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@objconv/$(DEPDIR)/trisort.Po@am__quote@ # am--include-marker
@@ -4606,6 +4640,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vslauncher-common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vslauncher_gui-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vssetup-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vssetup_dlg-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/gfx/$(DEPDIR)/ani_texture.Po@am__quote@ # am--include-marker
@@ -5311,19 +5346,75 @@ launcher/vslauncher-nogui.obj: launcher/nogui.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher-nogui.obj `if test -f 'launcher/nogui.cpp'; then $(CYGPATH_W) 'launcher/nogui.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/nogui.cpp'; fi`
 
-launcher/vslauncher-saveinterface.o: launcher/saveinterface.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher-saveinterface.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher-saveinterface.Tpo -c -o launcher/vslauncher-saveinterface.o `test -f 'launcher/saveinterface.cpp' || echo '$(srcdir)/'`launcher/saveinterface.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher-saveinterface.Tpo launcher/$(DEPDIR)/vslauncher-saveinterface.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/saveinterface.cpp' object='launcher/vslauncher-saveinterface.o' libtool=no @AMDEPBACKSLASH@
+launcher/vslauncher_gui-log.link.o: launcher/log.link.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-log.link.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-log.link.Tpo -c -o launcher/vslauncher_gui-log.link.o `test -f 'launcher/log.link.cpp' || echo '$(srcdir)/'`launcher/log.link.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-log.link.Tpo launcher/$(DEPDIR)/vslauncher_gui-log.link.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/log.link.cpp' object='launcher/vslauncher_gui-log.link.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher-saveinterface.o `test -f 'launcher/saveinterface.cpp' || echo '$(srcdir)/'`launcher/saveinterface.cpp
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-log.link.o `test -f 'launcher/log.link.cpp' || echo '$(srcdir)/'`launcher/log.link.cpp
 
-launcher/vslauncher-saveinterface.obj: launcher/saveinterface.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher-saveinterface.obj -MD -MP -MF launcher/$(DEPDIR)/vslauncher-saveinterface.Tpo -c -o launcher/vslauncher-saveinterface.obj `if test -f 'launcher/saveinterface.cpp'; then $(CYGPATH_W) 'launcher/saveinterface.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/saveinterface.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher-saveinterface.Tpo launcher/$(DEPDIR)/vslauncher-saveinterface.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/saveinterface.cpp' object='launcher/vslauncher-saveinterface.obj' libtool=no @AMDEPBACKSLASH@
+launcher/vslauncher_gui-log.link.obj: launcher/log.link.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-log.link.obj -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-log.link.Tpo -c -o launcher/vslauncher_gui-log.link.obj `if test -f 'launcher/log.link.cpp'; then $(CYGPATH_W) 'launcher/log.link.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/log.link.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-log.link.Tpo launcher/$(DEPDIR)/vslauncher_gui-log.link.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/log.link.cpp' object='launcher/vslauncher_gui-log.link.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher-saveinterface.obj `if test -f 'launcher/saveinterface.cpp'; then $(CYGPATH_W) 'launcher/saveinterface.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/saveinterface.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-log.link.obj `if test -f 'launcher/log.link.cpp'; then $(CYGPATH_W) 'launcher/log.link.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/log.link.cpp'; fi`
+
+launcher/vslauncher_gui-main.o: launcher/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-main.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-main.Tpo -c -o launcher/vslauncher_gui-main.o `test -f 'launcher/main.cpp' || echo '$(srcdir)/'`launcher/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-main.Tpo launcher/$(DEPDIR)/vslauncher_gui-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/main.cpp' object='launcher/vslauncher_gui-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-main.o `test -f 'launcher/main.cpp' || echo '$(srcdir)/'`launcher/main.cpp
+
+launcher/vslauncher_gui-main.obj: launcher/main.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-main.obj -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-main.Tpo -c -o launcher/vslauncher_gui-main.obj `if test -f 'launcher/main.cpp'; then $(CYGPATH_W) 'launcher/main.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/main.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-main.Tpo launcher/$(DEPDIR)/vslauncher_gui-main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/main.cpp' object='launcher/vslauncher_gui-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-main.obj `if test -f 'launcher/main.cpp'; then $(CYGPATH_W) 'launcher/main.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/main.cpp'; fi`
+
+launcher/vslauncher_gui-general.o: launcher/general.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-general.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-general.Tpo -c -o launcher/vslauncher_gui-general.o `test -f 'launcher/general.cpp' || echo '$(srcdir)/'`launcher/general.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-general.Tpo launcher/$(DEPDIR)/vslauncher_gui-general.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/general.cpp' object='launcher/vslauncher_gui-general.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-general.o `test -f 'launcher/general.cpp' || echo '$(srcdir)/'`launcher/general.cpp
+
+launcher/vslauncher_gui-general.obj: launcher/general.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-general.obj -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-general.Tpo -c -o launcher/vslauncher_gui-general.obj `if test -f 'launcher/general.cpp'; then $(CYGPATH_W) 'launcher/general.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/general.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-general.Tpo launcher/$(DEPDIR)/vslauncher_gui-general.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/general.cpp' object='launcher/vslauncher_gui-general.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-general.obj `if test -f 'launcher/general.cpp'; then $(CYGPATH_W) 'launcher/general.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/general.cpp'; fi`
+
+src/common/vslauncher_gui-common.o: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/common/vslauncher_gui-common.o -MD -MP -MF src/common/$(DEPDIR)/vslauncher_gui-common.Tpo -c -o src/common/vslauncher_gui-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/vslauncher_gui-common.Tpo src/common/$(DEPDIR)/vslauncher_gui-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/vslauncher_gui-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/common/vslauncher_gui-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+
+src/common/vslauncher_gui-common.obj: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/common/vslauncher_gui-common.obj -MD -MP -MF src/common/$(DEPDIR)/vslauncher_gui-common.Tpo -c -o src/common/vslauncher_gui-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/vslauncher_gui-common.Tpo src/common/$(DEPDIR)/vslauncher_gui-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/vslauncher_gui-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/common/vslauncher_gui-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+
+launcher/vslauncher_gui-saveinterface.o: launcher/saveinterface.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-saveinterface.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Tpo -c -o launcher/vslauncher_gui-saveinterface.o `test -f 'launcher/saveinterface.cpp' || echo '$(srcdir)/'`launcher/saveinterface.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Tpo launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/saveinterface.cpp' object='launcher/vslauncher_gui-saveinterface.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-saveinterface.o `test -f 'launcher/saveinterface.cpp' || echo '$(srcdir)/'`launcher/saveinterface.cpp
+
+launcher/vslauncher_gui-saveinterface.obj: launcher/saveinterface.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher_gui-saveinterface.obj -MD -MP -MF launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Tpo -c -o launcher/vslauncher_gui-saveinterface.obj `if test -f 'launcher/saveinterface.cpp'; then $(CYGPATH_W) 'launcher/saveinterface.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/saveinterface.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Tpo launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/saveinterface.cpp' object='launcher/vslauncher_gui-saveinterface.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-saveinterface.obj `if test -f 'launcher/saveinterface.cpp'; then $(CYGPATH_W) 'launcher/saveinterface.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/saveinterface.cpp'; fi`
 
 setup/src/c/vssetup-setup.o: setup/src/c/setup.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/c/vssetup-setup.o -MD -MP -MF setup/src/c/$(DEPDIR)/vssetup-setup.Tpo -c -o setup/src/c/vssetup-setup.o `test -f 'setup/src/c/setup.cpp' || echo '$(srcdir)/'`setup/src/c/setup.cpp
@@ -5971,7 +6062,10 @@ distclean: distclean-am
 	-rm -f launcher/$(DEPDIR)/vslauncher-log.link.Po
 	-rm -f launcher/$(DEPDIR)/vslauncher-main.Po
 	-rm -f launcher/$(DEPDIR)/vslauncher-nogui.Po
-	-rm -f launcher/$(DEPDIR)/vslauncher-saveinterface.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-general.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-log.link.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-main.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po
 	-rm -f objconv/$(DEPDIR)/asteroidgen.Po
 	-rm -f objconv/$(DEPDIR)/replace.Po
 	-rm -f objconv/$(DEPDIR)/trisort.Po
@@ -6246,6 +6340,7 @@ distclean: distclean-am
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po
 	-rm -f src/common/$(DEPDIR)/common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher-common.Po
+	-rm -f src/common/$(DEPDIR)/vslauncher_gui-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup_dlg-common.Po
 	-rm -f src/gfx/$(DEPDIR)/ani_texture.Po
@@ -6543,7 +6638,10 @@ maintainer-clean: maintainer-clean-am
 	-rm -f launcher/$(DEPDIR)/vslauncher-log.link.Po
 	-rm -f launcher/$(DEPDIR)/vslauncher-main.Po
 	-rm -f launcher/$(DEPDIR)/vslauncher-nogui.Po
-	-rm -f launcher/$(DEPDIR)/vslauncher-saveinterface.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-general.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-log.link.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-main.Po
+	-rm -f launcher/$(DEPDIR)/vslauncher_gui-saveinterface.Po
 	-rm -f objconv/$(DEPDIR)/asteroidgen.Po
 	-rm -f objconv/$(DEPDIR)/replace.Po
 	-rm -f objconv/$(DEPDIR)/trisort.Po
@@ -6818,6 +6916,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po
 	-rm -f src/common/$(DEPDIR)/common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher-common.Po
+	-rm -f src/common/$(DEPDIR)/vslauncher_gui-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup_dlg-common.Po
 	-rm -f src/gfx/$(DEPDIR)/ani_texture.Po
@@ -7036,8 +7135,13 @@ uninstall-am: uninstall-binPROGRAMS uninstall-pkgdataDATA
 .PRECIOUS: Makefile
 
 
+all $(bin_PROGRAMS): version.h #get_scm_revision
+
 .PHONY: get_scm_revision
+version.h: get_scm_revision
+	@true
 get_scm_revision:
+	@echo "-- checking scm revision..."
 	@scm_rev="$$(cd "$(top_srcdir)" && git --no-pager describe --abbrev=8 --dirty --always 2>/dev/null || printf -- 'unknown')"; \
 	scm_remote="$$(cd "$(top_srcdir)" && git --no-pager remote get-url origin 2>/dev/null || printf -- 'unknown')"; \
 	scm_ver_rcnum=$$(echo "$(PACKAGE_VERSION)" | sed -e 's/^[^0-9]*\([0-9.]*\).*$$/\1/' -e 's/[.]/,/g'); \
@@ -7047,7 +7151,6 @@ get_scm_revision:
 					 "# define SCM_REVISION \"$${scm_rev}\"" \
 					 "# define SCM_REMOTE \"$${scm_remote}\"" \
 					 "#endif" > version.h.txt && diff -q version.h.txt version.h 2>/dev/null || cp version.h.txt version.h
-all: get_scm_revision
 
 vegastrike_launch_tests: test
 	./test
@@ -7069,6 +7172,7 @@ tools/log.link.cpp: $(top_srcdir)/src/log.cpp
 
 setup/log.link.cpp: $(top_srcdir)/src/log.cpp
 	cp $< $@ || copy $< $@
+
 launcher/log.link.cpp: $(top_srcdir)/src/log.cpp
 	cp $< $@ || copy $< $@
 

@@ -8,6 +8,9 @@ SET(VSLAUNCHER_COMMON_SOURCES
 SET(VSLAUNCHER_GTK_SOURCES
                     saveinterface.cpp)
 
+SET(VSLAUNCHER_NOGUI_SOURCES
+                    nogui.cpp)
+
 SET(VSLAUNCHER_LIBS)
 SET(VSLAUNCHER_CPPFLAGS "-DVS_LOG_NO_XML")
 
@@ -26,8 +29,10 @@ if(MACOSX OR APPLE)
     endif()
 endif()
 
-SET(VSLAUNCHER_NOGUI_SOURCES
-                    nogui.cpp)
+FIND_LIBRARY(DL_LIB dl)
+if (DL_LIB)
+    SET(VSLAUNCHER_LIBS ${VSLAUNCHER_LIBS} "${DL_LIB}")
+endif()
 
 #find GTK2
 UNSET(GTK2_FIND_REQUIRED)
@@ -37,21 +42,27 @@ endif()
 IF(GTK2_FOUND)
     SET(GTK_LIBS ${GTK2_LIBRARIES})
     SET(GTK_CFLAGS ${GTK2_DEFINITIONS} -DGTK)
-    add_executable(vslauncher ${VSLAUNCHER_COMMON_SOURCES} ${VSLAUNCHER_GTK_SOURCES})
+    add_executable(vslauncher-gui ${VSLAUNCHER_COMMON_SOURCES} ${VSLAUNCHER_GTK_SOURCES})
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
         set_source_files_properties(${VSLAUNCHER_GTK_SOURCES} PROPERTIES COMPILE_OPTIONS "${GTK_CFLAGS}")
     else()
-        target_compile_options(vslauncher PUBLIC "${GTK_CFLAGS}") # works also but set_s.._properties is more precise
+        target_compile_options(vslauncher-gui PUBLIC "${GTK_CFLAGS}") # works also but set_s.._properties is more precise
     endif()
-    target_link_libraries(vslauncher ${GTK_LIBS})
+    target_link_libraries(vslauncher-gui ${GTK_LIBS})
+    target_link_libraries(vslauncher-gui ${VSLAUNCHER_LIBS})
+    target_compile_options(vslauncher-gui PUBLIC ${VSLAUNCHER_CPPFLAGS})
+    add_dependencies(vslauncher-gui get_scm_revision)
 ELSE(GTK2_FOUND)
-    message("!! vslauncher: Cant get GTK2 found, vslauncher will be built without GUI")
-    add_executable(vslauncher ${VSLAUNCHER_COMMON_SOURCES} ${VSLAUNCHER_NOGUI_SOURCES})
+    message("!! vslauncher: Cant get GTK2 found, vslauncher-gui will not be be built")
 ENDIF(GTK2_FOUND)
+
+add_executable(vslauncher ${VSLAUNCHER_COMMON_SOURCES} ${VSLAUNCHER_NOGUI_SOURCES})
 
 target_link_libraries(vslauncher ${VSLAUNCHER_LIBS})
 target_compile_options(vslauncher PUBLIC ${VSLAUNCHER_CPPFLAGS})
 
 #add_definitions(${GTK_CFLAGS} ${DLG_CFLAGS})
 include_directories(${vsUTCS_SOURCE_DIR}/launcher ${vsUTCS_SOURCE_DIR}/src/common ${vsUTCS_SOURCE_DIR} ${vsUTCS_BINARY_DIR} ${GTK2_INCLUDE_DIRS})
+
+add_dependencies(vslauncher get_scm_revision)
 

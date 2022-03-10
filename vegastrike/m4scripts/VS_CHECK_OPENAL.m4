@@ -11,10 +11,13 @@ AC_DEFUN([CHECK_FOR_AL_H], [
     AC_MSG_CHECKING([for al.h])
     AC_TRY_CPP( [ #include <al.h> ], have_al_h=yes, )
     AC_MSG_RESULT([$have_al_h])
-    CPPFLAGS="$saved_CPPFLAGS" 
+    dnl AC_MSG_CHECKING([for OpenAL/al.h])
+    dnl AC_TRY_CPP( [ #include <OpenAL/al.h> ], have_al_h=yes, have_al_h=no )
+    dnl AC_MSG_RESULT([$have_al_h])
+    CPPFLAGS="$saved_CPPFLAGS"
 ])
 
-AC_DEFUN([VS_CHECK_OPENAL], 
+AC_DEFUN([VS_CHECK_OPENAL],
 [
 #--------------------------------------------------------------------------
 #Check for openal library
@@ -34,12 +37,12 @@ if test "x$sdl_sound" != "xno" ; then
 	LIBS="$MACORPCLIBS $OPENAL_LDOPTS"
         AC_TRY_LINK( , , have_openal_lib=yes, have_openal_lib=no )
         AC_MSG_RESULT([$have_openal_lib])
-    ]) 
+    ])
 
     saved_LIBS="$RRLIBS"
-    
+
     OPENAL_LIB_LIST="openal"
-    
+
     for OPENAL_LIB_NAME in $OPENAL_LIB_LIST ; do
 
     if test "x$is_macosx" = "xyes" ; then
@@ -53,7 +56,7 @@ if test "x$sdl_sound" != "xno" ; then
       CHECK_FOR_OPENAL_LIB
     fi
 
-    
+
         if test "x$have_openal_lib" = "xyes" ; then
             LIBS="$saved_LIBS"
     	    VS_LIBS="$VS_LIBS $MACORPCLIBS"
@@ -77,7 +80,7 @@ AC_ARG_WITH(al-inc, AC_HELP_STRING([--with-al-inc=DIR], [OpenAL header file loca
 
 if test "x$with_al_inc" = "x" ; then
     AL_CPPFLAGS=""
-else 
+else
     AL_CPPFLAGS="-I$with_al_inc"
 fi
 
@@ -85,6 +88,15 @@ dnl check for al.h
 saved_CPPFLAGS="$CPPFLAGS"
 
 CHECK_FOR_AL_H
+
+if test "x$have_al_h" = "xno" -a "x$is_macosx" = "xyes" ; then
+    test -n "$macos_sdk" && AL_CPPFLAGS="-I${macos_sdk}/System/Library/Frameworks/OpenAL.framework/Headers" \
+    || AL_CPPFLAGS="-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/OpenAL.framework/Headers"
+    CHECK_FOR_AL_H
+    dnl if test "x$have_al_h" = "xyes"; then
+    dnl     AC_DEFINE_UNQUOTED([HAVE_OPENAL_FRAMEWORK], [1], [apple OpenAL framework])
+    dnl fi
+fi
 
 if test "x$have_al_h" = "xno" -a "x$AL_CPPFLAGS" = "x" ; then
     echo "*** Hmm, you don't seem to have OpenAL headers installed in the standard"
@@ -101,15 +113,15 @@ else
         echo "Cannot find AL/al.h"
         echo "Error::Configuring without OpenAL support!"
     else
-      dnl Check for alext.h 
+      dnl Check for alext.h
       AC_CHECK_HEADERS(AL/alext.h, have_alext_h=yes, have_alext_h=no )
 
       if test "x$sdl_sound" != "xno" ; then
         echo "Configuring with OpenAL support!"
-        VS_CPPFLAGS="${VS_CPPFLAGS} -DHAVE_AL=1" 
+        VS_CPPFLAGS="${VS_CPPFLAGS} -DHAVE_AL=1"
       else
         echo "Disabling OpenAL on user request"
-      fi   
+      fi
     fi
 fi
 VS_CPPFLAGS="${VS_CPPFLAGS} ${AL_CPPFLAGS}"

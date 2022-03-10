@@ -44,6 +44,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
+#include <time.h>
+#include <assert.h>
 
 #include <string>
 
@@ -70,6 +73,17 @@
 # define PATHSEP "/"
 #endif // ! _WIN32
 
+#ifndef VEGASTRIKE_PYTHON_DYNLIB_PATH
+# define VEGASTRIKE_PYTHON_DYNLIB_PATH "lib/pythonlibs"
+#endif
+
+#if !defined(HAVE_SETENV)
+// some putenv implementations do not allow stack or freeable variables, then we must store them.
+# include <map>
+static std::map<std::string,char *> s_envmap;
+#endif
+
+#include "log.h"
 
 namespace VSCommon {
 
@@ -96,7 +110,7 @@ HRESULT win32_get_appdata(WCHAR * wappdata) {
 #endif // ! _WIN32
 
 // Directories to look for data
-const char * datadirs[] = {
+const char * const datadirs[] = {
 ".",
 "../data",
 "../Resources/data",
@@ -130,16 +144,150 @@ const char * datadirs[] = {
  NULL
 };
 
+const char * const resourcessearchs[] = {
+	"..",
+	".." PATHSEP "Resources",
+	".",
+	NULL
+};
+
+const char * const pathsep = PATHSEP;
+
+// **************************************************************************
+// wrappers
+// **************************************************************************
+
+int vs_setenv(const char * var, const char * value, int override) {
+#if defined(HAVE_SETENV)
+	return setenv(var, value, override);
+#else
+	if (!override && getenv(var) != NULL) return 0;
+	char envstr[16384];
+	// some putenv implementations do not allow stack or freeable variables, then we must store them.
+	std::string mapkey(var);
+	int newlen = snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
+	if (newlen >= sizeof(envstr)) newlen = sizeof(envstr) - 1;
+	std::map<std::string,char *>::iterator itmap = s_envmap.find(mapkey);
+	if (itmap == s_envmap.end()) {
+		itmap = s_envmap.insert(std::make_pair(mapkey, strdup(envstr))).first;
+	} else {
+		char * mapstr = (char *) realloc(itmap->second, (size_t)(newlen+1));
+		if (mapstr == NULL)
+			return -1;
+		strcpy(mapstr, envstr);
+		itmap->second = mapstr;
+	}
+	//use putenv as SetEnvironmentVariableA(var,val) is not working on windows.
+	return putenv(itmap->second);
+#endif
+}
+
+
+int vs_mkdir(const char * file, int mode) {
+#if !defined(_WIN32)
+	return mkdir(file, mode);
+#else
+	(void)mode; return mkdir(file);
+#endif
+}
+
+#if !defined( _WIN32) || defined( __CYGWIN__)
+int 		vs_closedir(vsDIR * dirp) 	 { return closedir(dirp); }
+vsDIR * 	vs_opendir(const char * path){ return opendir(path); }
+vsdirent * 	vs_readdir(vsDIR * dirp) 	 { return readdir(dirp); }
+#else
+# define WIN32_DIRENT_DNAME_SZ 4096
+int vs_closedir(vsDIR * dirp) {
+	if (dirp == NULL)
+		return -1;
+	if (dirp->h != INVALID_HANDLE_VALUE)
+		FindClose(dirp->h);
+	if (dirp->d_name != NULL)
+		free(dirp->d_name);
+	free(dirp);
+	return 0;
+}
+vsDIR * vs_opendir(const char * path) {
+	std::string findpattern(VS_PATH_JOIN(path, "*"));
+	WIN32_FIND_DATA find;
+	HANDLE h;
+	if ((h=FindFirstFile(findpattern.c_str(), &find))==INVALID_HANDLE_VALUE)
+		return NULL;
+	vsDIR * dirp;
+	if ((dirp = (vsDIR*) malloc(sizeof(vsDIR))) == NULL) {
+		FindClose(h);
+		return NULL;
+	}
+	dirp->h = h;
+	if ((dirp->d_name = (char *) malloc(WIN32_DIRENT_DNAME_SZ+1)) == NULL) {
+		vs_closedir(dirp);
+		return NULL;
+	}
+	snprintf(dirp->d_name, WIN32_DIRENT_DNAME_SZ, "%s", find.cFileName);
+	dirp->first = true;
+	return dirp;
+}
+vsdirent * vs_readdir(vsDIR * dirp) {
+	if (dirp == NULL)
+		return NULL;
+	WIN32_FIND_DATA find;
+	if (dirp->first) {
+		dirp->first = false;
+		return dirp;
+	} else if (FindNextFile(dirp->h, &find)) {
+		snprintf(dirp->d_name, WIN32_DIRENT_DNAME_SZ, "%s", find.cFileName);
+		return dirp;
+	}
+	return NULL;
+}
+#endif
+
+// **************************************************************************
+// Game Directory Management
+// **************************************************************************
+
+std::string getresourcesdir(const char * base) {
+	char tmppwd[16384];
+	getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+	const std::string origpath(tmppwd);
+
+	/* look for resources directory, where we could find data,share,bin,lib */
+	const char * found = NULL;
+	const char * const bases[] = { base ? base : "", base ? "" : NULL, NULL };
+	for (const char * const * basetmp = bases; !found && *basetmp; ++basetmp) {
+	    for(const char * const * searchs = resourcessearchs; *searchs; ++searchs) {
+	    	// Test if the dir exist and contains config_file
+	    	chdir(origpath.c_str());
+	    	if (*basetmp != 0) {
+	    		chdir(*basetmp);
+	    	}
+	    	chdir(*searchs);
+	    	struct stat st;
+	    	if ((stat("share" PATHSEP "terminfo", &st) == 0 || stat("share" PATHSEP "gtk-2.0", &st) == 0
+	    	||  stat(VEGASTRIKE_PYTHON_DYNLIB_PATH, &st) == 0) && (st.st_mode & S_IFDIR) != 0) {
+	    		getcwd (tmppwd, sizeof(tmppwd)-1);
+	    		found = *searchs;
+	    		break;
+	    	}
+	    }
+	}
+	chdir(origpath.c_str());
+	if (found == NULL)
+		return "";
+	return std::string(tmppwd);
+}
+
 std::string getdatadir(const char * base)
 {
-    char tmppwd[65536];
+    char tmppwd[16384];
     getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
+    const std::string origpath(tmppwd);
     const char * found = NULL;
     const char * const bases[] = { base ? base : "", base ? "" : NULL, NULL };
     for (const char * const * basetmp = bases; !found && *basetmp; ++basetmp) {
-        for(const char ** searchs = datadirs; *searchs; ++searchs) {
-            chdir(tmppwd);
+        for(const char * const * searchs = datadirs; *searchs; ++searchs) {
+            chdir(origpath.c_str());
             if (*basetmp != 0) {
                 chdir(*basetmp);
             }
@@ -153,30 +301,31 @@ std::string getdatadir(const char * base)
                 continue ;
             fclose(tfp);
             // We have found the data directory
+            getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
             found = *searchs;
             break;
         }
     }
 
+    chdir(origpath.c_str());
+
     if(found == NULL) {
         fprintf(stderr, "Unable to find data directory from %s%s%s\n", base?base:"", base ? " or ":"",tmppwd);
-        for(const char ** searchs = datadirs; *searchs; ++searchs) {
+        for(const char * const * searchs = datadirs; *searchs; ++searchs) {
             fprintf(stderr, "Tried %s\n", *searchs);
         }
-        chdir(tmppwd);
         return "";
     }
-
-    getcwd (tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
     return std::string(tmppwd);
 }
 
-std::string gethomedir(const char * base) {
-    char tmppwd[65535];
+std::pair<std::string,std::string> gethomedir(const char * base) {
+    char tmppwd[16384];
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
 
-    std::string HOMESUBDIR;
+    const std::string origpath(tmppwd);
+    std::string HOMESUBDIR, DATASUBDIR;
     if (base != NULL) {
         chdir(base);
     }
@@ -200,6 +349,7 @@ std::string gethomedir(const char * base) {
         HOMESUBDIR = ".vegastrike";
 		fprintf(stderr,"Warning: Failed to find Version.txt anywhere, using %s as home.\n", HOMESUBDIR.c_str());
 	}
+	DATASUBDIR = HOMESUBDIR;
 #if !defined(VS_HOME_INSIDE_DATA)
 # if !defined(_WIN32)
 	struct passwd *pwent;
@@ -218,31 +368,22 @@ std::string gethomedir(const char * base) {
 # endif
 #endif
 
-	mkdir(HOMESUBDIR.c_str() 
-#ifndef _WIN32
-              , 0755
-#endif
-              );
+	vs_mkdir(HOMESUBDIR.c_str(), 0755);
 	chdir (HOMESUBDIR.c_str());
     //mkdir("generatedbsp"); 
-    mkdir("save"
-#ifndef _WIN32
-              , 0755
-#endif
-              );
+    vs_mkdir("save", 0755);
 
-    char homepath[65535];
-    getcwd(homepath, sizeof(homepath)-1); homepath[sizeof(homepath)-1] = 0;
-    chdir(tmppwd);
+    getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
+    chdir(origpath.c_str());
 
-    return std::string(homepath);
+    return std::make_pair(std::string(tmppwd), DATASUBDIR);
 }
 
 std::pair<std::string,std::string> getfiledir(const char *argv0, const char * base) {
     std::string bindir;
     std::string basename = argv0;
 
-    char tmppwd[65535];
+    char tmppwd[16384];
     getcwd(tmppwd, sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     std::string origpath = tmppwd;
     if (base)
@@ -265,6 +406,29 @@ std::pair<std::string,std::string> getfiledir(const char *argv0, const char * ba
 
     return std::make_pair(std::string(tmppwd), basename);
 }
+
+std::string getsuffixedfile(const char * file, time_t delay_sec, unsigned int maxfiles) {
+	std::string retfile = file, retfile_base = retfile;
+	std::string::size_type dot = retfile_base.rfind(".", std::string::npos);
+	std::string retfile_suf;
+	if (dot != std::string::npos) {
+		retfile_suf = retfile_base.substr(dot); 	// from last dot
+		retfile_base = retfile_base.substr(0, dot);	// begin -> before last dot
+	}
+	// Check whether the file is being used
+	VSCommon::file_id_t st;
+	for (unsigned int logi=1; (!maxfiles || logi <= maxfiles + 1) && VSCommon::getFileId(retfile.c_str(), &st)
+                              ; ++logi) {
+		char numstr[32] = { 0, };
+		snprintf(numstr, sizeof(numstr), "%u", (!maxfiles || logi <= maxfiles) ? logi : 1);
+		retfile = retfile_base + "." + numstr + retfile_suf;
+	}
+	return retfile;
+}
+
+// **************************************************************************
+// Console / Terminal Utilities
+// **************************************************************************
 
 // InitConsole()
 // *************
@@ -346,6 +510,20 @@ ssize_t fileIdCompare(file_id_t * id, file_id_t * other) {
     if (!id || !other)
         return (ssize_t) (id - other);
     return (ssize_t) memcmp(id, other, sizeof(*id));
+}
+
+// path_join("dir1", ..., "dirN", NULL) -> "dir1/.../dirN"
+std::string path_join(const char * first, ...) {
+	va_list valist;
+	std::string ret(first);
+
+	va_start(valist, first);
+	const char * arg;
+	while ((arg = va_arg(valist, const char *)) != NULL) {
+		ret = (ret + VSCommon::pathsep) + arg;
+	}
+	va_end(valist);
+	return ret;
 }
 
 #if !defined(_WIN32)

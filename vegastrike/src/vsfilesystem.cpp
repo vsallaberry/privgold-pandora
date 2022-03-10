@@ -397,7 +397,7 @@ std::string vegastrike_cwd;
 	string datadir;
 	string homedir;
 	string bindir;
-	string libdir;
+	string resourcesdir;
 
 	string config_file;
 	string weapon_list;
@@ -703,7 +703,7 @@ std::string vegastrike_cwd;
         const char * pathorder[] = { bindir.c_str(), vegastrike_cwd.c_str(), ".", NULL };
         for (const char ** base = pathorder; *base; ++base) {
             if ((*base)[0]) {
-                for (const char ** searchs = VSCommon::datadirs; *searchs; ++searchs) {
+                for (const char * const * searchs = VSCommon::datadirs; *searchs; ++searchs) {
                     data_paths.push_back((std::string(*base) + VSFS_PATHSEP) + *searchs);
                 }
             }
@@ -979,34 +979,13 @@ std::string vegastrike_cwd;
 	}
 
     void    InitBinDirectory() {
-        static const char * libsearchs[] = { ".", ".." VSFS_PATHSEP "lib", ".." VSFS_PATHSEP "Resources" VSFS_PATHSEP "lib", "lib", "..", NULL };
-        libdir = bindir;
-
-        for (const char ** path = libsearchs; *path != NULL; ++path) {
-            std::string libpath = (bindir + VSFS_PATHSEP) + *path;
-            if (DirectoryExists(libpath)) {
-                struct dirent ** dirlist = NULL;
-                int ret = scandir( libpath.c_str(), &dirlist, NULL, NULL);
-                while( ret-- > 0) {
-                    std::string dname;
-                    for (const char * s = dirlist[ret]->d_name; *s; ++s) dname.append(1, (char)tolower(*s));
-                    free(dirlist[ret]);
-                    if (!strcmp(dname.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH)
-                    || ((!strncmp(dname.c_str(), "sdl", 3) || !strncmp(dname.c_str(), "libsdl", 6))
-                        &&  (strstr(dname.c_str(), ".so") || strstr(dname.c_str(), ".dll") || strstr(dname.c_str(), ".dylib")))) {
-                        libdir = libpath;
-                        while (*(path + 1) != NULL) ++path;
-                        while(ret-- > 0) {
-                            free(dirlist[ret]);
-                        }
-                        break ;
-                    }
-                }
-                if (dirlist) free(dirlist);
-            }
-        }
         CONFIG_LOG(logvs::NOTICE, "Found binary directory: %s", bindir.c_str());
-        CONFIG_LOG(logvs::NOTICE, "Using libraries directory: %s", libdir.c_str());
+        if ((resourcesdir = VSCommon::getresourcesdir(bindir.c_str())).empty()) {
+            resourcesdir = bindir;
+            CONFIG_LOG(logvs::WARN, "Cannot find resources directory, using: %s", resourcesdir.c_str());
+        } else {
+            CONFIG_LOG(logvs::NOTICE, "Found resources directory: %s", resourcesdir.c_str());
+        }
     }
 
 	void	InitPaths( string conf, string subdir, ConfigOverrides_type * overrides)
@@ -2038,7 +2017,7 @@ std::string vegastrike_cwd;
 			int readsize = fread( content, 1, this->Size(), this->fp);
 			if( this->Size()!=readsize)
 			{
-				VSFS_LOG(logvs::NOTICE, "Only read %d out of %zu bytes of %s", readsize, this->Size(), this->filename.c_str());
+				VSFS_LOG(logvs::NOTICE, "Only read %d out of %ld bytes of %s", readsize, this->Size(), this->filename.c_str());
 				GetError("ReadFull");
 				if (readsize<=0)
 					return string();

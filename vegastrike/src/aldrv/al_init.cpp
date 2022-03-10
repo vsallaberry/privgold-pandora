@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "al_globals.h"
 #include <vector>
+#include "vs_log_modules.h"
 
 #if 1
 #define AL_GET_PROC(name) (alGetProcAddress(const_cast<ALubyte*>(reinterpret_cast<const ALubyte *>(name))))
@@ -184,6 +185,7 @@ bool AUDInit () {
 	  alGetEr = alGetError();
 
 	}
+	VS_LOG("audio", logvs::NOTICE, "audio initialized.");
 	return true;
 #endif
 	return false;

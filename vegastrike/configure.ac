@@ -124,15 +124,15 @@ case $target in
     ;;
 esac
 
+VS_SYS_LIBS=""
 AC_MSG_CHECKING([for libsocket])
 saved_LIBS="${LIBS}"
 LIBS="-lnsl -lresolv -lsocket"
 AC_TRY_LINK(, , [neednetlibs=yes], [neednetlibs=no])
 if test "x$neednetlibs" = "xyes"; then
-    true
-else
-    LIBS="${saved_LIBS}"
+    VS_SYS_LIBS="${VS_SYS_LIBS} ${LIBS}"
 fi
+LIBS="${saved_LIBS}"
 AC_MSG_RESULT(${neednetlibs})
 
 AC_MSG_CHECKING([for libutil])
@@ -140,10 +140,9 @@ saved_LIBS="${LIBS}"
 LIBS="-lutil"
 AC_TRY_LINK(, , [needutil=yes], [needutil=no])
 if test "x$needutil" = "xyes"; then
-    true
-else
-    LIBS="${saved_LIBS}"
+    VS_SYS_LIBS="${VS_SYS_LIBS} ${LIBS}"
 fi
+LIBS="${saved_LIBS}"
 AC_MSG_RESULT(${needutil})
 
 AC_MSG_CHECKING([for libregex])
@@ -151,12 +150,20 @@ saved_LIBS="${LIBS}"
 LIBS="-lregex"
 AC_TRY_LINK(, , [needregex=yes], [needregex=no])
 if test "x$needregex" = "xyes"; then
-    true
-else
-    LIBS="${saved_LIBS}"
+    VS_SYS_LIBS="${VS_SYS_LIBS} ${LIBS}"
 fi
+LIBS="${saved_LIBS}"
 AC_MSG_RESULT(${needregex})
 
+AC_MSG_CHECKING([for libdl])
+saved_LIBS="${LIBS}"
+LIBS="-ldl"
+AC_TRY_LINK(, , [have_lib_dl=yes], [have_lib_dl=no])
+if test "x$have_lib_dl" = "xyes"; then
+    VS_SYS_LIBS="${VS_SYS_LIBS} ${LIBS}"
+fi
+AC_MSG_RESULT(${have_lib_dl})
+LIBS="${saved_LIBS}"
 
 
 # Checks for header files.
@@ -523,13 +530,18 @@ if test "x$is_macosx" = "xyes" ; then
     fi
     AC_MSG_RESULT(${wnolongdouble})
 
+    AC_ARG_WITH(macos-deployment-target, AC_HELP_STRING([--with-macos-deployment-target=VERSION], [MacOS OSX version min]))
+    if test x$with_macos_deployment_target != x; then
+        CXXFLAGS="$CXXFLAGS -mmacosx-version-min=$with_macos_deployment_target"
+    fi
+
     dnl GL_CPPFLAGS="$GL_CPPFLAGS -framework OpenGL"
     dnl GLUT_CPPFLAGS="$GLUT_CPPFLAGS -framework GLUT"
 	VS_LIBS="$VS_LIBS -F${macos_sdk}/System/Library/Frameworks  -framework OpenGL -framework GLUT -framework CoreAudio"
     with_gl_inc=${macos_sdk}/System/Library/Frameworks/Carbon.framework/Libraries/CIncludes
     with_gl_libs=${macos_sdk}/System/Library/Frameworks/OpenGL.framework/Libraries
-    with_al_inc="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/Headers -I/sw/include"
-    with_al_libs="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/ -L/sw/lib"
+    #with_al_inc="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/Headers -I/sw/include"
+    #with_openal_libs="${macos_sdk}/System/Library/Frameworks/OpenAL.framework/ -L/sw/lib"
 #    PYTHON_LDOPTS="-L/System/Library/Frameworks/Python.framework"
 #    with_python_inc="/System/Library/Frameworks/Python.framework/Headers"
     VS_LIBS="$VS_LIBS -lobjc "
@@ -556,14 +568,16 @@ fi
 VS_CHECK_PYTHON
 
 ###############################
-vs_pythonlibs_path="pythonlibs"
+vs_pythonlibs_path="lib/pythonlibs"
 AC_DEFINE_UNQUOTED([VEGASTRIKE_PYTHON_DYNLIB_PATH], ["${vs_pythonlibs_path}"], [python_dynlibs])
 
-vs_pythonlibs_buildir="lib/${vs_pythonlibs_path}"
+vs_pythonlibs_buildir="${vs_pythonlibs_path}"
 mkdir -p "${vs_pythonlibs_buildir}"
 tmp_found=
 for dir in $("${PYTHON_BINARY}" -E -c "import sys; print('\n'.join(sys.path))"); do
-    for lib in "unicodedata" "time" "datetime" "_struct" "_io"; do
+    for lib in _collections _io _socket _symtable datetime fcntl operator select time _functools \
+               _scproxy _struct binascii dbm itertools math readline termios unicodedata \
+    ; do
         for ext in ".so" ".dylib" ".dll" ".pyd"; do
             if test -f "${dir}/${lib}${ext}"; then
                 tmp_found="${tmp_found} ${lib}${ext}"
@@ -1006,7 +1020,7 @@ AC_LANG(C++)
 CPPFLAGS="${BOOST_CPPFLAGS} ${CPPFLAGS} ${VS_CPPFLAGS} ${PYTHON_CPPFLAGS} ${CG_CPPFLAGS} "' -I$(top_srcdir)/src '
 CXXFLAGS="${CXXFLAGS} ${VS_CXXFLAGS} ${PTHREAD_CXXFLAGS}"
 
-LIBS="${LDFLAGS} ${LIBS} ${VS_LIBS} ${PYTHON_LIBS} ${PTHREAD_LIBS} ${CG_LIBS}"
+LIBS="${LDFLAGS} ${LIBS} ${VS_LIBS} ${PYTHON_LIBS} ${VS_SYS_LIBS} ${PTHREAD_LIBS} ${CG_LIBS}"
 
 AC_MSG_NOTICE([Compiling with CPPFLAGS: ${CPPFLAGS}.])
 AC_MSG_NOTICE([Compiling with CXXFLAGS: ${CXXFLAGS}.])

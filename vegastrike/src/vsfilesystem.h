@@ -123,7 +123,7 @@ namespace VSFileSystem
 	extern string datadir;
 	extern string homedir;									// User home directory including .vegastrike subdir
 	extern string bindir;
-	extern string libdir;
+	extern string resourcesdir;
 
 	extern string config_file;
 	extern string weapon_list;

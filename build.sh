@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (C) 2021 Vincent Sallaberry
+# Copyright (C) 2021-2022 Vincent Sallaberry
 # vegastrike/PrivateerGold
 #
 # This program is free software; you can redistribute it and/or modify
@@ -257,12 +257,24 @@ case "${cc_pref}" in
     *) target_sysname=${build_sysname}; target_arch=$(uname -m);;
 esac
 
+case "${target_arch}" in
+    x86_64|arm64) target_archbits=64;;
+    *) target_archbits=32;;
+esac
+
 # Exe / Shared Library file extension according to target
+target_osx_version_min="10.7"
 exe=
 case "${target_sysname}" in
     darwin*)
         clang_cxx_flags="-stdlib=libc++${clang_cxx_flags:+ }${clang_cxx_flags}"
-        build_dllext="dylib";;
+        build_dllext="dylib"
+        if test "${target_arch}" = "arm64"; then
+            target_osx_version_min="11.0"
+        elif test ${build_sysmajor} -ge 19; then
+            target_osx_version_min="10.11"
+        fi
+        ;;
     mingw*|cygwin*|msys*)
         build_dllext="dll.a"; cc_suff="${cc_suff}.exe"; exe=".exe";;
     linux*)
@@ -387,18 +399,19 @@ export PATH="/usr/bin:/bin:/usr/sbin:/sbin:${VEGA_PREFIX2:+${VEGA_PREFIX2}/bin:$
 export MAKE=$(which -a gmake make 2> /dev/null | head -n 1)
 export CMAKE=$(which -a cmake 2> /dev/null | head -n1)
 
-#export PKG_CONFIG_PATH=/usr/local/libpng12/lib/pkgconfig:/usr/lib/pkgconfig:/opt/X11/lib/pkgconfig:/opt/local/lib/pkgconfig
 export PKGCONFIG="${VEGA_PREFIX}/bin/pkg-config"
 export PKG_CONFIG="${PKGCONFIG}"
 PKG_CONFIG_PATH="${VEGA_PREFIX2:+${VEGA_PREFIX2}/lib/pkgconfig:}${VEGA_PREFIX}/lib/pkgconfig"
+case "${build_sysname}" in linux*) PKG_CONFIG_PATH+=":${VEGA_PREFIX}/lib/${target_arch}-linux-gnu/pkgconfig";; esac
 PKG_CONFIG_PATH+=":${PYTHON_PREFIX}/lib/pkgconfig"
 PKG_CONFIG_PATH+=":${GTK2_PREFIX}/lib/pkgconfig"
-#PKG_CONFIG_PATH+=/usr/local/specific/libpng12/lib/pkgconfig
-#PKG_CONFIG_PATH+=:/usr/local/specific/ffmpeg1/lib/pkgconfig
-#PKG_CONFIG_PATH+=:/usr/local/specific/libsdl1/lib/pkgconfig
+case "${build_sysname}" in linux*) PKG_CONFIG_PATH+=":${GTK2_PREFIX}/lib/${target_arch}-linux-gnu/pkgconfig:${GTK2_PREFIX}/share/pkgconfig";; esac
 PKG_CONFIG_PATH+=":/usr/lib/pkgconfig"
 PKG_CONFIG_PATH+=":/opt/local/lib/pkgconfig"
 export PKG_CONFIG_PATH
+
+LIBPNG_INCLUDE_DIR=$("${PKGCONFIG}" --cflags libpng | sed -e 's/^[[:space:]]*-I\([^[:space:]]*\).*/\1/')
+test -z "${LIBPNG_INCLUDE_DIR}" && LIBPNG_INCLUDE_DIR="${VEGA_PREFIX}/include"
 
 do_build_fun() {
     #
@@ -525,20 +538,25 @@ do_build_fun() {
 
                 case "${target_sysname}" in
                     darwin*)
+                        export OPENALDIR="${VEGA_PREFIX}"
                         add_config_args \
                             -DCMAKE_OSX_SYSROOT="${macos_sdk}" \
-                            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.7 \
-                            -DZLIB_INCLUDE_DIR=${macos_sdk}/usr/include -DZLIB_LIBRARY=/usr/lib/libz.${build_dllext} \
-                            -DBZ2_INCLUDE_DIR=${macos_sdk}/usr/include -DBZ2_LIBRARY=/usr/lib/libbz2.${build_dllext}  \
-                            -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.dylib \
+                            -DCMAKE_OSX_DEPLOYMENT_TARGET="${target_osx_version_min}" \
+                            -DZLIB_INCLUDE_DIR=${VEGA_PREFIX}/include -DZLIB_LIBRARY=${VEGA_PREFIX}/lib/libz.${build_dllext} \
+                            -DBZ2_INCLUDE_DIR=${VEGA_PREFIX}/include -DBZ2_LIBRARY=${VEGA_PREFIX}/lib/libbz2.${build_dllext}  \
+                            -DPNG_INCLUDE_DIRS=${LIBPNG_INCLUDE_DIR} -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng.dylib \
                             -DJPEG_INCLUDE_DIR=${VEGA_PREFIX}/include -DJPEG_LIBRARY=${VEGA_PREFIX}/lib/libjpeg.dylib \
                             -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
                             -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.dylib;${VEGA_PREFIX}/lib/libvorbis.dylib;${VEGA_PREFIX}/lib/libogg.dylib" \
-                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
+                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} ${GTK2_PREFIX}" \
                             -DGLUT_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/Headers/" \
                             -DGLUT_LIBRARIES="${macos_sdk_fwk}/System/Library/Frameworks/GLUT.framework/GLUT.tbd" \
-                            -DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
-                            -DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers"
+                            -DOPENAL_INCLUDE_DIR="${VEGA_PREFIX}/include/AL" -DOPENAL_LIBRARY="${VEGA_PREFIX}/lib/libopenal.dylib"
+                            #-DOPENAL_LIBRARY="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/OpenAL.tbd" \
+                            #-DOPENAL_INCLUDE_DIR="${macos_sdk_fwk}/System/Library/Frameworks/OpenAL.framework/Versions/A/Headers"
+                            #-DZLIB_INCLUDE_DIR=${macos_sdk}/usr/include -DZLIB_LIBRARY=/usr/lib/libz.${build_dllext}
+                            #-DBZ2_INCLUDE_DIR=${macos_sdk}/usr/include -DBZ2_LIBRARY=/usr/lib/libbz2.${build_dllext}
+
                         ;;
                     mingw*)
                         case "$(uname -o | tr "[:upper:]" "[:lower:]")" in
@@ -549,18 +567,20 @@ do_build_fun() {
                             -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ \
                             -DMATH_INCLUDE_DIRS="${VEGA_PREFIX}/${target_arch}-w64-mingw32/include" \
                             -DMATH_LIBRARIES="${VEGA_PREFIX}/${target_arch}-w64-mingw32/lib/libm.a" \
-                            -DPNG_INCLUDE_DIRS="${VEGA_PREFIX2}/include/libpng12" \
-                            -DPNG_LIBRARIES="${VEGA_PREFIX2}/lib/libpng12.a" \
+                            -DPNG_INCLUDE_DIRS="${LIBPNG_INCLUDE_DIR}" \
+                            -DPNG_LIBRARIES="${VEGA_PREFIX}/lib/libpng.dll.a" \
                             -DSHLWAPI_LIB="${VEGA_PREFIX}/${target_arch}-w64-mingw32/lib/libshlwapi.a" \
                             -DCMAKE_MAKE_PROGRAM="${MAKE}"
+                            #-DPNG_INCLUDE_DIRS="${VEGA_PREFIX2}/include/libpng12" \
+                            #-DPNG_LIBRARIES="${VEGA_PREFIX2}/lib/libpng.a" 
                         ;;
                     *)
                         add_config_args \
-                            -DPNG_INCLUDE_DIRS=${VEGA_PREFIX}/include -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng12.so \
+                            -DPNG_INCLUDE_DIRS=${LIBPNG_INCLUDE_DIR} -DPNG_LIBRARIES=${VEGA_PREFIX}/lib/libpng.so \
                             -DJPEG_INCLUDE_DIR=${VEGA_PREFIX}/include -DJPEG_LIBRARY=${VEGA_PREFIX}/lib/libjpeg.so \
                             -DVorbis_INCLUDE_DIRS=${VEGA_PREFIX}/include \
                             -DVorbis_LIBRARIES="${VEGA_PREFIX}/lib/libvorbisfile.so;${VEGA_PREFIX}/lib/libvorbis.so;${VEGA_PREFIX}/lib/libogg.so" \
-                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} /usr/local/gtk2" \
+                            -DVS_FIND_PREFIX_MORE_PATHS="${VEGA_PREFIX} ${GTK2_PREFIX}" \
                             -DOPENAL_INCLUDE_DIR="${VEGA_PREFIX}/include" -DOPENAL_LIBRARY="${VEGA_PREFIX}/lib/libopenal.so" \
                             -DGLUT_INCLUDE_DIR="${VEGA_PREFIX}/include" -DGLUT_LIBRARIES="${VEGA_PREFIX}/lib/libglut.so" \
                             -DZLIB_INCLUDE_DIR="${VEGA_PREFIX}/include" -DZLIB_LIBRARIES="${VEGA_PREFIX}/lib/libz.so" \
@@ -669,7 +689,9 @@ do_build_fun() {
                     darwin*)
                         add_config_args \
                             --with-macos-sdk="${macos_sdk_fwk}" \
-                            --enable-macosx-bundle
+                            --enable-macosx-bundle \
+                            --with-macos-deployment-target="${target_osx_version_min}" \
+                            --with-al-inc="${VEGA_PREFIX}/include/AL" --with-openal-libs="${VEGA_PREFIX}/lib"
                         ;;
                     *)
                         add_config_args \

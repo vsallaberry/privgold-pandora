@@ -884,6 +884,7 @@ void Music::InitMuzak()
 {
     muzak_count = XMLSupport::parse_int( vs_config->getVariable ("audio","music_layers","1") );
     muzak = new Music[muzak_count];
+    VS_LOG("music", logvs::NOTICE, "music initialized");
 }
 
 void Music::CleanupMuzak()

@@ -29,6 +29,13 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#ifdef HAVE_VERSION_H
+# include "version.h"
+#else
+# define SCM_VERSION "unknown"
+# define SCM_REVISION "unknown"
+# define SCM_REMOTE "unknown"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,11 +60,20 @@
 char * prog_arg=NULL;
 std::string origpath;
 std::string datadir;
-std::string homedir;
-std::string configfile;
+std::pair<std::string,std::string> homedir;
+std::string configfilename, configfile;
+std::pair<std::string,std::string> bindir;
+std::string resourcesdir;
 std::string vegastrikebin;
 std::string glengine;
+std::string setupprog;
 std::string vssetupbin;
+
+// ***************************************************************************
+// Internal
+// ***************************************************************************
+
+#define VSLAUNCH_LOG(...) 			VS_LOG("vslauncher", __VA_ARGS__)
 
 #ifdef _WIN32
 #define VSLAUNCH_EXE_EXT ".exe"
@@ -72,24 +88,22 @@ std::string vssetupbin;
 #define VSLAUNCH_BINARY             "vegastrike"
 #define VSLAUNCH_SETUP_BINARY       "vssetup"
 #define VSLAUNCH_GLENGINE_DEF       "SDL2"
+#define VSLAUNCH_MAXLOGS			3
 
 static const char * vslaunch_binsearchs[] = { ".", "bin", "..", "../bin", NULL };
 static const char * vslaunch_setupbinsearchs[] = { ".", "bin", "..", "../bin", "setup", "../setup", NULL };
 
-bool changeToData () {
-   return chdir(datadir.c_str()) == 0;
-}
 
-bool changehome() {
-    return chdir(homedir.c_str()) == 0;
-}
+// ***************************************************************************
+// Game Configuration Utilities
+// ***************************************************************************
 
 bool InitConfig() {
     // Check configfile
     char line[MAX_READ],  * p, * parm, * n_parm;
     FILE * fp;
-    configfile = "";
-    chdir(homedir.c_str());
+    configfile = configfilename = "";
+    chdir(homedir.first.c_str());
     if ((fp = fopen(VSLAUNCH_SETUPCONF, "r")) == NULL) {
         changeToData();
         fp = fopen(VSLAUNCH_SETUPCONF, "r");
@@ -116,13 +130,13 @@ bool InitConfig() {
     } else {
         VS_LOG("config", logvs::NOTICE, "Using configfile %s", configfile.c_str());
     }
-    chdir(homedir.c_str());
-    if ((fp = fopen(configfile.c_str(), "r")) == NULL) {
+    chdir(homedir.first.c_str());
+    if ((fp = fopen(configfilename.c_str(), "r")) == NULL) {
         changeToData();
         fp = fopen(configfile.c_str(), "r");
         configfile = datadir + "/" + configfile;
     } else {
-        configfile = homedir + "/" + configfile;
+        configfile = VS_PATH_JOIN(homedir.first.c_str(), configfile.c_str());
     }
     if (fp == NULL) {
         VS_LOG("config", logvs::WARN, "Warning cannot find configfile %s", configfile.c_str());
@@ -143,6 +157,18 @@ bool InitConfig() {
         fclose(fp);
     }
     return true;
+}
+
+// ***************************************************************************
+// Game Directories/Files Utilities
+// ***************************************************************************
+
+bool changeToData () {
+   return chdir(datadir.c_str()) == 0;
+}
+
+bool changehome() {
+    return chdir(homedir.first.c_str()) == 0;
 }
 
 static bool notFoundOrSame(const char * file, VSCommon::file_id_t * id_other) {
@@ -187,13 +213,18 @@ int main( int   argc,
         } else if (!strncmp(argv[i_argv], "-D", 2)) {
             datadir = std::string(argv[i_argv] + 2);
         } else if (has_console) {
-            logvs::log_printf("Usage: %s [--run|--setup] [-D<DATADIR>]\n", argv[0]);
+        	if (!strcmp(argv[i_argv], "--version")) {
+        		logvs::log_printf("vslauncher for vegastrike %s revision %s from %s\n",
+        						  SCM_VERSION, SCM_REVISION, SCM_REMOTE);
+        	} else {
+        		logvs::log_printf("Usage: %s [--run|--game|--setup|--gui] [-D<DATADIR>] [--version]\n", argv[0]);
+        	}
             exit(0);
         }
     }
 
     // Binary dir
-    std::pair<std::string,std::string> bindir = VSCommon::getfiledir(argv[0], origpath.c_str());
+    bindir = VSCommon::getfiledir(argv[0], origpath.c_str());
     if (bindir.first.empty()) {
         bindir.first = origpath;
         VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find binary dir, using %s", bindir.first.c_str());
@@ -203,25 +234,38 @@ int main( int   argc,
 
     // Init DATADIR
     // Will change to the data dir which makes selecting missions easier.
-    if ((!datadir.empty() && !(datadir = VSCommon::getdatadir(datadir.c_str())).empty()) 
-    ||  !(datadir = VSCommon::getdatadir(bindir.first.c_str())).empty()) { 
-        VS_LOG("vslauncher", logvs::NOTICE, "Found data in %s", datadir.c_str());
+    if ((!datadir.empty() && !(datadir = VSCommon::getdatadir(datadir)).empty())
+    ||  !(datadir = VSCommon::getdatadir(bindir.first)).empty()) {
+        VSLAUNCH_LOG(logvs::NOTICE, "Found data in %s", datadir.c_str());
+        chdir(datadir.c_str());
     }
-    // Init HOMEDIR
-    if ((homedir = VSCommon::gethomedir(datadir.c_str())).empty()) {
-        homedir = origpath; 
-        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find home, using %s", homedir.c_str());
+
+    resourcesdir = VSCommon::getresourcesdir(bindir.first);
+    if (resourcesdir.empty()) {
+        resourcesdir = bindir.first;
+        VSLAUNCH_LOG(logvs::WARN, "Warning: cannot find resources dir, using %s", resourcesdir.c_str());
     } else {
-        VS_LOG("vslauncher", logvs::NOTICE, "Found home in %s", homedir.c_str());
+        VSLAUNCH_LOG(logvs::NOTICE, "Found resources directory in %s", resourcesdir.c_str());
     }
+
+    // Init HOMEDIR
+    if ((homedir = VSCommon::gethomedir(datadir)).first.empty()) {
+        homedir.first = origpath;
+        VSLAUNCH_LOG(logvs::WARN, "Warning: cannot find home, using %s", homedir.first.c_str());
+    } else {
+        VSLAUNCH_LOG(logvs::NOTICE, "Found home in %s", homedir.first.c_str());
+    }
+    chdir(homedir.first.c_str());
     if (datadir.empty()) {
-        datadir = homedir; 
-        VS_LOG("vslauncher", logvs::WARN, "Warning: cannot find data, using %s", datadir.c_str());
+        datadir = homedir.first;
+        VSLAUNCH_LOG(logvs::WARN, "Warning: cannot find data, using %s", datadir.c_str());
     }
+
     // Init CONFIGFILE
     InitConfig();
+
     // Init Log. TODO read config to see we where we want to log
-    logvs::log_openfile("", homedir + "/vslauncher.log", /*redirect=*/true, /*append=*/false);
+    logvs::log_openfile("", homedir.first + "/vslauncher.log", /*redirect=*/true, /*append=*/false);
     atexit(logvs::log_terminate);
 
     VSCommon::file_id_t myid;

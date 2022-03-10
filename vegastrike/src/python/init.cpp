@@ -38,16 +38,7 @@
 #include "log.h"
 #include "vs_log_modules.h"
 #include "vsfilesystem.h"
-
-#if !defined(HAVE_SETENV)
-static int setenv(const char * var, const char * value, int override) {	
-	if (!override && getenv(var) != NULL) return 0;
-	char envstr[16384];
-	snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
-	//not working on windows: SetEnvironmentVariableA(var,val);
-	return putenv(envstr);
-}
-#endif
+#include "common/common.h"
 
 class Unit;
 //FROM_PYTHON_SMART_POINTER(Unit)
@@ -257,13 +248,13 @@ void Python::overridePythonEnv() {
       = XMLSupport::parse_bool (vs_config->getVariable ("python","override_python_path","true"));
 
     PYTHON_LOG(logvs::NOTICE, "override PYTHONHOME: %s -> '%s'", override_python_path?"true":"false", pythonenv.c_str());
-    setenv("PYTHONHOME", pythonenv.c_str(), override_python_path);
-    setenv("PYTHONPATH", pythonenv.c_str(), override_python_path);
+    VSCommon::vs_setenv("PYTHONHOME", pythonenv.c_str(), override_python_path);
+    VSCommon::vs_setenv("PYTHONPATH", pythonenv.c_str(), override_python_path);
 }
 
 void Python::initpaths(){
     // Looking for python lib-dynload (optional modules loaded dynamically)
-    std::string pyLibsPath = "r\"" + VSFileSystem::libdir + VSFS_PATHSEP VEGASTRIKE_PYTHON_DYNLIB_PATH "\"";
+    std::string pyLibsPath = "r\"" + VS_PATH_JOIN(VSFileSystem::resourcesdir.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH) + "\"";
     PYTHON_LOG(logvs::NOTICE, "PYTHON LIBS PATH: %s", pyLibsPath.c_str());
   /*
   char pwd[2048];

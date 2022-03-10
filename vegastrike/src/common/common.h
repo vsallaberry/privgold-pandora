@@ -42,32 +42,116 @@
 #ifndef _VS_COMMON_COMMON_H
 #define _VS_COMMON_COMMON_H
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <string>
+#include <time.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdarg.h>
 
 #if defined(_WIN32)
 # include <windows.h>
 #endif
 
+#if !defined( _WIN32) || defined( __CYGWIN__)
+# include <dirent.h>
+#endif
+
+#ifndef HAVE_CODECVT // not CXX11
+# define static_assert(x,y)
+#endif
+
 namespace VSCommon {
 
-// stores the data path search list
-extern const char * datadirs[];
+// stores the paths search lists
+extern const char * const datadirs[];
+extern const char * const resourcessearchs[];
 
-// Returns where the data directory is. Returns the "" if it can't find the data dir.
-// Note: When it returns it has already changed dir to where the data directory is
-//       if base is given, it will search into first, then in current directory.
-std::string getdatadir(const char * base = NULL);
+// patch separator
+extern const char * const pathsep;
 
-// Returns where the home directory is. Returns the "" if it can't find the home dir.
-// Note: cwd is not changed, but directory is created if not existing.
-std::string gethomedir(const char * base = NULL);
 
-// Return a pair <file_dir,file_name> for argv0, without changing current directory
-std::pair<std::string,std::string> getfiledir(const char *argv0, const char * base = NULL);
+// **************************************************************************
+// wrappers
+// **************************************************************************
+
+// unistd wrappers mainly for windows
+int 		vs_setenv(const char * var, const char * value, int override);
+int 		vs_mkdir(const char * dir, int mode);
+inline int	vs_mkdir(const std::string & dir, int mode) { return vs_mkdir(dir.c_str(), mode); }
+
+#if !defined( _WIN32) || defined( __CYGWIN__)
+typedef ::DIR vsDIR;
+typedef struct ::dirent vsdirent;
+#else
+struct vsdirent { char * d_name; HANDLE h; bool first; };
+typedef vsdirent vsDIR;
+#endif
+int 			vs_closedir(vsDIR * dirp);
+vsDIR *			vs_opendir(const char * path);
+inline vsDIR *	vs_opendir(const std::string & path) { return vs_opendir(path.c_str()); }
+vsdirent * 		vs_readdir(vsDIR * dirp);
+
+
+// **************************************************************************
+// Game Directory Management
+// **************************************************************************
+
+/**
+ * getresourcesdir()
+ *   Returns where the resources directory is. Returns "" if it can't be found.
+ *   Resources contains share (termiinfo,alsa,lib/python-libs).
+ *   Note: if base is given, it will search into first, then in current directory.
+ *         current directory is not changed
+ */
+std::string 		getresourcesdir(const char * base = NULL);
+inline std::string 	getresourcesdir(const std::string & base) { return getresourcesdir(base.c_str()); }
+
+/**
+ * getdatadir()
+ *   Returns where the data directory is. Returns "" if it can't be found.
+ *   Note: if base is given, it will search into first, then in current directory.
+ *         current directory is not changed
+ */
+std::string 		getdatadir(const char * base = NULL);
+inline std::string 	getdatadir(const std::string & base) { return getdatadir(base.c_str()); }
+
+/**
+ * gethomedir()
+ *   Returns where the home directory is (first), and the datadir homesubdir(second).
+ *   first will be "" if it can't find the home dir.
+ *   Note: cwd is not changed, but directory is created if not existing.
+ */
+std::pair<std::string,std::string> 			gethomedir(const char * base = NULL);
+inline std::pair<std::string,std::string>	gethomedir(const std::string & base) {
+												return gethomedir(base.c_str()); }
+
+/**
+ * getfiledir()
+ *   Return a pair <file_dir,file_name> for argv0, without changing current directory
+ */
+std::pair<std::string,std::string>			getfiledir(const char *argv0,         const char * base = NULL);
+inline std::pair<std::string,std::string> 	getfiledir(const std::string & argv0, const std::string & base = "") {
+												return getfiledir(argv0.c_str(), base.empty() ? NULL : base.c_str()); }
+
+/**
+ * getsuffixedfile()
+ *   Add an integer suffix to file if existing and recently updated.
+ *    delay_sec== (time_t)-1 to allways add suffix, maxfiles==0 for unlimited files.
+ */
+std::string 		getsuffixedfile(const char * file,        time_t delay_sec = 5, unsigned int maxfiles = 10);
+inline std::string 	getsuffixedfile(const std::string & file, time_t delay_sec = 5, unsigned int maxfiles = 10) {
+						return getsuffixedfile(file.c_str(), delay_sec, maxfiles); }
 
 #if defined(_WIN32)
-// Get user LocalAppData folder
+/**
+ * win32_get_appdata()
+ *   Get user LocalAppData folder
+ */
 HRESULT win32_get_appdata(WCHAR * wappdata);
 #endif // ! _WIN32
 
@@ -84,10 +168,24 @@ typedef struct {
 bool getFileId(const char * file, file_id_t * id);
 ssize_t fileIdCompare(file_id_t * id, file_id_t * other);
 
-// Translate lpCmdLine to argc, argv (for WinMain). If not win32, argv[0] has not signification. 
+/**
+ * VS_PATH_JOIN(()
+ *   VS_PATH_JOIN("dir1", ..., "dirN") -> "dir1/.../dirN"
+ */
+#define VS_PATH_JOIN(...) VSCommon::path_join(__VA_ARGS__, NULL)
+// Not to use directly: it is better to call VS_PATH_JOIN as it adds a NULL last parameter.
+std::string path_join(const char * first, ...); // all parameters must be char*, last one must be NULL.
+
+/**
+ * ParseCmdLine() / ParseCmdLineFree()
+ *   Translate lpCmdLine to argc, argv (for WinMain). If not win32, argv[0] has not signification.
+ */
 enum wcmd_flags { WCMDF_NONE = 0, WCMDF_ESCAPE_DQUOTES = 1 << 0, WCMDF_ESCAPE_BACKSLASH = 1 << 1 };
-bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES);
+bool 		ParseCmdLine(const char * cmdline,        int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES);
+inline bool	ParseCmdLine(const std::string & cmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES) {
+				return ParseCmdLine(cmdline.c_str(), pargc, pargv, flags); }
 void ParseCmdLineFree(char ** argv);
+
 
 } // ! namespace VSCommon
 

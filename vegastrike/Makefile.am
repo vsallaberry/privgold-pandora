@@ -485,7 +485,7 @@ LIBCMD = \
   src/cmd/weapon_xml.h
 
 if VS_MAKE_GTKUTILS
-  GTKUTILS_PROG=vssetup
+  GTKUTILS_PROG=vssetup vslauncher-gui
 else
   GTKUTILS_PROG=
 endif
@@ -522,7 +522,7 @@ bin_PROGRAMS = \
   $(DIALOGUTILS_PROG) \
   vslauncher
 
-$(bin_PROGRAMS): version.h #get_scm_revision
+all $(bin_PROGRAMS): version.h #get_scm_revision
 
 noinst_LIBRARIES_1=\
   libnetlowlevel.a
@@ -1256,26 +1256,34 @@ vssetup_dlg_SOURCES = \
     src/log.h
 
 
-if VS_MAKE_GTKUTILS
-VSLAUNCHER_SPECIFIC_SOURCES = launcher/saveinterface.cpp
-vslauncher_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
-vslauncher_CXXFLAGS_GTK = $(GTK_CFLAGS)
-else
-VSLAUNCHER_SPECIFIC_SOURCES = launcher/nogui.cpp
-endif
-vslauncher_CXXFLAGS = -DVS_LOG_NO_XML $(vslauncher_CXXFLAGS_GTK)
-launcher/log.link.cpp: $(top_srcdir)/src/log.cpp
-	cp $< $@ || copy $< $@
-
-vslauncher_SOURCES = \
+VSLAUNCHER_COMMON_SOURCES = \
 	launcher/launcher.h \
 	launcher/log.link.cpp \
 	launcher/main.cpp \
     launcher/general.cpp \
     launcher/general.h \
     src/common/common.cpp \
-    src/common/common.h \
-	$(VSLAUNCHER_SPECIFIC_SOURCES)
+    src/common/common.h
+
+VSLAUNCHER_GUI_SOURCES = launcher/saveinterface.cpp
+VSLAUNCHER_NOGUI_SOURCES = launcher/nogui.cpp
+
+vslauncher_gui_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
+vslauncher_LDFLAGS = $(GTK_LIBS) $(VS_APPLE_CARBON_LIBRARY)
+
+vslauncher_gui_CXXFLAGS = -DVS_LOG_NO_XML $(GTK_CFLAGS)
+vslauncher_CXXFLAGS = -DVS_LOG_NO_XML
+
+launcher/log.link.cpp: $(top_srcdir)/src/log.cpp
+	cp $< $@ || copy $< $@
+
+vslauncher_gui_SOURCES = \
+	$(VSLAUNCHER_COMMON_SOURCES) \
+	$(VSLAUNCHER_GUI_SOURCES)
+
+vslauncher_SOURCES = \
+	$(VSLAUNCHER_COMMON_SOURCES) \
+	$(VSLAUNCHER_NOGUI_SOURCES)
 
 if USE_PRECOMPILED_HEADERS
 PRECOMPILED_FLAGS = -include $(PRECOMPILED)

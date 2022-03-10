@@ -20,6 +20,16 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * -------------------------------------------------------------------------*/
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+#ifdef HAVE_VERSION_H
+# include "version.h"
+#else
+# define SCM_VERSION "unknown"
+# define SCM_REVISION "unknown"
+# define SCM_REMOTE "unknown"
+#endif
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -175,11 +185,13 @@ static size_t convert_one(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l
 	++it;
 	return n8;
 }
+
 enum { PRIV_FF=0, PRIV_SS, PRIV_FG, PRIV_FTO, PRIV_FRL, PRIV_NEWS, PRIV_DNEWS, PRIV_LAST=PRIV_DNEWS,
 	   PRIV_UNKNOWN };
 static const char * s_privateer_kw[] = {
 	"FF:", "SS:", "FG:", "FactionTookOver", "FactionRefList", "news", "dynamic_news", NULL
 };
+
 static unsigned int get_privsave_linetype(conv_ctx_t * g, conv_line_ctx_t * l) {
 	if ((g->flags & (FLG_PRIVSAVE | FLG_AUTOFMT)) == 0) return PRIV_UNKNOWN;
 	const char * s = g->line;
@@ -194,6 +206,7 @@ static unsigned int get_privsave_linetype(conv_ctx_t * g, conv_line_ctx_t * l) {
 	}
 	return PRIV_UNKNOWN;
 }
+
 static int get_word(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l, size_t len, const char ** pword, size_t *plen, const char * label = "WORD") {
 	size_t n8 = 0, n = 0, outlen, wordpos;
 	bool skipsep = (len == (size_t)-1);
@@ -213,6 +226,7 @@ static int get_word(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l, size
 	}
 	return 0;
 }
+
 static int get_num(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l, long * pnum, const char ** pnumpos, size_t *pnumlen) {
 	int ret = get_word(it, g, l, (size_t)-1, pnumpos, pnumlen, "NUM");
 	if (!ret && pnumpos && pnumlen) ret = str2num(pnum, *pnumpos, *pnumlen, 10);
@@ -378,8 +392,9 @@ int convert(const char * file, const char * outfile, unsigned int flags) {
 static int usage(int argc, char ** argv, int status) {
     (void) argc;
     fprintf(stdout, "Usage: %s\n"
-    			    "    [-h,--help] [-v,--verbose] [-P,--privateer-savegame] [-f,--force]\n"
-    		        "    [-C,--convert|-B,--convert-back] ['-'|<in-file> ['-'|<out-file>]]\n", argv[0]);
+    			    "    [-h,--help] [-V,--version] [-v,--verbose] [-f,--force]\n"
+    		        "    [-P,--privateer-savegame] [-C,--convert|-B,--convert-back]\n"
+    		        "    ['-'|<in-file> ['-'|<out-file>]]\n", argv[0]);
     return status;
 }
 int main(int argc, char ** argv) {
@@ -395,6 +410,7 @@ int main(int argc, char ** argv) {
         		short_opts = fake_short;
         		if (!strcmp(argv[i], "--help")) 					fake_short[1] = 'h';
         		else if (!strcmp(argv[i], "--verbose")) 			fake_short[1] = 'v';
+        		else if (!strcmp(argv[i], "--version")) 			fake_short[1] = 'V';
         		else if (!strcmp(argv[i], "--privateer-savegame")) 	fake_short[1] = 'P';
         		else if (!strcmp(argv[i], "--convert")) 			fake_short[1] = 'C';
         		else if (!strcmp(argv[i], "--force")) 				fake_short[1] = 'f';
@@ -403,6 +419,8 @@ int main(int argc, char ** argv) {
         	for (int j=1; short_opts[j]; ++j) {
         		switch (short_opts[j]) {
 					case 'h': return usage(argc, argv, 0);
+					case 'V': { fprintf(stdout, "unicode-conv for vegastrike %s revision %s from %s\n",
+		        						SCM_VERSION, SCM_REVISION, SCM_REMOTE); return 0; }
 					case 'v': flags |= ((flags & FLG_VERBOSE) ? FLG_DEBUG : FLG_VERBOSE); break ;
 					case 'f': flags |= FLG_FORCE; break ;
 					case 'P': flags = (flags & ~(FLG_AUTOFMT)) | FLG_PRIVSAVE; break ;
