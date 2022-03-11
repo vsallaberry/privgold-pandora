@@ -786,7 +786,7 @@ posh.h in your library's source files.
 #if defined FORCE_DOXYGEN
 #  define POSH_LITTLE_ENDIAN
 #  define POSH_BIG_ENDIAN
-#elif defined POSH_CPU_X86 || defined POSH_CPU_AXP || defined POSH_CPU_STRONGARM || defined POSH_OS_WIN32 || defined POSH_OS_WINCE || defined __MIPSEL__
+#elif defined POSH_CPU_X86 || defined POSH_CPU_AXP || defined POSH_CPU_STRONGARM || defined(POSH_CPU_ARM64) || defined POSH_OS_WIN32 || defined POSH_OS_WINCE || defined __MIPSEL__
 #  define POSH_LITTLE_ENDIAN 1
 #  define POSH_ENDIAN_STRING "little"
 #else
