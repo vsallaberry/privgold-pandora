@@ -137,6 +137,12 @@ info = _info   # I don't think this is useful, but why not?
 # For release, we can disable unimportant messages:
 # debug = _info
 
+def decode(s):
+	try:
+		return s.decode('utf-8');
+	except:
+		return s
+
 def _str2bool(s):
 	return s == '1' or s.lower() == 'yes' or s.lower() == 'true' or s.lower() == 'enabled' or s.lower() == 'on'
 
@@ -158,7 +164,7 @@ def __init():
 			_logfile = sys.stderr
 		else:
 			try:
-				_logfile = open(_file, 'a', buffering=1) # buffering = 1, -1 for full buffered, system default if omitted
+				_logfile = open(decode(_file), 'a', buffering=1) # buffering = 1, -1 for full buffered, system default if omitted
 				_logwrite = VS.LogPrint
 				# We use VS.LogPrint() rather than a python file object, in order to have FILE streams sync in python/c++
 				if os.name == 'posix':
