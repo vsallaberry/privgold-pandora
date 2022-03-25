@@ -2,7 +2,7 @@
 #include <vector>
 #include "beam.h"
 #include "unit_generic.h"
-//#include "unit_collide.h"
+#include "unit_collide.h"
 using std::vector;
 #include "audiolib.h"
 #include "configxml.h"

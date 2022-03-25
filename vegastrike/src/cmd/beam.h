@@ -2,7 +2,8 @@
 #define _CMD_BEAM_H_
 #include "weapon_xml.h"
 #include "gfx/mesh.h"
-#include "unit_collide.h"
+//#include "unit_collide.h"
+#include "linecollide.h"
 #include "gfx/matrix.h"
 #include "gfx/quaternion.h"
 #include <vector>
