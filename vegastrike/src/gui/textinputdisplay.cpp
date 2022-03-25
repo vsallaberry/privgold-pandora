@@ -111,7 +111,7 @@ void TextInputDisplay::draw() {
                     text += '#';
             } else if (WSK_CODE_IS_UTF32(c)) {
                 c = WSK_CODE_TO_UTF32(c);
-                char tmp[MB_CUR_MAX+1];
+                char tmp[MB_LEN_MAX+1];
                 size_t n = utf32_to_utf8(tmp, c);
                 text += tmp;
             }

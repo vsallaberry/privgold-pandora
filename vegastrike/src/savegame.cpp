@@ -296,7 +296,7 @@ std::string FixEncodingInString(const std::string & str) {
     std::string fixed;
     fixed.reserve(str.length()+20);
     for (Utf8Iterator it = Utf8Iterator::begin(str); it != it.end(); ++it) {
-        char utf8[MB_CUR_MAX+1];
+        char utf8[MB_LEN_MAX+1];
         if (*it && utf32_to_utf8(utf8, *it) > 0) {
             fixed.append(utf8);
         } else {

@@ -71,29 +71,14 @@
 
 #include "log.h"
 
-#define UTF8_ITERATOR_DEBUG(...) VS_DBG("unicode", logvs::DBG+3, __VA_ARGS__)
+#define UTF8_ITERATOR_DEBUG_L(_lvl, ...)	VS_DBG("unicode", _lvl, __VA_ARGS__)
+#define UTF8_ITERATOR_DEBUG(...) 			UTF8_ITERATOR_DEBUG_L(logvs::DBG+3, __VA_ARGS__)
+
+static bool s_unicode_initialized = false;
 
 // -----------------------------
 // utf8/utf32 simple conversions
 // -----------------------------
-
-#if !defined(HAVE_WCHAR_H) && !defined(HAVE_CWCHAR)
-size_t vs_wcrtomb_ascii(char * dst, wchar_t wc, void * ctx) {
-    (void)ctx;
-    *dst[0] = (char)wc;
-    *dst[1] = 0;
-    return 1;
-}
-size_t vs_mbrtowc_ascii(wchar_t * wc, const char * buf, size_t len, void * ctx) {
-    (void)ctx;
-    if (wc && buf && len > 0) {
-        *wc = (*buf & 0xff);
-        return 1;
-    } else {
-        return (size_t)-1;
-    }
-}
-#endif
 
 wchar_t utf8_to_utf32(const char * utf8) {
     Utf8Iterator it = Utf8Iterator(utf8);
@@ -111,6 +96,63 @@ size_t utf32_to_utf8(char * dst, wchar_t utf32) {
         dst[ret] = 0;
     }
     return ret;
+}
+
+size_t utf8_to_wstr(wchar_t ** pws, const char * s, size_t ws_sz, size_t len) {
+	if (!s || !pws || !ws_sz)
+		return (size_t)-1;
+	if (len == (size_t)-1)
+		len = strlen(s);
+	if (*pws == NULL && (*pws = (wchar_t*) malloc((len+1) * sizeof(**pws))) == NULL)
+		return (size_t)-1;
+	if (!len) {
+		**pws = 0;
+		return 0;
+	}
+	size_t wslen = 0;
+	for (Utf8Iterator it = Utf8Iterator::begin(s, len); it != it.end() && wslen + 1 < ws_sz; ++it, ++wslen) {
+		(*pws)[wslen] = *it;
+	}
+	(*pws)[wslen] = 0;
+	return wslen;
+}
+
+size_t wstr_to_utf8(char ** ps, const wchar_t * ws, size_t u8_sz, size_t wslen) {
+	if (!ws || !ps || !u8_sz)
+		return (size_t)-1;
+	if (wslen == (size_t)-1)
+		wslen = wcslen(ws);
+	bool ballocate = (*ps == NULL);
+	if (ballocate) {
+		u8_sz = (wslen+1) * 2;
+		if ((*ps = (char *) malloc(u8_sz * sizeof(**ps))) == NULL)
+			return (size_t)-1;
+	}
+	if (!wslen) {
+		**ps = 0;
+		return 0;
+	}
+	size_t u8len = 0;
+	for (size_t iw = 0; iw < wslen && ws[iw]; ++iw) {
+		if (u8len + MB_LEN_MAX + 1 >= u8_sz) {
+			if (ballocate) {
+				char * new_s = (char *) realloc(*ps, (u8_sz = (u8_sz*2 + MB_LEN_MAX + 1)) * sizeof(**ps));
+				if (new_s == NULL)
+					break ;
+				*ps = new_s;
+			} else {
+				break ;
+			}
+		}
+		size_t u8charlen = utf32_to_utf8(*ps + u8len, ws[iw]);
+		if (u8charlen == 0) {
+			u8charlen = 1;
+			(*ps)[u8len] = (ws[iw] < 128 ? (ws[iw]&0xff) : '?');
+		}
+		u8len += u8charlen;
+	}
+	(*ps)[u8len] = 0;
+	return u8len;
 }
 
 /* ************************************************************************* */
@@ -145,7 +187,7 @@ Utf8Iterator & Utf8Iterator::operator--() {
       return *this;
   wchar_t save_next = _value;
   size_t save_incr = _incr, combine_incr;
-  _nextvalue = (size_t)(1<<16); // to disable combination, on first pass.
+  _nextvalue = 0; // to disable combination, on first pass.
   for (int i = 0; i < 2; ++i) {
     _incr = _nextincr = 0;
     UTF8_ITERATOR_DEBUG("Utf8Iterator::--() START POS %zu VAL %x", _pos, _str[_pos]&0xff);
@@ -158,7 +200,8 @@ Utf8Iterator & Utf8Iterator::operator--() {
     UTF8_ITERATOR_DEBUG("Utf8Iterator::--() END --LOOP POS %zu VAL %x u32VAL %x NEXT %x", 
                         _pos, _str[_pos]&0xff, _value, _nextvalue);
     next();
-    if (i == 0 && _pos > 0 && _nextvalue < ((size_t)(1<<16)) && unicode_combinable(_nextvalue)) {
+    if (i == 0 && _pos > 0 && _nextvalue
+    &&  static_cast<size_t>(_nextvalue) < ((size_t)(1<<16)) && unicode_combinable(_nextvalue)) {
         combine_incr = _nextincr;
         UTF8_ITERATOR_DEBUG("Utf8Iterator::--() CONTINUE");
     } else if (i == 1) {
@@ -201,7 +244,8 @@ void Utf8Iterator::next() {
     } else {
         if ((_flags & U8F_COMBINE) != 0) {
             // combine utf8 characters if possible
-            if (_value < ((size_t)(1<<16)) && _nextvalue < ((size_t)(1<<16)) && unicode_combinable(_nextvalue)) {
+            if (static_cast<size_t>(_value) < ((size_t)(1<<16))
+            &&  _nextvalue && static_cast<size_t>(_nextvalue) < ((size_t)(1<<16)) && unicode_combinable(_nextvalue)) {
                 wchar_t newvalue = unicode_combine(_value, _nextvalue);
                 if (newvalue) {
                     _nextvalue = newvalue;
@@ -219,7 +263,10 @@ void Utf8Iterator::next() {
 // locale initialization needed for mbrtowc/wcrtomb
 // -----------------------------
 
-void unicodeInitLocale() {
+void unicodeInitLocale(bool force) {
+	if (s_unicode_initialized && !force)
+		return ;
+	s_unicode_initialized = true;
 #if defined(HAVE_LOCALE_H) || defined(HAVE_CLOCALE)
     char loc[50] = {0, };
     char myloc[50] = {0, };
@@ -250,7 +297,7 @@ void unicodeInitLocale() {
                         VS_LOG("unicode", logvs::WARN, "cannot set std::cout utf8 locale");
                     }
                    #else
-                   VS_LOG("unicode", logvs::NOTICE, "no std::cout::imbue support on this system");
+                   VS_LOG("unicode", logvs::INFO, "no std::cout::imbue support on this system");
                    #endif
 				   #if defined(_WIN32)
 				   # if 0 && (defined(__CYGWIN__) || defined(__MINGW32__))
@@ -272,6 +319,173 @@ void unicodeInitLocale() {
     VS_LOG("unicode", logvs::WARN, "warning: locale is not supported on this system");
 #endif
 }
+
+// -------------------------------------------------
+// mbrtowc/wcrtomb wrappers when libc does not utf8
+// -------------------------------------------------
+
+#if defined(VS_UNICODE_LIBC_WITHOUT_UTF8)
+# if HAVE_CODECVT
+#  include <codecvt>
+#  include <locale>
+#  undef VS_UNICODE_WCRTOMB_CXX11_CODECVT 	//codecvt_utf8 or wstring_convert
+#  define VS_UNICODE_MBRTOWC_CXX11_CODECVT	//codecvt_utf8 or wstring_convert
+
+typedef std::codecvt_utf8<char32_t> utf8_conv;
+static utf8_conv s_utf8_conv;
+
+size_t vs_wrap_wcrtomb(char * dst, wchar_t wc, mbstate_t * ctx) {
+#ifdef VS_UNICODE_WCRTOMB_CXX11_CODECVT
+	const utf8_conv::intern_type  * from_next;
+	utf8_conv::extern_type  * to_next;
+
+	utf8_conv::intern_type u32[2] = { static_cast<utf8_conv::intern_type>(wc), 0 };
+
+	utf8_conv::result ret = s_utf8_conv.out(*ctx, &u32[0], &u32[1], from_next,
+			                                &dst[0], &dst[MB_LEN_MAX], to_next);
+	if (ret != utf8_conv::ok)
+		return (size_t)-1;
+    return (to_next - dst);
+#else
+    if (dst == NULL)
+    	return 0;
+    if (wc == 0) {
+    	*dst = 0;
+    	return 1;
+    }
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> utf8_conv;
+    std::string u8 = utf8_conv.to_bytes(static_cast<char32_t>(wc));
+    UTF8_ITERATOR_DEBUG_L(logvs::DBG+4, "wcrtomb_cxx11: converted: %zu conv_len=%zu", utf8_conv.converted(), u8.length());
+    if (utf8_conv.converted() == 0 || u8.length() == 0) return (size_t)-1;
+    memcpy(dst, u8.c_str(), u8.length());
+    dst[u8.length()] = 0;
+    return(u8.length());
+#endif
+}
+
+size_t vs_wrap_mbrtowc(wchar_t * pwc, const char * utf8_in, size_t len, mbstate_t * ctx) {
+#ifdef VS_UNICODE_MBRTOWC_CXX11_CODECVT
+	if (len == 0 || utf8_in == NULL || *utf8_in == 0) {
+		*pwc = 0;
+		return 0;
+	}
+	const utf8_conv::extern_type  * from_next;
+	utf8_conv::intern_type  * to_next;
+	utf8_conv::intern_type u32[2] = { 0, };
+
+	utf8_conv::result ret = s_utf8_conv.in(*ctx, &utf8_in[0], &utf8_in[len], from_next,
+			                               &u32[0], &u32[1], to_next);
+	UTF8_ITERATOR_DEBUG_L(logvs::DBG+4, "mbrtowc_cxx11: result: %x(%02x) done?:%d ret:%zu u8=%02x%02x(%p)#%zu",
+			              ret, *u32, to_next > &u32[0], from_next - utf8_in, *utf8_in&0xff,utf8_in[1]&0xff, utf8_in, len);
+	if (ret == utf8_conv::error)
+		return (size_t)-1;
+	if (to_next == &u32[0]) // || ret == utf8_conv::partial)
+		return (size_t)-2;
+	*pwc = *u32;
+	return (from_next - utf8_in);
+#else
+	if (len == 0 || utf8_in == NULL || *utf8_in == 0) {
+		*pwc = 0;
+		return 0;
+	}
+	size_t u8_sz = len;
+	for (len = 0; utf8_in[len] && (unsigned char)(utf8_in[len]&0xff) >= 0xC0; ++len) /*loop*/;
+	if (utf8_in[len])++len;
+	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> utf8_conv;
+	std::u32string u32 = utf8_conv.from_bytes(utf8_in, utf8_in + len);
+	size_t converted = utf8_conv.converted();
+	if (converted == 0 || u32.length() == 0) return (size_t)-1;
+	//if (converted < len) return (size_t)-2;
+	*pwc=u32[0];
+	return converted;
+#endif
+}
+# elif 0 && (HAVE_SDL || HAVE_LIBICONV)
+#  if HAVE_SDL
+#   include <SDL_stdinc.h>
+#   define iconv_open 	SDL_iconv_open
+#   define iconv_close 	SDL_iconv_close
+#   define iconv_t 		SDL_iconv_t
+#   define iconv 		SDL_iconv
+#   define iconv_inbuf_cast (const char**)
+#  else
+#   include <iconv.h>
+#   define iconv_inbuf_cast
+#  endif
+static struct IConvCtx {
+	iconv_t ic_to_u8, ic_to_u32;
+	IConvCtx() {
+		ic_to_u32 = iconv_open("UCS-4BE", "UTF-8");
+		ic_to_u8 = iconv_open("UTF-8", "UCS-4BE");
+	}
+	~IConvCtx() {
+		if (ic_to_u8) iconv_close(ic_to_u8);
+		if (ic_to_u32) iconv_close(ic_to_u32);
+	}
+} s_iconv_ctx;
+size_t vs_wrap_wcrtomb(char * dst, wchar_t wc, mbstate_t * ctx) {
+	iconv_t ic = s_iconv_ctx.ic_to_u8;
+
+    char swc[5], *swcp = &swc[sizeof(swc)-1];
+    memset(swc, 0, sizeof(swc));
+    for (*swcp = 0; wc > 0 && swcp > &swc[0]; wc >>= 8) { *(--swcp) = wc; }
+
+    size_t in_sz = &swc[sizeof(swc)-1] - swcp;
+    size_t out_sz = MB_LEN_MAX + 1;
+
+    in_sz = 4;
+    swcp = swc;
+
+    dst[MB_LEN_MAX]=0;
+
+    int ret = iconv(ic, iconv_inbuf_cast &swcp, &in_sz, &dst, &out_sz);
+
+    size_t len = MB_LEN_MAX + 1 - out_sz;
+    dst[len] = 0;
+    return len;
+}
+size_t vs_wrap_mbrtowc(wchar_t * pwc, const char * utf8_in, size_t len, mbstate_t * ctx) {
+	iconv_t ic = s_iconv_ctx.ic_to_u32;
+
+	size_t in_sz = len;
+	size_t out_sz = 4;
+	char out[4];
+
+	char * in = (char*)utf8_in;
+	char * pout = out;
+	int ret = iconv(ic, iconv_inbuf_cast &in, &len, &pout, &out_sz);
+
+	if (out_sz != 0) {
+		return (size_t)-1;
+	}
+	*pwc = 0;
+	for (size_t i = 0; i < 4; ++i) {
+		//fprintf(stderr, "%02x ", out[i]&0xff);
+		*pwc = (*pwc << 8) + (out[i]&0xff);
+	}
+	UTF8_ITERATOR_DEBUG("iconv_mbrtowc: %x, return %zu\n", *pwc, in_sz-len);
+	return in_sz - len;
+}
+# else // ! HAVE_CODECVT
+#  warning "NO UTF8 SUPPORT (no libc, cxx11 or SDL/iconv utf8 handling)"
+size_t vs_wrap_wcrtomb(char * dst, wchar_t wc, mbstate_t * ctx) {
+    (void)ctx;
+    *dst[0] = (char)wc;
+    *dst[1] = 0;
+    return 1;
+}
+size_t vs_wrap_mbrtowc(wchar_t * wc, const char * buf, size_t len, mbstate_t * ctx) {
+    (void)ctx;
+    if (wc && buf && len > 0) {
+        *wc = (*buf & 0xff);
+        return 1;
+    } else {
+        return (size_t)-1;
+    }
+}
+# endif // ! HAVE_CODECVT
+#endif // ! VS_UNICODE_LIBC_WITHOUT_UTF8
+
 // END
 
 /*--------------------------------------------------------------------------*/
@@ -295,11 +509,15 @@ void unicodeInitLocale() {
 # include <codecvt>
 #endif
 
+static int cleanout(FILE*out) {
+	clearerr(out); fflush(out); clearerr(out); return 0;
+}
+
 #define TEST_PRINT_OK 1
 #define STR(x) #x
-#define PTEST(hdr,cond,res,...) fprintf(stderr, hdr " %s [%s]" "\n", __VA_ARGS__, res, STR(cond))
-#define TESTV(_hdr, cond, ...) ((cond) && (++n_tests|1) ? (TEST_PRINT_OK?PTEST(_hdr,cond,"OK",__VA_ARGS__)*0:0) \
-                                                        : PTEST(_hdr,cond,"FAILED",__VA_ARGS__)*0+1)
+#define PTEST(hdr,cond,res,...) fprintf(stderr, hdr " %s [%s] - %d" "\n", __VA_ARGS__, res, STR(cond), __LINE__)
+#define TESTV(_hdr, cond, ...) ((cond) && (++n_tests|1) ? (TEST_PRINT_OK?(cleanout(stderr)*0 + PTEST(_hdr,cond,"OK",__VA_ARGS__)*0):0) \
+                                                        : (cleanout(stderr)*0 + PTEST(_hdr,cond,"FAILED",__VA_ARGS__)*0+1))
 #define TEST(hdr,cond) TESTV("%s" hdr, cond, "")
 #define HDR "       "
 
@@ -386,14 +604,16 @@ static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::str
 
 static wchar_t u8towc(const std::string & s, size_t u8index, size_t * pu8len) { 
     const char * cstr = s.c_str() + u8index;
-    wchar_t wc, comb_wc; 
-    ssize_t u8len = mbtowc(&wc, cstr, MB_CUR_MAX), comb8len;
-    TEST(HDR, u8len >= 0 && u8len != (size_t)-1);
-    if (u8len == (size_t)-1) mbtowc(&wc, NULL, 0);
+    wchar_t wc, comb_wc;
+    mbstate_t st;
+    memset(&st, 0, sizeof(st));
+    ssize_t u8len = mbrtowc(&wc, cstr, MB_LEN_MAX, &st), comb8len;
+    TESTV(HDR "(u8len:%zx,u8:%02x[%p])", u8len >= 0 && u8len != (size_t)-1, u8len, cstr[0]&0xff, cstr);
+    if (u8len == (size_t)-1) memset(&st, 0, sizeof(st)); //mbtowc(&wc, NULL, 0);
     if (u8len <= 0)
         return 0;
     if (u8index + u8len < s.length() 
-    &&  (comb8len = mbtowc(&comb_wc, cstr + u8len, MB_CUR_MAX)) > 0
+    &&  (comb8len = mbrtowc(&comb_wc, cstr + u8len, MB_LEN_MAX, &st)) > 0
     &&  unicode_combinable(comb_wc)) {
         wc = unicode_combine(wc, comb_wc);   
     } else comb8len = 0;
@@ -408,11 +628,13 @@ static wchar_t u8itowc_l(const std::string & s, size_t wcindex, size_t * u8index
     wchar_t wc;
     size_t u8i = 0; 
     ssize_t u8len;
+    mbstate_t st;
+    memset(&st, 0, sizeof(st));
     for (size_t wci = 0; wci <= wcindex; ++wci, u8i += u8len) {
-        u8len = mbtowc(&wc, cstr + u8i, s.length() - u8i + 1);
-        TEST(HDR, u8len >= 0 && u8len != (size_t)-1);
+        u8len = mbrtowc(&wc, cstr + u8i, s.length() - u8i + 1, &st);
+        TESTV(HDR "(u8len:%zx)", u8len >= 0 && u8len != (size_t)-1, u8len);
         if (!u8len) break ;
-        if (u8len == (size_t)-1) mbtowc(&wc, NULL, 0);
+        if (u8len == (size_t)-1) memset(&st, 0, sizeof(st));//mbtowc(&wc, NULL, 0);
         if (wci > 0 && unicode_combinable(wc)) {
             --wci;
         }
@@ -495,7 +717,7 @@ static unsigned int big_u8it_test(std::basic_ostream<charT> & out, const std::st
             errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itplus == u8itowc(s, u8index_plusi), i,it_counter,it.pos(),itplus.pos(),*itplus);
 
             errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itmin.pos() == (idx=u8index(s, u8index_minusi)), i,it_counter,it.pos(),itmin.pos(),*itmin, idx);
-            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itmin == u8itowc(s, u8index_minusi), i,it_counter,it.pos(),itmin.pos(),*itmin);
+            errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c[%x],exp:%x)",*itmin == (wc=u8itowc(s, u8index_minusi)), i,it_counter,it.pos(),itmin.pos(),*itmin,*itmin,wc);
 
             errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c,ret:%zu)",itplus_eq.pos() == (idx=u8index(s, u8index_plusi)), i,it_counter,it.pos(),itplus_eq.pos(),*itplus_eq,idx);
             errs += TESTV(HDR "(i:%zd,idx:%zd,pos:%zu->%zu,v:%c)",*itplus_eq == u8itowc(s, u8index_plusi), i,it_counter,it.pos(),itplus_eq.pos(),*itplus_eq);

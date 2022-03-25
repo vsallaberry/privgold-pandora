@@ -53,10 +53,18 @@
 #elif defined(HAVE_WCHAR_H)
 # include <wchar.h>
 #else
-# define MB_CUR_MAX 6
+# define VS_UNICODE_LIBC_WITHOUT_UTF8
 typedef int wchar_t;
-# define mbrtowc(_wc, _str, _len, _ctx) vs_mbrtowc_ascii(_wc, _str, _len, _ctx)
-# define wcrtomb(_str, _wc, _ctx)       vs_wcrtomb_ascii(_str, _wc, _ctx)
+typedef long mbstate_t;
+#endif
+
+#if defined(HAVE_LIMITS_H)
+# include <limits.h>
+#endif
+
+#if !defined(MB_LEN_MAX) || MB_LEN_MAX < 6
+# undef MB_LEN_MAX
+# define MB_LEN_MAX 6
 #endif
 
 #include <ctype.h>
@@ -66,6 +74,19 @@ typedef int wchar_t;
 # include <wctype.h>
 #else
 # define iswprint(x) isprint(x)
+#endif
+
+#if defined(_WIN32) && defined(_WIN32_WINNT) && _WIN32_WINNT < 0x0601
+# define VS_UNICODE_LIBC_WITHOUT_UTF8
+#endif
+
+#if defined(VS_UNICODE_LIBC_WITHOUT_UTF8)
+# undef mbrtowc
+# undef wcrtomb
+size_t vs_wrap_wcrtomb(char * dst, wchar_t wc, mbstate_t * ctx);
+size_t vs_wrap_mbrtowc(wchar_t * wc, const char * buf, size_t len, mbstate_t * ctx);
+# define mbrtowc(_wc, _str, _len, _ctx) vs_wrap_mbrtowc(_wc, _str, _len, _ctx)
+# define wcrtomb(_str, _wc, _ctx)       vs_wrap_wcrtomb(_str, _wc, _ctx)
 #endif
 
 /*---------------------------------------------
@@ -92,12 +113,31 @@ typedef int wchar_t;
 /* get UTF32 unicode from utf8 character(s) : use utf8StringIter to process a string
  * returns the utf32 character or 0 on error */
 wchar_t utf8_to_utf32(const char * utf8);
-/* get utf8 bytes from an utf32 character (MB_CUR_MAX bytes stored at most)
+
+/* get utf8 bytes from an utf32 character (MB_LEN_MAX+1 bytes stored at most)
  * returns the number of bytes stored in dst or (size_t)-1 or error */
 size_t utf32_to_utf8(char * dst, wchar_t utf32);
 
+/* convert an utf8 string to a wchar string
+ * if *pws is NULL, *pws is allocated, and must be freed if no error.
+ * at most ws_sz chars written, at most u8_len chars read (including ending 0).
+ * return the size of resulting wchar string or (size_t)-1 on error (bad params/bad alloc) */
+size_t utf8_to_wstr(wchar_t ** pws, const char * s, size_t ws_sz = (size_t)-1, size_t u8len = (size_t)-1);
+inline size_t utf8_to_wstr(wchar_t * ws, const char * s, size_t ws_sz = (size_t)-1, size_t u8len = (size_t)-1) {
+	return ws == NULL ? (size_t)-1 : utf8_to_wstr(&ws, s, ws_sz, u8len);
+}
+
+/* convert a wchar string to an utf8 string
+ * if *ps is NULL, *ps is allocated, and must be freed if no error.
+ * at most ws_sz chars written, at most u8_len chars read (including ending 0).
+ * return the size of resulting utf8 string or (size_t)-1 on error (bad params/bad alloc)*/
+size_t wstr_to_utf8(char ** ps, const wchar_t * ws, size_t u8_sz = (size_t)-1, size_t wslen = (size_t)-1);
+inline size_t wstr_to_utf8(char * s, const wchar_t * ws, size_t u8_sz = (size_t)-1, size_t wslen = (size_t)-1) {
+	return s == NULL ? (size_t)-1 : wstr_to_utf8(&s, ws, u8_sz, wslen);
+}
+
 /* init Locale, needed for wcrtomb and mbrtowc used by Utf8Iterator */
-void unicodeInitLocale();
+void unicodeInitLocale(bool force = false);
 
 /** check if an unicode character is combinable, returns boolean. */
 int unicode_combinable(uint16_t character);
@@ -133,9 +173,9 @@ public:
         init();
         //fprintf(stderr, "[contructed] ('%s' size:%zu strlen:%zu).\n", _str, _size, strlen(_str));
     }
-    explicit Utf8Iterator(const char * s, size_t size = (size_t)-1) :
+    explicit Utf8Iterator(const char * s = NULL, size_t size = (size_t)-1) :
     _str(s),
-    _size(!s ? 0 : (size == (size_t)-1 ? strlen(s) : size)) {
+    _size(s == NULL ? 0 : (size == (size_t)-1 ? strlen(s) : size)) {
         init();
         //fprintf(stderr, "[contructed] ('%s' size:%zu strlen:%zu).\n", _str, _size, strlen(_str));
     }

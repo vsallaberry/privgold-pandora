@@ -510,7 +510,7 @@ namespace BaseUtil {
 		if ((keycode>0x20) && (keycode < 128))
 			data["char"] = string(1,keycode);
         else if (WSK_CODE_IS_UTF32(keycode)) {
-            char utf8[MB_CUR_MAX+1];
+            char utf8[MB_LEN_MAX+1];
             unsigned int utf32 = WSK_CODE_TO_UTF32(keycode);
             data["key"] = utf32;
             utf32_to_utf8(utf8, utf32);
