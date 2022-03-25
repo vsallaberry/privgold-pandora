@@ -16,10 +16,11 @@
  **************************************************************************/
 #include <string>
 #include <sys/stat.h>
+#include "common/common.h"
+#include "log.h"
 
 using std::string;
 #include "file.h"
-extern char origpath[65536];
 bool origconfig=false;
 void LoadMainConfig(void) {
 	FILE *fp;
@@ -29,11 +30,11 @@ void LoadMainConfig(void) {
 	int got_config = 0;
 	int got_temp = 0;
 	int got_column = 0;
-	if ((fp = fopen(CONFIG_FILE, "r")) == NULL) {
-		string opath (origpath);
+	if ((fp = VSCommon::vs_fopen(CONFIG_FILE, "r")) == NULL) {
+		string opath (datapath);
 		opath+=string("/")+CONFIG_FILE;
-		if ((fp = fopen(opath.c_str(), "r")) == NULL) {
-			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
+		if ((fp = VSCommon::vs_fopen(opath.c_str(), "r")) == NULL) {
+			VS_LOG("vssetup", logvs::WARN, "Unable to read from %s", CONFIG_FILE );
 			exit(-1);
 		}
 	}
@@ -44,53 +45,53 @@ void LoadMainConfig(void) {
 		parm = line;
 		n_parm = next_parm(parm);
 		if (strcmp("program_name", parm) == 0) {
-			if (CONFIG.program_name != NULL) { fprintf(stderr, "Duplicate program_name in config file\n"); continue; }
-			if (n_parm[0] == '\0') { fprintf(stderr, "Missing parameter for program_name\n"); continue; }
+			if (CONFIG.program_name != NULL) { VS_LOG("vssetup", logvs::WARN, "Duplicate program_name in config file"); continue; }
+			if (n_parm[0] == '\0') { VS_LOG("vssetup", logvs::WARN, "Missing parameter for program_name"); continue; }
 			CONFIG.program_name = NewString(n_parm);
 			got_name = 1;
 			continue;
 		}
 		if (strcmp("config_file", parm) == 0) {
-			if (CONFIG.config_file != NULL) { fprintf(stderr, "Duplicate config_file in config file\n"); continue; }
-			if (n_parm[0] == '\0') { fprintf(stderr, "Missing parameter for config_file\n"); continue; }
+			if (CONFIG.config_file != NULL) { VS_LOG("vssetup", logvs::WARN, "Duplicate config_file in config file"); continue; }
+			if (n_parm[0] == '\0') { VS_LOG("vssetup", logvs::WARN, "Missing parameter for config_file"); continue; }
 			CONFIG.config_file = NewString(n_parm);
 			got_config = 1;
 			continue;
 		}
 		if (strcmp("temp_file", parm) == 0) {
-			if (CONFIG.temp_file != NULL) { fprintf(stderr, "Duplicate temp_file in config file\n"); continue; }
-			if (n_parm[0] == '\0') { fprintf(stderr, "Missing parameter for temp_file in config file\n"); continue; }
+			if (CONFIG.temp_file != NULL) { VS_LOG("vssetup", logvs::WARN, "Duplicate temp_file in config file"); continue; }
+			if (n_parm[0] == '\0') { VS_LOG("vssetup", logvs::WARN, "Missing parameter for temp_file in config file"); continue; }
 			CONFIG.temp_file = NewString(n_parm);
 			got_temp = 1;
 			continue;
 		}
 		if (strcmp("columns", parm) == 0) {
-			if (CONFIG.columns > 0) { fprintf(stderr, "Duplicate columns in config file\n"); continue; }
-			if (n_parm[0] == '\0') { fprintf(stderr, "Missing parameter for columns in config file\n"); continue; }
+			if (CONFIG.columns > 0) { VS_LOG("vssetup", logvs::WARN, "Duplicate columns in config file"); continue; }
+			if (n_parm[0] == '\0') { VS_LOG("vssetup", logvs::WARN, "Missing parameter for columns in config file"); continue; }
 			CONFIG.columns = atoi(n_parm);
-			if (CONFIG.columns == 0) { fprintf(stderr, "Invalid parameter for column in config file\n"); continue; }
+			if (CONFIG.columns == 0) { VS_LOG("vssetup", logvs::WARN, "Invalid parameter for column in config file"); continue; }
 			got_column = 1;
 			continue;
 		}
-		fprintf(stderr, "Unknown line in config file: %s %s\n", parm, n_parm);
+		VS_LOG("vssetup", logvs::WARN, "Unknown line in config file: %s %s", parm, n_parm);
 	}
 	fclose(fp);
 	if (got_name == 0) {
-		fprintf(stderr, "Unable to find name of program. Using default (Application)\n");
+		VS_LOG("vssetup", logvs::WARN, "Unable to find name of program. Using default (Application)");
 		CONFIG.program_name = NewString("Application");
 	}
 	if (got_config == 0) {
-		fprintf(stderr, "Fatal Error. Name of config file not found. What can I do without a config file to modify?\n");
-		fprintf(stderr, "To specify a config file, edit setup.config and add the following line (without the <>):\n");
-		fprintf(stderr, "config_file <Name of config file>\n");
+		VS_LOG("vssetup", logvs::WARN, "Fatal Error. Name of config file not found. What can I do without a config file to modify?");
+		VS_LOG("vssetup", logvs::WARN, "To specify a config file, edit setup.config and add the following line (without the <>):");
+		VS_LOG("vssetup", logvs::WARN, "config_file <Name of config file>");
 		exit(-1);
 	}
 	if (got_temp == 0) {
-		fprintf(stderr, "Unable to find name of temporary file. Using default (config.temp)\n");
+		VS_LOG("vssetup", logvs::WARN, "Unable to find name of temporary file. Using default (config.temp)");
 		CONFIG.temp_file = NewString("config.temp");
 	}
 	if (got_column == 0) {
-		fprintf(stderr, "Unable to find number of columns. Using default (3)\n");
+		VS_LOG("vssetup", logvs::WARN, "Unable to find number of columns. Using default (3)");
 		CONFIG.columns = 3;
 	}
 }
@@ -98,13 +99,13 @@ void LoadMainConfig(void) {
 // The program segfaults with incorrect header information
 // I should add error checking for that
 string mangle_config (string config) {
-	return string(origpath)+string("/")+config;
+	return string(datapath)+string("/")+config;
 }
 
 bool useGameConfig(void) {
-	struct stat st1,st2;
-	if (stat(CONFIG.config_file, &st1)==0 && stat(mangle_config(CONFIG.config_file).c_str(), &st2)==0) {
-		if (st2.st_mtime > st1.st_mtime) {
+	VSCommon::file_info_t st1, st2;
+	if (VSCommon::getFileInfo(CONFIG.config_file, &st1) && VSCommon::getFileInfo(mangle_config(CONFIG.config_file), &st2)) {
+		if (st2.mtime > st1.mtime) {
 			return true;
 		}
 	}
@@ -121,14 +122,14 @@ void LoadConfig(void) {
 	G_CURRENT = &GROUPS;
 	C_CURRENT = &CATS;
 
-	if (useGameConfig() || (fp = fopen(CONFIG.config_file, "r")) == NULL) {
+	if (useGameConfig() || (fp = VSCommon::vs_fopen(CONFIG.config_file, "r")) == NULL) {
         std::string orig_configfile = mangle_config(CONFIG.config_file);
         origconfig=true;
-		if ((fp = fopen(orig_configfile.c_str(), "r")) == NULL) {
-			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
+        if ((fp = VSCommon::vs_fopen(orig_configfile.c_str(), "r")) == NULL) {
+			VS_LOG("vssetup", logvs::WARN, "Unable to read from %s", CONFIG_FILE );
 			exit(-1);
 		}
-        fprintf(stderr, "using game config %s\n", orig_configfile.c_str());
+        VS_LOG("vssetup", logvs::WARN, "using game config %s", orig_configfile.c_str());
 	}
 	while ((p = fgets(line, MAX_READ, fp)) != NULL) {
 		parm = line;
@@ -143,7 +144,7 @@ void LoadConfig(void) {
 			while ((n_parm = next_parm(parm))) {
 				G_CURRENT->name = NewString(parm);
 				G_NEXT = (struct group *)malloc(sizeof(struct group));
-				if (G_NEXT == 0) { fprintf (stderr,"Out of memory\n");exit(-1); }
+				if (G_NEXT == 0) { VS_LOG("vssetup", logvs::WARN, "Out of memory");exit(-1); }
 				G_NEXT->name = 0;
 				G_NEXT->setting = 0;
 				G_CURRENT->next = G_NEXT;
@@ -161,7 +162,7 @@ void LoadConfig(void) {
 			while ((n_parm = next_parm(parm))) {
 				C_CURRENT->name = NewString(parm);
 				C_NEXT = (struct catagory *)malloc(sizeof(struct catagory));
-				if (C_NEXT == 0) { fprintf (stderr,"Out of memory\n");exit(-1); }
+				if (C_NEXT == 0) { VS_LOG("vssetup", logvs::WARN, "Out of memory");exit(-1); }
 				C_CURRENT->next = C_NEXT;
 				C_NEXT->name = 0;
 				C_NEXT->group = 0;
@@ -200,15 +201,15 @@ void Modconfig(int setting, char *name, char *group) {
 	int commenting = 0;		// 0 if scanning, 1 if adding comments, 2 if removing comments
 	int skip;
 
-	if (useGameConfig() || (rp = fopen(CONFIG.config_file, "r")) == NULL) {
-		if ((rp = fopen(mangle_config(CONFIG.config_file).c_str(), "r")) == NULL) {
-			fprintf (stderr, "Unable to read from %s\n", CONFIG_FILE );
+	if (useGameConfig() || (rp = VSCommon::vs_fopen(CONFIG.config_file, "r")) == NULL) {
+		if ((rp = VSCommon::vs_fopen(mangle_config(CONFIG.config_file).c_str(), "r")) == NULL) {
+			VS_LOG("vssetup", logvs::WARN, "Unable to read from %s", CONFIG_FILE );
 			exit(-1);
 		}
 	}
-	if ((wp = fopen(CONFIG.temp_file, "w")) == NULL) {
-		if ((wp = fopen(mangle_config(CONFIG.temp_file).c_str(), "w")) == NULL) {
-			fprintf (stderr, "Unable to write to %s\n", CONFIG.temp_file );		exit(-1);
+	if ((wp = VSCommon::vs_fopen(CONFIG.temp_file, "w")) == NULL) {
+		if ((wp = VSCommon::vs_fopen(mangle_config(CONFIG.temp_file).c_str(), "w")) == NULL) {
+			VS_LOG("vssetup", logvs::WARN, "Unable to write to %s", CONFIG.temp_file );		exit(-1);
 		}
 	}
 	while ((p = fgets(line, MAX_READ, rp)) != NULL) {
@@ -247,7 +248,7 @@ void Modconfig(int setting, char *name, char *group) {
 		if (strcmp("#set", parm) == 0) {
 			parm = n_parm;
 			n_parm = next_parm(parm);
-			if (strcmp(parm, group) == 0) {
+			if (parm && group && strcmp(parm, group) == 0) {
 				if (setting == 1) { fprintf(wp, "#set %s none\n", group); }
 				if (setting == 2) { fprintf(wp, "#set %s %s\n", group, name); }
 			}
@@ -270,12 +271,12 @@ void Modconfig(int setting, char *name, char *group) {
 */
 		if (parm[0] != '#') { fprintf(wp, "%s\n", write); continue; }
 		parm++;
-		if (strcmp(name, parm) == 0) { commenting = setting; }
+		if (parm && name && strcmp(name, parm) == 0) { commenting = setting; }
 		else {
 			parm = n_parm;
 			while ((n_parm = next_parm(parm))) {
 				if (parm[0] == '<') { break; }
-				if (strcmp(name, parm) == 0) {
+				if (parm && name && strcmp(name, parm) == 0) {
 					commenting = setting;
 					break;
 				}
@@ -295,9 +296,9 @@ void Modconfig(int setting, char *name, char *group) {
 	fclose(wp);
 	fclose(rp);
 	// Now we commit the changes
-	if ((rp = fopen(CONFIG.temp_file, "r")) == NULL) {
-		if ((rp = fopen(mangle_config(CONFIG.temp_file).c_str(), "r")) == NULL) {
-			fprintf (stderr, "Unable to read from %s\n", CONFIG.temp_file );
+	if ((rp = VSCommon::vs_fopen(CONFIG.temp_file, "r")) == NULL) {
+		if ((rp = VSCommon::vs_fopen(mangle_config(CONFIG.temp_file).c_str(), "r")) == NULL) {
+			VS_LOG("vssetup", logvs::WARN, "Unable to read from %s", CONFIG.temp_file );
 
 			exit(-1);
 		}
@@ -308,12 +309,12 @@ void Modconfig(int setting, char *name, char *group) {
 		tmp1 = mangle_config (CONFIG.config_file);
 	}
 */
-	if ((wp = fopen(tmp1.c_str(), "w")) == NULL) {
+	if ((wp = VSCommon::vs_fopen(tmp1.c_str(), "w")) == NULL) {
 		tmp1 = mangle_config (CONFIG.config_file);
-		if ((wp = fopen(tmp1.c_str(), "w")) == NULL) {
+		if ((wp = VSCommon::vs_fopen(tmp1.c_str(), "w")) == NULL) {
 			tmp1 = CONFIG.config_file;
-			if ((wp = fopen(tmp1.c_str(), "w")) == NULL) {
-				fprintf (stderr, "Unable to write  to %s\n", CONFIG.config_file );
+			if ((wp = VSCommon::vs_fopen(tmp1.c_str(), "w")) == NULL) {
+				VS_LOG("vssetup", logvs::WARN, "Unable to write  to %s", CONFIG.config_file );
 				exit(1);
 			}
 		}

@@ -81,14 +81,10 @@ extern struct catagory CATS;
 extern struct group GROUPS;
 extern struct global_settings CONFIG;
 
-extern char origpath[65536];
-extern char binpath[65536];
-extern char resourcespath[65536];
-extern char homepath[65536];
-
-#if !defined(HAVE_SETENV)
-int setenv(const char * var, const char * value, int override);
-#endif
-
+extern const char * origpath;
+extern const char * datapath;
+extern const char * binpath;
+extern const char * resourcespath;
+extern const char * homepath;
 
 #endif    //CENTRAL_H

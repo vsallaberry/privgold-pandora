@@ -53,20 +53,12 @@
 
 using std::string;
 using std::vector;
-char binpath[65536];
-char origpath[65536];
-char resourcespath[65536];
-char homepath[65536];
+const char * binpath;
+const char * origpath;
+const char * datapath;
+const char * resourcespath;
+const char * homepath;
 
-#if !defined(HAVE_SETENV)
-int setenv(const char * var, const char * value, int override) {	
-	if (!override && getenv(var) != NULL) return 0;
-	char envstr[16384];
-	snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
-	//not working on windows: SetEnvironmentVariableA(var,val);
-	return putenv(envstr);
-}
-#endif
 
 static void changeToProgramDirectory(char *argv0) {
     int ret = -1; /* Should it use argv[0] directly? */
@@ -113,7 +105,7 @@ static void changeToProgramDirectory(char *argv0) {
     *c = '\0';             /* cut off last part (binary name) */
 
     if (strlen (parentdir)>0) {
-      chdir (parentdir);/* chdir to the binary app's parent */
+      VSCommon::vs_chdir (parentdir);/* chdir to the binary app's parent */
     }
     delete []parentdir;
 }
@@ -128,17 +120,28 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nS
 #else
 int main(int argc, char *argv[]) {
 #endif
-    const char * pathorder[] = { binpath, ".", NULL };
-
-    bool has_console = VSCommon::InitConsole();
+	char tmppwd[65535] = { 0, }; tmppwd[sizeof(tmppwd)-1] = 0;
+	const char * argdatadir = "";
+#if defined(CONSOLE)
+    bool forceconsole = true, redirectlog = false;
+#else
+    bool forceconsole = false, redirectlog = true;
+#endif
+    bool has_console = VSCommon::InitConsole(forceconsole, argc, argv);
     logvs::log_setfile(stdout);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
     unicodeInitLocale();
+    VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
+    origpath = strdup(tmppwd);
+    VS_LOG("vssetup", logvs::NOTICE, " In path %s", origpath);
+
     for (int i_argv = 1; i_argv < argc; ++i_argv) {
 		if ((i_argv + 1 < argc && strcmp(argv[i_argv], "--target") == 0) || strncmp(argv[i_argv], "-D", 2) == 0) {
-            if (chdir(argv[i_argv][1] == '-' ? argv[++i_argv] : argv[i_argv]+2) == 0) {
-                pathorder[0] = "."; pathorder[1] = binpath;
+            char * argpath = argv[i_argv][1] == '-' ? argv[++i_argv] : argv[i_argv]+2;
+			if (VSCommon::vs_chdir(argpath) == 0) {
+            	VSCommon::vs_chdir(origpath);
+            	argdatadir = argpath;
             }
 		} else if (has_console) {
 			if (!strcmp(argv[i_argv], "--version")) {
@@ -151,41 +154,28 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-    getcwd (origpath,sizeof(origpath)-1);
-	origpath[sizeof(origpath)-1]=0;
-    VS_LOG("vssetup", logvs::NOTICE, " In path %s", origpath);
+    VS_LOG("vssetup", logvs::NOTICE, "vssetup for vegastrike %s revision %s from %s",
+    								 SCM_VERSION, SCM_REVISION, SCM_REMOTE);
 
 	changeToProgramDirectory(argv[0]);
-    getcwd (binpath,sizeof(binpath)-1);
-	binpath[sizeof(binpath)-1]=0;
+    VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
+	binpath = strdup(tmppwd);
     VS_LOG("vssetup", logvs::NOTICE, "Binary path %s", binpath);
 
 	{
-        char tmppath[16384];
+        const char * pathorder[] = { argdatadir, binpath, ".", NULL };
 		vector<string>	data_paths;
 
-        /* look for resources directory, where we could find data,share,bin,lib */
-        for (const char ** base = pathorder; *base; ++base) {
-            data_paths.push_back( *base );
-	    	data_paths.push_back( string(*base)+"/..");
-            data_paths.push_back( string(*base)+"/../Resources");
-        }
-        for( vector<string>::iterator vsit=data_paths.begin(); vsit!=data_paths.end(); vsit++)
-		{
-			// Test if the dir exist and contains config_file
-			chdir(origpath);
-			chdir((*vsit).c_str());
-            struct stat st;
-            if (stat("share", &st) == 0 || stat("lib", &st) == 0) {
-    			getcwd (resourcespath, sizeof(resourcespath)-1);
-	    		resourcespath[sizeof(resourcespath)-1] = 0;
-    			VS_LOG("vssetup", logvs::NOTICE, "Found resources in %s", resourcespath);
-	    		break;
-            }
+		/* look for resources directory, where we could find data,share,bin,lib */
+		std::string resources_str = VSCommon::getresourcesdir(binpath);
+		if (!resources_str.empty()) {
+			VS_LOG("vssetup", logvs::NOTICE, "Found resources in %s", resources_str.c_str());
+		} else {
+			resources_str = binpath;
 		}
+	    resourcespath = strdup(resources_str.c_str());
 
         /* Now look for data directory */
-        data_paths.clear();
         for (const char ** base = pathorder; *base; ++base) {
         	if (**base == 0) continue ;
             for (const char * const * searchs = VSCommon::datadirs; *searchs; ++searchs) {
@@ -196,29 +186,28 @@ int main(int argc, char *argv[]) {
 		data_paths.push_back( DATA_DIR);
 #endif
 
-		// Win32 data should be "."
 		for( vector<string>::iterator vsit=data_paths.begin(); vsit!=data_paths.end(); vsit++)
 		{
 			// Test if the dir exist and contains config_file
-			chdir(origpath);
-			chdir((*vsit).c_str());
-			FILE *setupcfg = fopen("setup.config","r");
+			VSCommon::vs_chdir(origpath);
+			VSCommon::vs_chdir((*vsit).c_str());
+			FILE *setupcfg = VSCommon::vs_fopen("setup.config","r");
 			if (!setupcfg)
 				continue;
 			fclose(setupcfg);
-			setupcfg = fopen("Version.txt","r");
+			setupcfg = VSCommon::vs_fopen("Version.txt","r");
 			if (!setupcfg)
 				continue;
-			getcwd (origpath,sizeof(origpath)-1);
-			origpath[sizeof(origpath)-1] = 0;
-			VS_LOG("vssetup", logvs::NOTICE, "Found data in %s", origpath);
+			VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
+			datapath = strdup(tmppwd);
+			VS_LOG("vssetup", logvs::NOTICE, "Found data in %s", datapath);
 			break;
 		}
 	}
 	string HOMESUBDIR;
-	FILE *version=fopen("Version.txt","r");
+	FILE *version=VSCommon::vs_fopen("Version.txt","r");
 	if (!version)
-		version=fopen("../Version.txt","r");
+		version=VSCommon::vs_fopen("../Version.txt","r");
 	if (version) {
 		std::string hsd="";
 		int c;
@@ -241,7 +230,7 @@ int main(int argc, char *argv[]) {
 # if !defined(_WIN32)
 	struct passwd *pwent;
 	pwent = getpwuid (getuid());
-	chdir (pwent->pw_dir);
+	VSCommon::vs_chdir (pwent->pw_dir);
 # else
 	WCHAR wappdata_path[PATH_MAX];
 	if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {
@@ -255,18 +244,15 @@ int main(int argc, char *argv[]) {
 # endif
 #endif
 
-	mkdir(HOMESUBDIR.c_str() 
-#ifndef _WIN32
-              , 0755
-#endif
-              );
-	chdir (HOMESUBDIR.c_str());
+	VSCommon::vs_mkdir(HOMESUBDIR.c_str(), 0755);
+	VSCommon::vs_chdir (HOMESUBDIR.c_str());
     
-    getcwd(homepath,sizeof(homepath));
-    homepath[sizeof(homepath)-1]=0;
+    VSCommon::vs_getcwd(tmppwd,sizeof(tmppwd)-1);
+    homepath = strdup(tmppwd);
     VS_LOG("vssetup", logvs::NOTICE, "Now in Home Dir: %s", homepath);
 
-    logvs::log_openfile("", std::string(homepath) + "/vssetup.log", /*redirect=*/true, /*append=*/false);
+    logvs::log_openfile("", VSCommon::getsuffixedfile(std::string(homepath) + "/vssetup.log", 3),
+                        /*redirect=*/redirectlog, /*append=*/false); // redirections disturbs NCurses
     atexit(logvs::log_terminate);
 
 	Start(&argc,&argv);
@@ -274,6 +260,11 @@ int main(int argc, char *argv[]) {
 	VSCommon::ParseCmdLineFree(argv);
 #endif
     VS_LOG("vssetup", logvs::NOTICE, "exiting...");
+    free((void*)origpath);
+    free((void*)datapath);
+    free((void*)binpath);
+    free((void*)resourcespath);
+    free((void*)homepath);
 	return 0;
 }
 

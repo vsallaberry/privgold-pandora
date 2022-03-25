@@ -8,6 +8,7 @@
 # include <unistd.h>
 #endif
 #include "log.h"
+#include "common/common.h"
 
 //#define COLS 80
 //#define ROWS 24
@@ -29,28 +30,11 @@ enum { // STR_B_* for button, STR_T_* for title, STR_V_* for value */
 static char * strings[STR_NB] = { NULL, };
 
 void InitGraphics (int* argc,char*** argv){
-#if 0 && __APPLE__
-  if (!isatty(STDOUT_FILENO)) {
-    const size_t more_args = 4;
-    char ** newargv = (char **) malloc((*argc + more_args + 1)*sizeof(char*));
-    newargv[*argc + more_args] = NULL;
-    memcpy(newargv + more_args, *argv, *argc * sizeof(char *));
-    newargv[0] = strdup("open");
-    newargv[1] = strdup("-a");
-    newargv[2] = strdup("-W");
-    newargv[3] = strdup("Terminal.app");
-    execvp(*newargv, newargv); //Will this work on MacOS?
-    exit(0);
-  }
-#endif
-  char terminfodir[65535];
+  char terminfodir[16384];
   const char * old_terminfodir = getenv("TERMINFO_DIRS");
   snprintf(terminfodir, sizeof(terminfodir), "%s/share/terminfo%s%s", resourcespath, 
            old_terminfodir ? ":" : "", old_terminfodir ? old_terminfodir : "");
-  setenv("TERMINFO_DIRS", terminfodir, 1);
-
-  // disable redirections that disturb ncurses
-  logvs::log_openfile("", std::string(homepath) + "/vssetup.log", /*redirect=*/false, /*append=*/true);
+  VSCommon::vs_setenv("TERMINFO_DIRS", terminfodir, 1);
 
   init_dialog (stdin, stdout);
   if (*strings == NULL) {
@@ -194,7 +178,7 @@ void ShowMain() {
       break;
     }
     if (ret==DLG_EXIT_ERROR||ret==DLG_EXIT_UNKNOWN) {
-      fprintf(stderr,"Main dialog error...\n");
+      VS_LOG("vssetup", logvs::WARN, "Main dialog error...");
       break;
     }
     selected=0;
@@ -223,7 +207,7 @@ void ShowMain() {
       continue;
     }
     if (ret==DLG_EXIT_ERROR||ret==DLG_EXIT_UNKNOWN) {
-      fprintf(stderr,"Sub dialog error...\n");
+      VS_LOG("vssetup", logvs::WARN, "Sub dialog error...");
       continue;
     }
     SetOption(CURRENT,selectedstr);

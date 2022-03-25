@@ -33,6 +33,8 @@
 
 #include <stdio.h>
 
+#include "common/common.h"
+
 struct catagory CATS;
 struct group GROUPS;
 struct global_settings CONFIG;
@@ -118,7 +120,7 @@ void ShowReadme() {
         NULL
     };
     char curpath[65525] = { 0, };
-    getcwd(curpath, sizeof(curpath));
+    VSCommon::vs_getcwd(curpath, sizeof(curpath));
 #ifndef _WIN32
     pid_t pid = fork();
     if (pid > 0) return;
@@ -130,7 +132,7 @@ void ShowReadme() {
             char arg[65535];
             snprintf(arg, sizeof(arg), "%s%s%s", curpath, PATH_SEP, *search);
             printf("readme: trying %s\n", arg);
-            if ((fp = fopen(arg, "r")) != NULL) {
+            if ((fp = VSCommon::vs_fopen(arg, "r")) != NULL) {
                 fclose(fp);
 #if defined (_WIN32)
                 err = (ssize_t)ShellExecute(NULL,"open",arg,"","",1);
@@ -147,10 +149,10 @@ void ShowReadme() {
             }
         }
         if (i == 0) {
-            if (chdir(origpath) != 0) {
+            if (VSCommon::vs_chdir(datapath) != 0) {
                 break ;
             }
-            strcpy(curpath, origpath);
+            strcpy(curpath, datapath);
         }
     }
 }
