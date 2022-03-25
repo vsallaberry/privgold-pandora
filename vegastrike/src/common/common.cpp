@@ -999,7 +999,7 @@ static bool ParseCmdLine_error(bool ret, char * argv0, char ** argv, int * pargc
 	if (argv0 != NULL) free(argv0);
 	if (pargc != NULL) *pargc = 0;
 	if (pargv != NULL) *pargv = NULL;
-	return false;
+	return ret;
 }
 
 bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned int flags) {

@@ -363,6 +363,7 @@ am_test_OBJECTS = tests/test-test.$(OBJEXT) \
 	tests/test-log.link.$(OBJEXT) \
 	tests/test-unicode.link.$(OBJEXT) \
 	src/test-unicode_combine.$(OBJEXT) \
+	src/common/test-common.$(OBJEXT) \
 	tests/test-multimap.link.$(OBJEXT)
 test_OBJECTS = $(am_test_OBJECTS)
 test_LDADD = $(LDADD)
@@ -373,7 +374,8 @@ trisort_OBJECTS = $(am_trisort_OBJECTS)
 trisort_LDADD = $(LDADD)
 am_unicode_conv_OBJECTS = tools/unicode_conv-unicode-conv.$(OBJEXT) \
 	tools/unicode_conv-unicode.link.$(OBJEXT) \
-	src/unicode_conv-unicode_combine.$(OBJEXT)
+	src/unicode_conv-unicode_combine.$(OBJEXT) \
+	src/common/unicode_conv-common.$(OBJEXT)
 unicode_conv_OBJECTS = $(am_unicode_conv_OBJECTS)
 unicode_conv_LDADD = $(LDADD)
 unicode_conv_LINK = $(CXXLD) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) \
@@ -666,6 +668,8 @@ vegastrike_OBJECTS = $(am_vegastrike_OBJECTS)
 am__objects_26 = launcher/vslauncher-log.link.$(OBJEXT) \
 	launcher/vslauncher-main.$(OBJEXT) \
 	launcher/vslauncher-general.$(OBJEXT) \
+	src/vslauncher-unicode.$(OBJEXT) \
+	src/vslauncher-unicode_combine.$(OBJEXT) \
 	src/common/vslauncher-common.$(OBJEXT)
 am__objects_27 = launcher/vslauncher-nogui.$(OBJEXT)
 am_vslauncher_OBJECTS = $(am__objects_26) $(am__objects_27)
@@ -676,6 +680,8 @@ vslauncher_LINK = $(CXXLD) $(vslauncher_CXXFLAGS) $(CXXFLAGS) \
 am__objects_28 = launcher/vslauncher_gui-log.link.$(OBJEXT) \
 	launcher/vslauncher_gui-main.$(OBJEXT) \
 	launcher/vslauncher_gui-general.$(OBJEXT) \
+	src/vslauncher_gui-unicode.$(OBJEXT) \
+	src/vslauncher_gui-unicode_combine.$(OBJEXT) \
 	src/common/vslauncher_gui-common.$(OBJEXT)
 am__objects_29 = launcher/vslauncher_gui-saveinterface.$(OBJEXT)
 am_vslauncher_gui_OBJECTS = $(am__objects_28) $(am__objects_29)
@@ -690,24 +696,30 @@ vsrextract_LDADD = $(LDADD)
 am_vsrmake_OBJECTS = tools/common.$(OBJEXT) tools/vsrmake.$(OBJEXT)
 vsrmake_OBJECTS = $(am_vsrmake_OBJECTS)
 vsrmake_LDADD = $(LDADD)
-am_vssetup_OBJECTS = setup/src/c/vssetup-setup.$(OBJEXT) \
+am__objects_30 = setup/src/c/vssetup-setup.$(OBJEXT) \
 	setup/src/include/vssetup-central.$(OBJEXT) \
-	setup/src/include/vssetup-display_gtk.$(OBJEXT) \
 	setup/src/include/vssetup-file.$(OBJEXT) \
 	setup/src/include/vssetup-general.$(OBJEXT) \
+	src/vssetup-unicode.$(OBJEXT) \
+	src/vssetup-unicode_combine.$(OBJEXT) \
 	src/common/vssetup-common.$(OBJEXT) \
 	setup/vssetup-log.link.$(OBJEXT)
+am_vssetup_OBJECTS = $(am__objects_30) \
+	setup/src/include/vssetup-display_gtk.$(OBJEXT)
 vssetup_OBJECTS = $(am_vssetup_OBJECTS)
 vssetup_LDADD = $(LDADD)
 vssetup_LINK = $(CXXLD) $(vssetup_CXXFLAGS) $(CXXFLAGS) \
 	$(vssetup_LDFLAGS) $(LDFLAGS) -o $@
-am_vssetup_dlg_OBJECTS = setup/src/c/vssetup_dlg-setup.$(OBJEXT) \
+am__objects_31 = setup/src/c/vssetup_dlg-setup.$(OBJEXT) \
 	setup/src/include/vssetup_dlg-central.$(OBJEXT) \
-	setup/src/include/vssetup_dlg-display_dialog.$(OBJEXT) \
 	setup/src/include/vssetup_dlg-file.$(OBJEXT) \
 	setup/src/include/vssetup_dlg-general.$(OBJEXT) \
+	src/vssetup_dlg-unicode.$(OBJEXT) \
+	src/vssetup_dlg-unicode_combine.$(OBJEXT) \
 	src/common/vssetup_dlg-common.$(OBJEXT) \
 	setup/vssetup_dlg-log.link.$(OBJEXT)
+am_vssetup_dlg_OBJECTS = $(am__objects_31) \
+	setup/src/include/vssetup_dlg-display_dialog.$(OBJEXT)
 vssetup_dlg_OBJECTS = $(am_vssetup_dlg_OBJECTS)
 vssetup_dlg_LDADD = $(LDADD)
 vssetup_dlg_LINK = $(CXXLD) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) \
@@ -878,6 +890,14 @@ am__depfiles_remade = boost/1_28/src/$(DEPDIR)/classes.Po \
 	src/$(DEPDIR)/universe_util_server.Po \
 	src/$(DEPDIR)/vegaserver.Po src/$(DEPDIR)/vs_globals.Po \
 	src/$(DEPDIR)/vs_log_modules.Po src/$(DEPDIR)/vsfilesystem.Po \
+	src/$(DEPDIR)/vslauncher-unicode.Po \
+	src/$(DEPDIR)/vslauncher-unicode_combine.Po \
+	src/$(DEPDIR)/vslauncher_gui-unicode.Po \
+	src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po \
+	src/$(DEPDIR)/vssetup-unicode.Po \
+	src/$(DEPDIR)/vssetup-unicode_combine.Po \
+	src/$(DEPDIR)/vssetup_dlg-unicode.Po \
+	src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po \
 	src/$(DEPDIR)/xml_serializer.Po src/$(DEPDIR)/xml_support.Po \
 	src/aldrv/$(DEPDIR)/al_globals.Po \
 	src/aldrv/$(DEPDIR)/al_init.Po \
@@ -1032,6 +1052,8 @@ am__depfiles_remade = boost/1_28/src/$(DEPDIR)/classes.Po \
 	src/cmd/script/c_alike/$(DEPDIR)/c_alike.tab.Po \
 	src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po \
 	src/common/$(DEPDIR)/common.Po \
+	src/common/$(DEPDIR)/test-common.Po \
+	src/common/$(DEPDIR)/unicode_conv-common.Po \
 	src/common/$(DEPDIR)/vslauncher-common.Po \
 	src/common/$(DEPDIR)/vslauncher_gui-common.Po \
 	src/common/$(DEPDIR)/vssetup-common.Po \
@@ -2539,7 +2561,8 @@ unicode_conv_CXXFLAGS = -I.. -DVS_LOG_NO_XML
 unicode_conv_SOURCES = \
   tools/unicode-conv.cpp \
   tools/unicode.link.cpp \
-  src/unicode_combine.cpp
+  src/unicode_combine.cpp \
+  src/common/common.cpp
 
 test_LDFLAGS = 
 test_CXXFLAGS = -I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS
@@ -2548,41 +2571,37 @@ test_SOURCES = \
   tests/log.link.cpp \
   tests/unicode.link.cpp \
   src/unicode_combine.cpp \
+  src/common/common.cpp \
   tests/multimap.link.cpp
+
+VSSETUP_COMMON_SOURCES = \
+    setup/src/c/setup.cpp \
+    setup/src/include/central.cpp \
+    setup/src/include/central.h \
+    setup/src/include/display.h \
+    setup/src/include/file.cpp \
+    setup/src/include/file.h \
+    setup/src/include/general.cpp \
+    setup/src/include/general.h \
+    src/unicode.cpp \
+    src/unicode_combine.cpp \
+    src/unicode.h \
+    src/common/common.cpp \
+    src/common/common.h \
+    setup/log.link.cpp \
+    src/log.h
 
 vssetup_LDFLAGS = $(GTK_LIBS)
 vssetup_CXXFLAGS = $(GTK_CFLAGS) -DVS_LOG_NO_XML
 vssetup_SOURCES = \
-    setup/src/c/setup.cpp \
-    setup/src/include/central.cpp \
-    setup/src/include/central.h \
-    setup/src/include/display_gtk.cpp \
-    setup/src/include/display.h \
-    setup/src/include/file.cpp \
-    setup/src/include/file.h \
-    setup/src/include/general.cpp \
-    setup/src/include/general.h \
-    src/common/common.cpp \
-    src/common/common.h \
-    setup/log.link.cpp \
-    src/log.h
+    $(VSSETUP_COMMON_SOURCES) \
+    setup/src/include/display_gtk.cpp
 
 vssetup_dlg_LDFLAGS = $(DIALOG_LIBS)
 vssetup_dlg_CXXFLAGS = $(DIALOG_CFLAGS) -DVS_LOG_NO_XML
 vssetup_dlg_SOURCES = \
-    setup/src/c/setup.cpp \
-    setup/src/include/central.cpp \
-    setup/src/include/central.h \
-    setup/src/include/display_dialog.cpp \
-    setup/src/include/display.h \
-    setup/src/include/file.cpp \
-    setup/src/include/file.h \
-    setup/src/include/general.cpp \
-    setup/src/include/general.h \
-    src/common/common.cpp \
-    src/common/common.h \
-    setup/log.link.cpp \
-    src/log.h
+    $(VSSETUP_COMMON_SOURCES) \
+    setup/src/include/display_dialog.cpp
 
 VSLAUNCHER_COMMON_SOURCES = \
 	launcher/launcher.h \
@@ -2590,6 +2609,9 @@ VSLAUNCHER_COMMON_SOURCES = \
 	launcher/main.cpp \
     launcher/general.cpp \
     launcher/general.h \
+    src/unicode.cpp \
+    src/unicode_combine.cpp \
+    src/unicode.h \
     src/common/common.cpp \
     src/common/common.h
 
@@ -3183,6 +3205,14 @@ tests/test-unicode.link.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 src/test-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/common/$(am__dirstamp):
+	@$(MKDIR_P) src/common
+	@: > src/common/$(am__dirstamp)
+src/common/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/common/$(DEPDIR)
+	@: > src/common/$(DEPDIR)/$(am__dirstamp)
+src/common/test-common.$(OBJEXT): src/common/$(am__dirstamp) \
+	src/common/$(DEPDIR)/$(am__dirstamp)
 tests/test-multimap.link.$(OBJEXT): tests/$(am__dirstamp) \
 	tests/$(DEPDIR)/$(am__dirstamp)
 
@@ -3207,6 +3237,8 @@ tools/unicode_conv-unicode.link.$(OBJEXT): tools/$(am__dirstamp) \
 	tools/$(DEPDIR)/$(am__dirstamp)
 src/unicode_conv-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/common/unicode_conv-common.$(OBJEXT): src/common/$(am__dirstamp) \
+	src/common/$(DEPDIR)/$(am__dirstamp)
 
 unicode-conv$(EXEEXT): $(unicode_conv_OBJECTS) $(unicode_conv_DEPENDENCIES) $(EXTRA_unicode_conv_DEPENDENCIES) 
 	@rm -f unicode-conv$(EXEEXT)
@@ -3526,12 +3558,6 @@ src/universe_util_generic.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/vs_globals.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
-src/common/$(am__dirstamp):
-	@$(MKDIR_P) src/common
-	@: > src/common/$(am__dirstamp)
-src/common/$(DEPDIR)/$(am__dirstamp):
-	@$(MKDIR_P) src/common/$(DEPDIR)
-	@: > src/common/$(DEPDIR)/$(am__dirstamp)
 src/common/common.$(OBJEXT): src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 src/vsfilesystem.$(OBJEXT): src/$(am__dirstamp) \
@@ -4144,6 +4170,10 @@ launcher/vslauncher-main.$(OBJEXT): launcher/$(am__dirstamp) \
 	launcher/$(DEPDIR)/$(am__dirstamp)
 launcher/vslauncher-general.$(OBJEXT): launcher/$(am__dirstamp) \
 	launcher/$(DEPDIR)/$(am__dirstamp)
+src/vslauncher-unicode.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/vslauncher-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 src/common/vslauncher-common.$(OBJEXT): src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 launcher/vslauncher-nogui.$(OBJEXT): launcher/$(am__dirstamp) \
@@ -4158,6 +4188,10 @@ launcher/vslauncher_gui-main.$(OBJEXT): launcher/$(am__dirstamp) \
 	launcher/$(DEPDIR)/$(am__dirstamp)
 launcher/vslauncher_gui-general.$(OBJEXT): launcher/$(am__dirstamp) \
 	launcher/$(DEPDIR)/$(am__dirstamp)
+src/vslauncher_gui-unicode.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/vslauncher_gui-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 src/common/vslauncher_gui-common.$(OBJEXT):  \
 	src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
@@ -4198,15 +4232,16 @@ setup/src/include/$(DEPDIR)/$(am__dirstamp):
 setup/src/include/vssetup-central.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
-setup/src/include/vssetup-display_gtk.$(OBJEXT):  \
-	setup/src/include/$(am__dirstamp) \
-	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 setup/src/include/vssetup-file.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 setup/src/include/vssetup-general.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
+src/vssetup-unicode.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/vssetup-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 src/common/vssetup-common.$(OBJEXT): src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 setup/$(am__dirstamp):
@@ -4217,6 +4252,9 @@ setup/$(DEPDIR)/$(am__dirstamp):
 	@: > setup/$(DEPDIR)/$(am__dirstamp)
 setup/vssetup-log.link.$(OBJEXT): setup/$(am__dirstamp) \
 	setup/$(DEPDIR)/$(am__dirstamp)
+setup/src/include/vssetup-display_gtk.$(OBJEXT):  \
+	setup/src/include/$(am__dirstamp) \
+	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 
 vssetup$(EXEEXT): $(vssetup_OBJECTS) $(vssetup_DEPENDENCIES) $(EXTRA_vssetup_DEPENDENCIES) 
 	@rm -f vssetup$(EXEEXT)
@@ -4226,19 +4264,23 @@ setup/src/c/vssetup_dlg-setup.$(OBJEXT): setup/src/c/$(am__dirstamp) \
 setup/src/include/vssetup_dlg-central.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
-setup/src/include/vssetup_dlg-display_dialog.$(OBJEXT):  \
-	setup/src/include/$(am__dirstamp) \
-	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 setup/src/include/vssetup_dlg-file.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 setup/src/include/vssetup_dlg-general.$(OBJEXT):  \
 	setup/src/include/$(am__dirstamp) \
 	setup/src/include/$(DEPDIR)/$(am__dirstamp)
+src/vssetup_dlg-unicode.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
+src/vssetup_dlg-unicode_combine.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 src/common/vssetup_dlg-common.$(OBJEXT): src/common/$(am__dirstamp) \
 	src/common/$(DEPDIR)/$(am__dirstamp)
 setup/vssetup_dlg-log.link.$(OBJEXT): setup/$(am__dirstamp) \
 	setup/$(DEPDIR)/$(am__dirstamp)
+setup/src/include/vssetup_dlg-display_dialog.$(OBJEXT):  \
+	setup/src/include/$(am__dirstamp) \
+	setup/src/include/$(DEPDIR)/$(am__dirstamp)
 
 vssetup_dlg$(EXEEXT): $(vssetup_dlg_OBJECTS) $(vssetup_dlg_DEPENDENCIES) $(EXTRA_vssetup_dlg_DEPENDENCIES) 
 	@rm -f vssetup_dlg$(EXEEXT)
@@ -4468,6 +4510,14 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vs_globals.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vs_log_modules.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vsfilesystem.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vslauncher-unicode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vslauncher-unicode_combine.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vslauncher_gui-unicode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vssetup-unicode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vssetup-unicode_combine.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vssetup_dlg-unicode.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/xml_serializer.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/xml_support.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/aldrv/$(DEPDIR)/al_globals.Po@am__quote@ # am--include-marker
@@ -4639,6 +4689,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/cmd/script/c_alike/$(DEPDIR)/c_alike.tab.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/test-common.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/unicode_conv-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vslauncher-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vslauncher_gui-common.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/common/$(DEPDIR)/vssetup-common.Po@am__quote@ # am--include-marker
@@ -5220,6 +5272,20 @@ src/test-unicode_combine.obj: src/unicode_combine.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -c -o src/test-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
 
+src/common/test-common.o: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -MT src/common/test-common.o -MD -MP -MF src/common/$(DEPDIR)/test-common.Tpo -c -o src/common/test-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/test-common.Tpo src/common/$(DEPDIR)/test-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/test-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -c -o src/common/test-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+
+src/common/test-common.obj: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -MT src/common/test-common.obj -MD -MP -MF src/common/$(DEPDIR)/test-common.Tpo -c -o src/common/test-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/test-common.Tpo src/common/$(DEPDIR)/test-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/test-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -c -o src/common/test-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+
 tests/test-multimap.link.o: tests/multimap.link.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_CXXFLAGS) $(CXXFLAGS) -MT tests/test-multimap.link.o -MD -MP -MF tests/$(DEPDIR)/test-multimap.link.Tpo -c -o tests/test-multimap.link.o `test -f 'tests/multimap.link.cpp' || echo '$(srcdir)/'`tests/multimap.link.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) tests/$(DEPDIR)/test-multimap.link.Tpo tests/$(DEPDIR)/test-multimap.link.Po
@@ -5276,6 +5342,20 @@ src/unicode_conv-unicode_combine.obj: src/unicode_combine.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) -c -o src/unicode_conv-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
 
+src/common/unicode_conv-common.o: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) -MT src/common/unicode_conv-common.o -MD -MP -MF src/common/$(DEPDIR)/unicode_conv-common.Tpo -c -o src/common/unicode_conv-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/unicode_conv-common.Tpo src/common/$(DEPDIR)/unicode_conv-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/unicode_conv-common.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) -c -o src/common/unicode_conv-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
+
+src/common/unicode_conv-common.obj: src/common/common.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) -MT src/common/unicode_conv-common.obj -MD -MP -MF src/common/$(DEPDIR)/unicode_conv-common.Tpo -c -o src/common/unicode_conv-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/unicode_conv-common.Tpo src/common/$(DEPDIR)/unicode_conv-common.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/common/common.cpp' object='src/common/unicode_conv-common.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(unicode_conv_CXXFLAGS) $(CXXFLAGS) -c -o src/common/unicode_conv-common.obj `if test -f 'src/common/common.cpp'; then $(CYGPATH_W) 'src/common/common.cpp'; else $(CYGPATH_W) '$(srcdir)/src/common/common.cpp'; fi`
+
 launcher/vslauncher-log.link.o: launcher/log.link.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT launcher/vslauncher-log.link.o -MD -MP -MF launcher/$(DEPDIR)/vslauncher-log.link.Tpo -c -o launcher/vslauncher-log.link.o `test -f 'launcher/log.link.cpp' || echo '$(srcdir)/'`launcher/log.link.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) launcher/$(DEPDIR)/vslauncher-log.link.Tpo launcher/$(DEPDIR)/vslauncher-log.link.Po
@@ -5317,6 +5397,34 @@ launcher/vslauncher-general.obj: launcher/general.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='launcher/general.cpp' object='launcher/vslauncher-general.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher-general.obj `if test -f 'launcher/general.cpp'; then $(CYGPATH_W) 'launcher/general.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/general.cpp'; fi`
+
+src/vslauncher-unicode.o: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher-unicode.o -MD -MP -MF src/$(DEPDIR)/vslauncher-unicode.Tpo -c -o src/vslauncher-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher-unicode.Tpo src/$(DEPDIR)/vslauncher-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vslauncher-unicode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+
+src/vslauncher-unicode.obj: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher-unicode.obj -MD -MP -MF src/$(DEPDIR)/vslauncher-unicode.Tpo -c -o src/vslauncher-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher-unicode.Tpo src/$(DEPDIR)/vslauncher-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vslauncher-unicode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+
+src/vslauncher-unicode_combine.o: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher-unicode_combine.o -MD -MP -MF src/$(DEPDIR)/vslauncher-unicode_combine.Tpo -c -o src/vslauncher-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher-unicode_combine.Tpo src/$(DEPDIR)/vslauncher-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vslauncher-unicode_combine.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+
+src/vslauncher-unicode_combine.obj: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher-unicode_combine.obj -MD -MP -MF src/$(DEPDIR)/vslauncher-unicode_combine.Tpo -c -o src/vslauncher-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher-unicode_combine.Tpo src/$(DEPDIR)/vslauncher-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vslauncher-unicode_combine.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
 
 src/common/vslauncher-common.o: src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_CXXFLAGS) $(CXXFLAGS) -MT src/common/vslauncher-common.o -MD -MP -MF src/common/$(DEPDIR)/vslauncher-common.Tpo -c -o src/common/vslauncher-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
@@ -5388,6 +5496,34 @@ launcher/vslauncher_gui-general.obj: launcher/general.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o launcher/vslauncher_gui-general.obj `if test -f 'launcher/general.cpp'; then $(CYGPATH_W) 'launcher/general.cpp'; else $(CYGPATH_W) '$(srcdir)/launcher/general.cpp'; fi`
 
+src/vslauncher_gui-unicode.o: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher_gui-unicode.o -MD -MP -MF src/$(DEPDIR)/vslauncher_gui-unicode.Tpo -c -o src/vslauncher_gui-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher_gui-unicode.Tpo src/$(DEPDIR)/vslauncher_gui-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vslauncher_gui-unicode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher_gui-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+
+src/vslauncher_gui-unicode.obj: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher_gui-unicode.obj -MD -MP -MF src/$(DEPDIR)/vslauncher_gui-unicode.Tpo -c -o src/vslauncher_gui-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher_gui-unicode.Tpo src/$(DEPDIR)/vslauncher_gui-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vslauncher_gui-unicode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher_gui-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+
+src/vslauncher_gui-unicode_combine.o: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher_gui-unicode_combine.o -MD -MP -MF src/$(DEPDIR)/vslauncher_gui-unicode_combine.Tpo -c -o src/vslauncher_gui-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher_gui-unicode_combine.Tpo src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vslauncher_gui-unicode_combine.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher_gui-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+
+src/vslauncher_gui-unicode_combine.obj: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/vslauncher_gui-unicode_combine.obj -MD -MP -MF src/$(DEPDIR)/vslauncher_gui-unicode_combine.Tpo -c -o src/vslauncher_gui-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vslauncher_gui-unicode_combine.Tpo src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vslauncher_gui-unicode_combine.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -c -o src/vslauncher_gui-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+
 src/common/vslauncher_gui-common.o: src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vslauncher_gui_CXXFLAGS) $(CXXFLAGS) -MT src/common/vslauncher_gui-common.o -MD -MP -MF src/common/$(DEPDIR)/vslauncher_gui-common.Tpo -c -o src/common/vslauncher_gui-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/vslauncher_gui-common.Tpo src/common/$(DEPDIR)/vslauncher_gui-common.Po
@@ -5444,20 +5580,6 @@ setup/src/include/vssetup-central.obj: setup/src/include/central.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-central.obj `if test -f 'setup/src/include/central.cpp'; then $(CYGPATH_W) 'setup/src/include/central.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/central.cpp'; fi`
 
-setup/src/include/vssetup-display_gtk.o: setup/src/include/display_gtk.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup-display_gtk.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo -c -o setup/src/include/vssetup-display_gtk.o `test -f 'setup/src/include/display_gtk.cpp' || echo '$(srcdir)/'`setup/src/include/display_gtk.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo setup/src/include/$(DEPDIR)/vssetup-display_gtk.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_gtk.cpp' object='setup/src/include/vssetup-display_gtk.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-display_gtk.o `test -f 'setup/src/include/display_gtk.cpp' || echo '$(srcdir)/'`setup/src/include/display_gtk.cpp
-
-setup/src/include/vssetup-display_gtk.obj: setup/src/include/display_gtk.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup-display_gtk.obj -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo -c -o setup/src/include/vssetup-display_gtk.obj `if test -f 'setup/src/include/display_gtk.cpp'; then $(CYGPATH_W) 'setup/src/include/display_gtk.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_gtk.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo setup/src/include/$(DEPDIR)/vssetup-display_gtk.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_gtk.cpp' object='setup/src/include/vssetup-display_gtk.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-display_gtk.obj `if test -f 'setup/src/include/display_gtk.cpp'; then $(CYGPATH_W) 'setup/src/include/display_gtk.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_gtk.cpp'; fi`
-
 setup/src/include/vssetup-file.o: setup/src/include/file.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup-file.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup-file.Tpo -c -o setup/src/include/vssetup-file.o `test -f 'setup/src/include/file.cpp' || echo '$(srcdir)/'`setup/src/include/file.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup-file.Tpo setup/src/include/$(DEPDIR)/vssetup-file.Po
@@ -5485,6 +5607,34 @@ setup/src/include/vssetup-general.obj: setup/src/include/general.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/general.cpp' object='setup/src/include/vssetup-general.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-general.obj `if test -f 'setup/src/include/general.cpp'; then $(CYGPATH_W) 'setup/src/include/general.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/general.cpp'; fi`
+
+src/vssetup-unicode.o: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup-unicode.o -MD -MP -MF src/$(DEPDIR)/vssetup-unicode.Tpo -c -o src/vssetup-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup-unicode.Tpo src/$(DEPDIR)/vssetup-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vssetup-unicode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+
+src/vssetup-unicode.obj: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup-unicode.obj -MD -MP -MF src/$(DEPDIR)/vssetup-unicode.Tpo -c -o src/vssetup-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup-unicode.Tpo src/$(DEPDIR)/vssetup-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vssetup-unicode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+
+src/vssetup-unicode_combine.o: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup-unicode_combine.o -MD -MP -MF src/$(DEPDIR)/vssetup-unicode_combine.Tpo -c -o src/vssetup-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup-unicode_combine.Tpo src/$(DEPDIR)/vssetup-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vssetup-unicode_combine.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+
+src/vssetup-unicode_combine.obj: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup-unicode_combine.obj -MD -MP -MF src/$(DEPDIR)/vssetup-unicode_combine.Tpo -c -o src/vssetup-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup-unicode_combine.Tpo src/$(DEPDIR)/vssetup-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vssetup-unicode_combine.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
 
 src/common/vssetup-common.o: src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT src/common/vssetup-common.o -MD -MP -MF src/common/$(DEPDIR)/vssetup-common.Tpo -c -o src/common/vssetup-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
@@ -5514,6 +5664,20 @@ setup/vssetup-log.link.obj: setup/log.link.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/vssetup-log.link.obj `if test -f 'setup/log.link.cpp'; then $(CYGPATH_W) 'setup/log.link.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/log.link.cpp'; fi`
 
+setup/src/include/vssetup-display_gtk.o: setup/src/include/display_gtk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup-display_gtk.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo -c -o setup/src/include/vssetup-display_gtk.o `test -f 'setup/src/include/display_gtk.cpp' || echo '$(srcdir)/'`setup/src/include/display_gtk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo setup/src/include/$(DEPDIR)/vssetup-display_gtk.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_gtk.cpp' object='setup/src/include/vssetup-display_gtk.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-display_gtk.o `test -f 'setup/src/include/display_gtk.cpp' || echo '$(srcdir)/'`setup/src/include/display_gtk.cpp
+
+setup/src/include/vssetup-display_gtk.obj: setup/src/include/display_gtk.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup-display_gtk.obj -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo -c -o setup/src/include/vssetup-display_gtk.obj `if test -f 'setup/src/include/display_gtk.cpp'; then $(CYGPATH_W) 'setup/src/include/display_gtk.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_gtk.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup-display_gtk.Tpo setup/src/include/$(DEPDIR)/vssetup-display_gtk.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_gtk.cpp' object='setup/src/include/vssetup-display_gtk.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup-display_gtk.obj `if test -f 'setup/src/include/display_gtk.cpp'; then $(CYGPATH_W) 'setup/src/include/display_gtk.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_gtk.cpp'; fi`
+
 setup/src/c/vssetup_dlg-setup.o: setup/src/c/setup.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/c/vssetup_dlg-setup.o -MD -MP -MF setup/src/c/$(DEPDIR)/vssetup_dlg-setup.Tpo -c -o setup/src/c/vssetup_dlg-setup.o `test -f 'setup/src/c/setup.cpp' || echo '$(srcdir)/'`setup/src/c/setup.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/c/$(DEPDIR)/vssetup_dlg-setup.Tpo setup/src/c/$(DEPDIR)/vssetup_dlg-setup.Po
@@ -5541,20 +5705,6 @@ setup/src/include/vssetup_dlg-central.obj: setup/src/include/central.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/central.cpp' object='setup/src/include/vssetup_dlg-central.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-central.obj `if test -f 'setup/src/include/central.cpp'; then $(CYGPATH_W) 'setup/src/include/central.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/central.cpp'; fi`
-
-setup/src/include/vssetup_dlg-display_dialog.o: setup/src/include/display_dialog.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup_dlg-display_dialog.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo -c -o setup/src/include/vssetup_dlg-display_dialog.o `test -f 'setup/src/include/display_dialog.cpp' || echo '$(srcdir)/'`setup/src/include/display_dialog.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_dialog.cpp' object='setup/src/include/vssetup_dlg-display_dialog.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-display_dialog.o `test -f 'setup/src/include/display_dialog.cpp' || echo '$(srcdir)/'`setup/src/include/display_dialog.cpp
-
-setup/src/include/vssetup_dlg-display_dialog.obj: setup/src/include/display_dialog.cpp
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup_dlg-display_dialog.obj -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo -c -o setup/src/include/vssetup_dlg-display_dialog.obj `if test -f 'setup/src/include/display_dialog.cpp'; then $(CYGPATH_W) 'setup/src/include/display_dialog.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_dialog.cpp'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Po
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_dialog.cpp' object='setup/src/include/vssetup_dlg-display_dialog.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-display_dialog.obj `if test -f 'setup/src/include/display_dialog.cpp'; then $(CYGPATH_W) 'setup/src/include/display_dialog.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_dialog.cpp'; fi`
 
 setup/src/include/vssetup_dlg-file.o: setup/src/include/file.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup_dlg-file.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup_dlg-file.Tpo -c -o setup/src/include/vssetup_dlg-file.o `test -f 'setup/src/include/file.cpp' || echo '$(srcdir)/'`setup/src/include/file.cpp
@@ -5584,6 +5734,34 @@ setup/src/include/vssetup_dlg-general.obj: setup/src/include/general.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-general.obj `if test -f 'setup/src/include/general.cpp'; then $(CYGPATH_W) 'setup/src/include/general.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/general.cpp'; fi`
 
+src/vssetup_dlg-unicode.o: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup_dlg-unicode.o -MD -MP -MF src/$(DEPDIR)/vssetup_dlg-unicode.Tpo -c -o src/vssetup_dlg-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup_dlg-unicode.Tpo src/$(DEPDIR)/vssetup_dlg-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vssetup_dlg-unicode.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup_dlg-unicode.o `test -f 'src/unicode.cpp' || echo '$(srcdir)/'`src/unicode.cpp
+
+src/vssetup_dlg-unicode.obj: src/unicode.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup_dlg-unicode.obj -MD -MP -MF src/$(DEPDIR)/vssetup_dlg-unicode.Tpo -c -o src/vssetup_dlg-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup_dlg-unicode.Tpo src/$(DEPDIR)/vssetup_dlg-unicode.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode.cpp' object='src/vssetup_dlg-unicode.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup_dlg-unicode.obj `if test -f 'src/unicode.cpp'; then $(CYGPATH_W) 'src/unicode.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode.cpp'; fi`
+
+src/vssetup_dlg-unicode_combine.o: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup_dlg-unicode_combine.o -MD -MP -MF src/$(DEPDIR)/vssetup_dlg-unicode_combine.Tpo -c -o src/vssetup_dlg-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup_dlg-unicode_combine.Tpo src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vssetup_dlg-unicode_combine.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup_dlg-unicode_combine.o `test -f 'src/unicode_combine.cpp' || echo '$(srcdir)/'`src/unicode_combine.cpp
+
+src/vssetup_dlg-unicode_combine.obj: src/unicode_combine.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT src/vssetup_dlg-unicode_combine.obj -MD -MP -MF src/$(DEPDIR)/vssetup_dlg-unicode_combine.Tpo -c -o src/vssetup_dlg-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/vssetup_dlg-unicode_combine.Tpo src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/unicode_combine.cpp' object='src/vssetup_dlg-unicode_combine.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o src/vssetup_dlg-unicode_combine.obj `if test -f 'src/unicode_combine.cpp'; then $(CYGPATH_W) 'src/unicode_combine.cpp'; else $(CYGPATH_W) '$(srcdir)/src/unicode_combine.cpp'; fi`
+
 src/common/vssetup_dlg-common.o: src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT src/common/vssetup_dlg-common.o -MD -MP -MF src/common/$(DEPDIR)/vssetup_dlg-common.Tpo -c -o src/common/vssetup_dlg-common.o `test -f 'src/common/common.cpp' || echo '$(srcdir)/'`src/common/common.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/common/$(DEPDIR)/vssetup_dlg-common.Tpo src/common/$(DEPDIR)/vssetup_dlg-common.Po
@@ -5611,6 +5789,20 @@ setup/vssetup_dlg-log.link.obj: setup/log.link.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/log.link.cpp' object='setup/vssetup_dlg-log.link.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/vssetup_dlg-log.link.obj `if test -f 'setup/log.link.cpp'; then $(CYGPATH_W) 'setup/log.link.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/log.link.cpp'; fi`
+
+setup/src/include/vssetup_dlg-display_dialog.o: setup/src/include/display_dialog.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup_dlg-display_dialog.o -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo -c -o setup/src/include/vssetup_dlg-display_dialog.o `test -f 'setup/src/include/display_dialog.cpp' || echo '$(srcdir)/'`setup/src/include/display_dialog.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_dialog.cpp' object='setup/src/include/vssetup_dlg-display_dialog.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-display_dialog.o `test -f 'setup/src/include/display_dialog.cpp' || echo '$(srcdir)/'`setup/src/include/display_dialog.cpp
+
+setup/src/include/vssetup_dlg-display_dialog.obj: setup/src/include/display_dialog.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -MT setup/src/include/vssetup_dlg-display_dialog.obj -MD -MP -MF setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo -c -o setup/src/include/vssetup_dlg-display_dialog.obj `if test -f 'setup/src/include/display_dialog.cpp'; then $(CYGPATH_W) 'setup/src/include/display_dialog.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_dialog.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Tpo setup/src/include/$(DEPDIR)/vssetup_dlg-display_dialog.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='setup/src/include/display_dialog.cpp' object='setup/src/include/vssetup_dlg-display_dialog.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(vssetup_dlg_CXXFLAGS) $(CXXFLAGS) -c -o setup/src/include/vssetup_dlg-display_dialog.obj `if test -f 'setup/src/include/display_dialog.cpp'; then $(CYGPATH_W) 'setup/src/include/display_dialog.cpp'; else $(CYGPATH_W) '$(srcdir)/setup/src/include/display_dialog.cpp'; fi`
 install-pkgdataDATA: $(pkgdata_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(pkgdata_DATA)'; test -n "$(pkgdatadir)" || list=; \
@@ -6168,6 +6360,14 @@ distclean: distclean-am
 	-rm -f src/$(DEPDIR)/vs_globals.Po
 	-rm -f src/$(DEPDIR)/vs_log_modules.Po
 	-rm -f src/$(DEPDIR)/vsfilesystem.Po
+	-rm -f src/$(DEPDIR)/vslauncher-unicode.Po
+	-rm -f src/$(DEPDIR)/vslauncher-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vslauncher_gui-unicode.Po
+	-rm -f src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vssetup-unicode.Po
+	-rm -f src/$(DEPDIR)/vssetup-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vssetup_dlg-unicode.Po
+	-rm -f src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po
 	-rm -f src/$(DEPDIR)/xml_serializer.Po
 	-rm -f src/$(DEPDIR)/xml_support.Po
 	-rm -f src/aldrv/$(DEPDIR)/al_globals.Po
@@ -6339,6 +6539,8 @@ distclean: distclean-am
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/c_alike.tab.Po
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po
 	-rm -f src/common/$(DEPDIR)/common.Po
+	-rm -f src/common/$(DEPDIR)/test-common.Po
+	-rm -f src/common/$(DEPDIR)/unicode_conv-common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher-common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher_gui-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup-common.Po
@@ -6744,6 +6946,14 @@ maintainer-clean: maintainer-clean-am
 	-rm -f src/$(DEPDIR)/vs_globals.Po
 	-rm -f src/$(DEPDIR)/vs_log_modules.Po
 	-rm -f src/$(DEPDIR)/vsfilesystem.Po
+	-rm -f src/$(DEPDIR)/vslauncher-unicode.Po
+	-rm -f src/$(DEPDIR)/vslauncher-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vslauncher_gui-unicode.Po
+	-rm -f src/$(DEPDIR)/vslauncher_gui-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vssetup-unicode.Po
+	-rm -f src/$(DEPDIR)/vssetup-unicode_combine.Po
+	-rm -f src/$(DEPDIR)/vssetup_dlg-unicode.Po
+	-rm -f src/$(DEPDIR)/vssetup_dlg-unicode_combine.Po
 	-rm -f src/$(DEPDIR)/xml_serializer.Po
 	-rm -f src/$(DEPDIR)/xml_support.Po
 	-rm -f src/aldrv/$(DEPDIR)/al_globals.Po
@@ -6915,6 +7125,8 @@ maintainer-clean: maintainer-clean-am
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/c_alike.tab.Po
 	-rm -f src/cmd/script/c_alike/$(DEPDIR)/lex.yy.Po
 	-rm -f src/common/$(DEPDIR)/common.Po
+	-rm -f src/common/$(DEPDIR)/test-common.Po
+	-rm -f src/common/$(DEPDIR)/unicode_conv-common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher-common.Po
 	-rm -f src/common/$(DEPDIR)/vslauncher_gui-common.Po
 	-rm -f src/common/$(DEPDIR)/vssetup-common.Po

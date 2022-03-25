@@ -24,6 +24,7 @@
 #define M_PI 3.1415926536
 #endif
 #include "vsfilesystem.h"
+#include "vs_log_modules.h"
 
 using namespace VSFileSystem;
 using namespace std;
@@ -138,7 +139,7 @@ public:
 						       this->i*v.j-this->j*v.i);}
   void Yaw(float rad) //only works with unit vector
   {
-    float theta = 0;
+    float theta;
     float m = Mag();
     if (i>0)
       theta = (float)atan(k/i);
@@ -148,7 +149,14 @@ public:
       theta = -M_PI/2;
 	else if (k>0 && i==0)
 	  theta = M_PI/2;
-    
+	else {
+		static unsigned int warned = 0;
+		unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+		theta = 0;
+		GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+		assert(0);
+	}
+
     theta += rad;
     i = m*cosf(theta);
     k = m*sinf(theta); 
@@ -156,7 +164,7 @@ public:
   
   void Roll(float rad)
   {
-    float theta = 0;
+    float theta;
     float m = Mag();
     if (i>0)
       theta = (float)atan(j/i);
@@ -166,7 +174,14 @@ public:
       theta = -M_PI/2;
     else if (j>0 && i==0)
       theta = M_PI/2;
-    
+    else {
+    	static unsigned int warned = 0;
+    	unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+    	theta = 0;
+    	GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+    	assert(0);
+    }
+
     theta += rad; 
     i = m*cosf(theta);
     j = m*sinf(theta); 
@@ -174,7 +189,7 @@ public:
   
   void Pitch(float rad)
   {
-    float theta = 0;
+    float theta;
     float m = Mag();
     if (k>0)
       theta = (float)atan(j/k);
@@ -184,7 +199,14 @@ public:
       theta = -M_PI/2;
     else if (j>0 && k==0)
       theta = M_PI/2;
-    
+    else {
+    	static unsigned int warned = 0;
+    	unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+    	theta = 0;
+    	GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+    	assert(0);
+    }
+
     theta += rad;
     k = m*cosf(theta);
     j = m*sinf(theta);

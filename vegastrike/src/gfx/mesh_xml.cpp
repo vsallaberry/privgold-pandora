@@ -554,9 +554,9 @@ void Mesh::beginElement(MeshXML * xml, const string &name, const AttributeList &
 	assert(0);
       }
     }
-    assert(xml->point_state & (MeshXML::P_X |
+    assert((xml->point_state & (MeshXML::P_X |
 			       MeshXML::P_Y |
-			       MeshXML::P_Z) == 
+			       MeshXML::P_Z)) ==
 	   (MeshXML::P_X |
 	    MeshXML::P_Y |
 	    MeshXML::P_Z) );
@@ -844,9 +844,9 @@ void Mesh::beginElement(MeshXML * xml, const string &name, const AttributeList &
 	assert(0);
      }
     }
-    assert(xml->vertex_state & (MeshXML::V_POINT|
+    assert((xml->vertex_state & (MeshXML::V_POINT|
 				MeshXML::V_S|
-				MeshXML::V_T) == 
+				MeshXML::V_T)) ==
 	   (MeshXML::V_POINT|
 	    MeshXML::V_S|
 	    MeshXML::V_T) );
@@ -920,10 +920,10 @@ void Mesh::beginElement(MeshXML * xml, const string &name, const AttributeList &
      }
     }
 
-    assert(xml->vertex_state & (MeshXML::V_TYPE|
+    assert((xml->vertex_state & (MeshXML::V_TYPE|
 				MeshXML::V_ROTATE|
 				MeshXML::V_SIZE|
-				MeshXML::V_OFFSET) == 
+				MeshXML::V_OFFSET)) ==
 	   (MeshXML::V_TYPE|
 	    MeshXML::V_ROTATE|
 	    MeshXML::V_SIZE|
@@ -992,12 +992,12 @@ void Mesh::endElement(MeshXML* xml, const string &name) {
     VSFileSystem::vs_fprintf (stderr,"Unknown element end tag '%s' detected\n",name.c_str());
     break;
   case MeshXML::POINT:
-    assert(xml->point_state & (MeshXML::P_X | 
+    assert((xml->point_state & (MeshXML::P_X |
 			       MeshXML::P_Y | 
 			       MeshXML::P_Z |
 			       MeshXML::P_I |
 			       MeshXML::P_J |
-			       MeshXML::P_K) == 
+			       MeshXML::P_K)) ==
 	   (MeshXML::P_X | 
 	    MeshXML::P_Y | 
 	    MeshXML::P_Z |

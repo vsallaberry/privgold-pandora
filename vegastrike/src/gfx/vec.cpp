@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-/* © 1998 Chris Fry & Daniel Horn*/
+/* ï¿½ 1998 Chris Fry & Daniel Horn*/
 #include "vegastrike.h"
 #include <math.h>
 #include "vec.h"
@@ -40,6 +40,7 @@
 #else
 #include <boost/python/detail/extension_class.hpp>
 #endif
+#include "vs_log_modules.h"
 //#include "glob_externs.h"
 #define _CZ 761.465325527
 //extern Vector	_LightVector;
@@ -83,6 +84,13 @@ void Vector::Yaw(float rad) //only works with unit vector
 		theta = -PI/2;
 	else if (k>0 && i==0)
 		theta = PI/2;
+	else {
+		static unsigned int warned = 0;
+		unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+		theta = 0;
+		GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+		assert(0);
+	}
 
 	theta += rad;
 	i = cosf(theta);
@@ -101,6 +109,13 @@ void Vector::Roll(float rad)
 		theta = -PI/2;
 	else if (j>0 && i==0)
 		theta = PI/2;
+	else {
+		static unsigned int warned = 0;
+		unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+		theta = 0;
+		GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+		assert(0);
+	}
 	
 	theta += rad; 
 	i = cosf(theta);
@@ -119,7 +134,14 @@ void Vector::Pitch(float rad)
 		theta = -PI/2;
 	else if (j>0 && k==0)
 		theta = PI/2;
-	
+	else {
+		static unsigned int warned = 0;
+		unsigned int lvl = (warned ? logvs::VERBOSE : (warned=logvs::WARN));
+		theta = 0;
+		GFX_LOG(lvl, "%s(): bad state i:%f j:%f k:%f", __func__, i, j, k);
+		assert(0);
+	}
+
 	theta += rad;
 	k = cosf(theta);
 	j = sinf(theta);
