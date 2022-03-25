@@ -81,7 +81,16 @@ distclean: clean
 
 $(OBJ): Makefile
 
+#.SUFFIXES: .rc .res
+#.rc.res:
+#	$(WINDRES) $(CPPFLAGS) $(RCFLAGS) $< $@
+
+# run manually pre-processor because mingw32 i686 uses gcc -E and messes up quotes (clang64 x86_64 is ok)
 .SUFFIXES: .rc .res
 .rc.res:
-	$(WINDRES) $(CPPFLAGS) $(RCFLAGS) $< $@
+	"$(WINDRES)" $(CPPFLAGS) $(RCFLAGS) "$<" "$@" \
+	|| { echo "+ windres fallback..."; "$(CC)" -E -x c -DRC_INVOKED $(CPPFLAGS) "$<" -o "$(<).pre" \
+	     && "$(WINDRES)" -v $(RCFLAGS) --preprocessor "$(CC)" --preprocessor-arg -E \
+	        --preprocessor-arg -xc --preprocessor-arg -DRC_INVOKED "$(<).pre" "$@" \
+	     && rm "$(<).pre"; }
 
