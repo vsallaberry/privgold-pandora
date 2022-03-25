@@ -46,6 +46,24 @@ prefix=${CUSTOM_PREFIX:-/usr/local/vega05}
 resources=$(cd "`dirname "$my0"`"; pwd)
 test -L "${resources}" && resources=$(cd "$(readlink "${resources}")"; pwd)
 mergelibs="${resources}/mergelibs.sh"
+
+# target architecture
+if test -n "${CUSTOM_BUILD_ARCH}"; then
+    arch=all
+    test "${CUSTOM_BUILD_ARCH}" = "all" && main_arch=$(uname -m) || main_arch=${CUSTOM_BUILD_ARCH%% *}
+else
+    arch=all
+    main_arch="$(uname -m)"
+fi
+all_archs=${main_arch}
+if test "${build_sysname}" = "darwin"; then
+    if test ${build_sysmajor} -lt 19; then all_archs="i386 ${all_archs}"
+    else all_archs="arm64 ${all_archs}"; fi
+else
+    true # TODO
+fi
+
+# PATHS
 export PATH=${prefix}/bin:${prefix}/sbin${MORE_PREFIXES:+:${MORE_PREFIXES}/bin:${MORE_PREFIXES}/sbin}:/usr/bin:/usr/sbin:/bin:/sbin
 
 PKG_CONFIG_PATH="${prefix}/lib/pkgconfig:${prefix}/share/pkgconfig"
@@ -61,12 +79,7 @@ export PKG_CONFIG=${PKGCONFIG}
 compiler=${CC:-$(which -a clang gcc 2> /dev/null | head -n1)}
 macos_sdk=
 
-#baseoptflags="-pipe -O3 -fstack-protector -isysroot/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr -isystem/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/include -L//Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/usr/lib" # -mmacosx-version-min=10.7"
-#baseoptflags="-pipe -O3 -fstack-protector -isysroot/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk" # -mmacosx-version-min=10.7"
 baseoptflags="-pipe -O3 -fstack-protector"
-arch=${CUSTOM_BUILD_ARCH:-all}
-main_arch="$(uname -m)"
-all_archs=${main_arch}
 build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
 build_sysmajor=$(uname -r | awk -F '.' '{ print $1 }')
 case "${build_sysname}" in
@@ -75,16 +88,14 @@ case "${build_sysname}" in
 esac
 
 optflags="${baseoptflags}"
-if test "${build_sysname}" = "darwin"; then
-    if test ${build_sysmajor} -lt 19; then all_archs="i386 ${all_archs}"
-    else all_archs="arm64 ${all_archs}"; fi
-    for a in `echo ${all_archs}`; do
-        optflags="${optflags} -arch ${a}"
-    done
-else
-    #optflags="${optflags} -arch ${main_arch}"
-    true #TODO
-fi
+for a in `echo ${all_archs}`; do
+    case "${build_sysname}" in 
+        darwin*) optflags="${optflags} -arch ${a}";;
+        *) case "${a}" in *64) test "${a}" != "${main_arch}" && optflags="${optflags} -m64";; 
+                          *) optflags="${optflags} -m32";; 
+           esac;;
+    esac
+done
 
 ################### FIND COMPILER and SDK
 cc_flags=""
@@ -732,7 +743,8 @@ configure_fun() {
             do_autocmd ./autogen.sh
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
-                linux*)  add_args --with-x;;
+                linux*)  add_args --with-x
+                         test "${main_arch}" = "i386" && add_args --disable-video-x11-scrnsaver;;
             esac
             add_args \
                 --enable-joystick --enable-audio
@@ -761,7 +773,8 @@ configure_fun() {
             do_autocmd ./autogen.sh
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
-                linux*)  add_args --with-x;;
+                linux*)  add_args --with-x
+                         test "${main_arch}" = "i386" && add_args --disable-video-x11-scrnsaver;;
             esac
             add_args \
                 --enable-joystick --enable-audio
@@ -770,6 +783,7 @@ configure_fun() {
             if test -n "${macos_vermin}" && test ${macos_vermin} -lt $((10*1000000+11*1000)); then # no metal before 10.11
                 add_args --disable-video-metal --disable-render-metal
             fi
+
             add_buildargs V=1
             ;;
         dialog)
@@ -806,7 +820,7 @@ configure_fun() {
             ;;
         ffmpeg)
             build_one_arch
-            test "$arch" = "all" && _arch=$(uname -m) || _arch=$arch
+            test "$arch" = "all" && _arch=${main_arch} || _arch=$arch
             del_args "--build=*" "--host=*"
             test "$arch" = "arm64" && add_args "--enable-cross-compile" "--target-os=darwin" "--disable-asm"
             ###build_optimize_size; add_args --enable-small
@@ -869,7 +883,7 @@ configure_fun() {
                         arm64)  sslarch="darwin64-arm64-cc"; del_args "--build=*" "--host=*";;
                     esac ;;
                 linux)
-                    test "${arch}" = "all" && _arch=$(uname -m) || _arch=${arch}
+                    test "${arch}" = "all" && _arch=${main_arch} || _arch=${arch}
                     case "${_arch}" in
                         i386|x86)   sslarch="linux-x86";;
                         x86_64) sslarch="linux-x86_64";;
@@ -943,6 +957,8 @@ configure_fun() {
             && newcc=$(export PATH="$PATH:/opt/local/bin:/usr/local/bin"; which "clang-mp-9.0" "clang++-mp-9.0" | tr '\n' ':') \
             && newcc=${newcc%:} && test -x "${newcc%%:*}" && export CC=${newcc%%:*} CXX="${newcc#*:}"
 
+            case "${build_sysname}" in linux*) if test "${main_arch}" = "i386"; then export CC=gcc CXX=g++; fi;; esac
+
             build_cmake
             case "${build_sysname}" in
                 darwin*)
@@ -950,7 +966,11 @@ configure_fun() {
                         -DALSOFT_REQUIRE_SDL2=OFF # -DPORTAUDIO_FOUND=0 # -DPULSEAUDIO_FOUND=0 #-DALSOFT_UTILS=0
                     ;;
                 linux*) test -f /usr/include/getopt.h && mv -v utils/getopt.h utils/getopt.h.out || true
-                        add_args "-DALSOFT_REQUIRE_SDL2=OFF";;
+                        add_args "-DALSOFT_REQUIRE_SDL2=OFF"
+                        if test "${main_arch}" = "i386"; then 
+                            add_args "-DCMAKE_CXX_STANDARD=98" "-DHAVE_STD_CXX11=0" "-DHAVE_STD_C11=0" "-DHAVE_LIBATOMIC=0"
+                            export CFLAGS="${CFLAGS} -D_GLIBCXX_USE_CXX11_ABI=0" CXXFLAGS="${CXXFLAGS} -D_GLIBCXX_USE_CXX11_ABI=0"
+                        fi;;
                 *)
                     add_args "-DALSOFT_REQUIRE_SDL2=OFF";;
             esac
@@ -968,7 +988,7 @@ configure_fun() {
         mpg123)
             build_one_arch
             case "${build_sysname}" in darwin*) add_args --with-audio=coreaudio;; esac
-            test "$arch" = "all" && _arch=$(uname -m) || _arch=$arch
+            test "$arch" = "all" && _arch=${main_arch} || _arch=$arch
             case "${_arch}" in
                 i386|x86)   add_args "--with-cpu=sse";;
                 x86_64) add_args "--with-cpu=x86-64";;

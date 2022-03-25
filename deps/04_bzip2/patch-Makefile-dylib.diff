@@ -33,12 +33,12 @@
 -	./bzip2 -d  < sample1.bz2 > sample1.tst
 -	./bzip2 -d  < sample2.bz2 > sample2.tst
 -	./bzip2 -ds < sample3.bz2 > sample3.tst
-+	DYLD_LIBRARY_PATH=. ./bzip2 -1  < sample1.ref > sample1.rb2
-+	DYLD_LIBRARY_PATH=. ./bzip2 -2  < sample2.ref > sample2.rb2
-+	DYLD_LIBRARY_PATH=. ./bzip2 -3  < sample3.ref > sample3.rb2
-+	DYLD_LIBRARY_PATH=. ./bzip2 -d  < sample1.bz2 > sample1.tst
-+	DYLD_LIBRARY_PATH=. ./bzip2 -d  < sample2.bz2 > sample2.tst
-+	DYLD_LIBRARY_PATH=. ./bzip2 -ds < sample3.bz2 > sample3.tst
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -1  < sample1.ref > sample1.rb2
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -2  < sample2.ref > sample2.rb2
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -3  < sample3.ref > sample3.rb2
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -d  < sample1.bz2 > sample1.tst
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -d  < sample2.bz2 > sample2.tst
++	DYLD_LIBRARY_PATH=. LD_LIBRARY_PATH=. ./bzip2 -ds < sample3.bz2 > sample3.tst
  	cmp sample1.bz2 sample1.rb2 
  	cmp sample2.bz2 sample2.rb2
  	cmp sample3.bz2 sample3.rb2
