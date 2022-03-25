@@ -25,7 +25,16 @@ void GFXVertexList::UnMap() {
 }
 
 GFXVertexList::GFXVertexList() {
-  memset(this,0,sizeof(GFXVertexList));
+	numVertices = 0;
+	data.colors = NULL;
+	index.b = NULL;
+	mode = NULL;
+	unique_mode = false;
+	display_list=0;
+	vbo_data=0;
+	numlists = 0;
+	offsets = NULL;
+	changed = 0;
 }
   ///Returns the array of vertices to be mutated
 union GFXVertexList::VDAT * GFXVertexList::BeginMutate (int offset) {

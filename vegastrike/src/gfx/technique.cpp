@@ -248,20 +248,20 @@ using namespace __impl;
 
 
 Technique::Pass::Pass() :
+    program(0),
     type(FixedPass),
     colorWrite(true),
     zWrite(True),
     perLightIteration(0),
     maxIterations(0),
-    program(0),
     blendMode(Default),
-    sequence(0),
     depthFunction(LEqual),
     cullMode(DefaultFace),
     polyMode(Fill),
     offsetFactor(0),
     offsetUnits(0),
-    lineWidth(1)
+    lineWidth(1),
+    sequence(0)
 {
 }
 

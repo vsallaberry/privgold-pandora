@@ -58,7 +58,7 @@ GLenum GetGLTextureTarget(enum TEXTURE_TARGET texture_target) {
 #ifdef NV_CUBE_MAP
   case CUBEMAP:   tt=GL_TEXTURE_CUBE_MAP_EXT; break;
 #endif
-  default:        assert(false);
+  default:        tt=0; assert(false);
   }
   return tt;
 }

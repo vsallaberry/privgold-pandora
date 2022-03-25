@@ -80,7 +80,7 @@ void Mesh::AddDamageFX(const Vector & pnt, const Vector &norm,  const float dama
   }
 
   GFXColor tmp (col.r,col.g,col.b,col.a);
-  float numsec = flickertime*(damage < mindamage)?mindamage:damage;;
+  float numsec = flickertime * ((damage < mindamage) ? mindamage : damage);
   MeshFX newFX (numsec, (startpotency-endpotency)/(numsec*rSize()*rSize()) ,true,GFXColor(loc.i,loc.j,loc.k,1),tmp,GFXColor (0,0,0,1),tmp,GFXColor (1,0,startpotency/(rSize()*rSize())));
   if (LocalFX.size()>=MAXLOCALFX) {
     LocalFX[(rand()%(LocalFX.size()))].MergeLights (newFX);

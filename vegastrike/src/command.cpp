@@ -1062,7 +1062,7 @@ return false;
 };
 // }}}
 //call a menu with arguements {{{
-bool commandI::callMenu(char *name_in, char *args_in, std::string &d) {
+bool commandI::callMenu(const char *name_in, const char *args_in, std::string &d) {
 	//if there is a menu operation return true;
 	std::string name;
 	if(name_in != NULL)
@@ -1318,7 +1318,7 @@ bool commandI::callMenu(char *name_in, char *args_in, std::string &d) {
 // }}}
 
 // set a menu {{{
-std::string commandI::setMenu(char *name_in) {
+std::string commandI::setMenu(const char *name_in) {
 	std::string name;
 	name.append(name_in);
 	if(name[0] == 32) name.replace(0, 1, "");

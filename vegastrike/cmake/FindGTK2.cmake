@@ -155,12 +155,19 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
     )
     gtk2_debug_message("GTK2_GDK_INCLUDE_DIR is ${GTK2_GDK_INCLUDE_DIR}")
 
+    pkg_check_modules(gdkpixbuf2.0 ${GTK2_PKG_REQUIRED} gdk-pixbuf-2.0)
+    SET(_GDKPIXBUF2IncDir ${gdkpixbuf2.0_INCLUDE_DIRS})
+    SET(_GDKPIXBUF2LinkDir ${gdkpixbuf2.0_LIBRARY_DIRS})
+    SET(_GDKPIXBUF2LinkFlags ${gdkpixbuf2.0_LDFLAGS})
+    SET(_GDKPIXBUF2Cflags ${gdkpixbuf2.0_CFLAGS})
+
     string(REGEX REPLACE "([^ ])([ ]|$)" "\\1/include/gdk-pixbuf-2.0 " _TMP_VS_FIND_PREFIX_MORE_PATHS "${VS_FIND_PREFIX_MORE_PATHS}")
 
     find_path(GTK2_GDKPIXBUF_INCLUDE_DIR
       NAMES
         gdk-pixbuf/gdk-pixbuf.h
       HINTS
+        ${_GDKPIXBUF2IncDir}
         ${_GDK2IncDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
@@ -340,6 +347,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gdk_pixbuf-2.0
       HINTS
+        ${_GDKPIXBUF2LinkDir}
         ${_GDK2LinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
@@ -376,6 +384,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gthread-2.0
       HINTS
+        ${_GLIB2LinkDir}
         ${_GTK2LinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
@@ -394,6 +403,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         gobject-2.0
       HINTS
+        ${_GLIB2LinkDir}
         ${_GTK2LinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS
@@ -467,6 +477,7 @@ else (GTK2_LIBRARIES AND GTK2_INCLUDE_DIRS)
       NAMES
         pangocairo-1.0
       HINTS
+        ${_PANGOLinkDir}
         ${_CAIROLinkDir}
         ${_TMP_VS_FIND_PREFIX_MORE_PATHS}
       PATHS

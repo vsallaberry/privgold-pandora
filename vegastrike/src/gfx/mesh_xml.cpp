@@ -587,9 +587,9 @@ void Mesh::beginElement(MeshXML * xml, const string &name, const AttributeList &
 	assert(0);
       }
     }
-    if (xml->point_state & (MeshXML::P_I |
+    if ((xml->point_state & (MeshXML::P_I |
 			       MeshXML::P_J |
-			       MeshXML::P_K) != 
+			       MeshXML::P_K)) !=
 	   (MeshXML::P_I |
 	    MeshXML::P_J |
 	    MeshXML::P_K) ) {
@@ -1174,7 +1174,7 @@ void CopyFile (VSFile &src, VSFile &dst) {
   size_t hm;
   size_t srcstruct;
   size_t * srcptr = &srcstruct;
-  while (hm = src.Read(srcptr,sizeof(srcstruct))) {
+  while ((hm = src.Read(srcptr,sizeof(srcstruct))) != 0) {
     dst.Write(srcptr,hm);
   }
 }
@@ -1233,7 +1233,7 @@ Mesh * Mesh::LoadMesh (const char * filename, const Vector & scale, int faction,
     return 0;
   }
   if (m.size()>1) {
-    fprintf (stderr,"Mesh %s has %d subcomponents. Only first used!\n",filename,m.size());
+    fprintf (stderr,"Mesh %s has %zu subcomponents. Only first used!\n",filename,m.size());
     for (unsigned int i=1;i<m.size();++i) {
       delete m[i];
     }

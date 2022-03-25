@@ -58,7 +58,7 @@ UnitCollection * ClickList::requestIterator (int minX,int minY, int maxX, int ma
     double frustum [6][4];
     GFXCalculateFrustum(frustum,view,frustmat);
     Unit * un;
-	for(un_iter myParent = parentIter->createIterator();un = *myParent;++myParent){
+	for(un_iter myParent = parentIter->createIterator(); (un = *myParent) != NULL; ++myParent){
       if ((un)->queryFrustum(frustum)) 
 		uc->prepend(un);
     }
@@ -70,7 +70,7 @@ UnitCollection * ClickList::requestIterator (int mouseX, int mouseY) {
   perplines = vector<Vector>();
     UnitCollection * uc = new UnitCollection ();
     Unit * un;
-	for(un_iter myParent = parentIter->createIterator(),UAye = uc->createIterator();un = *myParent;++myParent){
+	for(un_iter myParent = parentIter->createIterator(),UAye = uc->createIterator(); (un = *myParent) != NULL; ++myParent){
 	if (queryShip(mouseX,mouseY,un))
 	  UAye.preinsert(un);
     }
@@ -97,7 +97,7 @@ Unit * ClickList::requestShip (int mouseX, int mouseY) {
   if (equalCheck&&lastSelected) {//the person clicked the same place and wishes to cycle through units from front to back
     float morethan = lastSelected->getMinDis(_Universe->AccessCamera()->GetPosition());//parent system for access cam
 	Unit *un;
-	for(un_iter UAye = uc->createIterator();un = *UAye;++UAye){
+	for(un_iter UAye = uc->createIterator(); (un = *UAye) != NULL; ++UAye){
       tmpdis = un->getMinDis (_Universe->AccessCamera()->GetPosition());//parent_system? FIXME (for access cam
       if (tmpdis>morethan&&tmpdis<minDistance) {
 	minDistance=tmpdis;
@@ -108,7 +108,7 @@ Unit * ClickList::requestShip (int mouseX, int mouseY) {
   if (targetUnit==NULL) {//ok the click location is either different, or 
     //he clicked on the back of the list and wishes to start over
 	Unit *un;
-	for(un_iter UAye = uc->createIterator();un = *UAye;++UAye){
+	for(un_iter UAye = uc->createIterator(); (un = *UAye) != NULL; ++UAye){
       tmpdis = un->getMinDis (_Universe->AccessCamera()->GetPosition());//parent_system FIXME
       if (tmpdis<minDistance) {
 	minDistance=tmpdis;

@@ -162,10 +162,10 @@ public:
 	GFXColor race;
 	navscreenoccupied * screenoccupation;
 	systemdrawnode(int type,float size,float x, float y, std::string source, unsigned index, navscreenoccupied * so, bool moused, GFXColor race)
-			:type(type),size(size),x(x),y(y),source(source), index(index), moused(moused), color(GetSystemColor(source)), race(race), screenoccupation(so) {
+			:type(type),size(size),x(x),y(y),index(index),source(source), moused(moused), color(GetSystemColor(source)), race(race), screenoccupation(so) {
 		
 	}
-	systemdrawnode () : size(SYSTEM_DEFAULT_SIZE), x(0),y(0), moused(false), color('v'), race(GrayColor), screenoccupation(NULL) {}
+	systemdrawnode () : type(0), size(SYSTEM_DEFAULT_SIZE), x(0),y(0), index(0), moused(false), color('v'), race(GrayColor), screenoccupation(NULL) {}
 
 	void draw(bool mouseover=false, bool willclick=false) {
 		DrawNode(type,size,x,y,source,screenoccupation,moused,race,mouseover,willclick);

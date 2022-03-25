@@ -39,7 +39,7 @@ public:
   float Mag () {return sqrtf(i*i+j*j+k*k);}
   void Yaw(float rad) //only works with unit vector
   {
-    float theta;
+    float theta = 0;
     float m = Mag();
     if (i>0)
       theta = (float)atan(k/i);
@@ -57,7 +57,7 @@ public:
   
   void Roll(float rad)
   {
-    float theta;
+    float theta = 0;
     float m = Mag();
     if (i>0)
       theta = (float)atan(j/i);
@@ -75,7 +75,7 @@ public:
   
   void Pitch(float rad)
   {
-    float theta;
+    float theta = 0;
     float m = Mag();
     if (k>0)
       theta = (float)atan(j/k);
@@ -292,7 +292,7 @@ void write_mesh (FILE * fp, vector <asteroid> &field) {
       field[i].polygon[j].Write (fp);
     }
   }
-  fprintf (fp,"</Polygons>\n<Material reflect=\"%d\">\n<Specular red=\"%f\" green=\"%f\" blue=\"%f\" alpha=\"%f\"/>\n</Material>\n</Mesh>\n",0,0,0,0,1);
+  fprintf (fp,"</Polygons>\n<Material reflect=\"%d\">\n<Specular red=\"%f\" green=\"%f\" blue=\"%f\" alpha=\"%f\"/>\n</Material>\n</Mesh>\n",0,0.,0.,0.,1.);
 }
 
 
@@ -396,7 +396,7 @@ Vector randVecInCube (float BoxSize, float x, float y, float z) {
 #endif
 
 #ifdef RAND
-void write_unit (FILE *fp, char *astFile, int num_cubes, float innerRadius, float outerRadius, float BoxSize) {
+void write_unit (FILE *fp, const char *astFile, int num_cubes, float innerRadius, float outerRadius, float BoxSize) {
 	fprintf(fp,"<Unit>");
 	if (!innerRadius) {
 		num_cubes--;
@@ -411,7 +411,7 @@ void write_unit (FILE *fp, char *astFile, int num_cubes, float innerRadius, floa
 		fprintf(fp,"\n\t<SubUnit file=\"%s\" x=\"%f\" y=\"%f\" z=\"%f\" />",astFile,vec.i,vec.j,vec.k);
 	}
 #else
-void write_unit (FILE *fp, char *astFile, float offset, float innerRadius, float outerRadius, float BoxSize) {
+void write_unit (FILE *fp, const char *astFile, float offset, float innerRadius, float outerRadius, float BoxSize) {
 	fprintf(fp,"<Unit>");
 	for (float x=-outerRadius;x<outerRadius;x+=offset) {
 		for (float y=-outerRadius;y<outerRadius;y+=offset) {
@@ -487,9 +487,9 @@ int main (int argc, char ** argv) {
     printf ("Enter size of safety zone (0 to disable)\n");  
     scanf ("%f",&safety_zone);
     printf ("Enter random seed (0 to use clock\n");
-    scanf ("%f",&randomseed);
+    scanf ("%d",&randomseed);
     printf ("Do you want a unit file? (y/n)\n");
-    scanf("%c",num_cubes);
+    scanf("%c",&num_cubes);
     if (num_cubes=='y') {
       printf ("Enter Output Unit File:\n");
       scanf ("%s",&unitfilename);
@@ -525,7 +525,7 @@ int main (int argc, char ** argv) {
   write_mesh (fp,field);
   fclose (fp);
   if (num_cubes||offset) {
-    char *newfilename="asteroids";
+    const char *newfilename="asteroids";
     fp= fopen (unitfilename,"w");
 #ifdef RAND
     write_unit(fp,newfilename,num_cubes,innerRadius,outerRadius,cube_sides.i);

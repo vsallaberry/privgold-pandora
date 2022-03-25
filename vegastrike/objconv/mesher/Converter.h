@@ -94,7 +94,7 @@ namespace Converter {
 	{
 	public:
 		/** Standard virtual destructor */
-		~ConversionImpl() {}
+		virtual ~ConversionImpl() {}
 
 		typedef std::vector<std::string> FormatList;
 

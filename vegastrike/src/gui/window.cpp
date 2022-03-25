@@ -159,8 +159,8 @@ m_rect(0.0,0.0,0.0,0.0),
 m_color(GUI_OPAQUE_BLACK()),
 m_outlineColor(GUI_CLEAR),
 m_outlineWidth(1.0),
-m_deleteOnClose(true),
 m_controls(NULL),
+m_deleteOnClose(true),
 m_controller(NULL)
 {
     m_controls = new GroupControl();

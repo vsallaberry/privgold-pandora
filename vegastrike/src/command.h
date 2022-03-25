@@ -48,13 +48,15 @@ class mItem {
 				//using this string, IF it's larger than 0.
 };
 class menu {
+	protected:
+	void init() {
+		selected = false; noescape = false; autoselect = false; defaultInput = false;
+		iselected = NULL; idefaultInput = NULL; aselect = NULL;
+	}
 	public:
-	menu() { selected = false; noescape = false; autoselect = false; defaultInput = false;};
-	menu(char *n_in, char *d_in, char *e_in) {
-		selected = false;
-		noescape = false;
-		autoselect = false;
-		defaultInput = false;
+	menu() { this->init(); };
+	menu(const char *n_in, const char *d_in, const char *e_in) {
+		this->init();
 		Name.append(n_in);
 		Display.append(d_in);
 		escape.append(e_in);
@@ -126,8 +128,8 @@ class commandI : public RText {
 		bool addMenuItem(mItem *mitem2add, menu * = NULL);
 		//the args added at addMenu are appended when the
 		//menuitem is called
-		bool callMenu(char *name, char *args, std::string &s2manip);
-		std::string setMenu(char *name); //force a menu set.
+		bool callMenu(const char *name, const char *args, std::string &s2manip);
+		std::string setMenu(const char *name); //force a menu set.
 		std::string displaymenu(); //utility to display the current menu
 		void breakmenu(); //utility to force a break from all menus
 		virtual std::string display(std::string &s); // build parts

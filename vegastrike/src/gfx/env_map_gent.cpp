@@ -261,7 +261,7 @@ struct Texmp
 {
 	unsigned char D [lmwid][lmwid][3];
 };
-static char *makebgname(char *tmp, char *InputName, char *add, char *suffix) {
+static char *makebgname(char *tmp, const char *InputName, const char *add, const char *suffix) {
 	return strcat(strcat (strcpy(tmp,InputName),add),suffix);
 }
 static void Spherize (CubeCoord Tex [lmwid][lmwid],CubeCoord gluSph [lmwid][lmwid],unsigned char Col[])
@@ -272,7 +272,7 @@ static void Spherize (CubeCoord Tex [lmwid][lmwid],CubeCoord gluSph [lmwid][lmwi
 	if (!Data) 
 	  return;//borken down and down Data[5], right Data[3]
 	char *tmp= (char *)malloc (strlen (InputName)+60);
-	char *suffix=".image";
+	const char *suffix=".image";
 	{
 	  std::string temp (InputName);
 	  if (VSFileSystem::LookForFile(temp+"_up.image", TextureFile) > VSFileSystem::Ok) {

@@ -37,6 +37,9 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
+/* Define to 1 if the system has the type `boolean'. */
+#undef HAVE_BOOLEAN
+
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
@@ -498,6 +501,9 @@
 
 /* Use POSIX threads */
 #undef USE_NET_THREAD_POSIX
+
+/* vegastrike libdir name */
+#undef VEGASTRIKE_LIBDIR_NAME
 
 /* python_dynlibs */
 #undef VEGASTRIKE_PYTHON_DYNLIB_PATH

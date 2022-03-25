@@ -472,7 +472,7 @@ int Mission::checkIntExpr(missionNode *node,int mode){
 /* *********************************************************** */
 
 bool Mission::checkBoolExpr(missionNode *node,int mode){
-  bool ok;
+  bool ok = false;
 
   // no difference between parse/run
 

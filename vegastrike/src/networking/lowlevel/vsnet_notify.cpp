@@ -46,11 +46,11 @@ void NotifyMe::addBytes( int sz )
  *------------------------------------------------------------*/
 
 Item::Item( SOCKETALT sock, const string& filename, VSFileSystem::VSFileType ft, NotifyPtr notify )
-    : _sock( sock )
+    : _filetype( ft)
+    , _sock( sock )
     , _filename( filename )
     , _state( Idle )
     , _error( Ok )
-	, _filetype( ft)
     , _notify( notify )
 {
 }
@@ -148,11 +148,11 @@ File::File( SOCKETALT     sock,
 			VSFileSystem::VSFileType ft,
             NotifyPtr     notify )
     : Item( sock, filename, ft, notify )
+    , _destfile( filename )
     , _localbasepath( localbasepath )
     , _of( NULL )
     , _len( 0 )
     , _offset( 0 )
-    , _destfile( filename )
 {
 }
 
@@ -163,11 +163,11 @@ File::File( const string& destfile,
 			VSFileSystem::VSFileType ft,
             NotifyPtr     notify )
     : Item( sock, filename, ft, notify )
+    , _destfile( destfile )
     , _localbasepath( localbasepath )
     , _of( NULL )
     , _len( 0 )
     , _offset( 0 )
-    , _destfile( destfile )
 {
 }
 

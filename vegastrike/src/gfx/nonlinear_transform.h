@@ -11,6 +11,7 @@
  */
 class IdentityTransform {
  public:
+  virtual ~IdentityTransform() {}
   ///Transforms in a possibly nonlinear way the point to some new space
   virtual QVector Transform (const QVector &v) const {return v;} 
   ///transforms a direction to some new space

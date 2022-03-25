@@ -247,7 +247,7 @@ void RText::conoutn(std::string &s, int a, int b, int c) {
 // }}}
 // saycommand(char *), should "say" something, will be useful only with network enabled {{{
 //does nothing now
-void RText::saycommand(char *init)/// 
+void RText::saycommand(const char *init)///
 { //actually, it appends "init" to commandbuf
 //Unused.
 //  SDL_EnableUNICODE((init!=NULL));

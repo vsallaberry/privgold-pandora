@@ -296,7 +296,7 @@ void Texture::Load(const char * FileName, int stage, enum FILTER mipmap, enum TE
 	//	this->texfilename = texfilename;
 	//strcpy (filename,texfilename.c_str());
 	VSFile f;
-	VSError err;
+	VSError err = Unspecified;
 	if (FileName)
 	  if (FileName[0])
 	    err = f.OpenReadOnly (FileName, TextureFile);

@@ -426,13 +426,13 @@ m_selectionTextColor(GUI_CLEAR),
 m_highlightColor(GUI_CLEAR),
 m_highlightTextColor(GUI_CLEAR),
 m_extraCellHeight(0.0),
-m_textMargins(Size(0.0,0.0)),
 m_cellPressed(NULL),
-m_highlightedCell(NULL),
 m_selectedCell(NULL),
-m_scroller(NULL),
+m_highlightedCell(NULL),
+m_needRecalcDisplay(true),
+m_textMargins(Size(0.0,0.0)),
 m_scrollPosition(0),
-m_needRecalcDisplay(true)
+m_scroller(NULL)
 {
     m_displayCells.reserve(DISPLAY_VECTOR_RESERVE);
 }

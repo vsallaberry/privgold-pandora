@@ -148,16 +148,17 @@ public:
         pFormatCtx(NULL),
         pCodecCtx(NULL),
         pCodec(NULL),
-        pStream(NULL),
         pFrameRGB(NULL),
         pFrameYUV(NULL),
         pNextFrameYUV(NULL),
-        frameBuffer(NULL),
-        _frameBuffer(NULL),
+        pStream(NULL),
+        frameReady(false),
         packetBuffer(NULL),
         packetBufferSize(0),
-        frameReady(false),
-        fbDimensionLimit(maxDimensions)
+        fbDimensionLimit(maxDimensions),
+        _frameBuffer(NULL),
+        frameBuffer(NULL),
+        frameBufferSize(0)
     {
         packet.data = NULL;
     }
