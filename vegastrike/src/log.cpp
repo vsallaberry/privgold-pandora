@@ -387,8 +387,8 @@ unsigned int log_level(const std::string & category, bool store) {
         }
 
         if (store || s_log_level_default >= 0) {
-        	VS_LOG("log", logvs::NOTICE, "%s log entry '%s' = %s (%u)",
-        		   store ? "creating" : "getting",
+            VS_LOG("log", logvs::INFO, "%s log entry '%s' = %s (%u)",
+                   store ? "creating" : "getting",
                    category.c_str(), log_level_name(loglevel), loglevel);
     	}
     } else {

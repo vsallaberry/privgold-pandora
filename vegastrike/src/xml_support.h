@@ -99,7 +99,8 @@ namespace XMLSupport {
 	sprintf (tmp,"%lu",num);
 	return(std::string(tmp));
   }
-#if defined(_WIN32) // should be #if sizeof(size_t) > sizeof(unsigned long)
+#if defined(_WIN32) && !defined(__i686__) && !defined(__i386__) && !defined(__x86__)
+// should be #if sizeof(size_t) > sizeof(unsigned long)
   inline std::string tostring (size_t num) {
 	char tmp[256];
 	sprintf (tmp,"%zu",num);

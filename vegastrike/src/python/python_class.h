@@ -176,7 +176,6 @@ boost::python::class_builder <SuperClass, NewClass, boost::noncopyable > Class (
 /*    BaseClass.def (&PythonClass<SuperClass>::IncRef,"IncRef"); \
       boost::python::class_builder <SuperClass> TempClass (name,"SuperClass"); */
 
-
 template <class SuperClass> class PythonClass:public SuperClass {
  protected:
   PyObject * self;
@@ -245,6 +244,9 @@ public:
 	  return PythonClass<SuperClass>::FactoryString(code);
   }
 };
+
+template <> PythonClass <PythonMissionBaseClass> *PythonClass< PythonMissionBaseClass >::last_instance;
+template <> PythonClass <Orders::FireAt> *PythonClass< Orders::FireAt >::last_instance;
 
 class pythonMission: public PythonClass <PythonMissionBaseClass> {
 public:

@@ -18,7 +18,7 @@ typedef int INT32;
 #endif
 #endif
 */
-#if defined( _WIN32) && !(defined( __CYGWIN__) || defined(__MINGW32__))
+#if defined(_WIN32)
 #include <windows.h>
 #endif
 #include "vsfilesystem.h"

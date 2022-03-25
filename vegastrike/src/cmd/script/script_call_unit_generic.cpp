@@ -1290,7 +1290,7 @@ void Mission::findNextEnemyTarget(Unit *my_unit){
       un_iter uiter(ssystem->getUnitList().createIterator());
 	  Unit *unit;
       Unit *target_unit=NULL;
-	  for(; unit = *uiter;++uiter){
+	  for( ; (unit = *uiter) != NULL; ++uiter) {
 		if(my_unit->getRelation(unit)<0.0){
 			target_unit = *uiter;
 			break;
@@ -1303,7 +1303,7 @@ void Mission::findNextEnemyTarget(Unit *my_unit){
 
 static Unit * getIthUnit (un_iter uiter, int unit_nr) {
   Unit *unit = NULL;
-  for(int i = 0;unit = *uiter;++uiter,++i){
+  for(int i = 0; (unit = *uiter) != NULL; ++uiter, ++i) {
   	if(i == unit_nr)
 		return (unit);
   }

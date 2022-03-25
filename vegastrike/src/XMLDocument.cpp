@@ -1,5 +1,6 @@
 #include "XMLDocument.h"
 
+#include <stdlib.h>
 #include <assert.h>
 #include <fstream>
 #include <expat.h>
@@ -22,9 +23,9 @@ namespace XMLDOM {
 
 XMLElement::XMLElement() :
     mType(XET_CDATA),
-    mParent(0),
-    mDocument(0),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -32,10 +33,10 @@ XMLElement::XMLElement() :
 
 XMLElement::XMLElement(const std::string& cdata) :
     mType(XET_CDATA),
-    mParent(0),
-    mDocument(0),
     mContents(cdata),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -43,10 +44,10 @@ XMLElement::XMLElement(const std::string& cdata) :
 
 XMLElement::XMLElement(Type type, const std::string& data) :
     mType(type),
-    mParent(0),
-    mDocument(0),
     mContents((type==XET_CDATA||type==XET_COMMENT)?data:std::string()),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -54,10 +55,10 @@ XMLElement::XMLElement(Type type, const std::string& data) :
 
 XMLElement::XMLElement(const char* tagName, const char* const* attrValuePairList, unsigned int nAttr) :
     mType(XET_TAG),
-    mParent(0),
-    mDocument(0),
     mTagName(tagName),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -67,10 +68,10 @@ XMLElement::XMLElement(const char* tagName, const char* const* attrValuePairList
 
 XMLElement::XMLElement(const char* tagName, const char* const* attrValuePairList) :
     mType(XET_TAG),
-    mParent(0),
-    mDocument(0),
     mTagName(tagName),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -80,10 +81,10 @@ XMLElement::XMLElement(const char* tagName, const char* const* attrValuePairList
 
 XMLElement::XMLElement(const std::string& tagName, const std::vector<std::string> &attrValuePairList) :
     mType(XET_TAG),
-    mParent(0),
-    mDocument(0),
     mTagName(tagName),
     mAttributes(),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.end()),
     mNameAttribute(mAttributes.end())
 {
@@ -93,10 +94,10 @@ XMLElement::XMLElement(const std::string& tagName, const std::vector<std::string
 
 XMLElement::XMLElement(const std::string& tagName, const std::map<std::string,std::string> &attrValuePairList) :
     mType(XET_TAG),
-    mParent(0),
-    mDocument(0),
     mTagName(tagName),
     mAttributes(attrValuePairList),
+    mParent(NULL),
+    mDocument(NULL),
     mIdAttribute(mAttributes.find("id")),
     mNameAttribute(mAttributes.find("name"))
 {
@@ -105,8 +106,8 @@ XMLElement::XMLElement(const std::string& tagName, const std::map<std::string,st
 XMLElement::~XMLElement()
 {
     clear();
-    mParent = 0;
-    mDocument = 0;
+    mParent = NULL;
+    mDocument = NULL;
 }
 
 void XMLElement::clear(bool doAttributes)
@@ -156,7 +157,7 @@ const XMLElement* XMLElement::getChildById(const std::string &id) const
 {
     ElementMap::const_iterator cit = mById.find(id);
     if (cit==mById.end())
-        return 0; else
+        return NULL; else
         return cit->second;
 }
 
@@ -164,7 +165,7 @@ XMLElement* XMLElement::getChildById(const std::string &id)
 {
     ElementMap::iterator cit = mById.find(id);
     if (cit==mById.end())
-        return 0; else
+        return NULL; else
         return cit->second;
 }
 
@@ -172,7 +173,7 @@ const XMLElement* XMLElement::getChildByName(const std::string &name) const
 {
     ElementMap::const_iterator cit = mByName.find(name);
     if (cit==mByName.end())
-        return 0; else
+        return NULL; else
         return cit->second;
 }
 
@@ -180,7 +181,7 @@ XMLElement* XMLElement::getChildByName(const std::string &name)
 {
     ElementMap::iterator cit = mByName.find(name);
     if (cit==mByName.end())
-        return 0; else
+        return NULL; else
         return cit->second;
 }
 
@@ -329,7 +330,7 @@ const XMLElement* XMLElement::getChildByHierarchicalId(const std::string &id) co
     std::string::size_type sep = id.find('/');
     if (sep!=std::string::npos) {
         const XMLElement *sub = getChildById(id.substr(0,sep));
-        return sub?sub->getChildByHierarchicalId(id.substr(sep+1)):0;
+        return sub?sub->getChildByHierarchicalId(id.substr(sep+1)):NULL;
     } else {
         return getChildById(id);
     }
@@ -340,7 +341,7 @@ XMLElement* XMLElement::getChildByHierarchicalId(const std::string &id)
     std::string::size_type sep = id.find('/');
     if (sep!=std::string::npos) {
         XMLElement *sub = getChildById(id.substr(0,sep));
-        return sub?sub->getChildByHierarchicalId(id.substr(sep+1)):0;
+        return sub?sub->getChildByHierarchicalId(id.substr(sep+1)):NULL;
     } else {
         return getChildById(id);
     }
@@ -351,7 +352,7 @@ const XMLElement* XMLElement::getChildByHierarchicalName(const std::string &name
     std::string::size_type sep = name.find('/');
     if (sep!=std::string::npos) {
         const XMLElement *sub = getChildByName(name.substr(0,sep));
-        return sub?sub->getChildByHierarchicalName(name.substr(sep+1)):0;
+        return sub?sub->getChildByHierarchicalName(name.substr(sep+1)):NULL;
     } else {
         return getChildByName(name);
     }
@@ -362,7 +363,7 @@ XMLElement* XMLElement::getChildByHierarchicalName(const std::string &name)
     std::string::size_type sep = name.find('/');
     if (sep!=std::string::npos) {
         XMLElement *sub = getChildByName(name.substr(0,sep));
-        return sub?sub->getChildByHierarchicalName(name.substr(sep+1)):0;
+        return sub?sub->getChildByHierarchicalName(name.substr(sep+1)):NULL;
     } else {
         return getChildByName(name);
     }
@@ -490,8 +491,8 @@ namespace ExpatHandlers {
 
 
 XMLSerializer::XMLSerializer(const char* encoding, XMLDocument *doc, XMLElement *elem) :
-    internals(0),
-    options(OPT_DEFAULT)
+    options(OPT_DEFAULT),
+    internals(NULL)
 {
     initialise(encoding,doc,elem);
 }
@@ -666,7 +667,7 @@ bool XMLSerializer::initialise(const char* encoding, XMLDocument *doc, XMLElemen
 
 XMLDocument* XMLSerializer::close()
 {
-    XMLDocument *doc = 0;
+    XMLDocument *doc = NULL;
     XMLParserContext *ctxt = (XMLParserContext*)internals;
     if (ctxt) {
         XML_ParserFree(ctxt->parser);
@@ -676,7 +677,7 @@ XMLDocument* XMLSerializer::close()
         delete ctxt;
     }
 
-    internals = 0;
+    internals = NULL;
 
     return doc;
 }

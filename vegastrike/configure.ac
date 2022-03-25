@@ -206,7 +206,7 @@ AC_HEADER_TIME
 AC_STRUCT_TM
 AC_C_VOLATILE
 AC_CHECK_TYPES([ptrdiff_t])
-
+AC_CHECK_TYPES([boolean])
 
 # Checks for library functions.
 AC_FUNC_CLOSEDIR_VOID
@@ -568,8 +568,14 @@ fi
 VS_CHECK_PYTHON
 
 ###############################
-vs_pythonlibs_path="lib/pythonlibs"
+AC_ARG_WITH(vegastrike-libdir-name, AC_HELP_STRING([--with-vegastrike-libdir-name=DIR], [lib directory name]))
+if test -z "$with_vegastrike_libdir_name" -o "x$with_vegastrike_libdir_name" = "xno"; then
+    with_vegastrike_libdir_name=lib
+fi
+
+vs_pythonlibs_path="${with_vegastrike_libdir_name}/pythonlibs"
 AC_DEFINE_UNQUOTED([VEGASTRIKE_PYTHON_DYNLIB_PATH], ["${vs_pythonlibs_path}"], [python_dynlibs])
+AC_DEFINE_UNQUOTED([VEGASTRIKE_LIBDIR_NAME], ["${with_vegastrike_libdir_name}"], [vegastrike libdir name])
 
 vs_pythonlibs_buildir="${vs_pythonlibs_path}"
 mkdir -p "${vs_pythonlibs_buildir}"

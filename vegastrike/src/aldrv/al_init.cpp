@@ -185,7 +185,8 @@ bool AUDInit () {
 	  alGetEr = alGetError();
 
 	}
-	VS_LOG("audio", logvs::NOTICE, "audio initialized.");
+	const ALCchar * devname = alcGetString(dev, ALC_DEVICE_SPECIFIER);
+	VS_LOG("audio", logvs::NOTICE, "audio initialized (%s).", devname ? devname : "unknown");
 	return true;
 #endif
 	return false;

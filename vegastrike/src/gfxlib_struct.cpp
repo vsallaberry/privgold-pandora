@@ -341,7 +341,7 @@ void GFXVertexList::Draw (enum POLYTYPE *mode,const INDEX index, const int numli
                 glcounts.clear();
                 
                 for (int j=i, offs=totoffset; j<numlists; offs += offsets[j++]) if(!drawn[j] && (mode[j]==mode[i])) {
-                    glindices.push_back(use_vbo ? (GLvoid*)(stride*offs)
+                    glindices.push_back(use_vbo ? (GLvoid*)((size_t)(stride*offs))
                                                 : (GLvoid*)&index.b[stride*offs]);
                     glcounts.push_back(offsets[j]);
                     drawn[j] = true;
@@ -354,7 +354,7 @@ void GFXVertexList::Draw (enum POLYTYPE *mode,const INDEX index, const int numli
         } else {
             for (int i=0;i<numlists;i++) {
                 glDrawElements (PolyLookup(mode[i]),offsets[i], indextype, 
-                    use_vbo ? (void*)(stride*totoffset)
+                    use_vbo ? (void*)((size_t)(stride*totoffset))
                             : &index.b[stride*totoffset] );//changed&INDEX_BYTE == stride!
                 totoffset += offsets[i];
             }

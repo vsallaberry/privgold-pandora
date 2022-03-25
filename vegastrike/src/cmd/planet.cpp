@@ -238,7 +238,7 @@ void GamePlanet::AddRing(const std::string &texture,float iradius,float oradius,
   meshdata.pop_back();
   static int stacks=XMLSupport::parse_int(vs_config->getVariable ("graphics","planet_detail","24"));
   if (slices>0) {
-    stacks = stacks;
+    //stacks = stacks;
     if (stacks<3)
       stacks=3;
     for (int i=0;i<slices;i++) {
