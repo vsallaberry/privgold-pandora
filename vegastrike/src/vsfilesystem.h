@@ -17,6 +17,7 @@ using std::vector;
 #include "networking/const.h"
 #include "pk3.h"
 #include <gnuhash.h>
+#include "common/common.h"
 
 class VegaConfig;
 class VSImage;
@@ -149,19 +150,11 @@ namespace VSFileSystem
 	/**** VSFileSystem wrappers to stdio calls                                                   ****/
 	/************************************************************************************************/
 
-#if defined(_WIN32)
-	int 	vs_mkdir(const char * path, mode_t mode);
-	FILE * 	vs_fopen(const char * path, const char * mode);
-	char *	vs_getcwd(char * path, size_t size);
-	int 	vs_chdir(const char * path);
-	int 	vs_stat(const char * path, struct stat * st);
-#else
-	inline int		vs_mkdir(const char * path, mode_t mode) { return mkdir(path, mode); }
-	inline FILE * 	vs_fopen(const char * path, const char * mode) { return fopen(path, mode); }
-	inline char *	vs_getcwd(char * path, size_t size) { return getcwd(path, size); }
-	inline int 		vs_chdir(const char * path) { return chdir(path); }
-	inline int 		vs_stat(const char * path, struct stat * st) { return stat(path, st); }
-#endif
+	inline int		vs_mkdir(const char * path, mode_t mode) 	{ return VSCommon::vs_mkdir(path, mode); }
+	inline FILE * 	vs_fopen(const char * path, const char * mode) { return VSCommon::vs_fopen(path, mode); }
+	inline char *	vs_getcwd(char * path, size_t size) 		{ return VSCommon::vs_getcwd(path, size); }
+	inline int 		vs_chdir(const char * path) 				{ return VSCommon::vs_chdir(path); }
+	inline int 		vs_stat(const char * path, struct stat * st){ return VSCommon::vs_stat(path, st); }
 
 	FILE *	vs_open( const char * filename, const char * mode);
 	size_t	vs_read( void *ptr, size_t size, size_t nmemb, FILE * fp);

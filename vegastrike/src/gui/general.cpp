@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 #include "gldrv/winsys.h"
+#include "common/common.h"
+
 #ifdef _WIN32
 //#include <glib.h>
 #endif
@@ -437,9 +439,9 @@ int isdir(const char *file) {
 		if (file[length-2] == '.' || file[length-2] == SEPERATOR || file[length-2] == '\\') { return -1; }
 	}
 
-	if (-1 == chdir(file)) { return 0; }
+	if (-1 == VSCommon::vs_chdir(file)) { return 0; }
 	else {
-		chdir("..");
+		VSCommon::vs_chdir("..");
 		return 1;
 	}
 }
@@ -455,25 +457,25 @@ glob_t *FindPath(char *path, int type) {
 	char thispath[800000];
 #endif
         char* curpath = NULL;
-	DIR *dir;
+	VSCommon::vsDIR *dir;
 	vector <string> result;
 	vector <string> pathlist;
-	dirent *entry;
+	VSCommon::vsdirent *entry;
 	unsigned int cur;
 	char *newpath = NULL;
 #if defined(__APPLE__) || defined(MACOSX)
-	getcwd(thispath, MAXPATHLEN);
+	VSCommon::vs_getcwd(thispath, MAXPATHLEN);
 #else
-	getcwd(thispath, 790000);
+	VSCommon::vs_getcwd(thispath, 790000);
 #endif
 	pathlist.push_back((string(thispath)+SEPERATOR+mypath).c_str());
 	for (cur = 0; cur < pathlist.size(); cur++) {
 		curpath = strdup(pathlist[cur].c_str());
-		dir = opendir(curpath);
-		chdir(curpath);
+		dir = VSCommon::vs_opendir(curpath);
+		VSCommon::vs_chdir(curpath);
 		if (dir == NULL) { continue; }
 		entry = NULL;
-		while ((entry = readdir(dir)) != NULL) {
+		while ((entry = VSCommon::vs_readdir(dir)) != NULL) {
 			newpath = strdup((string(curpath)+SEPERATOR+entry->d_name).c_str());
 			if (isdir(newpath) == 1) {
 				pathlist.push_back(newpath);
@@ -481,9 +483,9 @@ glob_t *FindPath(char *path, int type) {
 			}
 			else if (type == 0) { result.push_back(newpath); }
 		}
-		closedir(dir);
+		VSCommon::vs_closedir(dir);
 	}
-	chdir(thispath);
+	VSCommon::vs_chdir(thispath);
 
 	FILES->gl_pathc = result.size();
 

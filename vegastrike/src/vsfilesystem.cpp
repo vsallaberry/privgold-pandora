@@ -51,76 +51,6 @@ struct dirent { char d_name[1]; };
 #include "unicode.h"
 #include "vs_log_modules.h"
 
-#ifdef _WIN32
-namespace VSFileSystem {
-wchar_t * utf8_to_wchar(const char * s) {
-	if (!s) 
-		return NULL;
-	size_t len = strlen(s);
-	if (!len) 
-		return NULL;
-	wchar_t * news = (wchar_t*)malloc((len+1) * sizeof(wchar_t));
-	if (!news) 
-		return NULL;
-	size_t newlen = 0;
-	for (Utf8Iterator it = Utf8Iterator::begin(s, len); it != it.end(); ++it, ++newlen) {
-		news[newlen] = *it;
-	}
-	news[newlen]=0;
-	return news;
-}
-int 	vs_mkdir(const char * path, mode_t mode) {
-	(void)mode;
-	wchar_t * wfilename = utf8_to_wchar(path);
-	if (wfilename == NULL) {
-		return -1;
-	}
-	int res = _wmkdir(wfilename);
-	free(wfilename);
-	return res;
-}
-FILE * 	vs_fopen(const char * path, const char * mode) {
-	wchar_t * wfilename = utf8_to_wchar(path);
-	wchar_t * wmode = utf8_to_wchar(mode);
-	FILE * res = NULL;
-	if (wfilename != NULL && wmode != NULL) {
-		res = _wfopen(wfilename, wmode);
-	}
-	if (wfilename != NULL)	free(wfilename);
-	if (wmode != NULL) 		free(wmode);
-	return res;
-}
-char * 	vs_getcwd(char * path, size_t size) {
-	WCHAR wpath[PATH_MAX];
-	wchar_t * res = _wgetcwd(wpath, PATH_MAX);
-	size_t n8 = 0;
-	for (size_t n16 = 0; n8 + 1 < size && wpath[n16]; ++n16) {
-		n8 += utf32_to_utf8(path + n8, wpath[n16]);
-	}
-	if (n8 < size)
-		path[n8] = 0;
-	return path;
-}
-int 	vs_chdir(const char * path) {
-	wchar_t * wfilename = utf8_to_wchar(path);
-	if (wfilename == NULL) {
-		return -1;
-	}
-	int res = _wchdir(wfilename);
-	free(wfilename);
-	return res;
-}
-int 	vs_stat(const char * path, struct stat * st) {
-	wchar_t * wfilename = utf8_to_wchar(path);
-	if (wfilename == NULL) {
-		return -1;
-	}
-	int res = wstat(wfilename, st);
-	free(wfilename);
-	return res;
-}
-} // ! namespace VSFileSystem
-#endif // ! _WIN32
 
 using VSFileSystem::VSVolumeType;
 using VSFileSystem::VSFSNone;
@@ -651,7 +581,6 @@ std::string vegastrike_cwd;
 		}
 		homedir = string(chome_path) + "/" + HOMESUBDIR;
 # else
-		unicodeInitLocale();
 		WCHAR wappdata_path[PATH_MAX];
 		CHAR appdata_path[PATH_MAX];
 		if (VSCommon::win32_get_appdata(wappdata_path) != S_OK) {

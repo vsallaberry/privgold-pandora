@@ -55,11 +55,10 @@
 
 #if defined(_WIN32)
 # include <windows.h>
-#endif
-
-#if !defined( _WIN32) || defined( __CYGWIN__)
+#else
 # include <dirent.h>
 #endif
+#include <sys/stat.h>
 
 #ifndef HAVE_CODECVT // not CXX11
 # define static_assert(x,y)
@@ -80,17 +79,24 @@ extern const char * const pathsep;
 // **************************************************************************
 
 // unistd wrappers mainly for windows
-int 		vs_setenv(const char * var, const char * value, int override);
-int 		vs_mkdir(const char * dir, int mode);
-inline int	vs_mkdir(const std::string & dir, int mode) { return vs_mkdir(dir.c_str(), mode); }
+int 	vs_setenv(const char * var, const char * value, int override);
+int		vs_mkdir(const char * path, mode_t mode);
+FILE * 	vs_fopen(const char * path, const char * mode);
+FILE * 	vs_freopen(const char * path, const char * mode, FILE * fp);
+char *	vs_getcwd(char * path, size_t size);
+int 	vs_chdir(const char * path);
+int 	vs_stat(const char * path, struct stat * st);
 
-#if !defined( _WIN32) || defined( __CYGWIN__)
+inline int vs_mkdir(const std::string & dir, mode_t mode) { return vs_mkdir(dir.c_str(), mode); }
+
+#if !defined(_WIN32)
 typedef ::DIR vsDIR;
 typedef struct ::dirent vsdirent;
 #else
 struct vsdirent { char * d_name; HANDLE h; bool first; };
 typedef vsdirent vsDIR;
 #endif
+
 int 			vs_closedir(vsDIR * dirp);
 vsDIR *			vs_opendir(const char * path);
 inline vsDIR *	vs_opendir(const std::string & path) { return vs_opendir(path.c_str()); }
@@ -155,18 +161,75 @@ inline std::string 	getsuffixedfile(const std::string & file, time_t delay_sec =
 HRESULT win32_get_appdata(WCHAR * wappdata);
 #endif // ! _WIN32
 
-// Essentially for windozws applications built in GUI mode (-mwindows)
-// This will attach application to console if it is run from it.
-// On macOS, linux, unix the libc handle it automatically (except the forcealloc==true).
-bool InitConsole(bool forcealloc = false);
+
+// **************************************************************************
+// Console / Terminal Utilities
+// **************************************************************************
+
+/**
+ * InitConsole()
+ *   Essentially for windozws applications built in GUI mode (-mwindows)
+ *   This will attach application to console if it is run from it.
+ *   On macOS, linux, unix, the libc handles it automatically (except the forcealloc==true).
+ *   The argc and argv are needed if forcealloc==true, and the current directory must be as initially.
+ */
+bool InitConsole(bool forcealloc = false, int argc = 0, char ** argv = NULL);
+
+
+// **************************************************************************
+// File Utilities
+// **************************************************************************
 
 // -- file comparisons
+typedef enum {
+	FIT_UNKNOWN = 0, FIT_type = 1 << 0,
+	FIT_FILE = FIT_type, FIT_DIR = FIT_type + 1, FIT_LINK = FIT_type + 2,
+	FIT_WRITE = 1 << 2, /*type_mask*/ FIT_TYPE_MASK = (FIT_WRITE - 1) & ~(FIT_type - 1),
+} file_info_type_t;
+
+static_assert(FIT_LINK < FIT_WRITE, "Not enough space for FIT_type, FIT_WRITE must be increased");
+
 typedef struct {
     uint64_t dev;
     uint64_t ino;
-} file_id_t;
-bool getFileId(const char * file, file_id_t * id);
-ssize_t fileIdCompare(file_id_t * id, file_id_t * other);
+    uint64_t size;
+    time_t mtime, atime, ctime, btime; /*modif,access,changed,birth*/
+    unsigned int type;
+} file_info_t;
+
+/**
+ * getFileInfo()
+ *   return false on error
+ */
+bool 		getFileInfo(const char * file,        file_info_t * id);
+inline bool	getFileInfo(const std::string & file, file_info_t * id) {
+				return getFileInfo(file.c_str(), id); }
+
+/**
+ * fileIdCompare()
+ *   return 0 if file are equal (dev/inode equal), < 0 if id<other, >0 otherwise.
+ */
+ssize_t fileIdCompare(file_info_t * id, file_info_t * other);
+
+/**
+ * fileCompare()
+ *   return true if equal, false otherwise
+ */
+bool 		fileCompare(const char * src,        const char * dst);
+inline bool	fileCompare(const std::string & src, const std::string & dst) {
+				return fileCompare(src.c_str(), dst.c_str()); }
+
+/**
+ * fileCopyIfDifferent()
+ *   return one of FileCompareResult. call with depth==(size_t)-1 for full recursive.
+ *     success is greater or equal 0, error is negative.
+ *
+ */
+typedef enum { FILECOMP_EQUAL = 0, FILECOMP_REPLACED = 1,
+               FILECOMP_DIFF = -1, FILECOMP_ERROR = -2, FILECOMP_SRCNOTFOUND = -3} FileCompareResult;
+int			fileCopyIfDifferent(const char * src,        const char * dst,        size_t depth = 0);
+inline int	fileCopyIfDifferent(const std::string & src, const std::string & dst, size_t depth = 0) {
+				return fileCopyIfDifferent(src.c_str(), dst.c_str(), depth); }
 
 /**
  * VS_PATH_JOIN(()
@@ -178,14 +241,40 @@ std::string path_join(const char * first, ...); // all parameters must be char*,
 
 /**
  * ParseCmdLine() / ParseCmdLineFree()
- *   Translate lpCmdLine to argc, argv (for WinMain). If not win32, argv[0] has not signification.
+ *   Translate a command line string to argc, argv (initially written for WinMain).
+ *   Unless WCMDF_ARGV0_FROM_CMDLINE is On, argv[0] is not taken from cmdline but with GetModuleFileName.
+ *   If WCMDF_WITHOUT_ARGV0 is On, cmdline is not supposed to have arg0 (to use with WinMain lpCmdLine arg.)
+ *   On Windows, typical usage is { int argc; char** argv; unicodeInitLocale(); ParseCommandLine(GetCommandLineW(), &argc, &argv); }
  */
-enum wcmd_flags { WCMDF_NONE = 0, WCMDF_ESCAPE_DQUOTES = 1 << 0, WCMDF_ESCAPE_BACKSLASH = 1 << 1 };
-bool 		ParseCmdLine(const char * cmdline,        int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES);
-inline bool	ParseCmdLine(const std::string & cmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_ESCAPE_DQUOTES) {
+enum wcmd_flags {
+	WCMDF_NONE = 0, WCMDF_ESCAPE_DQUOTES = 1 << 0, WCMDF_ESCAPE_SQUOTES = 1 << 1,
+	WCMDF_ESCAPE_BACKSLASH = 1 << 2,
+	WCMDF_WITHOUT_ARGV0 = 1 << 3, WCMDF_ARGV0_FROM_CMDLINE = 1 << 4,
+	WCMDF_DEFAULT = WCMDF_ESCAPE_DQUOTES
+};
+
+bool 		ParseCmdLine(const char * cmdline,        int * pargc, char *** pargv, unsigned int flags = WCMDF_DEFAULT);
+inline bool	ParseCmdLine(const std::string & cmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_DEFAULT) {
 				return ParseCmdLine(cmdline.c_str(), pargc, pargv, flags); }
+
+bool 		ParseCmdLine(const wchar_t * wcmdline,        int * pargc, char *** pargv, unsigned int flags = WCMDF_DEFAULT);
+inline bool	ParseCmdLine(const std::wstring & wcmdline, int * pargc, char *** pargv, unsigned int flags = WCMDF_DEFAULT) {
+				return ParseCmdLine(wcmdline.c_str(), pargc, pargv, flags); }
+
 void ParseCmdLineFree(char ** argv);
 
+/**
+ * Process execution utilities
+ * Like std exec* functions, last argument of vs_execl MUST be NULL,
+ * and last element in argv of vs_execv must be NULL.
+ * On windows, arguments are quoted before calling exec* as required in microsoft doc.
+ */
+enum vs_exec_flags {
+	VEF_NONE = 0, VEF_PATH = 1 << 0, VEF_EXEC = 1 << 1, VEF_WAIT = 1 << 2,
+	VEF_DEFAULT = VEF_EXEC
+};
+int vs_execv(unsigned int flags, const char * file, char *const* argv);
+int vs_execl(unsigned int flags, const char * file, const char * arg0, ...);
 
 } // ! namespace VSCommon
 

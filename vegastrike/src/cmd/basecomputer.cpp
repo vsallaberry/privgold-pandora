@@ -3121,7 +3121,7 @@ static int	nodirs( const struct dirent * entry)
 	// Have to check if we have the full path or just relative (which would be a problem)
 	std::string tmp=VSFileSystem::homedir+"/save/"+entry->d_name;
 	struct stat s;
-	if( stat( tmp.c_str(), &s)<0)
+	if( VSCommon::vs_stat( tmp.c_str(), &s)<0)
 		return string( entry->d_name)!="." && string( entry->d_name)!="..";
 	if( (s.st_mode & S_IFDIR)==0 && string( entry->d_name)!="." && string( entry->d_name)!="..")
 	{
@@ -3139,10 +3139,10 @@ static int datesort ( const void *v1, const void *v2 ) {
 	const struct dirent *d2=*(const struct dirent**)v2;
 	struct stat s1, s2;
 	std::string tmp=VSFileSystem::homedir+"/save/"+d1->d_name;
-	if (stat(tmp.c_str(), &s1))
+	if (VSCommon::vs_stat(tmp.c_str(), &s1))
 		return 0;
 	tmp=VSFileSystem::homedir+"/save/"+d2->d_name;
-	if (stat(tmp.c_str(), &s2))
+	if (VSCommon::vs_stat(tmp.c_str(), &s2))
 		return 0;
 
 	return s1.st_mtime - s2.st_mtime;

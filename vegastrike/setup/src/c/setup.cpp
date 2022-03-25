@@ -49,6 +49,7 @@
 #include <string>
 
 #include "log.h"
+#include "unicode.h"
 
 using std::string;
 using std::vector;
@@ -122,8 +123,8 @@ static void changeToProgramDirectory(char *argv0) {
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
     char ** argv;
     int argc;
-    VSCommon::ParseCmdLine(lpCmdLine, &argc, &argv);
-    char*argv0 = argv[0];
+    unicodeInitLocale();
+    VSCommon::ParseCmdLine(GetCommandLineW(), &argc, &argv);
 #else
 int main(int argc, char *argv[]) {
 #endif
@@ -133,6 +134,7 @@ int main(int argc, char *argv[]) {
     logvs::log_setfile(stdout);
     logvs::log_setflag(logvs::F_QUEUELOGS, true);
 
+    unicodeInitLocale();
     for (int i_argv = 1; i_argv < argc; ++i_argv) {
 		if ((i_argv + 1 < argc && strcmp(argv[i_argv], "--target") == 0) || strncmp(argv[i_argv], "-D", 2) == 0) {
             if (chdir(argv[i_argv][1] == '-' ? argv[++i_argv] : argv[i_argv]+2) == 0) {

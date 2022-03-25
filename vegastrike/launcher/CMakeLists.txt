@@ -3,6 +3,8 @@ SET(VSLAUNCHER_COMMON_SOURCES
                     general.cpp
                     main.cpp
                     ../src/log.cpp
+                    ../src/unicode.cpp
+                    ../src/unicode_combine.cpp
                     ../src/common/common.cpp )
 
 SET(VSLAUNCHER_GTK_SOURCES

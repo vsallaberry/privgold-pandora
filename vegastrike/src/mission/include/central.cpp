@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #endif
+#include "common/common.h"
+
 glob_t *MISSIONS;
 struct mission_data DATA;
 

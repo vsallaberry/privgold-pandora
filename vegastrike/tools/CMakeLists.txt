@@ -8,6 +8,7 @@ set(VSREXTRACT_SOURCES
     vsrextract.cpp)
 
 set(UNICODE_CONV_SOURCES
+    ../src/common/common.cpp
     ../src/unicode.cpp
     ../src/unicode_combine.cpp
     unicode-conv.cpp)

@@ -36,6 +36,19 @@
 #include "unicode.h"
 #include "log.h"
 
+#if defined(VS_LOG_NO_VSCOMMON)
+namespace VSCommon {
+	inline FILE * vs_fopen(const char * file, const char * mode) {
+		return fopen(file, mode);
+	}
+	inline FILE * vs_freopen(const char * file, const char * mode, FILE * fp) {
+		return freopen(file, mode, fp);
+	}
+}
+#else
+# include "common/common.h"
+#endif
+
 /* ************************************************************************* */
 namespace logvs {
     unsigned int log_level(const std::string & module, bool store) {
@@ -119,29 +132,31 @@ enum {
 	FLG_FORCE    	= 1 << 7,
 };
 
-typedef struct {
-	const char * file = NULL, * outfile = NULL;
+typedef struct conv_ctx_s {
+	conv_ctx_s() { memset(this, 0, sizeof(*this)); file = outfile = NULL; logout = stderr; line = outline = NULL; }
+	const char * file, * outfile;
 	FILE * logout = stderr;
 	unsigned int flags;
-	size_t linesz = 0, outsz = 0;
-	char * line = NULL, * outline = NULL;
+	size_t linesz, outsz;
+	char * line, * outline;
 	ssize_t n;
-	size_t conv_count = 0, line_count = 0, line_conv_count = 0, words_conv_count = 0, maxlinesz = 0, maxoutlinesz = 0;
-	size_t warn = 0;
+	size_t conv_count, line_count, line_conv_count, words_conv_count, maxlinesz, maxoutlinesz;
+	size_t warn;
 } conv_ctx_t;
-typedef struct {
-	size_t oldpos = -1;
-	size_t loc_conv_count = 0, outpos = 0, oldoutpos = 0, newwordidx = 0;
-	ssize_t loc_word_conv = 0;
-	unsigned int oldchar = ' ';
-	unsigned int line_type = 0;
+typedef struct conv_line_ctx_s {
+	conv_line_ctx_s() { memset(this, 0, sizeof(*this)); oldpos = -1; oldchar = ' '; itend = Utf8Iterator(NULL); }
+	size_t oldpos;
+	size_t loc_conv_count, outpos, oldoutpos, newwordidx;
+	ssize_t loc_word_conv;
+	unsigned int oldchar;
+	unsigned int line_type;
 	size_t nextpos;
-	Utf8Iterator itend = Utf8Iterator(NULL);
+	Utf8Iterator itend;
 } conv_line_ctx_t;
 
 static size_t convert_one(Utf8Iterator & it, conv_ctx_t * g, conv_line_ctx_t * l) {
 	if (it == l->itend) return 0;
-	char utf8[MB_CUR_MAX+1];
+	char utf8[MB_LEN_MAX+1];
 	int n8;
 	l->oldpos = it.pos();
 	l->nextpos = (it+1).pos();
@@ -268,21 +283,22 @@ int convert(const char * file, const char * outfile, unsigned int flags) {
     g.file = file;
     g.outfile = outfile;
 
+    unicodeInitLocale();
+
     if (file == NULL) {
         fp_in = stdin;
-    } else if ((fp_in = fopen(file, "r")) == NULL) {
+    } else if ((fp_in = VSCommon::vs_fopen(file, "r")) == NULL) {
         fprintf(g.logout, "%s: %s\n", file, strerror(errno));
         return -1;
     }
     if (outfile == NULL) {
         fp_out = stdout;
     } else if ((!strcmp(file ? file : "", outfile)&&((errno=EINVAL)|1))
-    || (fp_out = fopen(outfile, "w")) == NULL) {
+    || (fp_out = VSCommon::vs_fopen(outfile, "w")) == NULL) {
         fprintf(g.logout, "%s: %s\n", outfile, strerror(errno));
         if (fp_in != stdin) fclose(fp_in);
         return -1;
     }
-    unicodeInitLocale();
 
     while ((g.n = getline(&g.line, &g.linesz, fp_in)) > 0) {
     	g.line[g.n] = 0;

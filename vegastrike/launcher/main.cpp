@@ -52,10 +52,13 @@
 #include <unistd.h>
 #endif
 
-#include "src/common/common.h"
+#include <stdarg.h>
+#include <sstream>
+#include "common/common.h"
 #include "general.h"
 #include "launcher.h"
-#include "src/log.h"
+#include "log.h"
+#include "unicode.h"
 
 char * prog_arg=NULL;
 std::string origpath;
@@ -171,9 +174,9 @@ bool changehome() {
     return chdir(homedir.first.c_str()) == 0;
 }
 
-static bool notFoundOrSame(const char * file, VSCommon::file_id_t * id_other) {
-    VSCommon::file_id_t id;
-    if (!VSCommon::getFileId(file, &id))
+static bool notFoundOrSame(const char * file, VSCommon::file_info_t * id_other) {
+    VSCommon::file_info_t id;
+    if (!VSCommon::getFileInfo(file, &id))
         return true;
     if (!id_other)
         return false;
@@ -186,10 +189,10 @@ enum vsl_flags { F_NONE = 0, F_RUN_VEGASTRIKE = 1 << 0, F_RUN_VSSETUP = 1 << 1 }
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
     char ** argv;
     int argc;
-    VSCommon::ParseCmdLine(lpCmdLine, &argc, &argv);
+    unicodeInitLocale();
+    VSCommon::ParseCmdLine(GetCommandLineW(), &argc, &argv);
 #else
-int main( int   argc,
-          char *argv[] )
+int main(int argc, char ** argv)
 {
 #endif
     char tmppwd[65535];
@@ -201,6 +204,7 @@ int main( int   argc,
 
     getcwd(tmppwd,sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     VS_LOG("vslauncher", logvs::NOTICE, " In path %s", tmppwd);
+    unicodeInitLocale();
     origpath = tmppwd;
     prog_arg = argv[0];
 
@@ -268,8 +272,8 @@ int main( int   argc,
     logvs::log_openfile("", homedir.first + "/vslauncher.log", /*redirect=*/true, /*append=*/false);
     atexit(logvs::log_terminate);
 
-    VSCommon::file_id_t myid;
-    getFileId((bindir.first + "/" + bindir.second).c_str(), &myid);
+    VSCommon::file_info_t myid;
+    getFileInfo((bindir.first + "/" + bindir.second).c_str(), &myid);
 
     // Vegastrike binary
     for (const char ** bin = vslaunch_binsearchs; *bin; ++bin) {

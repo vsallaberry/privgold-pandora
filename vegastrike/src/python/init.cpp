@@ -214,10 +214,11 @@ BOOST_PYTHON_MODULE_INIT(Vegastrike)
 }*/
 #endif
 
-static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 40) {
+static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 50) {
     std::string res = pythonscript;
     for (std::string::iterator it = res.begin(); it != res.end(); ++it) {
-        if (*it == '\n') *it = ';'; //res = res.replace(it, it+1, ';');
+        if (*it == '\n') *it = ';';
+        else if (*it == '\t') { *it++ = ' '; it = res.insert(it, ' '); }
     }
     return res.substr(0, (res.size() < maxsize ? res.size() : maxsize));
 }
@@ -225,85 +226,69 @@ static const std::string pretty_python_script(const std::string & pythonscript, 
 void Python::overridePythonEnv() {
     std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
 
-    std::string pythonenv("");
-    // Find all the mods dir (ignore homedir)
-    for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
-    {
-        std::string pydir = VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
- 
-        if (!VSFileSystem::DirectoryExists(pydir)) {
-            PYTHON_LOG(logvs::WARN, "WARNING: the Python Home Path does not exist, "
-                       "this could be fatal (check the datadir)");
-            PYTHON_LOG(logvs::WARN, "  missing PYTHONHOME: %s", pydir.c_str());
-        }
+    // Find the first the mod dir
+    //std::string pydir = VSFileSystem::Rootdir[1]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
+    // Use builtin '<datadir>/modules/builtin'
+    std::string pydir = VSFileSystem::datadir + VSFS_PATHSEP + moduledir + VSFS_PATHSEP "builtin";
 
-        if(pythonenv.size()) {
-            pythonenv += ":";
-        }
-
-        pythonenv += pydir;
+    if (!VSFileSystem::DirectoryExists(pydir)) {
+    	PYTHON_LOG(logvs::WARN, "WARNING: the Python Home Path does not exist, "
+    			"this could be fatal (check the datadir)");
+    	PYTHON_LOG(logvs::WARN, "  missing PYTHONHOME: %s", pydir.c_str());
     }
 
     static bool override_python_path
       = XMLSupport::parse_bool (vs_config->getVariable ("python","override_python_path","true"));
 
-    PYTHON_LOG(logvs::NOTICE, "override PYTHONHOME: %s -> '%s'", override_python_path?"true":"false", pythonenv.c_str());
-    VSCommon::vs_setenv("PYTHONHOME", pythonenv.c_str(), override_python_path);
-    VSCommon::vs_setenv("PYTHONPATH", pythonenv.c_str(), override_python_path);
+    PYTHON_LOG(logvs::NOTICE, "override PYTHONHOME: %s -> '%s'", override_python_path?"true":"false", pydir.c_str());
+    VSCommon::vs_setenv("PYTHONHOME", pydir.c_str(), override_python_path);
+    VSCommon::vs_setenv("PYTHONPATH", pydir.c_str(), override_python_path);
 }
 
 void Python::initpaths(){
-    // Looking for python lib-dynload (optional modules loaded dynamically)
-    std::string pyLibsPath = "r\"" + VS_PATH_JOIN(VSFileSystem::resourcesdir.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH) + "\"";
-    PYTHON_LOG(logvs::NOTICE, "PYTHON LIBS PATH: %s", pyLibsPath.c_str());
-  /*
-  char pwd[2048];
-  VSFileSystem::vs_getcwd (pwd,2047);
-  pwd[2047]='\0';
-  for (int i=0;pwd[i]!='\0';i++) {
-	  if (pwd[i]=='\\')
-		  pwd[i]=DELIM;
-  }
-  */
+  // Looking for python lib-dynload (optional modules loaded dynamically)
+  std::string pyLibsPath = VS_PATH_JOIN(VSFileSystem::resourcesdir.c_str(), VEGASTRIKE_PYTHON_DYNLIB_PATH);
+  PYTHON_LOG(logvs::NOTICE, "PYTHON LIBS PATH: %s", pyLibsPath.c_str());
+
   std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
   std::string basesdir (vs_config->getVariable ("data","python_bases","bases"));
 
-  /*
-   std::string changepath ("import sys\nprint sys.path\nsys.path = ["
-			  "\""+std::string(pwd)+DELIMSTR"modules"DELIMSTR"builtin\""
-			  ",\""+std::string(pwd)+DELIMSTR+moduledir+string("\"")+
-			  ",\""+std::string(pwd)+DELIMSTR+basesdir + string("\"")+
-			  "]\n");
-   */
-  std::string modpaths(pyLibsPath);
+  std::string pymodpaths;
+  std::string modpaths;
+  const std::string mods[] = {
+	moduledir + VSFS_PATHSEP "builtin",
+	moduledir + VSFS_PATHSEP "quests",
+	moduledir + VSFS_PATHSEP "missions",
+	moduledir + VSFS_PATHSEP "ai",
+	moduledir,
+	basesdir
+  };
+
+  pymodpaths += "decode(r\"" + pyLibsPath + "\")";
+  modpaths += pyLibsPath;
   // Find all the mods dir (ignore homedir)
   for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
   {
-      if(modpaths.size()) {
-          modpaths += ",";
-      }
-	  modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "quests\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "missions\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "ai\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +moduledir+"\",";
-      modpaths += "r\""+VSFileSystem::Rootdir[i]+ VSFS_PATHSEP +basesdir+"\"";
+	  for (size_t imod = 0; imod < sizeof(mods)/sizeof(*mods); ++imod) {
+		  std::string dir = VSFileSystem::Rootdir[i]+ VSFS_PATHSEP + mods[imod];
+		  if(pymodpaths.size()) pymodpaths += ",";
+		  if(modpaths.size()) modpaths += ":";
+		  pymodpaths += "decode(r\"" + dir + "\")";
+		  modpaths += dir;
+	  }
   }
+
   /*
   string::size_type backslash;
-  while ((backslash=modpaths.find("\\"))!=std::string::npos) {
-     modpaths[backslash]='/';
-     }*/
+  while ((backslash=pymodpaths.find("\\"))!=std::string::npos) {
+     pymodpaths[backslash]='/';
+  }*/
+  //VSCommon::vs_setenv("PYTHONPATH", modpaths.c_str(), 1); // not useful if done after Py_Initialize().
 
-  std::string changepath ("import sys\nold_syspath = sys.path\nsys.path = ["+modpaths+"]\n");
+  std::string changepath ("import sys\nold_syspath = sys.path\n"
+		                  "def decode(s):\n\ttry:\n\t\treturn s.decode('utf-8')\n\texcept:\n\t\treturn s\n"
+		                  "sys.path = ["+pymodpaths+"]\n");
 
-  /*
-   std::string changepath ("import sys\nprint sys.path\nsys.path = ["
-			  "\""+VSFileSystem::datadir+DELIMSTR"modules"DELIMSTR"builtin\""
-			  ",\""+VSFileSystem::datadir+DELIMSTR+moduledir+string("\"")+
-			  ",\""+VSFileSystem::datadir+DELIMSTR+basesdir + string("\"")+
-			  "]\n");
-	*/
   char * temppython = strdup(changepath.c_str());
   if (PYTHON_LOG(logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
     PYTHON_LOG(logvs::NOTICE, "running '%s'...",pretty_python_script(changepath).c_str());

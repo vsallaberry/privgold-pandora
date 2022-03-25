@@ -1,5 +1,6 @@
 
 set(TEST_SOURCES
+    ../src/common/common.cpp
     ../src/unicode.cpp
     ../src/unicode_combine.cpp
     ../src/multimap.cpp

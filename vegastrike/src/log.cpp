@@ -61,6 +61,19 @@
 
 #include "gnuhash.h"
 
+#if defined(VS_LOG_NO_VSCOMMON)
+namespace VSCommon {
+	inline FILE * vs_fopen(const char * file, const char * mode) {
+		return fopen(file, mode);
+	}
+	inline FILE * vs_freopen(const char * file, const char * mode, FILE * fp) {
+		return freopen(file, mode, fp);
+	}
+}
+#else
+# include "common/common.h"
+#endif
+
 /*
  * Detect if we are building vegastrike and include
  * specific stuff such as configxml, msgcenter, getNewTime, ...
@@ -566,17 +579,17 @@ int log_openfile(const std::string & module,
         logout = stderr;
     } else {
         if (!redirect) {
-            logout = fopen(filename.c_str(), append ? "a" : "w");
+            logout = VSCommon::vs_fopen(filename.c_str(), append ? "a" : "w");
         } else {
         	if (s_log_stderr_fd < 0)
         		s_log_stderr_fd = dup(fileno(stderr));
             if (s_log_stdout_fd < 0)
             	s_log_stdout_fd = dup(fileno(stdout));
-            if (!append && (logout = fopen(filename.c_str(), "w")) != NULL) {
+            if (!append && (logout = VSCommon::vs_fopen(filename.c_str(), "w")) != NULL) {
                 fclose(logout); // erase the file before freopen() because if stderr is redirected its file will be erased.
             }
-            if ((logout = freopen(filename.c_str(), "a", stderr)) == NULL) {
-                if ((logout = fopen(filename.c_str(), append ? "a" : "w")) != NULL) {
+            if ((logout = VSCommon::vs_freopen(filename.c_str(), "a", stderr)) == NULL) {
+                if ((logout = VSCommon::vs_fopen(filename.c_str(), append ? "a" : "w")) != NULL) {
                 	fflush(stderr);
                     if (dup2(fileno(logout), fileno(stderr)) < 0) {
                 		VS_LOG("log", logvs::WARN, "Warning: cannot redirect stderr");

@@ -1002,7 +1002,7 @@ namespace UniverseUtil
 		text="Savegame: "+text+lf+"_________________"+lf;
 		{
 			struct stat attrib;
-			if (0==stat((getSaveDir()+filename).c_str(), &attrib)) {
+			if (0==VSCommon::vs_stat((getSaveDir()+filename).c_str(), &attrib)) {
 				text+="Saved on: ";
 				text+=ctime(&attrib.st_mtime)+lf;
 			}
@@ -1070,9 +1070,9 @@ namespace UniverseUtil
         if (strcasecmp(logfile.c_str(), "stdout") == 0 || strcasecmp(logfile.c_str(), "stderr") == 0) {
             return logfile;
         }
-        std::pair<std::string,std::string> logdir = VSCommon::getfiledir(logfile.c_str(), VSFileSystem::homedir.c_str());
-        logfile = (logdir.first + VSFS_PATHSEP) + logdir.second;
-        return logfile;
+        std::pair<std::string,std::string> logdir = VSCommon::getfiledir(logfile, VSFileSystem::homedir);
+        return VSCommon::getsuffixedfile((logdir.first + VSFS_PATHSEP) + logdir.second, 3);
+
     }
 
     int LogPrint(const std::string & message, const std::string & module) {

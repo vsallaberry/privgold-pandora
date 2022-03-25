@@ -1190,7 +1190,8 @@ unicode_conv_CXXFLAGS=-I.. -DVS_LOG_NO_XML
 unicode_conv_SOURCES= \
   tools/unicode-conv.cpp \
   tools/unicode.link.cpp \
-  src/unicode_combine.cpp
+  src/unicode_combine.cpp \
+  src/common/common.cpp
 
 test_LDFLAGS =
 test_CXXFLAGS=-I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS
@@ -1199,6 +1200,7 @@ test_SOURCES= \
   tests/log.link.cpp \
   tests/unicode.link.cpp \
   src/unicode_combine.cpp \
+  src/common/common.cpp \
   tests/multimap.link.cpp
 
 vegastrike_launch_tests: test
@@ -1219,42 +1221,36 @@ tools/unicode.link.cpp: $(top_srcdir)/src/unicode.cpp
 tools/log.link.cpp: $(top_srcdir)/src/log.cpp
 	cp $< $@ || copy $< $@
 
+VSSETUP_COMMON_SOURCES = \
+    setup/src/c/setup.cpp \
+    setup/src/include/central.cpp \
+    setup/src/include/central.h \
+    setup/src/include/display.h \
+    setup/src/include/file.cpp \
+    setup/src/include/file.h \
+    setup/src/include/general.cpp \
+    setup/src/include/general.h \
+    src/unicode.cpp \
+    src/unicode_combine.cpp \
+    src/unicode.h \
+    src/common/common.cpp \
+    src/common/common.h \
+    setup/log.link.cpp \
+    src/log.h
+
 setup/log.link.cpp: $(top_srcdir)/src/log.cpp
 	cp $< $@ || copy $< $@
 vssetup_LDFLAGS = $(GTK_LIBS)
 vssetup_CXXFLAGS= $(GTK_CFLAGS) -DVS_LOG_NO_XML
 vssetup_SOURCES = \
-    setup/src/c/setup.cpp \
-    setup/src/include/central.cpp \
-    setup/src/include/central.h \
-    setup/src/include/display_gtk.cpp \
-    setup/src/include/display.h \
-    setup/src/include/file.cpp \
-    setup/src/include/file.h \
-    setup/src/include/general.cpp \
-    setup/src/include/general.h \
-    src/common/common.cpp \
-    src/common/common.h \
-    setup/log.link.cpp \
-    src/log.h
+    $(VSSETUP_COMMON_SOURCES) \
+    setup/src/include/display_gtk.cpp
 
 vssetup_dlg_LDFLAGS = $(DIALOG_LIBS)
 vssetup_dlg_CXXFLAGS= $(DIALOG_CFLAGS) -DVS_LOG_NO_XML
 vssetup_dlg_SOURCES = \
-    setup/src/c/setup.cpp \
-    setup/src/include/central.cpp \
-    setup/src/include/central.h \
-    setup/src/include/display_dialog.cpp \
-    setup/src/include/display.h \
-    setup/src/include/file.cpp \
-    setup/src/include/file.h \
-    setup/src/include/general.cpp \
-    setup/src/include/general.h \
-    src/common/common.cpp \
-    src/common/common.h \
-    setup/log.link.cpp \
-    src/log.h
-
+    $(VSSETUP_COMMON_SOURCES) \
+    setup/src/include/display_dialog.cpp
 
 VSLAUNCHER_COMMON_SOURCES = \
 	launcher/launcher.h \
@@ -1262,6 +1258,9 @@ VSLAUNCHER_COMMON_SOURCES = \
 	launcher/main.cpp \
     launcher/general.cpp \
     launcher/general.h \
+    src/unicode.cpp \
+    src/unicode_combine.cpp \
+    src/unicode.h \
     src/common/common.cpp \
     src/common/common.h
 

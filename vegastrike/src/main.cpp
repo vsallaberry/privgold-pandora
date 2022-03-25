@@ -69,6 +69,7 @@
 #include "log.h"
 #include "vs_log_modules.h"
 #include "common/common.h"
+#include "unicode.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -272,19 +273,20 @@ int main( int argc, char *argv[] )
     logvs::log_setflags(logvs::F_NONE | logvs::F_FOOTER | logvs::F_QUEUELOGS);
     atexit(logvs::log_terminate);
 
+    unicodeInitLocale();
     VSFileSystem::ChangeToProgramDirectory(argv[0]);
     InitTime();
     UpdateTime();
 
 	CONFIGFILE = NULL;
 	mission_name[0]='\0';
-        {
-          char pwd[8192]="";
-          VSFileSystem::vs_getcwd(pwd,8191);
-          pwd[8191]='\0';
-          VS_LOG("main", logvs::NOTICE, " In path %s",pwd);
-        }
 
+	{
+		char pwd[8192]="";
+		VSFileSystem::vs_getcwd(pwd,8191);
+		pwd[8191]='\0';
+		VS_LOG("main", logvs::NOTICE, "  In path %s", pwd);
+	}
 
     /* Print copyright notice */
     vs_print_buildinfo(NULL, VPB_VERSION | VPB_SCM);
@@ -298,7 +300,8 @@ int main( int argc, char *argv[] )
 
         GetVersionEx(&osvi);
         isVista=(osvi.dwMajorVersion==6);
-        VS_LOG("main", logvs::NOTICE, "Windows version %lu %lu\n", osvi.dwMajorVersion, osvi.dwMinorVersion);
+        VS_LOG("main", logvs::NOTICE, "Windows version %lu.%lu (minimum: %04x)\n",
+        		osvi.dwMajorVersion, osvi.dwMinorVersion, _WIN32_WINNT);
     }
 #endif
 
@@ -391,6 +394,7 @@ int main( int argc, char *argv[] )
     UpdateTime();
 #endif
 
+    GAME_LOG(logvs::NOTICE, "initializing audio...");
     AUDInit();
     AUDListenerGain (XMLSupport::parse_float(vs_config->getVariable ("audio","sound_gain",".5")));
     Music::InitMuzak();
@@ -422,6 +426,22 @@ int main( int argc, char *argv[] )
 
     return 0;
 }
+
+#if defined(_WIN32) && defined(SDL_WINDOWING)
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
+    char ** argv;
+    int argc;
+    VSCommon::InitConsole();
+    logvs::log_setflags(logvs::F_NONE | logvs::F_FOOTER | logvs::F_QUEUELOGS);
+    unicodeInitLocale();
+    VSCommon::ParseCmdLine(GetCommandLineW(), &argc, &argv);
+    GAME_LOG(logvs::NOTICE, "winmain: %d arguments (%s)", argc-1, lpCmdLine);
+    int ret = main(argc,argv);
+    VSCommon::ParseCmdLineFree(argv);
+    return ret;
+}
+#endif
+
   static Animation * SplashScreen = NULL;
 static bool BootstrapMyStarSystemLoading=true;
 void SetStarSystemLoading (bool value) {
@@ -988,8 +1008,8 @@ std::string ParseCommandLine(int argc, char ** lpCmdLine, FILE * out) {
     }
     else{
       // no "-" before it - it's the mission name
-      strncpy (mission_name,lpCmdLine[i],1023);
-	  mission_name[1023]='\0';
+      snprintf(mission_name, sizeof(mission_name), "%s", lpCmdLine[i]);
+      GAME_LOG(logvs::NOTICE, "mission name from command line: '%s'", mission_name);
     }
   }
   return retstr;
@@ -1043,6 +1063,7 @@ static void vs_print_buildinfo(FILE * out, int flags) {
     if ((flags & VPB_LIBS)) {
         std::ostringstream oss;
         oss
+      << std::endl << "  " << "C++: " << __cplusplus << " (h)"
       #if defined(HAVE_SDL)
         << std::endl << "  " << "SDL: " << sdlstr << " (h)"
       #endif

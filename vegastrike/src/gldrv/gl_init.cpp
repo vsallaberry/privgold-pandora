@@ -474,9 +474,6 @@ void GFXInit (int argc, char ** argv){
     bool handle_unicode_kb = XMLSupport::parse_bool(vs_config->getVariable("keyboard","enable_unicode","true"));
     bool handle_unicode_display
             = XMLSupport::parse_bool(vs_config->getVariable("display","enable_unicode","true"));
-    if (handle_unicode_kb || handle_unicode_display || handle_unicode_kb_cockpit) {
-        unicodeInitLocale();
-    }
     
     winsys_init (&argc,argv,"Vega Strike",(char*)icon_file.c_str());
     //winsys_show_cursor(0);
