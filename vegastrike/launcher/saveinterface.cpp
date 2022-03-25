@@ -21,13 +21,13 @@ extern void my_sleep (int i);
 #include <unistd.h>
 #endif
 
-#include "src/common/common.h"
+#include "common/common.h"
 #include "general.h"
 #include "launcher.h"
 
-void LoadMissionDialog (char * Filename,int i);
-void LoadSaveDialog (char *, char *, int);
-void LoadAutoDialog (char *, char *, int);
+void LoadMissionDialog (const char * Filename,int i);
+void LoadSaveDialog (const char *, const char *, int);
+void LoadAutoDialog (const char *, const char *, int);
 
 #define NUM_TITLES 9
 static const char * titles [NUM_TITLES] = {"Start Game", "Start New Game","Play Saved Game","Continue Last Game", "Game Settings", "Recover From Autosave","Change Scenario", "Help","Exit Launcher"};
@@ -76,13 +76,13 @@ std::string ParentDir () {
       final[999]='\0';
       parentdir = new char [1000];
       parentdir[999]='\0';
-      getcwd (parentdir,999);
+      VSCommon::vs_getcwd (parentdir,999);
       if (mypwd.length()>0) {
-        chdir (mypwd.c_str());
+        VSCommon::vs_chdir (mypwd.c_str());
       }
-      getcwd (final,999);
+      VSCommon::vs_getcwd (final,999);
       if (strlen(parentdir)>0) {
-        chdir (parentdir);
+        VSCommon::vs_chdir (parentdir);
       }
       delete [] parentdir;
     }
@@ -94,11 +94,11 @@ std::string ParentDir () {
 void win32_GoToParentDir () {
   std::string par = ParentDir ();
   //  fprintf (stderr,"changing to %s",par.c_str());
-  chdir (par.c_str());
-  FILE * fp1 = fopen ("../vegastrike.config","r");
-  FILE * fp2 = fopen ("vegastrike.config","r");
+  VSCommon::vs_chdir (par.c_str());
+  FILE * fp1 = VSCommon::vs_fopen ("../vegastrike.config","r");
+  FILE * fp2 = VSCommon::vs_fopen ("vegastrike.config","r");
   if ((!fp2)&&fp1) {
-	  chdir ("..");
+	  VSCommon::vs_chdir ("..");
   }
 }
 #endif // _WIN32
@@ -123,7 +123,7 @@ GdkWindow * Help (const char *title, const char *text) {
 
 void save_stuff( const char *filename) {
   changehome();
-    FILE *file=fopen("save.4.x.txt","wt");
+    FILE *file=VSCommon::vs_fopen("save.4.x.txt","wt");
     if (file) {
       fprintf (file, "%s%c", filename,0);
       fclose(file);
@@ -239,7 +239,7 @@ void launch_mission (bool load_lastsave = false) {
 using std::string;
 void file_mission_sel (GtkWidget *w, GtkFileSelection *fs) {
   std::string tmp = gtk_file_selection_get_filename (GTK_FILE_SELECTION (fs));
-  FILE * fp =(fopen (tmp.c_str(),"r"));
+  FILE * fp =(VSCommon::vs_fopen (tmp.c_str(),"r"));
   if (fp!=NULL) {
     fclose (fp);
 	int where=tmp.find ("/mission/");
@@ -329,7 +329,7 @@ void hello( GtkWidget *widget, gpointer   data ) {
         //gdk_window_destroy(gtk_widget_get_parent_window(widget));
         //gtk_main_quit();
 
-        //chdir(origpath.c_str());
+        //VSCommon::vs_chdir(origpath.c_str());
         //pid=fork();
 		if (1|| pid==0) {
 			//if (execlp(vssetupbin.c_str(), vssetupbin.c_str(),NULL) < 0) {
@@ -359,7 +359,7 @@ void hello( GtkWidget *widget, gpointer   data ) {
 }
 
 int RunInterface(int * pargc, char *** pargv) {
-    //    chdir ("./.vegastrike/save");
+    //    VSCommon::vs_chdir ("./.vegastrike/save");
     gtk_init (pargc, pargv);
     GtkWidget *window;
     GtkWidget *button;
@@ -381,7 +381,7 @@ int RunInterface(int * pargc, char *** pargv) {
           * function hello() passing it NULL as its argument.  The hello()
           * function is defined above. */
         gtk_signal_connect (GTK_OBJECT (button), "clicked",
-                             GTK_SIGNAL_FUNC (hello), (void*)i);
+                             GTK_SIGNAL_FUNC (hello), (void*)((size_t)i));
         gtk_container_add (GTK_CONTAINER (vbox), button);
         gtk_widget_show (button);
     }
@@ -599,17 +599,13 @@ void copyfile ( GtkWidget        *w,
 		char *rementstr=new char [strlen(newentstr)+20];
 		sprintf(remstr,"../serialized_xml/%s/",newstr);
 		sprintf(rementstr,"../serialized_xml/%s/",newentstr);
-#ifdef _WIN32
-		mkdir(rementstr);
-#else
-		mkdir(rementstr,0xffffffff);
-#endif
+		VSCommon::vs_mkdir(rementstr, 0755);
 		delete []rementstr;
 		FILE *f1=0;
 		FILE *f2=0;
 		glob_t *dirs=FindFiles(remstr,"");
 		for (unsigned int i=0;i<dirs->gl_pathc;i++) {
-			f1=fopen(dirs->gl_pathv[i],"rb");
+			f1=VSCommon::vs_fopen(dirs->gl_pathv[i],"rb");
 			if (f1) {
 				int len=strlen(dirs->gl_pathv[i]);
 				char *newchr;
@@ -619,7 +615,7 @@ void copyfile ( GtkWidget        *w,
 				newchr=dirs->gl_pathv[i]+j+1;
 				char *rementstr=new char [strlen(newentstr)+20+strlen(newchr)];
 				sprintf(rementstr,"../serialized_xml/%s/%s",newentstr,newchr);
-				f2=fopen(rementstr,"w+b");
+				f2=VSCommon::vs_fopen(rementstr,"w+b");
 				if (f2) {
 					copyfp(f1,f2);
 					fclose(f2);
@@ -628,9 +624,9 @@ void copyfile ( GtkWidget        *w,
 				delete []rementstr;
 			}
 		}
-		f1=fopen(newstr,"rb");
+		f1=VSCommon::vs_fopen(newstr,"rb");
 		if (f1) {
-			f2=fopen(newentstr,"wb");
+			f2=VSCommon::vs_fopen(newentstr,"wb");
 			if (f2) {
 				copyfp(f1,f2);
 				fclose(f2);
@@ -705,9 +701,9 @@ void copynormal ( GtkWidget        *w,
 		char *newentstr=makeasc(chr);
 		if (newstr&&newstr[0]!='\0'&&newentstr&&newentstr[0]!='\0') {
 			FILE *f1, *f2;
-			f1=fopen(newstr,"rb");
+			f1=VSCommon::vs_fopen(newstr,"rb");
 			if (f1) {
-				f2=fopen(newentstr,"wb");
+				f2=VSCommon::vs_fopen(newentstr,"wb");
 				if (f2) {
 					copyfp(f1,f2);
 					fclose(f2);
@@ -769,7 +765,8 @@ void copynormal_conf ( GtkWidget        *w,
 	}
 }
 
-void LoadSaveFunction (char *Filename, char *otherstr, int i, GtkSignalFunc func,const char * default_thing="\0\0\0\0\0\0\0\0",bool usenormalbuttons=false) {
+void LoadSaveFunction (const char *Filename, const char *otherstr, int i,
+		GtkSignalFunc func,const char * default_thing="\0\0\0\0\0\0\0\0",bool usenormalbuttons=false) {
      GtkWidget *filew;
     filew = gtk_file_selection_new (Filename);
 	if (!usenormalbuttons){
@@ -802,7 +799,7 @@ void LoadSaveFunction (char *Filename, char *otherstr, int i, GtkSignalFunc func
     GTK_FILE_SELECTION(filew)->help_button=gtk_button_new_with_label ("Help");
     GTK_WIDGET_SET_FLAGS(GTK_FILE_SELECTION(filew)->help_button, GTK_CAN_DEFAULT);
     gtk_signal_connect (GTK_OBJECT (GTK_FILE_SELECTION (filew)->help_button),
-                        "clicked", (GtkSignalFunc) help_func, (void*)i );
+                        "clicked", (GtkSignalFunc) help_func, (void*)((size_t)i) );
 
     gtk_signal_connect_object (GTK_OBJECT (GTK_FILE_SELECTION
                                             (filew)->cancel_button),
@@ -827,23 +824,23 @@ void LoadSaveFunction (char *Filename, char *otherstr, int i, GtkSignalFunc func
 //	delete []otherstr;
 }
 
-void LoadMissionDialog (char * Filename,int i) {
+void LoadMissionDialog (const char * Filename,int i) {
   changeToData();
-  chdir ("mission");
+  VSCommon::vs_chdir ("mission");
   char mypwd [1000];
-  getcwd (mypwd,1000);
+  VSCommon::vs_getcwd (mypwd,1000);
   //  fprintf (stderr,mypwd);
   LoadSaveFunction (Filename,"Select the mission, then run by clicking new or load game.",i,(GtkSignalFunc) file_mission_sel,my_mission.c_str(),true);
 }
 
-void LoadSaveDialog (char *Filename,char *otherstr, int i) {
+void LoadSaveDialog (const char *Filename,const char *otherstr, int i) {
   changehome();
-  chdir ("save");
+  VSCommon::vs_chdir ("save");
   LoadSaveFunction (Filename,otherstr,i,(GtkSignalFunc) file_ok_sel);
 }
-void LoadAutoDialog (char *Filename,char *otherstr, int i) {
+void LoadAutoDialog (const char *Filename,const char *otherstr, int i) {
   changehome();
-  chdir ("save");
+  VSCommon::vs_chdir ("save");
   LoadSaveFunction (Filename,otherstr,i,(GtkSignalFunc)file_ok_auto_sel);
 }
 /* example-end */

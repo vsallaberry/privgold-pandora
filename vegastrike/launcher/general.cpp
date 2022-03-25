@@ -30,11 +30,14 @@ using std::vector;
 #ifdef _G_RANDOM
 int RANDOMIZED = 0;
 #endif    // _G_RANDOM
+#include "common/common.h"
 
 // Gets the next parameter from the string, sorted by a space
 // Sticks a \0 at the space and returns a pointer to the right side.
 
 #ifdef _G_STRING_PARSE
+
+static char s_empty_string[2] = { 0, 0 };
 
 char *next_parm(char *string) {
 	char *next;
@@ -186,7 +189,7 @@ char *StripExtension(char *filename) {
 	int length, cur;
 	char *last = filename;
 	length = strlen(filename) - 1;
-	if (length <= 0) { return "\0"; }
+	if (length <= 0) { return s_empty_string; }
 	for (cur = 0; cur <= length; cur++) {
 		if (filename[cur] == '.') { last = &filename[cur]; }
 	}
@@ -365,7 +368,7 @@ char *NewString(char *line) {
 
 // if _G_ERROR is defined, it will print the error message
 // if EXIT_ON_FATAL is defined, and is_fatal is greater than 0, the program will exit
-void ShowError(char *error_msg, char *error_code, int is_fatal) {
+void ShowError(const char *error_msg, const char *error_code, int is_fatal) {
 #ifdef _G_ERROR
         if (is_fatal > 0) { fprintf(stderr, "Fatal "); }
         fprintf(stderr, "Error [%s]: %s\n", error_code, error_msg);
@@ -431,9 +434,9 @@ int isdir(const char *file) {
 		if (file[length-2] == '.' || file[length-2] == SEPERATOR || file[length-2] == '\\') { return -1; }
 	}
 
-	if (-1 == chdir(file)) { return 0; }
+	if (-1 == VSCommon::vs_chdir(file)) { return 0; }
 	else {
-		chdir("..");
+		VSCommon::vs_chdir("..");
 		return 1;
 	}
 }
@@ -441,7 +444,7 @@ int isdir(const char *file) {
 // type = 0: file
 // type = 1: dirs
 
-glob_t *FindPath(char *path, int type) {
+glob_t *FindPath(const char *path, int type) {
 	glob_t *FILES = new glob_t;
 	string mypath(path);
 #if defined(__APPLE__) || defined(MACOSX)
@@ -450,25 +453,25 @@ glob_t *FindPath(char *path, int type) {
 	char thispath[800000];
 #endif
         char* curpath = NULL;
-	DIR *dir;
+	VSCommon::vsDIR *dir;
 	vector <string> result;
 	vector <string> pathlist;
-	dirent *entry;
+	VSCommon::vsdirent *entry;
 	unsigned int cur;
 	char *newpath = NULL;
 #if defined(__APPLE__) || defined(MACOSX)
-	getcwd(thispath, MAXPATHLEN);
+	VSCommon::vs_getcwd(thispath, MAXPATHLEN);
 #else
-	getcwd(thispath, 790000);
+	VSCommon::vs_getcwd(thispath, 790000);
 #endif
 	pathlist.push_back((string(thispath)+SEPERATOR+mypath).c_str());
 	for (cur = 0; cur < pathlist.size(); cur++) {
 		curpath = strdup(pathlist[cur].c_str());
-		dir = opendir(curpath);
-		chdir(curpath);
+		dir = VSCommon::vs_opendir(curpath);
+		VSCommon::vs_chdir(curpath);
 		if (dir == NULL) { continue; }
 		entry = NULL;
-		while ((entry = readdir(dir)) != NULL) {
+		while ((entry = VSCommon::vs_readdir(dir)) != NULL) {
 			newpath = strdup((string(curpath)+SEPERATOR+entry->d_name).c_str());
 			if (isdir(newpath) == 1) {
 				pathlist.push_back(newpath);
@@ -476,9 +479,9 @@ glob_t *FindPath(char *path, int type) {
 			}
 			else if (type == 0) { result.push_back(newpath); }
 		}
-		closedir(dir);
+		VSCommon::vs_closedir(dir);
 	}
-	chdir(thispath);
+	VSCommon::vs_chdir(thispath);
 
 	FILES->gl_pathc = result.size();
 
@@ -496,8 +499,8 @@ glob_t *FindPath(char *path, int type) {
 	return FILES;
 }
 
-glob_t *FindFiles(char *path, char *extension) { return FindPath(path, 0); }
-glob_t *FindDirs(char *path) { return FindPath(path, 1); }
+glob_t *FindFiles(const char *path, const char *extension) { return FindPath(path, 0); }
+glob_t *FindDirs(const char *path) { return FindPath(path, 1); }
 
 /*
 glob_t *FindDirs(char *path) {

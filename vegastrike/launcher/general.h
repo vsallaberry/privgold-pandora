@@ -151,7 +151,7 @@ char *NewString(char *string);
 #endif    // __cplusplus
 #endif    // _G_STRING_MANAGE
 
-void ShowError(char *error_msg, char *error_code, int is_fatal);
+void ShowError(const char *error_msg, const char *error_code, int is_fatal);
 
 #ifdef _G_XML
 char *xml_pre_chomp_comment(char *string);
@@ -167,9 +167,9 @@ typedef struct {
 } glob_t;
 
 int isdir(const char *file);
-glob_t *FindPath(char *path, int type);
-glob_t *FindFiles(char *path, char *extension);
-glob_t *FindDirs(char *path);
+glob_t *FindPath(const char *path, int type);
+glob_t *FindFiles(const char *path, const char *extension);
+glob_t *FindDirs(const char *path);
 #endif    // _G_PATH
 
 #endif    // GENERAL_H

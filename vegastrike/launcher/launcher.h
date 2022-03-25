@@ -7,16 +7,6 @@
 
 #include "log.h"
 
-#if defined(_WIN32)
-#include <windows.h>
-#include <process.h>
-# define VSLAUNCH_RUN_PROCESS(name, ...) (VS_LOG("vslauncher",logvs::NOTICE, "running %s", name)*0 + fflush(NULL)*0 \
-                                          + (spawnl(P_NOWAIT, name, __VA_ARGS__))) //args terminated by NULL
-#else // ! defined(_WIN32)
-#include <unistd.h>
-# define VSLAUNCH_RUN_PROCESS(name, ...) (VS_LOG("vslauncher",logvs::NOTICE, "running %s", name)*0 + fflush(NULL)*0 \
-                                          + (execlp(name, __VA_ARGS__) == 0 ? -1 : -1)) //args terminated by NULL
-#endif // ! defined(_WIN32)
 
 extern char * prog_arg;
 extern std::string origpath;
