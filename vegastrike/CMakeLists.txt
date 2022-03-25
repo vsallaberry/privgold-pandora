@@ -686,7 +686,8 @@ IF(PYTHON_INCLUDE_DIR AND PYTHON_LIBRARY)
     SET(VEGASTRIKE_PYTHON_DYNLIB_PATH "${VEGASTRIKE_LIBDIR_NAME}/pythonlibs")
     SET(VS_PYTHON_DYNLIB_BUILDDIR "${CMAKE_BINARY_DIR}/${VEGASTRIKE_PYTHON_DYNLIB_PATH}")
     SET(VS_PYTHON_DYNLIB_NAMES _collections _io _socket _symtable datetime fcntl operator select
-        time _functools _scproxy _struct binascii dbm itertools math readline termios unicodedata)
+        time _functools _scproxy _struct binascii dbm itertools math readline termios unicodedata
+        _csv _ssl _hashlib _random pyexpat parser)
     unset(tmp_pythonlibs)
     file (MAKE_DIRECTORY "${VS_PYTHON_DYNLIB_BUILDDIR}")
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -E -c "import sys; print(\";\".join(sys.path))"
