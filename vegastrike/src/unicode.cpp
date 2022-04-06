@@ -277,6 +277,8 @@ void unicodeInitLocale(bool force) {
         	tmp = setlocale(LC_CTYPE, ""); // system default locale
         	VS_LOG("unicode", logvs::VERBOSE, "system default LCCTYPE locale: %s", tmp != NULL ? tmp : "(null)");
         }
+        if (tmp && setlocale(LC_CTYPE, tmp) == NULL)
+            tmp = setlocale(LC_CTYPE, "");
         if (tmp) {
             strncpy(myloc, tmp, sizeof(myloc)-1);
             myloc[sizeof(myloc) - 1] = 0;

@@ -871,9 +871,19 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/__future__.py</locationURI>
 		</link>
 		<link>
-			<name>modules/builtin/__phello__.foo.py</name>
+			<name>modules/builtin/_abcoll.py</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/__phello__.foo.py</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/_abcoll.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/_weakrefset.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/_weakrefset.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/abc.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/abc.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/aifc.py</name>
@@ -899,6 +909,11 @@
 			<name>modules/builtin/atexit.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/atexit.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/base64.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/base64.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/bdb.py</name>
@@ -946,6 +961,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/codeop.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/collections.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/collections.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/colorsys.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/colorsys.py</locationURI>
@@ -961,6 +981,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/compileall.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/contextlib.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/contextlib.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/copy.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/copy.py</locationURI>
@@ -969,6 +994,11 @@
 			<name>modules/builtin/copy_reg.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/copy_reg.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/csv.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/csv.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/dircache.py</name>
@@ -1021,6 +1051,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/fpformat.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/functools.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/functools.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/genericpath.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/genericpath.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/getopt.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/getopt.py</locationURI>
@@ -1039,6 +1079,16 @@
 			<name>modules/builtin/glob.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/glob.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/hashlib.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/hashlib.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/heapq.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/heapq.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/hmac.py</name>
@@ -1064,6 +1114,11 @@
 			<name>modules/builtin/inspect.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/inspect.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/io.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/io.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/keyword.py</name>
@@ -1136,6 +1191,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/os.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/os2emxpath.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/os2emxpath.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/pickle.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/pickle.py</locationURI>
@@ -1166,11 +1226,6 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/pprint.py</locationURI>
 		</link>
 		<link>
-			<name>modules/builtin/pre.py</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/pre.py</locationURI>
-		</link>
-		<link>
 			<name>modules/builtin/profile.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/profile.py</locationURI>
@@ -1189,6 +1244,11 @@
 			<name>modules/builtin/py_compile.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/py_compile.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/py_random.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/py_random.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/pyclbr.py</name>
@@ -1216,19 +1276,9 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/re.py</locationURI>
 		</link>
 		<link>
-			<name>modules/builtin/reconvert.py</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/reconvert.py</locationURI>
-		</link>
-		<link>
 			<name>modules/builtin/regex_syntax.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/regex_syntax.py</locationURI>
-		</link>
-		<link>
-			<name>modules/builtin/regsub.py</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/regsub.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/repr.py</name>
@@ -1281,6 +1331,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/site.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/sitecustomize.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/sitecustomize.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/smtpd.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/smtpd.py</locationURI>
@@ -1316,6 +1371,11 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/sre_parse.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/ssl.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/ssl.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/stat.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/stat.py</locationURI>
@@ -1341,6 +1401,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/stringold.py</locationURI>
 		</link>
 		<link>
+			<name>modules/builtin/struct.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/struct.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/subprocess.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/subprocess.py</locationURI>
+		</link>
+		<link>
 			<name>modules/builtin/symbol.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/symbol.py</locationURI>
@@ -1359,6 +1429,11 @@
 			<name>modules/builtin/tempfile.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/tempfile.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/textwrap.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/textwrap.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/this.py</name>
@@ -1396,14 +1471,19 @@
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/types.py</locationURI>
 		</link>
 		<link>
-			<name>modules/builtin/tzparse.py</name>
-			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/tzparse.py</locationURI>
-		</link>
-		<link>
 			<name>modules/builtin/unittest.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/unittest.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/urllib.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/urllib.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/urlparse.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/urlparse.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/user.py</name>
@@ -1439,6 +1519,71 @@
 			<name>modules/builtin/encodings/aliases.py</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/aliases.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/ascii.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/ascii.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/cp1252.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/cp1252.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/cp437.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/cp437.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/iso8859_1.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/iso8859_1.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/iso8859_9.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/iso8859_9.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/mbcs.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/mbcs.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_16.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_16.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_16_be.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_16_be.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_16_le.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_16_le.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_32.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_32.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_32_be.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_32_be.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_32_le.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_32_le.py</locationURI>
+		</link>
+		<link>
+			<name>modules/builtin/encodings/utf_7.py</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/data/modules/builtin/encodings/utf_7.py</locationURI>
 		</link>
 		<link>
 			<name>modules/builtin/encodings/utf_8.py</name>

@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     VS_LOG("vssetup", logvs::NOTICE, "vssetup for vegastrike %s revision %s from %s",
     								 SCM_VERSION, SCM_REVISION, SCM_REMOTE);
 
-	changeToProgramDirectory(argv[0]);
+	changeToProgramDirectory(VSCommon::fix_argv0(&argc, &argv));
     VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
 	binpath = strdup(tmppwd);
     VS_LOG("vssetup", logvs::NOTICE, "Binary path %s", binpath);
@@ -199,10 +199,11 @@ int main(int argc, char *argv[]) {
 			if (!setupcfg)
 				continue;
 			VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
-			datapath = strdup(tmppwd);
-			VS_LOG("vssetup", logvs::NOTICE, "Found data in %s", datapath);
+			VS_LOG("vssetup", logvs::NOTICE, "Found data in %s", tmppwd);
 			break;
 		}
+		VSCommon::vs_getcwd (tmppwd,sizeof(tmppwd)-1);
+		datapath = strdup(tmppwd);
 	}
 	string HOMESUBDIR;
 	FILE *version=VSCommon::vs_fopen("Version.txt","r");

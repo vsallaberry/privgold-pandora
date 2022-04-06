@@ -274,7 +274,7 @@ int main( int argc, char *argv[] )
     atexit(logvs::log_terminate);
 
     unicodeInitLocale();
-    VSFileSystem::ChangeToProgramDirectory(argv[0]);
+    VSFileSystem::ChangeToProgramDirectory(VSCommon::fix_argv0(&argc, &argv));
     InitTime();
     UpdateTime();
 

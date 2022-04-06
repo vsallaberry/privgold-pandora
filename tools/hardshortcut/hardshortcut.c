@@ -55,32 +55,58 @@
 static EXEC_CONST char * const shortcuts[] = SHORTCUTS;
 
 #if defined(_WIN32)
+static char * basename_from_argv0(const wchar_t * ws) {
+    char * s = malloc((wcslen(ws) + 1) * sizeof(*s));
+    size_t i;
+    if (s) { for (i = 0; ws[i]; ++i) { s[i] = ws[i] < 256 ? ws[i]&0xff : '?'; }
+             s[i] = 0; }
+    return s;
+}
+#define chdir(d) _wchdir(d)
+#define STR_FMT "%ls"
+#else
+#define STR_FMT "%s"
+#define basename_from_argv0(s) strdup(s) 
+#endif
+
+#if defined(_WIN32)
 static char ** quote_argv(EXEC_CONST char *const* argv);
 #endif
 #if defined(_WIN32) && defined(_WINDOWS)
 static int ParseCmdLine(const char * cmdline, int * argc, char *** argv);
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd) {
-    char ** argv, *argv0;
+    char ** argv;
     int argc;
     ParseCmdLine(lpCmdLine, &argc, &argv);
-    argv0 = argv[0];
 #else
 int main(int argc, char *argv[]) {
-    char * argv0 = strdup(argv[0]);
+#endif
+#if defined(_WIN32)
+    wchar_t argv0[16384] = { 0, };
+    argv0[sizeof(argv0)/sizeof(*argv0) - 1] = 0;
+    GetModuleFileNameW(NULL, argv0, sizeof(argv0)/sizeof(*argv0) - 1);
+    wchar_t * tmp = argv0 + wcslen(argv0) - 1;
+#else
+    char * argv0 = argv[0], * tmp = argv0 + strlen(argv0) - 1;
 #endif
     EXEC_CONST char * const * shortcut = shortcuts;
-    char * basename, **nargv = NULL, * tmp = argv0 + strlen(argv0) - 1;
+    char * basename, ** nargv = NULL;
     int ret;
 
     while (tmp >= argv0 && *tmp != '/' && *tmp != *PATHSEP) {
         --tmp;
     }
-    basename = strdup(tmp+1);
-    if (tmp >= argv0) strcpy(tmp, PATHSEP); else strcpy(argv0, ".");
-    fprintf(stderr, "in path %s, program:%s\n", argv0, basename); 
+    basename = basename_from_argv0(tmp+1);
+    if (tmp >= argv0) { tmp[0] = *PATHSEP; tmp[1] = 0; } else { argv0[0] = '.'; argv0[1] = 0; }
+    fprintf(stderr, "in path " STR_FMT ", program:%s\n", argv0, basename); 
     chdir(argv0);
+
+#if !defined(_WIN32)
     free(argv0);
-    if (argv0 == argv[0]) free(argv);
+#elif defined(_WINDOWS)
+    free(argv[0]);
+    free(argv);
+#endif
 
     while (*shortcut != NULL && strncmp(*shortcut, basename, strlen(*shortcut))) {
         while (*shortcut++ != NULL) ;
@@ -95,7 +121,9 @@ int main(int argc, char *argv[]) {
     if ((ret = doexec(shortcut[1], nargv != NULL ? (EXEC_CONST char *const*) nargv : shortcut+1)) == -1) {
         fprintf(stderr, "error launching %s\n", shortcut[1]);
     }
+#if defined(_WIN32)
     if (nargv != NULL) { for (int i = 0; nargv[i] != NULL; ++i) { free(nargv[i]); }; free(nargv); }
+#endif
     return ret;
 }
 

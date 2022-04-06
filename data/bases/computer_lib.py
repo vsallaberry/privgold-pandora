@@ -91,13 +91,24 @@ savefilters = set(["Autosave","New_Game"])
 
 class NewSaveGame: pass
 
+def decode(filename):
+	try: 
+		return filename.decode('utf-8')
+	except:
+		return filename
+
 def file_exists(filename):
 	try: 
-		f = open(filename)
+		f = open(filename.decode('utf-8'))
 		f.close()
 		return True		
 	except:
-		return False
+		try: 
+			f = open(filename)
+			f.close()
+			return True
+		except:
+			return False
 
 def time_sorted_listdir(dir):
 	import os

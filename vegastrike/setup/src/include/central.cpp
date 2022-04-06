@@ -34,6 +34,7 @@
 #include <stdio.h>
 
 #include "common/common.h"
+#include "unicode.h"
 
 struct catagory CATS;
 struct group GROUPS;
@@ -131,11 +132,13 @@ void ShowReadme() {
             ssize_t err;
             char arg[65535];
             snprintf(arg, sizeof(arg), "%s%s%s", curpath, PATH_SEP, *search);
-            printf("readme: trying %s\n", arg);
+            fprintf(stderr, "readme: trying %s\n", arg);
             if ((fp = VSCommon::vs_fopen(arg, "r")) != NULL) {
                 fclose(fp);
 #if defined (_WIN32)
-                err = (ssize_t)ShellExecute(NULL,"open",arg,"","",1);
+                WCHAR warg[16384] = { 0, };
+                utf8_to_wstr(warg, arg);
+                err = (ssize_t)ShellExecuteW(NULL,L"open",warg,L"",L"",1);
 #elif defined (__APPLE__)
                 char * script = (char*)malloc(sizeof(arg));
                 snprintf(script, sizeof(arg), "tell application \"Preview.app\" to open \"%s\"", arg);

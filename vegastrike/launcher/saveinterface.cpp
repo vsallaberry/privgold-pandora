@@ -22,6 +22,7 @@ extern void my_sleep (int i);
 #endif
 
 #include "common/common.h"
+#include "unicode.h"
 #include "general.h"
 #include "launcher.h"
 
@@ -175,10 +176,13 @@ DWORD WINAPI DrawStartupDialog(LPVOID lpParameter) {
         progress=false;
         Help ("Please wait while vegastrike loads...","Please wait while vegastrike loads...");
 		//int pid=spawnl(P_WAIT,vegastrikebin.c_str(),vegastrikebin.c_str(),s->num?s->num:(std::string("\"")+s->my_mission+"\"").c_str(),s->num?(std::string("\"")+s->my_mission+"\"").c_str():NULL,NULL);
-        int pid=spawnvp(P_WAIT,vegastrikebin.c_str(),argv);
-		if (pid==-1) {
+        if (VSCommon::vs_execv(VSCommon::VEF_WAIT,vegastrikebin.c_str(),argv) == -1) {
             fprintf(stderr, "cannot launch %s\n", vegastrikebin.c_str());
 		}
+        if (argv) {
+        	for (int i = 0; argv[i] != NULL; ++i) free(argv[i]);
+        	free(argv);
+        }
         /*if (s->num)
           free (s->num);
         free (s->my_mission);
@@ -228,8 +232,12 @@ void launch_mission (bool load_lastsave = false) {
   fflush (stderr);
   changeToData();
 #ifndef _WIN32
-  if (execvp(vegastrikebin.c_str(), argv) != 0) {
+  if (VSCommon::vs_execv(VSCommon::VEF_WAIT, vegastrikebin.c_str(), argv) != 0) {
       fprintf(stderr, "ERROR: cannot run %s\n", vegastrikebin.c_str());   
+  }
+  if (argv) {
+	  for (int i = 0; argv[i] != NULL; ++i) free(argv[i]);
+	  free(argv);
   }
 #else
   DWORD id;
@@ -296,7 +304,6 @@ void file_ok_auto_sel( GtkWidget        *w,
 
 void hello( GtkWidget *widget, gpointer   data ) {
     int i=(int)(size_t)data;
-    int pid=0;
     switch (i) {
     case 0:
         launch_mission(false);
@@ -321,27 +328,22 @@ void hello( GtkWidget *widget, gpointer   data ) {
     case 4:
       changeToData();
 #ifdef _WIN32
-		pid=spawnl(P_NOWAIT,vssetupbin.c_str(), vssetupbin.c_str(),NULL);
-		if (pid==-1) {
+		if (VSCommon::vs_execl(VSCommon::VEF_WAIT,vssetupbin.c_str(), vssetupbin.c_str(),NULL) == -1) {
             fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
 		}
 #else
-        //gdk_window_destroy(gtk_widget_get_parent_window(widget));
-        //gtk_main_quit();
+		{
+			//gdk_window_destroy(gtk_widget_get_parent_window(widget));
+			//gtk_main_quit();
+			//VSCommon::vs_chdir(origpath.c_str());
 
-        //VSCommon::vs_chdir(origpath.c_str());
-        //pid=fork();
-		if (1|| pid==0) {
-			//if (execlp(vssetupbin.c_str(), vssetupbin.c_str(),NULL) < 0) {
-            char ** argv = (char **) malloc((2) * sizeof(*argv));
-            argv[0] = strdup(vssetupbin.c_str()); argv[1] = NULL;
-            GPid gpid;
-            if (gdk_spawn_on_screen(gdk_screen_get_default(), NULL, argv, NULL, (GSpawnFlags)0, NULL, NULL, &gpid, NULL) != TRUE) {
-                fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
-            }
-			return;
-		} else if (pid < 0) {
-            fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
+			//if (VSCommon::vs_execl(vssetupbin.c_str(), vssetupbin.c_str(),NULL) < 0) {
+			char ** argv = (char **) malloc((2) * sizeof(*argv));
+			argv[0] = strdup(vssetupbin.c_str()); argv[1] = NULL;
+			GPid gpid;
+			if (gdk_spawn_on_screen(gdk_screen_get_default(), NULL, argv, NULL, (GSpawnFlags)0, NULL, NULL, &gpid, NULL) != TRUE) {
+				fprintf(stderr, "ERROR: cannot run %s\n", vssetupbin.c_str());
+			}
         }
 #endif
       break;
@@ -360,7 +362,9 @@ void hello( GtkWidget *widget, gpointer   data ) {
 
 int RunInterface(int * pargc, char *** pargv) {
     //    VSCommon::vs_chdir ("./.vegastrike/save");
+	gtk_disable_setlocale();
     gtk_init (pargc, pargv);
+    unicodeInitLocale(true); // gtk overwrites the LC_CTYPE utf8
     GtkWidget *window;
     GtkWidget *button;
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

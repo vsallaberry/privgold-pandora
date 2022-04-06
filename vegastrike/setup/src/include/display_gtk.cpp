@@ -21,8 +21,9 @@ void ClickButton(GtkWidget *w, struct catagory *CUR);
 
 #include <stdio.h>
 
-//#define USE_RADIO
+#include "unicode.h"
 
+//#define USE_RADIO
 
 static GtkWidget *window, *main_vbox;
 
@@ -31,7 +32,9 @@ void exit_0(GtkWidget *w, void *arg) {
 }
 
 void InitGraphics(int *argc, char*** argv) {
+	gtk_disable_setlocale();
 	gtk_init(argc, argv);
+	unicodeInitLocale(true); // gtk overwrites the LC_CTYPE utf8
         GET_TITLE; // sets title;
         GET_STATIC_TEXT;
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -55,6 +58,7 @@ void InitGraphics(int *argc, char*** argv) {
 
 	gtk_widget_show(window);
 }
+
 void myexit(int exitval){
     ShowReadme();
 	exit(0);//exitval);

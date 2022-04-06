@@ -84,10 +84,15 @@
 # define VEGASTRIKE_PYTHON_DYNLIB_PATH VEGASTRIKE_LIBDIR_NAME "/pythonlibs"
 #endif
 
-#if !defined(HAVE_SETENV)
+#if defined(_WIN32) || !defined(HAVE_SETENV)
 // some putenv implementations do not allow stack or freeable variables, then we must store them.
 # include <map>
-static std::map<std::string,char *> s_envmap;
+# if defined(_WIN32)
+typedef std::map<std::string,wchar_t *> putenv_map_t;
+# else
+typedef std::map<std::string,char *> putenv_map_t;
+# endif
+static putenv_map_t s_envmap;
 #endif
 
 #if !defined(_WIN32)
@@ -181,37 +186,41 @@ const char * const pathsep = PATHSEP;
 // wrappers
 // **************************************************************************
 
+#if !defined(_WIN32) && defined(HAVE_SETENV)
 int vs_setenv(const char * var, const char * value, int override) {
-#if defined(HAVE_SETENV)
 	return setenv(var, value, override);
+}
 #else
+int vs_setenv(const char * var, const char * value, int override) {
 	if (!override && getenv(var) != NULL) return 0;
 	char envstr[16384];
+
+	int newlen = snprintf(envstr, sizeof(envstr)/sizeof(*envstr), "%s=%s", var, value);
+	if (newlen >= sizeof(envstr)/sizeof(*envstr))
+		newlen = (sizeof(envstr)/sizeof(*envstr)) - 1;
+
 	// some putenv implementations do not allow stack or freeable variables, then we must store them.
 	std::string mapkey(var);
-	int newlen = snprintf(envstr, sizeof(envstr), "%s=%s", var, value);
-	if (newlen >= sizeof(envstr)) newlen = sizeof(envstr) - 1;
-	std::map<std::string,char *>::iterator itmap = s_envmap.find(mapkey);
+	putenv_map_t::iterator itmap = s_envmap.find(mapkey);
 	if (itmap == s_envmap.end()) {
-		itmap = s_envmap.insert(std::make_pair(mapkey, strdup(envstr))).first;
+		itmap = s_envmap.insert(std::make_pair(mapkey, (putenv_map_t::mapped_type) malloc((size_t)(sizeof(*(itmap->second))*(newlen+1))))).first;
 	} else {
-		char * mapstr = (char *) realloc(itmap->second, (size_t)(newlen+1));
+		putenv_map_t::mapped_type mapstr = (putenv_map_t::mapped_type) realloc(itmap->second, (size_t)(sizeof(*mapstr)*(newlen+1)));
 		if (mapstr == NULL)
 			return -1;
-		strcpy(mapstr, envstr);
 		itmap->second = mapstr;
 	}
-	//use putenv as SetEnvironmentVariableA(var,val) is not working on windows.
 # if defined(_WIN32)
-    wchar_t nputenvstr[16384];
-    if (utf8_to_wstr(nputenvstr, itmap->second, sizeof(nputenvstr)/sizeof(*nputenvstr)) == (size_t)-1)
-    	return putenv(itmap->second);
-    return _wputenv(nputenvstr);
+	//use putenv as SetEnvironmentVariable(var,val) is not working on windows.
+    if (utf8_to_wstr(itmap->second, envstr, newlen+1) == (size_t)-1)
+    	return -1;
+    return _wputenv(itmap->second);
 # else
+	strcpy(itmap->second, envstr);
 	return putenv(itmap->second);
 # endif
-#endif
 }
+#endif
 
 #if !defined( _WIN32)
 
@@ -724,14 +733,13 @@ static int set_utimes(FILE * fp, const char * path, file_info_t * info) {
 	//  <https://docs.microsoft.com/en-us/windows/desktop/FileIO/creating-and-opening-files>
 	int ret = 0;
 	FILETIME ftAtime, ftMtime;
-	WCHAR * wpath = NULL; // nul et non avenu comme vichy.
-	if (utf8_to_wstr(&wpath, path) == (size_t)-1 || wpath == NULL)
+	WCHAR wfile[VSCOMMON_PATH_MAX];
+	if (utf8_to_wstr(wfile, path, sizeof(wfile)/sizeof(*wfile)) == (size_t)-1)
 		return -1;
-	HANDLE h = CreateFileW(wpath, FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+	HANDLE h = CreateFileW(wfile, FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                            NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	if (h == INVALID_HANDLE_VALUE) {
-		free(wpath);
 		return -1;
 	}
 	winTimeTtoFileTime(&ftMtime, &info->mtime);
@@ -740,7 +748,6 @@ static int set_utimes(FILE * fp, const char * path, file_info_t * info) {
 	if (SetFileTime (h, NULL, &ftAtime, &ftMtime))
 		ret = -1;
 	CloseHandle(h);
-	free(wpath);
 	return ret;
 }
 #else
@@ -770,16 +777,15 @@ bool getFileInfo(const char * file, file_info_t * id) {
     // inspired by GNU coreutils stat win32 lib
     BY_HANDLE_FILE_INFORMATION info;
     HANDLE h;
-    WCHAR * wfile = NULL; // nul et non avenu comme vichy.
+    WCHAR wfile[VSCOMMON_PATH_MAX];
     bool ret = false;
-    if (utf8_to_wstr(&wfile, file) == (size_t)-1 || wfile == NULL)
-        return -1;
+    if (utf8_to_wstr(wfile, file, sizeof(wfile)/sizeof(*wfile)) == (size_t)-1)
+        return false;
     h = CreateFileW(wfile, FILE_READ_ATTRIBUTES,
                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
                     NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (h == INVALID_HANDLE_VALUE) {
-    	free(wfile);
-        return ret;
+        return false;
     }
     if (GetFileInformationByHandle (h, &info)) {
         id->dev = info.dwVolumeSerialNumber;
@@ -793,7 +799,6 @@ bool getFileInfo(const char * file, file_info_t * id) {
         ret = true;
     }
     CloseHandle(h);
-    free(wfile);
     return ret;
 #else
     struct stat st;
@@ -962,7 +967,7 @@ std::string path_join(const char * first, ...) {
 	va_start(valist, first);
 	const char * arg;
 	while ((arg = va_arg(valist, const char *)) != NULL) {
-		ret = (ret + VSCommon::pathsep) + arg;
+		if (*arg != 0 && (*arg != '.' || arg[1] != 0)) ret = (ret + VSCommon::pathsep) + arg;
 	}
 	va_end(valist);
 	return ret;
@@ -975,6 +980,29 @@ std::string path_join(const char * first, ...) {
 static const char * quote_follows(const char *s, const char * quotes, bool match0) {
 	while (*s == '\\') ++s;
 	return (match0 && *s == 0) || strchr(quotes, *s) != NULL ? s : NULL;
+}
+
+char * fix_argv0(int * pargc, char *** pargv, size_t * pargv0len) {
+#if defined(_WIN32)
+	file_info_t st;
+	if (pargv == NULL || getFileInfo((*pargv)[0], &st) == false) {
+		char * argv0 = NULL;
+		WCHAR wargv0[VSCOMMON_PATH_MAX] = { 0, };
+		GetModuleFileNameW(NULL, wargv0, sizeof(wargv0)/sizeof(*wargv0) - 1);
+		wargv0[sizeof(wargv0)/sizeof(*wargv0) - 1] = 0;
+		size_t argv0len = wstr_to_utf8(&argv0, wargv0);
+		if (pargv0len)
+			*pargv0len = argv0len != (size_t)-1 && argv0 != NULL ? argv0len : 0;
+		if (pargv)
+			(*pargv)[0] = argv0;
+		return argv0len != (size_t)-1 ? argv0 : NULL;
+	}
+#endif
+	if (pargv0len)
+		*pargv0len = (pargv != NULL && (*pargv)[0] != NULL) ? strlen((*pargv)[0]) : 0;
+	if (pargv == NULL)
+		return NULL;
+	return (*pargv)[0];
 }
 
 #if defined(_WIN32)
@@ -1003,7 +1031,7 @@ static bool ParseCmdLine_error(bool ret, char * argv0, char ** argv, int * pargc
 }
 
 bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned int flags) {
-    char *argv0 = NULL;
+    char *argv0 = NULL, * lpCmdLine;
     int argc = (flags & WCMDF_WITHOUT_ARGV0) == 0 ? 0 : 1;
     char ** argv = (char**) malloc((argc + 1) * sizeof(*argv));
     size_t argv0_len = get_argv0(&argv0);
@@ -1021,9 +1049,12 @@ bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned in
         if (newargv0 == NULL) return ParseCmdLine_error(false, argv0, argv, pargc, pargv);
         argv0 = newargv0;
     }
-    // use remaining space in argv0 for cmdline
-
-    char * lpCmdLine = argv0 + argv0_len + 1;
+    // use remaining space in argv0 for cmdline, make argv[0] always set to argv0
+    if (*argv0 == 0 || (flags & (WCMDF_ARGV0_FROM_CMDLINE|WCMDF_WITHOUT_ARGV0)) == WCMDF_ARGV0_FROM_CMDLINE) {
+    	lpCmdLine = argv0; //argv0 taken from cmdline
+    } else {
+    	lpCmdLine = argv0 + argv0_len + 1; // argv0 taken from get_argv0()
+    }
     snprintf(lpCmdLine, 32767, "%s", cmdline);
     while (*lpCmdLine) {
         int escape = 0;
@@ -1050,8 +1081,7 @@ bool ParseCmdLine(const char * cmdline, int * pargc, char *** pargv, unsigned in
         	++lpCmdLine;
         *arg = 0;
     }
-    if (*argv0 && (flags & WCMDF_ARGV0_FROM_CMDLINE) == 0) // use GetModuleFileName if not empty, first element of cmdline otherwise
-    	*argv = argv0;
+    *argv = argv0;
     argv[argc] = NULL;
     *pargv = argv;
     *pargc = argc;
@@ -1147,14 +1177,30 @@ static int vs_exec_free(int ret, WCHAR ** wargv, char ** nargv, void * otherptr)
 		free(otherptr);
 	return ret;
 }
+//#define VS_EXEC_WITH_CREATE_PROCESS
+#if defined(VS_EXEC_WITH_CREATE_PROCESS)
+typedef struct { WCHAR * wargs; PROCESS_INFORMATION pi; } vs_exec_wait_t;
+static DWORD WINAPI vs_exec_wait(LPVOID lpParameter) {
+	vs_exec_wait_t * p = (vs_exec_wait_t *) lpParameter;
+	WaitForSingleObject(p->pi.hProcess, INFINITE);
+	CloseHandle(p->pi.hThread);
+	CloseHandle(p->pi.hProcess);
+	free(p->wargs); // Is CreateProcess() taking ownership ?
+	free(p);
+	return 0;
+}
+#endif
 int vs_execv(unsigned int flags, const char * file, char *const* argv) {
 	WCHAR wfile[VSCOMMON_PATH_MAX];
 	WCHAR ** wargv = NULL;
 	int ret = 0;
 	int argc;
 
-	if (utf8_to_wstr(wfile, file, sizeof(wfile)/sizeof(*wfile)) == (size_t)-1)
+	//unicodeInitLocale(true);
+	if (utf8_to_wstr(&wfile[0], file, sizeof(wfile)/sizeof(*wfile)) == (size_t)-1) {
+		VS_LOG("common", logvs::VERBOSE, "cannot convert utf8 (wfile)");
 		return -1;
+	}
 	VS_LOG("common",logvs::NOTICE, "running %s", file);
 	fflush(NULL);
 
@@ -1164,12 +1210,15 @@ int vs_execv(unsigned int flags, const char * file, char *const* argv) {
 
 	for (argc = 0; argv[argc] != NULL; ++argc) ; /*loop*/
 	if ((wargv = (WCHAR**) malloc((argc+1) * sizeof(*wargv))) == NULL) {
+		VS_LOG("common", logvs::WARN, "warning: cannot malloc wargv");
 		return vs_exec_free(-1, wargv, nargv, NULL);
 	}
 	for (int i = 0; i < argc; ++i) {
 		WCHAR * warg = NULL;
-		if (utf8_to_wstr(&warg, argv[i]) == (size_t)-1 || warg == NULL)
+		if (utf8_to_wstr(&warg, argv[i]) == (size_t)-1 || warg == NULL) {
+			VS_LOG("common", logvs::VERBOSE, "warning: cannot convert utf8 (warg)");
 			return vs_exec_free(-1, wargv, nargv, warg);
+		}
 		wargv[i] = warg;
 	}
 	wargv[argc] = NULL;
@@ -1181,10 +1230,49 @@ int vs_execv(unsigned int flags, const char * file, char *const* argv) {
 			ret = _wexecv(wfile, wargv) == 0 ? -1 : -1;
 	}
 	else {
+#if defined(VS_EXEC_WITH_CREATE_PROCESS)
+		size_t len, count;
+		int i;
+		WCHAR * wargs;
+		for (len = 0, i = 0; i < argc; ++i) {
+			len += wcslen(wargv[i]) + (i > 0);
+		}
+		wargs = (WCHAR *) malloc((len+1) * sizeof(*wargs));
+		for(i = 1, count = 0; i < argc; ++i) {
+			if (i > 0) wargs[count++] = ' ';
+			for (size_t j = 0; wargv[i][j]; ++j) {
+				wargs[count++] = wargv[i][j];
+			}
+		}
+		wargs[count] = 0;
+		VS_LOG("common", logvs::VERBOSE, "CMD %ls", wargs);
+		STARTUPINFOW si;
+		memset(&si, 0, sizeof(si));
+		si.cb = sizeof(si);
+		vs_exec_wait_t * p = (vs_exec_wait_t *) malloc(sizeof(*p));
+		memset(&p->pi, 0, sizeof(p->pi));
+		p->wargs = wargs;
+		//CreateProcessW(lpAppName,lpCmdLine,lpProcAttrs,lpThAttrs,bInheritHandles,dwFlags,lpEnv,lpCurDir,lpStartupInfo,lpProcInfo)
+		BOOL ok = CreateProcessW(wfile, wargs, NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT, NULL, NULL, &si, &(p->pi));
+		if (!ok) {
+			VS_LOG("common", logvs::WARN, "warning: cannot run process, err %lx (%s)", GetLastError(), strerror(GetLastError()));
+			free(wargs);
+			ret = -1;
+		} else {
+			if ((flags & VEF_WAIT) != 0) {
+				vs_exec_wait(p);
+			} else {
+				DWORD id;
+				HANDLE hThr=CreateThread(NULL, 0, vs_exec_wait, (void *) p, 0, &id);
+			}
+			ret = 0;
+		}
+#else
 		if ((flags & VEF_PATH) != 0)
 			ret = _wspawnvp((flags & VEF_WAIT) != 0 ? P_WAIT : P_NOWAIT, wfile, wargv);
 		else
 			ret = _wspawnv((flags & VEF_WAIT) != 0 ? P_WAIT : P_NOWAIT, wfile, wargv);
+#endif
 	}
 	return vs_exec_free(ret, wargv, nargv, NULL);
 }

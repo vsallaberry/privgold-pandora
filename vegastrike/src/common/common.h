@@ -263,6 +263,9 @@ inline bool	ParseCmdLine(const std::wstring & wcmdline, int * pargc, char *** pa
 
 void ParseCmdLineFree(char ** argv);
 
+/** get the program name from argv and pottentially fix argv */
+char * fix_argv0(int * pargc, char *** pargv, size_t * pargv0len = NULL);
+
 /**
  * Process execution utilities
  * Like std exec* functions, last argument of vs_execl MUST be NULL,

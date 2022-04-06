@@ -158,7 +158,7 @@ namespace VSFileSystem
 
 std::string vegastrike_cwd;
 
-	void ChangeToProgramDirectory(char *argv0) {
+	void ChangeToProgramDirectory(const char *argv0) {
 		{
 			char pwd[8192];
 			pwd[0]='\0';
@@ -167,7 +167,7 @@ std::string vegastrike_cwd;
 			vegastrike_cwd = pwd;
 		}
 		int ret = -1; /* Should it use argv[0] directly? */
-		char *program = argv0;
+		const char *program = argv0;
 #if defined(linux) || defined(__linux__)
 		char buf[65536];
 		{

@@ -41,7 +41,9 @@
 #include <boost/python/detail/extension_class.hpp>
 #endif
 #include "vs_log_modules.h"
+#include <assert.h>
 //#include "glob_externs.h"
+
 #define _CZ 761.465325527
 //extern Vector	_LightVector;
 //extern float _LVRed;

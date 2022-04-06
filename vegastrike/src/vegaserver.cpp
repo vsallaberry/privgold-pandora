@@ -26,6 +26,7 @@
 #include "force_feedback.h"
 #include "lin_time.h"
 #include "options.h"
+#include "common/common.h"
 //#ifndef _WIN32
 //#include <fenv.h>
 //#endif
@@ -46,7 +47,7 @@ int main( int argc, char **argv)
   //#ifndef _WIN32
   //  feenableexcept(FE_DIVBYZERO|FE_INVALID);//|FE_OVERFLOW|FE_UNDERFLOW)
   //#endif
-	VSFileSystem::ChangeToProgramDirectory(argv[0]);
+	VSFileSystem::ChangeToProgramDirectory(VSCommon::fix_argv0(&argc, &argv));
 	
 	// Stupid static variable somewhere, so need to initialize it twice.
 	InitTime();

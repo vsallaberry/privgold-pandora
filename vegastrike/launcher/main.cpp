@@ -412,7 +412,7 @@ int main(int argc, char ** argv)
     VSCommon::vs_getcwd(tmppwd,sizeof(tmppwd)-1); tmppwd[sizeof(tmppwd)-1] = 0;
     VSLAUNCH_LOG(logvs::NOTICE, " In path %s", tmppwd);
     origpath = tmppwd;
-    prog_arg = argv[0];
+    prog_arg = VSCommon::fix_argv0(&argc, &argv);
 
     // command line options
     for (int i_argv = 1; i_argv < argc; ++i_argv) {
@@ -440,7 +440,7 @@ int main(int argc, char ** argv)
     VSLAUNCH_LOG(logvs::NOTICE, "vslauncher for vegastrike %s revision %s from %s",
             						    SCM_VERSION, SCM_REVISION, SCM_REMOTE);
     // Binary dir
-    bindir = VSCommon::getfiledir(argv[0], origpath.c_str());
+    bindir = VSCommon::getfiledir(prog_arg, origpath.c_str());
     if (bindir.first.empty()) {
         bindir.first = origpath;
         VSLAUNCH_LOG(logvs::WARN, "Warning: cannot find binary dir, using %s", bindir.first.c_str());
@@ -499,7 +499,7 @@ int main(int argc, char ** argv)
     const char * const binengines[] = { glengine.c_str(), "." VSLAUNCH_GLENGINE_DEF, "", NULL };
     for (const char * const * binengine = binengines; *binengine; ++binengine) {
         for (const char * const * bin = vslaunch_binsearchs; *bin; ++bin) {
-            std::string vega_base((bindir.first + "/" + *bin) + "/" VSLAUNCH_BINARY);
+            std::string vega_base(VS_PATH_JOIN(bindir.first.c_str(), *bin, VSLAUNCH_BINARY));
             std::string vega = (vega_base + *binengine) + VSLAUNCH_EXE_EXT;
             if (notFoundOrSame(vega, &myid)) {
                 continue ; // same as me or not found
@@ -520,7 +520,7 @@ int main(int argc, char ** argv)
     for (const char * const * setupname = setupnames; *setupname; ++setupname) { 
         if (**setupname == 0) continue ;
         for (const char * const * bin = vslaunch_setupbinsearchs; *bin; ++bin) {
-            std::string vega(((((bindir.first + "/") + *bin) + "/") + *setupname) +  VSLAUNCH_EXE_EXT);
+            std::string vega(VS_PATH_JOIN(bindir.first.c_str(), *bin, *setupname) +  VSLAUNCH_EXE_EXT);
             if (notFoundOrSame(vega, &myid)) {
                 continue ; // same as my on not found
             }
