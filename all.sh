@@ -1,8 +1,12 @@
 #!/bin/bash
 do_clean=
 buildpool=./build
-build_sysname=$(uname -m | tr "[:upper:]" "[:lower:]")
-
+build_sysname=$(uname -s | tr "[:upper:]" "[:lower:]")
+case "${build_sysname}" in
+    darwin*) build_dllext=.dylib;;
+    mingw*|cywin*|msys*|windows*) build_dllext=.dll.a;;
+    *) build_dllext=.so;;
+esac
 unset buildargs; declare -a buildargs
 for arg in "$@"; do
     case "$arg" in
@@ -17,15 +21,15 @@ for f in $build_list; do
     tool=auto;cxxf=;args=;mcc=;gfx=sdl2;type=release
     unset newbuildargs; declare -a newbuildargs
     case $f in
-        glut1) args="--optimize=-Os";gfx=glut1;;
-        sdl2) args="--optimize=-Os";gfx=sdl2;;
+        glut1) args="--optimize=-O3";gfx=glut1;;
+        sdl2) args="--optimize=-O3";gfx=sdl2;;
         sdl2dbg) type=RelWithDebInfo;args="--optimize=-O1";gfx=sdl2;;
         sdl2fulldbg) type=Debug;gfx=sdl2;;
         native) type=NativeRelease;args="--optimize=-O3";
                 newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-ffast-math";gfx=sdl2;;
         auto) tool=configure;;
         univ) case "${build_sysname}" in darwin*) ;; *) continue;; esac
-              newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-arch i386 -arch x86_64"; args="--optimize=-Os";;
+              newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-arch i386 -arch x86_64"; args="--optimize=-O3";;
         gcc6) mcc=gcc6; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing";;
         gcc6dbg) mcc=gcc6; args="--cxx-std=98 --optimize=-O1 --cxx-flags=-Wno-strict-aliasing"; type=RelWithDebInfo;;
         gcc5) mcc=gcc-mp-5; args="--cxx-std=98 --cxx-flags=-Wno-strict-aliasing"; tool=configure;;
@@ -33,14 +37,14 @@ for f in $build_list; do
         clang12) mcc=clang-mp-12;;
         gcc8) mcc=gcc-mp-8; tool=configure;;
         png12) pngpref="/usr/local/specific/libpng12"; test -d "${pngpref}" || continue
-               args="--optimize=-Os";gfx=sdl2; buildargs[${#buildargs[@]}]="--"
+               args="--optimize=-O3";gfx=sdl2; buildargs[${#buildargs[@]}]="--"
                buildargs[${#buildargs[@]}]="-DFFMPEG_INCLUDE_DIRS=${pngpref}/include/libpng12;/usr/local/vega05/include"
-               buildargs[${#buildargs[@]}]="-DFFMPEG_LIBRARIES=/usr/local/vega05/lib/libavutil.dylib;/usr/local/vega05/lib/libavcodec.dylib;/usr/local/vega05/lib/libavformat.dylib;/usr/local/vega05/lib/libswscale.dylib;/usr/local/vega05/lib/libbz2.dylib"
+               buildargs[${#buildargs[@]}]="-DFFMPEG_LIBRARIES=/usr/local/vega05/lib/libavutil${build_dllext};/usr/local/vega05/lib/libavcodec${build_dllext};/usr/local/vega05/lib/libavformat${build_dllext};/usr/local/vega05/lib/libswscale${build_dllext};/usr/local/vega05/lib/libbz2${build_dllext}"
                for define in HAVE_LIBAVCODEC_AVCODEC_H HAVE_LIBAVCODEC_AVUTIL_H HAVE_LIBAVFORMAT_AVFORMAT_H HAVE_LIBSWSCALE_SWSCALE_H HAVE_LIBAVFILTER_AVFILTER_H HAVE_LIBAVFORMAT_AVIO_H HAVE_LIBAVDEVICE_AVDEVICE_H HAVE_LIBSWRESAMPLE_SWRESAMPLE_H; do
                    buildargs[${#buildargs[@]}]="-D${define}=1"
                done
                buildargs[${#buildargs[@]}]="-DPNG_INCLUDE_DIRS=${pngpref}/include/libpng12"
-               buildargs[${#buildargs[@]}]="-DPNG_LIBRARIES=${pngpref}/lib/libpng12.dylib";;
+               buildargs[${#buildargs[@]}]="-DPNG_LIBRARIES=${pngpref}/lib/libpng12${build_dllext}";;
         *) gfx=$f;;
     esac
     test -z "${mcc}" -o -x "$(which "${mcc}")" || { echo "!! compiler '${mcc}' not available on this system, skipping..."; continue; }

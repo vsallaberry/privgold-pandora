@@ -116,8 +116,10 @@ for macOS or linux. See [credits](#credits) for more details.
 the Windows release is shipped with open sources libraries provided
 by [MSYS2](https://sourceforge.net/projects/msys2), which is LGPL itself, and 
 the libraries it uses are open sources with various licences (mit,bsd,gpl,lgpl,...)
-There are currently three exceptions: I rebuilt myself ffmpeg, libpng 
-(need old versions), and SDL 1 (msys2 has gcc build, needed a clang build).
+There are currently two exceptions on x86_64: I rebuilt myself ffmpeg 
+(need old version), and SDL 1 (msys2 has gcc build, needed a clang build),
+and 7 on i686: ffmpeg(old version), glut(?), 
+{glib,atk,gdk-pixbuf,harfbuzz,pango} (need Windows XP compatibility). 
 
 ## Updates Overview
 

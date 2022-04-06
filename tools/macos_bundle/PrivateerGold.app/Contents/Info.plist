@@ -20,7 +20,7 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>launcher.sh</string>
+	<string>vslauncher</string>
     <key>CFBundleGetInfoString</key>
     <string>1.2.0 (Vegastrike 0.4.4.1)</string>
     <key>CFBundleIconFile</key>
