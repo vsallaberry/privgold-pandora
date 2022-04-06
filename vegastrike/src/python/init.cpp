@@ -223,13 +223,53 @@ static const std::string pretty_python_script(const std::string & pythonscript, 
     return res.substr(0, (res.size() < maxsize ? res.size() : maxsize));
 }
 
-void Python::overridePythonEnv() {
-    std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
+static int python_run(const std::string & str) {
+	char * temppython = strdup(str.c_str());
+	if (PYTHON_LOG(logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
+		PYTHON_LOG(logvs::NOTICE, "running '%s'...",pretty_python_script(str).c_str());
+	}
+	int ret = PyRun_SimpleString(temppython);
+	Python::reseterrors();
+	free (temppython);
+	return ret;
+}
 
+#if defined(_WIN32)
+# define VS_PYTHON_RELATIVE_MODULES_PATH VSFileSystem::resourcesdir
+#endif
+#if defined(VS_PYTHON_RELATIVE_MODULES_PATH)
+# define VS_PYTHON_RELATIVE_IMPORT_DEFAULT "true"
+#else
+# define VS_PYTHON_RELATIVE_IMPORT_DEFAULT "false"
+#endif
+
+void Python::initpython() {
+    std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
+    bool override_python_path
+          = XMLSupport::parse_bool (vs_config->getVariable ("python","override_python_path","true"));
+    int python_optimized_bytecode
+          = XMLSupport::parse_int (vs_config->getVariable ("python","optimized_bytecode","1"));
+    bool python_relative_import
+          = XMLSupport::parse_bool (vs_config->getVariable ("python","relative_import",VS_PYTHON_RELATIVE_IMPORT_DEFAULT));
+
+    // First, set PYTHONHOME AND PYTHONPATH
     // Find the first the mod dir
     //std::string pydir = VSFileSystem::Rootdir[1]+ VSFS_PATHSEP +moduledir+ VSFS_PATHSEP "builtin";
     // Use builtin '<datadir>/modules/builtin'
-    std::string pydir = VSFileSystem::datadir + VSFS_PATHSEP + moduledir + VSFS_PATHSEP "builtin";
+    std::string pydir = moduledir + VSFS_PATHSEP "builtin";
+    char origpath[16384] = { 0, };
+
+    if (python_relative_import) {
+		// The Python and mingw libraries I use have issues with paths containing unicode characters > 255
+		// The dirty workaround applied here is to consider all elements of PYTHONPATH(sys.path) as
+		// relatives to VSFileSystem::datadir, and patch the python import to make the chdir(datadir) while importing.
+    	PYTHON_LOG(logvs::NOTICE, "using relative python import");
+		VSCommon::vs_getcwd(origpath, sizeof(origpath)/sizeof(*origpath));
+		VSCommon::vs_chdir((VSFileSystem::datadir + VSFS_PATHSEP + pydir).c_str());
+		pydir = ".";
+    } else {
+    	pydir = VSFileSystem::datadir + VSFS_PATHSEP + pydir;
+    }
 
     if (!VSFileSystem::DirectoryExists(pydir)) {
     	PYTHON_LOG(logvs::WARN, "WARNING: the Python Home Path does not exist, "
@@ -237,12 +277,26 @@ void Python::overridePythonEnv() {
     	PYTHON_LOG(logvs::WARN, "  missing PYTHONHOME: %s", pydir.c_str());
     }
 
-    static bool override_python_path
-      = XMLSupport::parse_bool (vs_config->getVariable ("python","override_python_path","true"));
+    PYTHON_LOG(logvs::NOTICE, "override env: %s -> PYTHONHOME:'%s', optimize:%d, relative_import:%s",
+    		   override_python_path?"true":"false", pydir.c_str(), python_optimized_bytecode, python_relative_import?"true":"false");
 
-    PYTHON_LOG(logvs::NOTICE, "override PYTHONHOME: %s -> '%s'", override_python_path?"true":"false", pydir.c_str());
     VSCommon::vs_setenv("PYTHONHOME", pydir.c_str(), override_python_path);
     VSCommon::vs_setenv("PYTHONPATH", pydir.c_str(), override_python_path);
+    VSCommon::vs_setenv("PYTHONOPTIMIZE", python_optimized_bytecode > 0
+    		                              ? XMLSupport::tostring(python_optimized_bytecode).c_str()
+    		                              : "", override_python_path);
+
+    // *********************************************************
+    //   I n i t i a l i z e     P y t h o n    l i b r a r y
+    // *********************************************************
+    Py_Initialize();
+    PYTHON_LOG(logvs::NOTICE, "python initialized (optimization = %d)", Py_OptimizeFlag);
+
+    if (python_relative_import) {
+    	python_run("import sys, sitecustomize; sys.meta_path.append("
+    			      "sitecustomize.RelativeImporter(r'" + VSFileSystem::resourcesdir + "'))");
+    	VSCommon::vs_chdir(origpath);
+    }
 }
 
 void Python::initpaths(){
@@ -252,7 +306,8 @@ void Python::initpaths(){
 
   std::string moduledir (vs_config->getVariable ("data","python_modules","modules"));
   std::string basesdir (vs_config->getVariable ("data","python_bases","bases"));
-
+  bool python_relative_import = XMLSupport::parse_bool (vs_config->getVariable ("python","relative_import",
+		                                                               VS_PYTHON_RELATIVE_IMPORT_DEFAULT));
   std::string pymodpaths;
   std::string modpaths;
   const std::string mods[] = {
@@ -264,8 +319,12 @@ void Python::initpaths(){
 	basesdir
   };
 
-  pymodpaths += "decode(r\"" + pyLibsPath + "\")";
   modpaths += pyLibsPath;
+  pyLibsPath = "r'" + pyLibsPath + "'";
+  if (python_relative_import) {
+	  pyLibsPath = "os.path.relpath(" + pyLibsPath + ", r'" + VSFileSystem::resourcesdir + "')";
+  }
+  pymodpaths += "decode(" + pyLibsPath + ")";
   // Find all the mods dir (ignore homedir)
   for( size_t i=1; i<VSFileSystem::Rootdir.size(); i++)
   {
@@ -273,8 +332,12 @@ void Python::initpaths(){
 		  std::string dir = VSFileSystem::Rootdir[i]+ VSFS_PATHSEP + mods[imod];
 		  if(pymodpaths.size()) pymodpaths += ",";
 		  if(modpaths.size()) modpaths += ":";
-		  pymodpaths += "decode(r\"" + dir + "\")";
 		  modpaths += dir;
+		  dir = "r'" + dir + "'";
+		  if (python_relative_import) {
+			  dir = "os.path.relpath(" + dir + ", r'" + VSFileSystem::resourcesdir + "')";
+		  }
+		  pymodpaths += "decode(" + dir + ")";
 	  }
   }
 
@@ -285,17 +348,9 @@ void Python::initpaths(){
   }*/
   //VSCommon::vs_setenv("PYTHONPATH", modpaths.c_str(), 1); // not useful if done after Py_Initialize().
 
-  std::string changepath ("import sys\nold_syspath = sys.path\n"
-		                  "def decode(s):\n\ttry:\n\t\treturn s.decode('utf-8')\n\texcept:\n\t\treturn s\n"
-		                  "sys.path = ["+pymodpaths+"]\n");
-
-  char * temppython = strdup(changepath.c_str());
-  if (PYTHON_LOG(logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
-    PYTHON_LOG(logvs::NOTICE, "running '%s'...",pretty_python_script(changepath).c_str());
-  }
-  PyRun_SimpleString(temppython);	
-  Python::reseterrors();
-  free (temppython);
+  python_run ("import sys, os.path\nold_syspath = sys.path\n"
+		      "def decode(s):\n\ttry:\n\t\treturn s.decode('utf-8')\n\texcept:\n\t\treturn s\n"
+		      "sys.path = ["+pymodpaths+"]\n");
 }
 
 void Python::reseterrors() {
@@ -359,9 +414,8 @@ void Python::init() {
     return;
   }
   isinit=true;
-  overridePythonEnv();
 // initialize python library
-  Py_Initialize();
+  initpython();
   initpaths();
 #if BOOST_VERSION != 102800
   boost::python::converter::registry::insert(Vector_convertible, QVector_construct, boost::python::type_id<QVector>());

@@ -583,7 +583,7 @@ tmp_found=
 for dir in $("${PYTHON_BINARY}" -E -c "import sys; print('\n'.join(sys.path))"); do
     for lib in _collections _io _socket _symtable datetime fcntl operator select time _functools \
                _scproxy _struct binascii dbm itertools math readline termios unicodedata \
-               _csv _ssl _hashlib _random pyexpat parser \
+               _csv _ssl _hashlib _random pyexpat parser _subprocess \
     ; do
         for ext in ".so" ".dylib" ".dll" ".pyd"; do
             if test -f "${dir}/${lib}${ext}"; then

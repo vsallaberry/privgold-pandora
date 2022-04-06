@@ -287,6 +287,7 @@ __builtin__.help = _Helper()
 
 encoding = "ascii" # Default value set by _PyUnicode_Init()
 
+sys.path.append('')
 import encodings # even if utf8 is not default it must be registered
 encoding='utf-8'
 

@@ -21,7 +21,7 @@ class Python {
 public:
 	static void init();
 	static void initpaths();
-    static void overridePythonEnv();
+    static void initpython();
 	static void test();
 	static void reseterrors();
 };
