@@ -1307,11 +1307,7 @@ do_delivery_fun_real() {
     esac
 
     # Put data in bundle
-    if test "${do_delivery}" = "nodata"; then
-        echo "+ creating data link"
-        rm -f "${bundle_resdir}/data" || exit 1
-        ln -sv "${priv_data}" "${bundle_resdir}/data" || exit $?
-    else
+    if test "${do_delivery}" != "nodata"; then
         test -z "${interactive}" || yesno "? Copy whole data in bundle (${priv_data}) ?" \
         && { echo "+ copying data..."; rm -f "${bundle_resdir}/data" || exit 1; \
              xcopy --exclude "/bin" --exclude "/tofix" \
@@ -1346,6 +1342,13 @@ do_delivery_fun_real() {
     esac
     (cd "$(dirname "${package_name}")" && shasum -a256 "$(basename "${package_name}")" > "${package_name}.sha256" \
      && du -sh "${package_name}" | awk '{ print $1 }' | tr '\n' ' ' && cat "${package_name}.sha256")
+
+    if test "${do_delivery}" = "nodata"; then
+        echo "+ creating data link"
+        rm -f "${bundle_resdir}/data" || exit 1
+        ln -sv "${priv_data}" "${bundle_resdir}/data" || exit $?
+    fi
+
     popd >/dev/null
 }
 

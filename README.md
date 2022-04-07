@@ -19,7 +19,7 @@ this is not an official release of vegastrike or Privateer Gold.
 The first Goal was to have a 64bit MacOS build: this is when the pandora
 box has been opened, implying a lot more updates.
   
-Tested on macOS El Capitan, Mojave and Catalina, linux debian 9, and on virtual machines with Windows 7&10.
+Tested on macOS El Capitan, Mojave and Catalina, linux debian 9, and on virtual machines with Windows XP&7&10.
 Vegastrike now supports 3 graphical engines for openGL: GLUT, SDL1, SDL2.
 SDL1 is discouraged, SDL2 is recommended, use GLUT if trouble with SDL2.
 Unicode handling (keyboard and graphics) has been improved.
@@ -46,8 +46,10 @@ Tested on:
   
 * Experimental non-tested build for macOS BigSur or later with arm64 (apple M1).  
 * Experimental build for linux-x86_64 (tested on a macbook with freshly installed debian9)
+* Experimental build for linux-i386 (not tested)
 * Experimental build for Windows-x86_64 (tested with windows 10 & 7 in Virtual Machines) 
-  
+* Experimental build for Windows-i386 (32 bits, tested with windows XP 32 bits, 10 & 7 in Virtual Machines) 
+
 * MacOS:
   + supported architectures are i386, x86_64, arm64.
   + open the APP with alt (option) key pressed in order to run SETUP.
@@ -168,6 +170,7 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
   + fix: FontHeight management in cockpit when Cockpit font is not base font
   + fix: (1.03 bug) don't crash if the savegame cannot be saved for some reasons 
     (eg:System does not allow name)
+* 1.2.4 and later : see data/Patch.txt
 
 ## Updates Detail
 

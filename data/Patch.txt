@@ -1,13 +1,134 @@
 -----------------------------------------------------------------------------
-     Privateer Gemini Gold Pandora v1.2.3 -- 2022/01/17 -- Changes
+     Privateer Gemini Gold Pandora v1.2.4 -- 2022/04/15 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
-Privateer Gemini Gold versions.
+Privateer Gemini Gold and Pandora versions.
 
 -----------------------------------------------------------------------------
                                  CHANGE HISTORY
 -----------------------------------------------------------------------------
+
+  -------------------------------------------------------------------------
+        Privateer Gemini Gold Pandora v1.2.4 -- 2022/04/15 -- Changes
+  -------------------------------------------------------------------------
+  10. CHANGES FROM 1.2.3 TO 1.2.4
+
+    Vegastrike 0.4.4.5
+
+    A. Logging to file and Log Timestamps
+
+       - File logging by application rather than by scripts and file redirections.
+
+       - Timestamps are included in logs (we use the Main Loop counter rather 
+         than time measurement: less accurate but faster).
+
+    B. Windows: don't open console when running + Icons
+
+       - The Console (cmd) is used only if the game is run from it.
+         The Console (cmd) window is no more shown when running the game,
+         but command line features are still available when run from console.
+
+       - vegastrike, vssetup, vslauncher, privgold, privsetup include now 
+         windows version info and icons.
+
+    C. Unicode combined characters
+
+       - On old macOS with HFS filesystem, the system encodes the filename in 
+         utf8 in the decomposed utf8 form. For example, the accentuated e,
+         would be in composed form: \xc3\xa9, and \c65\xcc\x81 if decomposed.
+         This did not forbid privateer versions up to 1.2.3 to run, all
+         was working fine (save, load, overwrite detection, save a game with
+         the utf8 composed form). The only limitation was when displaying
+         a file given by the macOS HFS API outside of console: the file
+         was displayed without accent, without forbidding the game to
+         perform norminally.
+         
+       - The Linux, Windows, and apple APFS filesystems (since Sierra)
+         do not use the decomposed form as in HFS.
+
+    D. Splashscreen: wait for loading end, optional text animation
+
+       - The Privateer Menu is displayed only when it is ready (game fully loaded)
+         Before this update, we had to wait a few seconds between apparition of menu
+         and the motion of the mouse.
+
+       - During Game Loading, a little text animation is shown at bottom-left corner
+         of the screen.
+
+    E. OpenGL engines: GLUT nvidia-linux, Window Managers timeouts, Alt+Tab, Unicode Text Editing
+
+       - SDL gnome: workaround on linux when some window managers (such as gnome) 
+         complain about non-responsivity of application (but still working and 
+         resumable with alt-tab or similar)
+
+       - GLUT on linux: with some GL drivers (such as proprietary nvidia), GLUT
+         could not enter in Game Mode (Fullscreen - OK with nouveau). Now the game
+         tries to create a window even if the Game Mode cannot be initialized.
+
+       - SDL2 Text Editing: better handling of unicode combined characters.
+
+       - macOS alt+tab: in some cases, resuming vegastrike on macOS after an alt-tab
+         restored the window in a shifted position. Moreover, now only Command (cmd)/Tab
+         switches applications.
+
+    F. vslauncher: Old vegastrike launcher utility
+
+       - enable build of old vegastrike launcher
+     
+       - Cross platform way of launching the game without need of specific scripts.
+
+    G. OpenAL on macOS (3D Sound Library)
+
+       - Rather than using the system OpenAL Framework, Now OpenAL is included in release.
+
+       - It seems that using a rebuilt and recent openal library rather than
+         system one on macOS has improved sound quality and might reduce the 
+         issue of ship cannon sounds not stopping when leaving/finishing the battle.
+
+    H. Vegastrike Config updates 
+
+       - add graphical resolutions: 1366x768 and 1280x720
+
+       - restore Privateer Gemini Gold v1.03 default sound settings ("Sound and Music",...)
+
+    I. Python Optional Libraries, Python Optimization.
+
+       - macOS and linux python library is now built with optimization (llvm-profiler).
+
+       - Python bytecode is by default PYO (basic bytecode optimization)
+
+       - Some native libraries (lib-dynload) required by some python modules are included in this release.
+
+       - Some python standard module have been updated to 2.7 version.
+
+    J. GTK libraries on linux and macOS arm64
+
+       - GTK libraries and then graphical vssetup and vslauncher are now included on
+         linux x86_64 and macOS arm64 releases.
+
+    K. EXPERIMENTAL linux-i386 and Windows-i386 (32 bits)
+
+       - The linux 32 version has not been tested.
+
+       - The Windows 32 bits version has been tested on Windows XP SP3 32 bits, 
+         Windows 10 64 bits(Virtual Machine) and Windows 7 on 32 bit machine.
+
+    L. Windows: running the game from a path containing unicode characters
+
+    M. The optimization level of vegastrike programs has been increased (Os -> O3)
+
+    N. Linux RUNPATH : vegastrike is built with Linux RUNPATH 
+       (move your installation folder without need of tunning LD_LIBRARY_PATH)
+
+    O. libpng 1.6, macOS and windows GTK themes
+
+    W. Windows x86_64 tests on real windows 10 computer
+
+       - 1.2.3 has been tested on real windows 10 computer in addition to tests done
+         with windows 10 & 7 on Virtual Machines.
+ 
+    Z. see git for more details
 
   -------------------------------------------------------------------------
         Privateer Gemini Gold Pandora v1.2.3 -- 2022/01/17 -- Changes

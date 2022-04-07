@@ -592,7 +592,7 @@ int log_openfile(const std::string & module,
                 if ((logout = VSCommon::vs_fopen(filename.c_str(), append ? "a" : "w")) != NULL) {
                 	fflush(stderr);
                     if (dup2(fileno(logout), fileno(stderr)) < 0) {
-                		VS_LOG("log", logvs::WARN, "Warning: cannot redirect stderr");
+                		VS_LOG("log", logvs::WARN, "Warning: cannot redirect stderr (%p,fd:%d)", stderr, fileno(stderr));
 #ifdef _WIN32
                         *stderr = *logout;
 #endif
@@ -603,8 +603,12 @@ int log_openfile(const std::string & module,
             if (logout != NULL) {
                 s_log_redirected = true;
                 fflush(stdout);
+#ifdef _WIN32
+                if (stdout && fileno(stdout) < 0)
+                    freopen("CONERR$", "a", stdout);
+#endif
                 if (dup2(fileno(logout), fileno(stdout)) < 0) {
-                	VS_LOG("log", logvs::WARN, "Warning: cannot redirect stdout");
+                	VS_LOG("log", logvs::WARN, "Warning: cannot redirect stdout (%p,fd:%d)", stdout, fileno(stdout));
 #ifdef _WIN32
                         *stdout = *logout;
 #endif
