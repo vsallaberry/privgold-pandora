@@ -87,34 +87,41 @@ quadrants = {
 	"Gemini/Varnus": 'Humboldt',
 }
 
-savefilters = set(["Autosave","New_Game"])
+savefilters = set([u"Autosave",u"New_Game"])
 
 class NewSaveGame: pass
 
-def decode(filename):
+def decode(s):
 	try: 
-		return filename.decode('utf-8')
+		return s.decode('utf-8')
 	except:
-		return filename
+		return s
 
+def encode(s):
+	try: 
+		return s.encode('utf-8')
+	except:
+		return s
+
+def fun_fromutf8(fun, arg):
+	try:
+		return fun(decode(arg))
+	except:
+		return fun(arg)
+		
 def file_exists(filename):
 	try: 
-		f = open(filename.decode('utf-8'))
+		f = fun_fromutf8(open, filename)
 		f.close()
 		return True		
-	except:
-		try: 
-			f = open(filename)
-			f.close()
-			return True
-		except:
-			return False
+	except:		
+		return False
 
 def time_sorted_listdir(dir):
 	import os
 	def time_key(filename):
-		return (-os.stat(dir+'/'+filename).st_mtime, filename)
-	return sorted(os.listdir(dir), key=time_key)
+		return (-fun_fromutf8(os.stat,decode(dir)+u'/'+decode(filename)).st_mtime, filename)
+	return sorted(fun_fromutf8(os.listdir, dir), key=time_key)
 
 # unicodedata not needed for now as engine handles decomposed utf8 chars
 try:
@@ -127,14 +134,14 @@ except:
 def normalize(string):
 	return string #not needed for now
 	try:
-		return unicodedata_normalize('NFC', unicode(string, errors='strict')).encode('utf-8', errors='backskashreplace')
+		return unicodedata_normalize('NFC', decode(string)).encode('utf-8', errors='backskashreplace')
 	except:
-		return string
+		return encode(string)
 
 def savelist():
 	global savefilters
 	# here path is accessed with item.data, item.string contains escape sequence for GUI object
-	return [ GUI.GUISimpleListPicker.listitem(normalize(path.replace('#','##').replace('_','#_')),path)
+	return [ GUI.GUISimpleListPicker.listitem(normalize(path.replace('#','##').replace('_','#_')),encode(path))
 		for path in time_sorted_listdir(VS.getSaveDir())
 		if path[:1] != '.' and path not in savefilters ]
 

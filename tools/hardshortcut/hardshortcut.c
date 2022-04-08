@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     GetModuleFileNameW(NULL, argv0, sizeof(argv0)/sizeof(*argv0) - 1);
     wchar_t * tmp = argv0 + wcslen(argv0) - 1;
 #else
-    char * argv0 = argv[0], * tmp = argv0 + strlen(argv0) - 1;
+    char * argv0 = strdup(argv[0]), * tmp = argv0 + strlen(argv0) - 1;
 #endif
     EXEC_CONST char * const * shortcut = shortcuts;
     char * basename, ** nargv = NULL;
