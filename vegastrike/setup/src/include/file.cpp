@@ -118,11 +118,12 @@ void LoadConfig(void) {
 	char *p, *n_parm, *parm, *group;
 	struct group *G_CURRENT, *G_NEXT;
 	struct catagory *C_CURRENT, *C_NEXT;
+	bool bUseGameConfig = useGameConfig();
 
 	G_CURRENT = &GROUPS;
 	C_CURRENT = &CATS;
 
-	if (useGameConfig() || (fp = VSCommon::vs_fopen(CONFIG.config_file, "r")) == NULL) {
+	if (bUseGameConfig || (fp = VSCommon::vs_fopen(CONFIG.config_file, "r")) == NULL) {
         std::string orig_configfile = mangle_config(CONFIG.config_file);
         origconfig=true;
         if ((fp = VSCommon::vs_fopen(orig_configfile.c_str(), "r")) == NULL) {
@@ -130,6 +131,17 @@ void LoadConfig(void) {
 			exit(-1);
 		}
         VS_LOG("vssetup", logvs::WARN, "using game config %s", orig_configfile.c_str());
+        if (bUseGameConfig) {
+        	std::string backup_config = VSCommon::getsuffixedfile(CONFIG.config_file, (time_t)-1, 2);
+        	if (backup_config != CONFIG.config_file) {
+        		int res = VSCommon::fileCopyIfDifferent(CONFIG.config_file, backup_config, 1);
+        		if (res < 0) {
+        			VS_LOG("vssetup", logvs::WARN, "cannot save user config file in %s", backup_config.c_str());
+        		} else if (res == VSCommon::FILECOMP_REPLACED) {
+        			VS_LOG("vssetup", logvs::NOTICE, "saving user config file in %s", backup_config.c_str());
+        		}
+        	}
+        }
 	}
 	while ((p = fgets(line, MAX_READ, fp)) != NULL) {
 		parm = line;

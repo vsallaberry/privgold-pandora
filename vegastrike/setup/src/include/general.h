@@ -20,9 +20,9 @@
 #ifndef GENERAL_H
 #define GENERAL_H
 
-//#define GLIB
+//#define _G_GLIB
 
-#ifdef GLIB
+#ifdef _G_GLIB
 #include <glib.h>
 #endif
 
@@ -73,10 +73,10 @@ double pwer(double start, long end);
 extern "C" {
 #endif
 void btoa(char *dest, char *string);
-#ifdef GLIB
+#ifdef _G_GLIB
 char *GetString(GString *line);
 void SetString(GString **ptr, char *line);
-#endif    //GLIB
+#endif    //_G_GLIB
 char *NewString(const char *string);
 #endif    //GENERAL_H
 

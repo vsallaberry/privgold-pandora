@@ -270,7 +270,7 @@ void btoa(char *dest, char *string) {
 	return;
 }
 
-#ifdef GLIB
+#ifdef _G_GLIB
 
 // Some handy wrappers for glib that help error handling which prevent segfaults
 char *GetString(GString *line) {
