@@ -28,11 +28,12 @@ int getMouseButtonStatus ();//returns button status that are bitwise anded (i.e.
 void InitMouse();
 void RestoreMouse();
 void ProcessMouse();
-void BindKey(int key,MouseHandler handler);
-void UnbindMouse (int key);
+void BindMouse(int button, unsigned int scope, MouseHandler handler);
+void UnbindMouse (int button, unsigned int scope);
 int getMouseDrawFunc();
 void GetMouseDelta (int &dx, int &dy);
 int lookupMouseButton (int winsys_button);//returns 0 for left click, 1 for middle, 2 for right. ....
+void GetMouseXY(int &mx, int &my);
 #endif
 
 

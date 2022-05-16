@@ -3,7 +3,7 @@
 #include <SDL.h>
 #include <SDL_thread.h>
 #include "vegastrike.h"
-#include "vs_globals.h"
+#include "command.h"
 
 //#ifdef WIN32
 //	#include <winsock.h>     // For socket(), connect(), send(), and recv()

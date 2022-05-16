@@ -5,10 +5,12 @@
 
 #include "configxml.h"
 #include "universe_generic.h"
-#include "command.h"
 
-extern commandI *CommandInterpretor;
 extern Universe * _Universe;
+
+class commandI;
+extern commandI *CommandInterpretor;
+
 /*
 #ifdef _SERVER
 	#include "universe_generic.h"

@@ -274,7 +274,7 @@ namespace CockpitKeys {
       textmessager=_Universe->CurrentCockpit();
     }
   }
-      void QuitNow () {
+      void QuitNow (const KBData&,KBSTATE newState) {
     {
       cleanexit=true;
 	  if(Network==NULL && game_options.write_savegame_on_exit)
@@ -298,14 +298,14 @@ namespace CockpitKeys {
    }
  }
 
- void PitchDown(const KBData&,KBSTATE newState) {
+ void PitchDown(const KBData& data,KBSTATE newState) {
 	static Vector Q;
 	static Vector R;
 	for (int i=0;i<NUM_CAM;i++) {
 	if(newState==PRESS) {
-	  if (QuitAllow) {
-	    QuitNow();
-	  }
+		if (!vs_config->checkVersion(XMLCONFIG_MAKEVERSION(1,2,4)) && QuitAllow) {
+			QuitNow(data,newState);
+		}
 		Q = _Universe->AccessCockpit()->AccessCamera(i)->Q;
 		R = _Universe->AccessCockpit()->AccessCamera(i)->R;
 		_Universe->AccessCockpit()->AccessCamera(i)->myPhysics.ApplyBalancedLocalTorque(-Q, R, game_options.camera_pan_speed);
@@ -384,6 +384,15 @@ namespace CockpitKeys {
 	}
 
   }
+
+  void ConfirmQuit(const KBData& data,KBSTATE newState) {
+	  if(newState==PRESS) {
+		  if (QuitAllow) {
+			  QuitNow(data,newState);
+		  }
+	  }
+  }
+
 bool cockpitfront=true;
   void Inside(const KBData&,KBSTATE newState) {
     {
@@ -766,8 +775,18 @@ void clickhandler (KBSTATE k, int x, int y, int delx, int dely, int mod) {
 */
 
 void InitializeInput() {
-
-	BindKey(27,0,0, Quit,KBData()); // always have quit on esc
+	BindKey(WSK_ESCAPE,0,0, INSC_ALL, Quit,KBData()); // always have quit on esc
+	BindKey('q',0,0, INSC_ALL, ConfirmQuit,KBData()); // always have quit on esc
+	if (!vs_config->checkVersion(XMLCONFIG_MAKEVERSION(1,2,4))) {
+		// with an old vega config, always have prev/next/enter link on keyboard, joystick, mouse wheel.
+		BindKey(WSK_LEFT,	0,0, INSC_BASE, BaseKeys::PrevLink,KBData());
+		BindKey(WSK_UP,		0,0, INSC_BASE, BaseKeys::PrevLink,KBData());
+		BindKey(WSK_RIGHT,	0,0, INSC_BASE, BaseKeys::NextLink,KBData());
+		BindKey(WSK_DOWN,	0,0, INSC_BASE, BaseKeys::NextLink,KBData());
+		BindKey(' ',		0,0, INSC_BASE, BaseKeys::EnterLink,KBData());
+		BindKey(WSK_RETURN,	0,0, INSC_BASE, BaseKeys::EnterLink,KBData());
+		//BindJoyKey(0, JOYkey, handler, data)
+	}
 }
 
 void IncrementStartupVariable () {
@@ -826,7 +845,7 @@ void createObjects(std::vector <std::string> &fighter0name, std::vector <StarSys
 			      Vector (-1,0,-1));
 //GOOD!!
   ****/
-  BindKey (1,CoordinateSelect::MouseMoveHandle);
+  BindMouse (1, INSC_COCKPIT, CoordinateSelect::MouseMoveHandle);
 
   //int numf=mission->number_of_flightgroups;
   int numf=mission->number_of_ships;

@@ -821,7 +821,7 @@ void winsys_process_events()
                         continue ;
                     }
                 } else if (iswprint(event.key.keysym.sym) && SDL_HasEvent(SDL_TEXTINPUT)
-                && ((kb_unicode_mode & WS_UNICODE_FULL) != 0 || !HasKeyBinding(event.key.keysym.sym, mod))) {
+                && ((kb_unicode_mode & WS_UNICODE_FULL) != 0 || !kbHasBindingWSK(event.key.keysym.sym, mod))) {
                     // UNICODE KEYDOWN
                     WINSYS_DBG(logvs::DBG+1,
                                "SDL%d: key '%c' (%x,scan:%x,release:%d,mod:%x) to be processed by TEXTINPUT(q:%zu)",
@@ -1450,7 +1450,7 @@ void winsys_process_events()
             // On some computers (eg apple), alt+ascii gives unicode specials, then we ignore that
             // if we find a key binding without unicode
             if ((kb_unicode_mode & WS_UNICODE_FULL) == 0) {
-                maybe_unicode &= !HasKeyBinding(event.key.keysym.sym, mod);
+                maybe_unicode &= !kbHasBindingWSK(event.key.keysym.sym, mod);
             }
 
             // Translate untranslated release events

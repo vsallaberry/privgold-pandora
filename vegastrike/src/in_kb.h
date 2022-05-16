@@ -51,11 +51,12 @@ void setActiveModifiers(unsigned int mask);
 
 unsigned int getModifier(const char* mod_name);
 void ProcessKB(unsigned int player);
-void BindKey(unsigned int key, unsigned int modifiers, unsigned int player, KBHandler handler, const KBData& data);
-void UnbindKey(unsigned int key,unsigned int modifiers);
+void BindKey(unsigned int key, unsigned int modifiers, unsigned int player, unsigned int scope, KBHandler handler, const KBData& data);
+void UnbindKey(unsigned int key,unsigned int modifiers,unsigned int scope);
 void InitKB ();
 void RestoreKB ();
-// modifiers: enum KB_MODIFIER_ENUM
-bool HasKeyBinding(unsigned int key, unsigned int modifiers);
+bool kbHasBinding(unsigned int key, unsigned int modifiers);    // modifiers: enum KB_MODIFIER_ENUM
+bool kbHasBindingWSK(unsigned int key, unsigned int modifiers); // modifiers: enum WSK_MOD_*
+void kbGetInput(int key, int modifiers, bool release, int x, int y);
 
 #endif

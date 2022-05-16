@@ -37,6 +37,13 @@
 
 #define BASE_EXTENSION ".py"
 
+namespace BaseKeys {
+	void NextLink(const KBData&,KBSTATE newState);
+ 	void PrevLink(const KBData&,KBSTATE newState);
+ 	void EnterLink(const KBData&,KBSTATE newState);
+ 	void Computer(const KBData&,KBSTATE newState);
+}
+
 class BaseInterface {
 	bool drawlinkcursor;
 	TextPlane curtext;
@@ -333,6 +340,8 @@ public:
 			return dynamic_cast<LinkT *>(GetLink(it));
 		}
 		Link * GetCurrentLink(int offset = 0, bool only_valid = true, bool set = false);
+		size_t objs_size() { return objsmap.size(); }
+		size_t links_size() { return linksmap.size(); }
 		Room ();
 		~Room ();
 

@@ -40,7 +40,7 @@ using std::string;
 using XMLSupport::AttributeList;
 
 typedef vsUMap<string,KBHandler> CommandMap;
-typedef vsUMap<string,int> KeyMap;
+typedef vsUMap<string,unsigned int> KeyMap;
 
 class GameVegaConfig: public VegaConfig {
  public:

@@ -59,8 +59,8 @@ static int miny=-1;
 static int maxz=1;
 static int minz=-1;
 
-typedef vsUMap<int, int> 	JoystickIDMap;
-typedef std::deque<int> 	JoystickEventQueue;
+typedef vsUMap<int, int> 			JoystickIDMap;
+typedef std::deque<JoystickEvent> 	JoystickEventQueue;
 
 static JoystickIDMap 		joystickIDMap;
 static JoystickEventQueue 	joystickEventQueue;
@@ -172,12 +172,12 @@ void InitJoystick(){
 
   for (i=0;i<NUMJBUTTONS;i++) {
     for (int j=0;j<MAX_JOYSTICKS;j++) {
-      UnbindJoyKey (j,i);
+      UnbindJoyKey (j,i,INSC_ALL);
     }
   }
   for(int h=0;h<MAX_HATSWITCHES;h++){
     for(int v=0;v<MAX_VALUES;v++){
-      UnbindHatswitchKey(h,v);
+      UnbindHatswitchKey(h,v,INSC_ALL);
     }
   }
   for(int j=0;j<MAX_JOYSTICKS;j++){
@@ -186,7 +186,7 @@ void InitJoystick(){
 	joystick[j] = NULL;
     for(int h=0;h<MAX_DIGITAL_HATSWITCHES;h++){
       for(int v=0;v<MAX_DIGITAL_VALUES;v++){
-	UnbindDigitalHatswitchKey(j,h,v);
+	UnbindDigitalHatswitchKey(j,h,v,INSC_ALL);
       }
     }
   }
@@ -366,8 +366,6 @@ struct mouseData{
   mouseData(int ddx,int ddy, float ttime) {dx=ddx;dy=ddy;time=ttime;}
 };
 
-extern void GetMouseXY(int &mousex,int &mousey);
-
 static std::list <mouseData> md;
 
 void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
@@ -475,6 +473,7 @@ void JoyStick::GetJoyStick(float &x,float &y, float &z, int &buttons)
    }
    for(int h=0;h<nr_of_hats;h++){
        digital_hat[h]=SDL_JoystickGetHat(joy,h);
+       JOY_DBG(logvs::DBG+1, "JoyHAT %d = %d", h, digital_hat[h]);
    }
    for(a=0;a<MAX_AXES;a++)
        joy_axis[a]=((float)axi[a]/32768.0);
@@ -498,13 +497,13 @@ int JoyStick::NumButtons(){
   return nr_of_buttons;
 }
 
-void JoystickQueuePush(int which) {
-	joystickEventQueue.push_back(which);
+void JoystickQueuePush(const JoystickEvent & joydata) {
+	joystickEventQueue.push_back(joydata);
 }
 
 void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
 	(void)x; (void)y; (void)z; (void)buttons; (void)state;
-	JoystickQueuePush(which);
+	JoystickQueuePush(JoystickEvent(which));
 }
 
 void JoystickProcessQueue(int player) {
@@ -513,17 +512,15 @@ void JoystickProcessQueue(int player) {
 	if (md.size() > 0 && joystick[MOUSE_JOYSTICK]->isAvailable() && joystick[MOUSE_JOYSTICK]->player == player) {
 		float x, y, z; int buttons;
 		joystick[MOUSE_JOYSTICK]->GetJoyStick (x,y,z,buttons);
-		JoystickQueuePush(MOUSE_JOYSTICK);
+		JoystickQueuePush(JoystickEvent(MOUSE_JOYSTICK));
 	}
 	for (JoystickEventQueue::iterator it = joystickEventQueue.begin(); it != joystickEventQueue.end(); ) {
-		unsigned int which = *it;
+		unsigned int which = it->which;
 		if (!joystick[which]->isAvailable()) {
 			it = joystickEventQueue.erase(it);
 		} else if (joystick[which]->player == player) {
 			if (!done[which]) {
 				ProcessJoystick(which);
-				JOY_DBG(logvs::DBG, "Joystick #%u x:%g y:%g z:%g buttons:%d", which, joystick[which]->joy_axis[0],
-					    joystick[which]->joy_axis[1], joystick[which]->joy_axis[2], joystick[which]->joy_buttons);
 			}
 			if (done[which] || (joystick[which]->joy_buttons == 0)) { // The game loop needs to receive repeated buttons events
 				it = joystickEventQueue.erase(it);
@@ -531,7 +528,7 @@ void JoystickProcessQueue(int player) {
 				++it;
 			}
 			done[which] = true;
-		} else if (joystick[*it]->player >= _Universe->numPlayers()) {
+		} else if (joystick[it->which]->player >= _Universe->numPlayers()) {
 			it = joystickEventQueue.erase(it);
 		} else {
 			++it;

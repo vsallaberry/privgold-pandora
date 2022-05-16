@@ -3,6 +3,8 @@
 #include "config_xml.h"
 #include "in_kb_data.h"
 #include <assert.h>	/// needed for assert() calls.
+#include "vs_log_modules.h"
+
 void DefaultJoyHandler (const KBData&, KBSTATE newState) {
   //  VSFileSystem::Fprintf (stderr,"STATE: %d", st);
 }
@@ -24,54 +26,71 @@ enum JSSwitches{
   NUMSWITCHES
 };
 #define MAXOR(A,B) (((A)<(B))?(B):(A))
-JSHandlerCall JoystickBindings [NUMSWITCHES][MAXOR(MAX_HATSWITCHES,MAX_JOYSTICKS)][MAXOR(NUMJBUTTONS,MAXOR(MAX_VALUES,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))];
+JSHandlerCall JoystickBindings [INSC_NB][NUMSWITCHES][MAXOR(MAX_HATSWITCHES,MAX_JOYSTICKS)][MAXOR(NUMJBUTTONS,MAXOR(MAX_VALUES,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))];
 KBSTATE JoystickState [NUMSWITCHES][MAXOR(MAX_HATSWITCHES,MAX_JOYSTICKS)][MAXOR(MAX_VALUES,MAXOR(NUMJBUTTONS,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))];
 
-static void GenUnbindJoyKey (JSSwitches whichswitch, int joystick, int key) {
-  assert (key<MAXOR(NUMJBUTTONS,MAXOR(MAX_VALUES,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))&&joystick<MAXOR(MAX_JOYSTICKS,MAX_HATSWITCHES));
-  JoystickBindings[whichswitch][joystick][key]=JSHandlerCall();
-  JoystickState[whichswitch][joystick][key]=UP;
+static void GenUnbindJoyKey (JSSwitches whichswitch, int joystick, int key, unsigned int scope) {
+	if (!(key<MAXOR(NUMJBUTTONS,MAXOR(MAX_VALUES,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))&&joystick<MAXOR(MAX_JOYSTICKS,MAX_HATSWITCHES)
+	      && whichswitch < NUMSWITCHES && key >= 0)) {
+		JOY_LOG(logvs::WARN, "unbind joystick switch(%d)/joy(%d)/key(%d)/scope(%u) out of bound", whichswitch, joystick, key, scope);
+		return ;
+	}
+	for (size_t ijoy = joystick>=0 ? joystick : 0; ijoy < (joystick>=0 ? joystick+1 : MAX_JOYSTICKS); ++ijoy) {
+		for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
+			JoystickBindings[iscp][whichswitch][ijoy][key]=JSHandlerCall();
+		}
+		JoystickState[whichswitch][ijoy][key]=UP;
+	}
 }
 
-static void GenBindJoyKey (JSSwitches whichswitch,int joystick, int key, KBHandler handler, const KBData &data) {
-  assert (key<NUMJBUTTONS&&joystick<MAX_JOYSTICKS);
-  JoystickBindings[whichswitch][joystick][key]=JSHandlerCall(handler,data);
+static void GenBindJoyKey (JSSwitches whichswitch,int joystick, int key, unsigned int scope, KBHandler handler, const KBData &data) {
+  if (!(key<MAXOR(NUMJBUTTONS,MAXOR(MAX_VALUES,MAX_DIGITAL_HATSWITCHES*MAX_DIGITAL_VALUES))&&joystick<MAXOR(MAX_JOYSTICKS,MAX_HATSWITCHES)
+        && whichswitch < NUMSWITCHES && key >= 0)) {
+    JOY_LOG(logvs::WARN, "bind joystick switch(%d)/joy(%d)/key(%d)/scope(%u) out of bound", whichswitch, joystick, key, scope);
+    return ;
+  }
+  for (size_t ijoy = joystick>=0 ? joystick : 0; ijoy < (joystick>=0 ? joystick+1 : MAX_JOYSTICKS); ++ijoy) {
+	  for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
+		  JoystickBindings[iscp][whichswitch][ijoy][key]=JSHandlerCall(handler,data);
+	  }
+  }
   handler (KBData(),RESET);
 }
 
 
-void UnbindJoyKey (int joystick, int key) {
-  GenUnbindJoyKey(JOYSTICK_SWITCH,joystick,key);
+void UnbindJoyKey (int joystick, int key, unsigned int scope) {
+  GenUnbindJoyKey(JOYSTICK_SWITCH,joystick,key,scope);
 }
 
-void BindJoyKey (int joystick, int key, KBHandler handler, const KBData &data) {
-  GenBindJoyKey(JOYSTICK_SWITCH,joystick,key,handler,data);
+void BindJoyKey (int joystick, int key, unsigned int scope, KBHandler handler, const KBData &data) {
+  GenBindJoyKey(JOYSTICK_SWITCH,joystick,key,scope,handler,data);
 }
 
-void UnbindHatswitchKey (int joystick, int key) {
-  GenUnbindJoyKey(HATSWITCH,joystick,key);
+void UnbindHatswitchKey (int joystick, int key, unsigned int scope) {
+  GenUnbindJoyKey(HATSWITCH,joystick,key,scope);
 }
 
-void BindHatswitchKey (int joystick, int key, KBHandler handler, const KBData &data) {
-  GenBindJoyKey(HATSWITCH,joystick,key,handler,data);
+void BindHatswitchKey (int joystick, int key, unsigned int scope, KBHandler handler, const KBData &data) {
+  GenBindJoyKey(HATSWITCH,joystick,key,scope,handler,data);
 }
 
-void UnbindDigitalHatswitchKey (int joystick, int key, int dir) {
-  GenUnbindJoyKey(DIGHATSWITCH,joystick,key*MAX_DIGITAL_VALUES+dir);
+void UnbindDigitalHatswitchKey (int joystick, int key, int dir, unsigned int scope) {
+  GenUnbindJoyKey(DIGHATSWITCH,joystick,key*MAX_DIGITAL_VALUES+dir,scope);
 }
 
-void BindDigitalHatswitchKey (int joystick, int key, int dir, KBHandler handler, const KBData &data) {
-  GenBindJoyKey(DIGHATSWITCH,joystick,key*MAX_DIGITAL_VALUES+dir,handler,data);
+void BindDigitalHatswitchKey (int joystick, int key, int dir, unsigned int scope, KBHandler handler, const KBData &data) {
+  GenBindJoyKey(DIGHATSWITCH,joystick,key*MAX_DIGITAL_VALUES+dir,scope,handler,data);
 }
 
 
-void ProcessJoystick (int whichplayer) {
+void ProcessJoystick (int which) {
   float x,y,z;
   int buttons;
+  unsigned int scope = inGetCurrentScope();
 #if !defined(HAVE_SDL)
   SDL_JoystickUpdate();// this is called by SDL event loop (even by glut) / winsys.cpp
 #endif
-  for (int i=whichplayer;i<whichplayer+1&&i<MAX_JOYSTICKS;i++) {
+  for (int i=which;i<which+1&&i<MAX_JOYSTICKS;i++) {
     buttons=0;
     if(joystick[i]->isAvailable()){
 #if !defined(HAVE_SDL)
@@ -133,7 +152,7 @@ void ProcessJoystick (int whichplayer) {
           KBSTATE * state
             =&JoystickState[DIGHATSWITCH][i][h*MAX_DIGITAL_VALUES+dir_index];
           JSHandlerCall* handler
-            =&JoystickBindings[DIGHATSWITCH][i][h*MAX_DIGITAL_VALUES+dir_index];
+            =&JoystickBindings[scope][DIGHATSWITCH][i][h*MAX_DIGITAL_VALUES+dir_index];
 	  if(press==true){
 	    if(*state==UP){
 	      (*handler->function)
@@ -154,7 +173,7 @@ void ProcessJoystick (int whichplayer) {
       
       for (int j=0;j<NUMJBUTTONS;j++) {
         KBSTATE * state = &JoystickState[JOYSTICK_SWITCH][i][j];
-        JSHandlerCall*handler=&JoystickBindings [JOYSTICK_SWITCH][i][j];
+        JSHandlerCall*handler=&JoystickBindings [scope][JOYSTICK_SWITCH][i][j];
 	if ((buttons&(1<<j))) {
 	  if (*state==UP) {
 	    (*handler->function)
@@ -170,6 +189,8 @@ void ProcessJoystick (int whichplayer) {
 	(*handler->function) (handler->data,*state);
       }
     } // is available
+    JOY_DBG(logvs::DBG, "Joystick #%u x:%g y:%g z:%g buttons:%d", i, joystick[i]->joy_axis[0],
+      	    joystick[i]->joy_axis[1], joystick[i]->joy_axis[2], joystick[i]->joy_buttons);
   } // for nr joysticks  
 
   for(int h=0;h<MAX_HATSWITCHES;h++){
@@ -186,7 +207,7 @@ void ProcessJoystick (int whichplayer) {
 	    float hs_val=vs_config->hatswitch[h][v];
 	    if(fabs(hs_val)<=1.0){
 	      // this is set
-	      JSHandlerCall *handler=&JoystickBindings[HATSWITCH][h][v];
+	      JSHandlerCall *handler=&JoystickBindings[scope][HATSWITCH][h][v];
               KBSTATE * state = &JoystickState[HATSWITCH][h][v];
 	      if(hs_val-margin<=axevalue && axevalue<=hs_val+margin){
 		// hatswitch pressed
@@ -206,6 +227,7 @@ void ProcessJoystick (int whichplayer) {
 	      (*handler->function)(handler->data,*state);
 	    }
 	  } // for all values
+	  JOY_DBG(logvs::DBG, "Joystick hatswitch #%u hat:%d haxis:%d axeval:%g", hs_joy, h, hs_axis, axevalue);
 	} // is available
       }
   }

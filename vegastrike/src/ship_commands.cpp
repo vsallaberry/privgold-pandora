@@ -1,9 +1,10 @@
 #include "cmd/unit_generic.h"
 #include "config_xml.h"
 #include "xml_support.h"
-#include "vs_globals.h"
+//#include "vs_globals.h"
 #include "universe_util.h"
 #include "gldrv/winsys.h"
+#include "command.h"
 
 //fmin conflicted with c++11 double std::fmin(double,double)
 static inline float vs_fminf(float a, float b) { return (a<b)?a:b; };
@@ -28,6 +29,7 @@ class ShipCommands {
 	public:
 		ShipCommands() {
 			//create some functors, register them with the command interp {{{
+			cslide = cright = cdown = cup = cleft = croll = cfire = NULL;
 			cpymenu = new Functor<ShipCommands>(this, &ShipCommands::pymenu);
 			CommandInterpretor->addCommand(cpymenu, "pymenu");
 			csetkps = new Functor<ShipCommands>(this, &ShipCommands::setkps);

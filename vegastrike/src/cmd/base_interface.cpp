@@ -53,6 +53,7 @@
 #include "in_kb.h"
 #include "in_joystick.h"
 #include "options.h"
+#include "command.h"
 #include "log.h"
 #include "vs_log_modules.h"
 
@@ -772,8 +773,8 @@ void RunPython(const char *filnam) {
 #endif
 	if (filnam[0]) {
 		if (filnam[0]=='#' && filnam[1]!='\0') {
-            if (BASE_DBG(logvs::DBG+1, "Running python string '%s'...", filnam) <= 0) {
-                BASE_DBG(logvs::DBG, "Running python string...");
+            if (BASE_DBG(logvs::DBG+1, "Running python string '%s'", filnam) <= 0) {
+                BASE_DBG(logvs::DBG, "Running python string '%s'...", Python::prettyPythonScript(filnam).c_str());
             }
 			::Python::reseterrors();
 			PyRun_SimpleString(const_cast<char*>(filnam));
@@ -905,32 +906,83 @@ BaseInterface::Room::Link * BaseInterface::Room::MouseOver (BaseInterface *base,
 	return link;
 }
 
+namespace BaseKeys {
+	enum BASE_LINK_CMD_ENUM { BASE_LINK_NONE = -2, BASE_PREV_LINK, BASE_ENTER_LINK, BASE_NEXT_LINK };
+	static void handleLink(BASE_LINK_CMD_ENUM what, const KBData&, KBSTATE newState) {
+		if (newState != PRESS)
+			return ;
+		BaseInterface * base = BaseInterface::CurrentBase;
+		if (base == NULL || base->curroom < 0 || base->curroom > base->rooms.size())
+			return ;
+		int curroom = base->curroom;
+		BaseInterface::Room * room = base->rooms[curroom];
+		int button;
+		float x, y;
+		if (what == BASE_ENTER_LINK) 	button = WS_LEFT_BUTTON;
+		else if (what == BASE_PREV_LINK)button = WS_WHEEL_UP;
+		else 							button = WS_WHEEL_DOWN;
+		BaseInterface::Room::Link * link = room->GetCurrentLink(0, false);
+		if (link != NULL) {
+			x = link->x + link->wid / 2.;
+			y = link->y + link->hei / 2.;
+		} else {
+			int mx, my;
+			GetMouseXY(mx, my);
+			CalculateRealXAndY(mx,my,&x,&y);
+		}
+		if (base && base == BaseInterface::CurrentBase && curroom == base->curroom)
+			room->Click(base, x, y, button, WS_MOUSE_DOWN);
+		if (base && base == BaseInterface::CurrentBase && curroom == base->curroom)
+			room->Click(base, x, y, button, WS_MOUSE_UP);
+	}
+	void NextLink(const KBData & data, KBSTATE newState) {
+		handleLink(BASE_NEXT_LINK, data, newState);
+	}
+ 	void PrevLink(const KBData & data, KBSTATE newState) {
+ 		handleLink(BASE_PREV_LINK, data, newState);
+ 	}
+ 	void EnterLink(const KBData & data, KBSTATE newState) {
+ 		handleLink(BASE_ENTER_LINK, data, newState);
+ 	}
+ 	void Computer(const KBData & data, KBSTATE newState) {
+ 		if (newState != PRESS || BaseInterface::CurrentBase == NULL)
+ 			return ;
+ 		BaseInterface::Room::Comp comp("BaseKeys::Computer", "");
+ 		for (unsigned int i = 0; i < BaseComputer::LOADSAVE/* DISPLAY_MODE_COUNT*/; ++i) {
+ 			comp.modes.push_back((enum BaseComputer::DisplayMode)i);
+ 		}
+ 		comp.Click(BaseInterface::CurrentBase, -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_DOWN);
+ 		comp.Click(BaseInterface::CurrentBase, -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_UP);
+ 	}
+}
+
 // This is a hack to emulate link navigation with joystick.
 // We could use the KeyBindings mechanism provided by in_sdl/in_joystick
 // (assuming we can differenciate game bindings and base bindings).
 void BaseInterface::Joystick(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
 	static const bool joy_link_nav_emul = XMLSupport::parse_bool(vs_config->getVariable("joystick", "base_link_nav", "true"));
-	static unsigned int prev_key[MAX_JOYSTICKS] = { (unsigned int)-1, };
+	static bool init_done = false;
+	static enum BaseKeys::BASE_LINK_CMD_ENUM prev_cmd[MAX_JOYSTICKS];
 	BaseInterface * base = CurrentBase;
 	if (!joy_link_nav_emul || base == NULL || !(base->python_kbhandler.empty()) || which >= GetNumJoysticks())
 		return ;
-	if (prev_key[0] == (unsigned int)-1) memset(prev_key, 0, sizeof(prev_key));
-	unsigned int key = 0;
-	if (buttons != 0) {
-		key = ' ';
-	} else if (fabs(x) >= 0.8 && x*x > y*y) {
-		key = x>0 ? WSK_RIGHT : WSK_LEFT;
-	} else if (fabs(y) >= 0.8 && y*y > x*x) {
-		key = y>0 ? WSK_RIGHT : WSK_LEFT;
+	if (!init_done) {
+		for (size_t i = 0; i < sizeof(prev_cmd)/sizeof(*prev_cmd); ++i) prev_cmd[i] = BaseKeys::BASE_LINK_NONE;
+		init_done = true;
 	}
-	if (key != prev_key[which]) {
-		prev_key[which] = key;
-		if (key != 0) {
+	enum BaseKeys::BASE_LINK_CMD_ENUM what = BaseKeys::BASE_LINK_NONE;
+	if (buttons != 0) {
+		what = BaseKeys::BASE_ENTER_LINK;
+	} else if (fabs(x) >= 0.8 && x*x > y*y) {
+		what = x>0 ? BaseKeys::BASE_NEXT_LINK : BaseKeys::BASE_PREV_LINK;
+	} else if (fabs(y) >= 0.8 && y*y > x*x) {
+		what = y>0 ? BaseKeys::BASE_NEXT_LINK : BaseKeys::BASE_PREV_LINK;
+	}
+	if (what != prev_cmd[which]) {
+		prev_cmd[which] = what;
+		if (what != BaseKeys::BASE_LINK_NONE) {
 			BASE_LOG(logvs::VERBOSE, "joystick: #%d x:%g y:%g z:%g buttons:%x", which, x, y, z, buttons);
-			if (base != BaseInterface::CurrentBase) return ;
-			base->Key(key, (unsigned int)-1, false, 0, 0);
-			if (base != BaseInterface::CurrentBase) return ;
-			base->Key(key, (unsigned int)-1, true, 0, 0);
+			BaseKeys::handleLink(what, KBData(), PRESS);
 		}
 	}
 }
@@ -939,6 +991,8 @@ BaseInterface *BaseInterface::CurrentBase=NULL;
 static BaseInterface *lastBaseDoNotDereference=NULL;
 
 void * BaseInterface::CurrentFont = NULL;
+
+extern bool QuitAllow;
 
 bool RefreshGUI(void) {
 	bool retval=false;
@@ -952,6 +1006,20 @@ bool RefreshGUI(void) {
 #else
 					return RefreshInterface ();
 #endif
+				} else if (QuitAllow) {
+					static VSSprite QuitSprite("quit.sprite",BILINEAR,GFXTRUE);
+					static VSSprite QuitCompatSprite("quit.spr",BILINEAR,GFXTRUE);
+
+					GFXColor(0,0,0,0);
+					glViewport(0,0,g_game.x_resolution, g_game.y_resolution);
+					StartGUIFrame(GFXTRUE);
+					//GFXEnable(TEXTURE0);
+					if (QuitSprite.LoadSuccess()) {
+						QuitSprite.Draw();
+					} else {
+						QuitCompatSprite.Draw();
+					}
+					EndGUIFrame(GFXFALSE);
 				} else {
 					BaseInterface::CurrentBase->Draw();
 				}
@@ -992,23 +1060,8 @@ void base_main_loop() {
 
 void BaseInterface::Room::Key(BaseInterface* base, unsigned int ch, unsigned int mod, bool release, float x, float y) {
 	static const bool kb_link_nav_emul = XMLSupport::parse_bool(vs_config->getVariable("keyboard", "base_link_nav", "true"));
-	BASE_DBG(logvs::DBG+1, "Room::Key() %x mod:%x release:%d", ch, mod, release);
-	if ((mod == (unsigned int)-1 || kb_link_nav_emul) && !release && (ch == ' ' || ch == WSK_RETURN
-	||  ch == WSK_DOWN || ch == WSK_UP || ch == WSK_LEFT || ch == WSK_RIGHT)) {
-		int button;
-		if (ch == WSK_RETURN || ch == ' ') button = WS_LEFT_BUTTON;
-		else if (ch == WSK_UP || ch == WSK_LEFT) button = WS_WHEEL_UP;
-		else button = WS_WHEEL_DOWN;
-		Link * link = GetCurrentLink(0, false);
-		if (link != NULL) {
-			x = link->x + link->wid / 2.;
-			y = link->y + link->hei / 2.;
-		}
-		if (base && base == BaseInterface::CurrentBase)
-			this->Click(base, x, y, button, WS_MOUSE_DOWN);
-		if (base && base == BaseInterface::CurrentBase)
-			this->Click(base, x, y, button, WS_MOUSE_UP);
-	}
+	BASE_DBG(logvs::DBG, "Room::Key() %x mod:%x release:%d", ch, mod, release);
+	kbGetInput(ch, mod, release, x, y);
 }
 
 void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int button, int state) {
@@ -1242,6 +1295,9 @@ void BaseInterface::ActiveMouseOverWin (int x, int y) {
 	}
 }
 
+int shiftup(int);
+int shiftdown(int);
+
 void BaseInterface::Key(unsigned int ch, unsigned int mod, bool release, int x, int y)
 {
 	if (!python_kbhandler.empty()) {
@@ -1258,7 +1314,13 @@ void BaseInterface::Key(unsigned int ch, unsigned int mod, bool release, int x, 
 	}
 	else {
 		float fx, fy;
+		unsigned int shiftdown_ch = shiftdown(ch);
 		CalculateRealXAndY(x, y, &fx, &fy);
+		if ((mod & KB_MOD_SHIFT) != 0 && kbHasBinding(shiftdown_ch, mod)) {
+			ch = shiftdown_ch;
+		} else {
+			mod &= ~KB_MOD_SHIFT;
+		}
 		rooms[curroom]->Key(this, ch, mod, release, fx, fy);
 	}
 }
@@ -1295,14 +1357,17 @@ BaseInterface::~BaseInterface () {
 		VSFileSystem::vs_close(fp);
 	}
 #endif
+	size_t links = 0, objs = 0;
 	CurrentBase=NULL;
 	restore_main_loop();
 	for (size_t i=0;i<rooms.size();i++) {
+		objs += rooms[i]->objs_size();
+		links +=  rooms[i]->links_size();
 		delete rooms[i];
 	}
+	BASE_LOG(logvs::NOTICE, "ByeBye Base - %zu rooms, %zu objs, %zu links", rooms.size(), objs, links);
 }
 void base_main_loop();
-int shiftup(int);
 static void base_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, int x, int y ) {
 	// Set modifiers
 	unsigned int amods = 0;
@@ -1310,7 +1375,7 @@ static void base_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, i
 	amods |= (mod&(WSK_MOD_LCTRL |WSK_MOD_RCTRL )) ? KB_MOD_CTRL  : 0;
 	amods |= (mod&(WSK_MOD_LALT  |WSK_MOD_RALT  )) ? KB_MOD_ALT   : 0;
 	setActiveModifiers(amods);
-	unsigned int shiftedch = ((WSK_MOD_LSHIFT==(mod&WSK_MOD_LSHIFT))||(WSK_MOD_RSHIFT==(mod&WSK_MOD_RSHIFT)))?shiftup(ch):ch;
+	unsigned int shiftedch = ((amods & KB_MOD_SHIFT) != 0) ?shiftup(ch):ch;
 	if (BaseInterface::CurrentBase && !BaseInterface::CurrentBase->CallComp) {
 		// Flush buffer
 		if (base_keyboard_queue.size())
@@ -1324,6 +1389,9 @@ static void base_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, i
 	}
 }
 void BaseInterface::InitCallbacks () {
+	BASE_DBG(logvs::DBG, "%s()", __func__);
+	RestoreKB();
+	base_keyboard_queue.clear();
 	winsys_set_keyboard_func(base_keyboard_cb);	
 	winsys_set_mouse_func(ClickWin);
 	winsys_set_joystick_func(Joystick);
@@ -1332,8 +1400,8 @@ void BaseInterface::InitCallbacks () {
 	CurrentBase=this;
 //	UpgradeCompInterface(caller,baseun);
 	CallComp=false;
-	static bool simulate_while_at_base=XMLSupport::parse_bool(vs_config->getVariable("physics","simulate_while_docked","false"));
-	if (!(simulate_while_at_base||_Universe->numPlayers()>1)) {
+	//if (CommandInterpretor) CommandInterpretor->enable(false);
+	if (!(game_options.simulate_while_at_base||_Universe->numPlayers()>1)) {
 		GFXLoop(base_main_loop);
 	}
 }
@@ -1811,6 +1879,10 @@ void BaseInterface::Draw () {
     if (game_options.show_msgcenter_base && mission) {
         mission->gametime += GetElapsedTime(); //DirectorLoop not run in base
         Mission::RenderMessages(NULL);
+    }
+    if(CommandInterpretor && CommandInterpretor->console){
+        GFXColorf(GFXColor(1,1,1,1));
+        CommandInterpretor->renderconsole();
     }
 
 	curtext.GetCharSize(x,y);

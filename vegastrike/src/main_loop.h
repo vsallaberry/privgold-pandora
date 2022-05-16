@@ -1,6 +1,7 @@
 #ifndef _MAIN_LOOP_H_
 #define _MAIN_LOOP_H_
 #include "in.h"
+#include "in_kb_data.h"
 #include "cmd/unit_generic.h"
 void bootstrap_draw (const std::string &message, Animation * SplashScreen=NULL);
 
@@ -41,11 +42,13 @@ namespace CockpitKeys {
    void  ViewTarget(const KBData&,KBSTATE newState) ;
    void  OutsideTarget(const KBData&,KBSTATE newState) ;
    void  Quit(const KBData&,KBSTATE newState) ;
+   void  ConfirmQuit(const KBData&,KBSTATE newState) ;
    void  TextMessageKey(const KBData&,KBSTATE newState) ;
    void  toggleFPS(const KBData&,KBSTATE a);
    void  toggleHelp(const KBData&,KBSTATE a);
    void  toggleMsgCenterLog(const KBData&,KBSTATE a);
-   void  QuitNow();
+   void  QuitNow(const KBData&,KBSTATE newState);
+   inline void  QuitNow() { QuitNow(KBData(),PRESS); }
 }
 
 

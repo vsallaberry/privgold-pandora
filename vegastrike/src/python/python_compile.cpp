@@ -127,31 +127,31 @@ static void pySetScratchVector(const KBSTATE k) {
   }
 }
 void RunPythonPress(const KBData&s,KBSTATE k){
-  if (k==PRESS&&s.data.length()){
+  if (k==PRESS&&s.data().length()){
     pySetScratchVector(k);
-    CompileRunPython(s.data);
+    CompileRunPython(s.data());
     UniverseUtil::setScratchVector(Vector(0,0,0));
   }
 }
 void RunPythonRelease(const KBData&s,KBSTATE k){
-  if (k==RELEASE&&s.data.length()){
+  if (k==RELEASE&&s.data().length()){
     pySetScratchVector(k);
-    CompileRunPython(s.data);
+    CompileRunPython(s.data());
     UniverseUtil::setScratchVector(Vector(0,0,0));
   }
 }
 void RunPythonToggle(const KBData&s,KBSTATE k){
-  if ((k==RELEASE||k==PRESS)&&s.data.length()){
+  if ((k==RELEASE||k==PRESS)&&s.data().length()){
     pySetScratchVector(k);
-    CompileRunPython(s.data);
+    CompileRunPython(s.data());
     UniverseUtil::setScratchVector(Vector(0,0,0));
   }
   
 }
 void RunPythonPhysicsFrame(const KBData&s,KBSTATE k){
-  if ((k==DOWN||k==UP)&&s.data.length()){
+  if ((k==DOWN||k==UP)&&s.data().length()){
     pySetScratchVector(k);
-    CompileRunPython(s.data);
+    CompileRunPython(s.data());
     UniverseUtil::setScratchVector(Vector(0,0,0));
   }  
 }

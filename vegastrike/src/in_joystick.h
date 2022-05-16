@@ -105,14 +105,24 @@ class JoyStick {
 
 extern JoyStick *joystick[MAX_JOYSTICKS];
 typedef void (*JoyHandler)(KBSTATE,float x, float y, int mod);
-void BindJoyKey (int key, int joystick, KBHandler handler, const KBData&data);
-void UnbindJoyKey (int joystick, int key);
 
-void UnbindHatswitchKey (int hatswitch, int val_index);
-void BindHatswitchKey (int hatswitch, int val_index, KBHandler handler, const KBData&data);
+struct JoystickEvent {
+	int which;
+	unsigned int button, state, modifier;
+	float x, y, z;
+	JoystickEvent(int _which, unsigned int _button = 0, unsigned int _state = 0, unsigned int _modifier = 0,
+			      float _x = 0., float _y = 0., float _z = 0.)
+	: which(_which), button(_button), state(_state), modifier(_modifier), x(_x), y(_y), z(_z) {}
+};
 
-void BindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index, KBHandler handler, const KBData&data);
-void UnbindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index);
+void BindJoyKey (int key, int joystick, unsigned int scope, KBHandler handler, const KBData&data);
+void UnbindJoyKey (int joystick, int key, unsigned int scope);
+
+void UnbindHatswitchKey (int hatswitch, int val_index, unsigned int scope);
+void BindHatswitchKey (int hatswitch, int val_index, unsigned int scope, KBHandler handler, const KBData&data);
+
+void BindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index, unsigned int scope, KBHandler handler, const KBData&data);
+void UnbindDigitalHatswitchKey (int joystick,int hatswitch, int dir_index, unsigned int scope);
 
 unsigned int GetNumJoysticks();
 int GetJoystickByID(int id);
@@ -120,6 +130,6 @@ int GetJoystickByID(int id);
 void RestoreJoystick();
 void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state);
 void JoystickProcessQueue(int player);
-void JoystickQueuePush(int which);
+void JoystickQueuePush(const JoystickEvent & joydata);
 
 #endif // _JOYSTICK_H_

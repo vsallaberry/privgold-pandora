@@ -5852,7 +5852,7 @@ bool BaseComputer::LoadSaveQuitConfirm::processWindowCommand(const EventCommandI
 // Show options.
 
 bool BaseComputer::actionConfirmedQuitGame() {
-	CockpitKeys::QuitNow();
+	CockpitKeys::QuitNow(KBData(),PRESS);
 	return true;
 }
 bool BaseComputer::actionQuitGame(const EventCommandId& command, Control* control) {

@@ -32,6 +32,8 @@
 #include "easydom.h"
 #include <map>
 
+#define XMLCONFIG_MAKEVERSION(major,minor,rev)  ((major)/1.0 + (minor)/1000.0 + (rev)/1000000.0)
+
 using std::string;
 using std::map;
 
@@ -56,6 +58,7 @@ class configNodeFactory : public easyDomFactory<configNode> {
 
 class VegaConfig {
  public:
+  bool checkVersion(float version);
 
 #define MAX_AXIS 32
   int axis_axis[MAX_AXIS];
@@ -92,6 +95,8 @@ class VegaConfig {
   const easyDomNode * Bindings() const { return bindings; }
     
  protected:
+  float myversion;
+
   string getVariable(configNode *section,string name,string defaultval);
 
   configNode *variables;

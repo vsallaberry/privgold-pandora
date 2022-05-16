@@ -77,11 +77,32 @@ VegaConfig::~VegaConfig()
 
 /* *********************************************************** */
 
+bool VegaConfig::checkVersion(float version) {
+	return myversion >= version;
+}
+
 bool VegaConfig::checkConfig(configNode *node){
   if(node->Name()!="vegaconfig"){
     CONFIG_LOG(logvs::ERROR, "this is no Vegastrike config file");
     return false;
   }
+  std::string versionstr = node->attr_value("version");
+  if (versionstr.empty()) {
+	  myversion = XMLCONFIG_MAKEVERSION(1,2,0);
+  } else {
+	  myversion = 0;
+	  float factor = 1.0;
+	  for (std::string::iterator it = versionstr.begin(); it != versionstr.end(); ) {
+		  std::string::iterator tmp = std::find(it, versionstr.end(), '.');
+		  myversion += XMLSupport::parse_int(std::string(it, tmp)) / factor;
+		  factor *= 1000.0;
+		  if (tmp != versionstr.end()) {
+			  ++tmp;
+		  }
+		  it = tmp;
+	  }
+  }
+  CONFIG_LOG(logvs::NOTICE, "config version = %f", myversion);
 
   vector<easyDomNode *>::const_iterator siter;
   

@@ -69,8 +69,8 @@ QVector &LocationSelect::Position()
 
 
 void LocationSelect::MoveLocation (Vector start,Vector Plane1, Vector Plane2) {    
-  //BindKey (1,LocationSelect::MouseMoveHandle);
-  //UnbindMouse (getMouseDrawFunc()); //don't draw the mouse
+  //BindMouse (1, inGetCurrentScope(), LocationSelect::MouseMoveHandle);
+  //UnbindMouse (getMouseDrawFunc(), inGetCurrentScope(), ); //don't draw the mouse
   //BindKey (']',::incConstant);
   //BindKey ('[',::decConstant);
   LocalPosition = QVector(0,0,0);
@@ -92,7 +92,7 @@ void LocationSelect::MoveLocation (Vector start,Vector Plane1, Vector Plane2, Ve
 }
 
 LocationSelect::~LocationSelect() {
-  UnbindMouse (1);
+  UnbindMouse (1, inGetCurrentScope());
 }
 
 

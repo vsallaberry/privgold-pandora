@@ -36,55 +36,145 @@ extern list<InputListener*> listeners;
 
 extern InputListener* activelistener;
 */
+#include "cmd/base.h"
+
+const std::string * const	KBData::_empty_string = new std::string();
 
 static void DefaultKBHandler(const KBData&,KBSTATE newState) {
 	// do nothing
 	return;
 }
+
 struct HandlerCall{
   KBHandler function;
   KBData data;
-  HandlerCall() {
-    function=DefaultKBHandler;
-  }
+  HandlerCall() : function(DefaultKBHandler) {}
 };
-static HandlerCall keyBindings [LAST_MODIFIER][WSK_LAST];
-static unsigned int playerBindings [LAST_MODIFIER][WSK_LAST];
-KBSTATE keyState [LAST_MODIFIER][WSK_LAST];
 
-static void kbGetInput(int key, int modifiers, bool release, int x, int y){
-  ///FIXME If key is out of array index range, do nothing. This is a quick hack, the underlying cause of invalid parameters ever being given should probably be fixed instead
-  //if (key < 0 || key >= WSK_LAST) // check done before in glut_keyboard_cb
-  //  return;
+static HandlerCall	keyBindings [INSC_NB][LAST_MODIFIER][KEYMAP_SIZE];
+static unsigned int	playerBindings [LAST_MODIFIER][KEYMAP_SIZE];
+KBSTATE				keyState [LAST_MODIFIER][KEYMAP_SIZE];
 
-  int i=_Universe->CurrentCockpit();
-  _Universe->SetActiveCockpit(playerBindings[modifiers][key]);
+typedef vsUMap<std::pair<unsigned char,unsigned int>,unsigned int> PlayerBindingsMap;
+typedef vsUMap<std::pair<unsigned char,unsigned int>,KBSTATE> KeyStateMap;
+typedef vsUMap<std::pair<unsigned char,std::pair<unsigned char,unsigned int> >,HandlerCall> KeyBindingsMap;
 
-
-  if ((keyState[modifiers][key]==RESET||keyState[modifiers][key]==UP)&&!release)
-    keyBindings[modifiers][key].function(keyBindings[modifiers][key].data,PRESS);
-  if ((keyState[modifiers][key]==DOWN||keyState[modifiers][key]==RESET)&&release)
-    keyBindings[modifiers][key].function(keyBindings[modifiers][key].data,RELEASE);
-  keyState[modifiers][key] = release?UP:DOWN;
-  _Universe->SetActiveCockpit(i);
+#ifndef stdext
+# define stdext std
+#endif
+namespace stdext {
+template<> GNUHASH_CLASS hash<std::pair<unsigned char,unsigned int> /*PlayerBindingsMap::key_type*/> {
+	hash<size_t> a;
+public:
+	size_t operator () (const /*PlayerBindingsMap::key_type*/ std::pair<unsigned char,unsigned int> &key) const{
+		return a((size_t)(key.first) | (size_t)(((unsigned short)(key.second))<<4));
+	}
+};
+template<> GNUHASH_CLASS hash</*KeyBindingsMap::key_type*/ std::pair<unsigned char,std::pair<unsigned char,unsigned int> > > {
+	hash<size_t> a;
+public:
+	size_t operator () (const /*KeyBindingsMap::key_type*/ std::pair<unsigned char,std::pair<unsigned char,unsigned int> > &key) const{
+		return (size_t)(a((size_t)(key.first) | (size_t)(((unsigned short)(key.second.first))<<4))
+				        ^ a(((size_t)key.second.second)));
+	}
+};
 }
 
-static bool kbHasBinding(int key, int modifiers)
-{
-	static HandlerCall defaultHandler;
-	return (keyBindings[modifiers][key].function != defaultHandler.function);
+static PlayerBindingsMap 	s_playerBindingsMap;
+static KeyStateMap			s_keyStateMap;
+static KeyBindingsMap 		s_keyBindingsMap;
+
+static HandlerCall  s_defaultHandler;
+static KBSTATE		s_defaultState;
+static unsigned int	s_defaultPlayer;
+
+unsigned int inGetCurrentScope() {
+	return BaseInterface::CurrentBase == NULL ? INSC_COCKPIT : INSC_BASE;
+}
+
+static inline PlayerBindingsMap::key_type makePlayerBindingsKey(unsigned int key, unsigned int modifiers) {
+	return std::make_pair((unsigned char)modifiers, key);
+}
+static inline KeyBindingsMap::key_type makeKeyBindingsKey(unsigned int key, unsigned int modifiers, unsigned int scope) {
+	return std::make_pair((unsigned char)scope, std::make_pair((unsigned char)modifiers, key));
+}
+static inline KeyStateMap::key_type makeKeyStateKey(unsigned int key, unsigned int modifiers) {
+	return std::make_pair((unsigned char)modifiers, key);
+}
+
+static inline KBSTATE & keyStateRef(unsigned int key, unsigned int modifiers) {
+	if (key >= KEYMAP_SIZE) {
+		KeyStateMap::iterator it = s_keyStateMap.find(makeKeyStateKey(key, modifiers));
+		if (it != s_keyStateMap.end())
+			return it->second;
+		return s_defaultState;
+	}
+	return keyState[modifiers][key];
+}
+static inline HandlerCall & keyBindingsRef(unsigned int key, unsigned int modifiers, unsigned int scope) {
+	if (key >= KEYMAP_SIZE) {
+		KeyBindingsMap::iterator it = s_keyBindingsMap.find(makeKeyBindingsKey(key, modifiers, scope));
+		if (it != s_keyBindingsMap.end())
+			return it->second;
+		return s_defaultHandler;
+	}
+	return keyBindings[scope][modifiers][key];
+}
+static inline unsigned int & playerBindingsRef(unsigned int key, unsigned int modifiers) {
+	if (key >= KEYMAP_SIZE) {
+		PlayerBindingsMap::iterator it = s_playerBindingsMap.find(makePlayerBindingsKey(key, modifiers));
+		if (it != s_playerBindingsMap.end())
+			return it->second;
+		return s_defaultPlayer;
+	}
+	return playerBindings[modifiers][key];
+}
+
+void kbGetInput(int key, int modifiers, bool release, int x, int y){
+	unsigned int scope = inGetCurrentScope();
+
+	KBSTATE & state = keyStateRef(key, modifiers);
+	HandlerCall & handler = keyBindingsRef(key, modifiers, scope);
+	unsigned int & player = playerBindingsRef(key, modifiers);
+
+	VS_DBG("keyboard", logvs::DBG, "kbGetInput '%c' (%d,0x%x) (mod:%d release:%d scope:%d state=%d)",
+			key < 128 ? key : '?', key, key, modifiers, release, scope, state);
+
+	int i=_Universe->CurrentCockpit();
+	_Universe->SetActiveCockpit(player);//playerBindings[modifiers][key]);
+
+	/*if ((keyState[modifiers][key]==RESET||keyState[modifiers][key]==UP)&&!release)
+		keyBindings[scope][modifiers][key].function(keyBindings[scope][modifiers][key].data,PRESS);
+	if ((keyState[modifiers][key]==DOWN||keyState[modifiers][key]==RESET)&&release)
+		keyBindings[scope][modifiers][key].function(keyBindings[scope][modifiers][key].data,RELEASE);
+	keyState[modifiers][key] = release?UP:DOWN; */
+
+	if ((state==RESET||state==UP)&&!release)
+		handler.function(handler.data,PRESS);
+	if ((state==DOWN||state==RESET)&&release)
+		handler.function(handler.data,RELEASE);
+	state = release?UP:DOWN;
+
+	_Universe->SetActiveCockpit(i);
 }
 
 // modifiers: enum KB_MODIFIER_ENUM
-bool HasKeyBinding(unsigned int key, unsigned int modifiers)
+bool kbHasBinding(unsigned int key, unsigned int modifiers)
 {
-    static HandlerCall defaultHandler;
-    if (key >= WSK_LAST)
-        return false;
+	unsigned int scope = inGetCurrentScope();
+	VS_DBG("keyboard", logvs::DBG+1, "kbHasBindings(%x,mod:%x,scop:%x)?", key, modifiers, scope);
+	bool has_bindings = (keyBindingsRef(key, modifiers, scope).function != s_defaultHandler.function);
+	VS_DBG("keyboard", logvs::DBG+1, "kbHasBindings -> %d", has_bindings);
+	return has_bindings;
+}
+
+// modifiers: enum WSK_*
+bool kbHasBindingWSK(unsigned int key, unsigned int modifiers)
+{
     unsigned int internal_mod = (modifiers & (WSK_MOD_LALT | WSK_MOD_RALT) ? KB_MOD_ALT : 0)
                               | (modifiers & (WSK_MOD_LSHIFT | WSK_MOD_RSHIFT) ? KB_MOD_SHIFT : 0)
                               | (modifiers & (WSK_MOD_LCTRL | WSK_MOD_RCTRL) ? KB_MOD_CTRL : 0);
-    return (keyBindings[internal_mod][key].function != defaultHandler.function);
+    return kbHasBinding(key,internal_mod);//(keyBindings[internal_mod][key].function != defaultHandler.function);
 }
 
 // The SDL KB unicode driver can identify the right shifted keys
@@ -150,6 +240,7 @@ unsigned int pullActiveModifiers()
 #endif
     return getActiveModifiers();
 }
+
 unsigned int getModifier(const char* mod_name){
   if (mod_name[0]=='\0')
     return 0;
@@ -162,14 +253,17 @@ unsigned int getModifier(const char* mod_name){
     rv |= KB_MOD_ALT;
   return rv;
 }
+
 int getModifier(bool alton, bool cntrlon, bool shifton) {
-	return cntrlon?KB_MOD_CTRL:(alton?KB_MOD_ALT:(shifton?KB_MOD_SHIFT:0));
+	return (cntrlon?KB_MOD_CTRL:0) | (alton?KB_MOD_ALT:0) | (shifton?KB_MOD_SHIFT:0);
 }
- void glut_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, int x, int y ) 
+
+void glut_keyboard_cb( unsigned int  ch,unsigned int mod, bool release, int x, int y )
 {
-  bool shifton=false;
-  int alton=false;
-  int ctrlon=false;
+  bool shifton = 0 != (mod & (WSK_MOD_LSHIFT|WSK_MOD_RSHIFT));
+  bool alton = 0 != (mod & (WSK_MOD_LALT|WSK_MOD_RALT));
+  bool ctrlon = 0 != (mod & (WSK_MOD_LCTRL|WSK_MOD_RCTRL));
+
   unsigned int shiftup_ch, shiftdown_ch;
     
   unsigned int modmask = KB_MOD_MASK;
@@ -180,20 +274,13 @@ int getModifier(bool alton, bool cntrlon, bool shifton) {
   shiftup_ch = shiftup(ch);
   shiftdown_ch = shiftdown(ch);
     
-  if ((WSK_MOD_LSHIFT==(mod&WSK_MOD_LSHIFT))||(WSK_MOD_RSHIFT==(mod&WSK_MOD_RSHIFT))) {
+  if (shifton) {
     // This is ugly, but we have to support legacy config files...
 	// ...maybe add config option to disable this soooo ugly thing...
-	if (!kbHasBinding(ch,KB_MOD_SHIFT)) {
+	if (!kbHasBinding(ch,getModifier(alton,ctrlon,shifton))) {
 		ch = shiftup_ch;
 		modmask &= ~KB_MOD_SHIFT;
 	}
-	shifton=true;
-  }
-  if ((WSK_MOD_LALT==(mod&WSK_MOD_LALT))||(WSK_MOD_RALT==(mod&WSK_MOD_RALT))) {
-    alton=true;
-  }
-  if ((WSK_MOD_LCTRL==(mod&WSK_MOD_LCTRL))||(WSK_MOD_RCTRL==(mod&WSK_MOD_RCTRL))) {
-    ctrlon=true;
   }
 
   // Polling state
@@ -202,26 +289,23 @@ int getModifier(bool alton, bool cntrlon, bool shifton) {
 	   |(alton  ?KB_MOD_ALT  :0)
 	   |(ctrlon ?KB_MOD_CTRL :0)  );  
 
-  // No Key State for unicode characters yet
-  if (shiftup_ch >= WSK_LAST || shiftdown_ch >= WSK_LAST) {
-      return ;
-  }
   int curmod=getModifier(alton,ctrlon,shifton) & modmask;
+
   kbGetInput( ch, curmod,release, x, y );
   if (release) {
     for (int i=0;i<LAST_MODIFIER;++i) {
       if (i!=curmod){
-        if(keyState[i][shiftdown_ch]==DOWN)
-          kbGetInput (shiftdown_ch,i,release,x,y);
-        if(keyState[i][shiftup_ch]==DOWN)
+        if(keyStateRef(shiftdown_ch, i) == DOWN) //keyState[i][shiftdown_ch]==DOWN)
+          kbGetInput (shiftdown_ch, i,release,x,y);
+        if(keyStateRef(shiftup_ch, i) == DOWN) //keyState[i][shiftup_ch]==DOWN)
           kbGetInput (shiftup_ch,i,release,x,y);
       }else{
         if (shifton) {
-          if (shiftdown_ch!=ch&&keyState[i][shiftdown_ch]==DOWN) {
+          if (shiftdown_ch!=ch && keyStateRef(shiftdown_ch, i) == DOWN) { //keyState[i][shiftdown_ch]==DOWN) {
             kbGetInput (shiftdown_ch,i,release,x,y);
           }
         }else {
-          if (shiftup_ch!=ch&&keyState[i][shiftup_ch]==DOWN) {
+          if (shiftup_ch!=ch && keyStateRef(shiftup_ch, i) == DOWN) { //keyState[i][shiftup_ch]==DOWN) {
             kbGetInput (shiftup_ch,i,release,x,y);
           }
         }
@@ -249,36 +333,59 @@ static void glut_special_up_cb( int key, int x, int y )
 }
 */
 void RestoreKB() {
-  for (int i=0;i<LAST_MODIFIER;++i) {
-    for(int a=0; a<KEYMAP_SIZE; a++) {
-      if (keyState[i][a]==DOWN) {
-        keyBindings[i][a].function(keyBindings[i][a].data,RELEASE);      
-        keyState[i][a] = UP;
+  unsigned int scope = inGetCurrentScope();
+  for (unsigned s = 0; s < INSC_ALL; ++s) {
+    for (int i=0;i<LAST_MODIFIER;++i) {
+      for(int a=0; a<KEYMAP_SIZE; a++) {
+        if (keyState[i][a]==DOWN) {
+          if (s == scope) {
+            keyBindings[s][i][a].function(keyBindings[s][i][a].data,RELEASE);
+          }
+          keyState[i][a] = UP;
+        }
       }
     }
+  }
+  for (KeyBindingsMap::iterator it = s_keyBindingsMap.begin(); it != s_keyBindingsMap.end(); ++it) {
+	  unsigned int s = it->first.first;
+	  KBSTATE & stateRef = keyStateRef(it->first.second.second, it->first.second.first);
+	  if (stateRef==DOWN) {
+		  if (s == scope) {
+	      	it->second.function(it->second.data,RELEASE);
+	      }
+	      stateRef = UP;
+	  }
   }
   winsys_set_keyboard_func( glut_keyboard_cb );
 }
 
 void InitKB()
 {
-  for (int i=0;i<LAST_MODIFIER;++i) {
-    for(int a=0; a<KEYMAP_SIZE; a++) {
-      keyState[i][a] = UP;
-      UnbindKey(a,i);
-    }
+  VS_LOG("keyboard", logvs::INFO, "%s(): keyBindings:%zub(KBHandler:%zu,KBData:%zu)",
+		  __func__, sizeof(keyBindings), sizeof(KBHandler), sizeof(KBData));
+  for (unsigned s = 0; s < INSC_ALL; ++s) {
+	  for (int i=0;i<LAST_MODIFIER;++i) {
+		for(int a=0; a<KEYMAP_SIZE; a++) {
+		  keyState[i][a] = UP;
+		  UnbindKey(a, i, s);
+		}
+	  }
   }
+  s_keyBindingsMap.clear();
+  s_keyStateMap.clear();
+  s_playerBindingsMap.clear();
   RestoreKB();
 }
 
 
 void ProcessKB(unsigned int player)
 {
-  /*  if(!activationreqqueue.empty()) {
+	unsigned int scope = inGetCurrentScope();
+	/*  if(!activationreqqueue.empty()) {
     InputListener *newactive = NULL;
     list<InputListener*>::const_iterator li_it = listeners.begin();
     float min = FLT_MAX;
-    
+
     while(li_it!=listeners.end()) { //pick the one with lowest z
       float curr_z = (*li_it)->parent->Position().k;
       if(curr_z<min ) {
@@ -290,31 +397,63 @@ void ProcessKB(unsigned int player)
       activelistener = newactive;
     //empty & analyze to see which one deserves to be activated
     }*/
-  for(int mod=0; mod<LAST_MODIFIER; mod++) {
-    for(int a=0; a<KEYMAP_SIZE; a++) {
-      if (playerBindings[mod][a]==player)
-        keyBindings[mod][a].function(keyBindings[mod][a].data,keyState[mod][a]);
-    }
-  }
+
+	for(int mod=0; mod<LAST_MODIFIER; mod++) {
+		for(int a=0; a<KEYMAP_SIZE; a++) {
+			if (playerBindingsRef(a, mod) == player) { //playerBindings[mod][a]==player)
+				//keyBindings[scope][mod][a].function(keyBindings[scope][mod][a].data,keyState[mod][a]);
+				HandlerCall & handler = keyBindingsRef(a, mod, scope);
+				handler.function(handler.data,keyStateRef(a,mod));
+			}
+		}
+	}
+
+	for (KeyBindingsMap::iterator it = s_keyBindingsMap.begin(); it != s_keyBindingsMap.end(); ++it) {
+		unsigned int s = it->first.first;
+		unsigned int key = it->first.second.second;
+		unsigned int mod = it->first.second.first;
+		KBSTATE & stateRef = keyStateRef(key, mod);
+		if (s == scope && playerBindingsRef(key, mod) == player) { //playerBindings[mod][a]==player)
+			HandlerCall & handler = keyBindingsRef(key, mod, scope);
+			handler.function(handler.data,keyStateRef(key,mod));
+		}
+	}
 }	
 
-void BindKey(unsigned int key,unsigned int mod, unsigned int player, KBHandler handler, const KBData&data) {
-    if (key >= WSK_LAST || mod >= LAST_MODIFIER) {
-        // TODO: unicode with hashmap
-        VS_LOG("keyboard", logvs::WARN, "WARNING: Bindkey with key(%d)/mod(%d) out of bounds", key, mod);
+void BindKey(unsigned int key,unsigned int mod, unsigned int player, unsigned int scope, KBHandler handler, const KBData&data) {
+    if (mod >= LAST_MODIFIER) {
+        VS_LOG("keyboard", logvs::WARN, "WARNING: Bindkey with key(%u)/mod(%u) out of bounds", key, mod);
         return ;
     }
-    keyBindings[mod][key].function = handler;
-	keyBindings[mod][key].data = data;
-	playerBindings[mod][key]=player;
-	handler(std::string(),RESET); // key is not used in handler
+    if (key >= KEYMAP_SIZE) {
+    	s_keyStateMap[makeKeyStateKey(key, mod)] = UP;
+    	s_playerBindingsMap[makePlayerBindingsKey(key, mod)] = player;
+    }
+    for (unsigned int iscp = scope >= INSC_ALL ? 0 : scope; iscp < (scope >= INSC_ALL ? INSC_ALL : scope+1); ++iscp) {
+    	if (key >= KEYMAP_SIZE) {
+    	    s_keyBindingsMap[makeKeyBindingsKey(key, mod, iscp)] = HandlerCall();
+    	}
+    	/*keyBindings[i][mod][key].function = handler;
+		keyBindings[i][mod][key].data = data;
+		playerBindings[mod][key]=player;*/
+    	HandlerCall & handlerRef = keyBindingsRef(key, mod, iscp);
+    	unsigned int & playerRef = playerBindingsRef(key, mod);
+
+    	handlerRef.function = handler;
+		handlerRef.data = data;
+		playerRef = player;
+		handler(std::string(),RESET); // key is not used in handler
+		VS_DBG("keyboard", logvs::DBG, "BindKey(%c/%x,mod:%x,ply:%u,scp:%u)",key,key,mod,player,iscp);
+    }
 }
 
-void UnbindKey(unsigned int key,unsigned int mod) {
-  if (key >= WSK_LAST || mod >= LAST_MODIFIER) {
-      // TODO: unicode with hashmap
-      VS_LOG("keyboard", logvs::WARN, "WARNING: Unbindkey with key(%d)/mod(%d) out of bounds", key, mod);
+void UnbindKey(unsigned int key, unsigned int mod, unsigned int scope) {
+  if (mod >= LAST_MODIFIER) {
+      VS_LOG("keyboard", logvs::WARN, "WARNING: Unbindkey with key(%u)/mod(%u) out of bounds", key, mod);
       return ;
   }
-  keyBindings[mod][key] = HandlerCall();
+  for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
+	  //keyBindings[i][scope][key] = HandlerCall();
+	  keyBindingsRef(key, mod, iscp) = HandlerCall();
+  }
 }

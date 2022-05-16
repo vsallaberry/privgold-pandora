@@ -2760,7 +2760,7 @@ void GameCockpit::Draw() {
         CockpitKeys::PitchDown (std::string(),RELEASE);
 	zoomfactor=dietime*10;
       }
-      QuitAllow=true;
+      QuitAllow=false;//true;
     }else {
     }
   }else{

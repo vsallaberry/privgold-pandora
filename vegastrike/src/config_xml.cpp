@@ -45,11 +45,11 @@
 //#include "vs_globals.h"
 //#include "vegastrike.h"
 #include "gfx/screenshot.h"
+#include "cmd/base.h"
+#include "command.h"
+#include "unicode.h"
 #include "log.h"
-
-/* *********************************************************** */
-
-#define CONFIG_LOG(_lvl, ...) VS_LOG("config", _lvl, __VA_ARGS__)
+#include "vs_log_modules.h"
 
 /* *********************************************************** */
 GameVegaConfig::GameVegaConfig(const char *configfile): VegaConfig( configfile)
@@ -234,7 +234,7 @@ CommandMap initGlobalCommandMap();
 static CommandMap commandMap=initGlobalCommandMap();
 
 static void ComposeFunctions(const KBData& composition, KBSTATE k) {
-  std::string s=composition.data;
+  std::string s=composition.data();
   while (s.length()){
     std::string::size_type where=s.find(" ");
     std::string t=s.substr(0,where);
@@ -261,6 +261,21 @@ static void ComposeFunctionsToggle(const KBData& composition, KBSTATE k) {
   if (k==PRESS||k==RELEASE) {
     ComposeFunctions(composition,k);
   }
+}
+
+static unsigned int getScope(const std::string & str) {
+	unsigned int scope;
+	if (!strcasecmp(str.c_str(), "all")) {
+		scope = INSC_ALL;
+	} else if (!strcasecmp(str.c_str(), "base")) {
+		scope = INSC_BASE;
+	} else {
+		scope = INSC_COCKPIT;
+		if (!str.empty() && strcasecmp(str.c_str(), "cockpit")) {
+			CONFIG_LOG(logvs::WARN, "key bindings: unknown scope '%s', assuming it is cockpit", str.c_str());
+		}
+	}
+	return scope;
 }
 
 void GameVegaConfig::initCommandMap(){
@@ -314,63 +329,66 @@ void GameVegaConfig::doAxis(configNode *node){
   }
   int axis_nr=atoi(axis.c_str());
 
-  // no checks for correct number yet 
-
-  bool inverse=false;
-  if(!invertstr.empty()){
-    inverse=XMLSupport::parse_bool(invertstr);
+  if ((joy_nr >= 0 && joy_nr >= MAX_JOYSTICKS) || axis_nr < 0 || axis_nr >= MAX_AXES) {
+	  CONFIG_LOG(logvs::WARN, "joystick incorrect joystick(%d)/axis(%d)", joy_nr, axis_nr);
+	  return ;
   }
 
-  if(name=="x"){
-    axis_joy[0]=joy_nr;
-    joystick[joy_nr]->axis_axis[0]=axis_nr;
-    joystick[joy_nr]->axis_inverse[0]=inverse;
-  }
-  else if(name=="y"){
-    axis_joy[1]=joy_nr;
-    joystick[joy_nr]->axis_axis[1]=axis_nr;
-    joystick[joy_nr]->axis_inverse[1]=inverse;
-  }
-  else if(name=="z"){
-    axis_joy[2]=joy_nr;
-    joystick[joy_nr]->axis_axis[2]=axis_nr;
-    joystick[joy_nr]->axis_inverse[2]=inverse;
-  }
-  else if(name=="throttle"){
-    axis_joy[3]=joy_nr;
-    joystick[joy_nr]->axis_axis[3]=axis_nr;
-    joystick[joy_nr]->axis_inverse[3]=inverse;
+  if(name=="hatswitch"){
+      string nr_str=node->attr_value("nr");
+      string margin_str=node->attr_value("margin");
 
+      if(nr_str.empty() || margin_str.empty()){
+        CONFIG_LOG(logvs::NOTICE, "joystick: you have to assign a number and a margin to the hatswitch");
+        return;
+      }
+      int nr=atoi(nr_str.c_str());
+
+      float margin=atof(margin_str.c_str());
+      hatswitch_margin[nr]=margin;
+
+      hatswitch_axis[nr]=axis_nr;
+      hatswitch_joystick[nr]=joy_nr;
+
+      hs_value_index=0;
+      for(vector<easyDomNode *>::const_iterator siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
+        configNode *cnode=(configNode *)(*siter);
+        checkHatswitch(nr,cnode);
+      }
+  } else {
+	  bool inverse=false;
+	  if(!invertstr.empty()){
+		inverse=XMLSupport::parse_bool(invertstr);
+	  }
+
+	  if(name=="x"){
+		axis_joy[AXIS_X]=joy_nr;
+		joystick[joy_nr]->axis_axis[AXIS_X]=axis_nr;
+		joystick[joy_nr]->axis_inverse[AXIS_X]=inverse;
+	  }
+	  else if(name=="y"){
+		axis_joy[AXIS_Y]=joy_nr;
+		joystick[joy_nr]->axis_axis[AXIS_Y]=axis_nr;
+		joystick[joy_nr]->axis_inverse[AXIS_Y]=inverse;
+	  }
+	  else if(name=="z"){
+		axis_joy[AXIS_Z]=joy_nr;
+		joystick[joy_nr]->axis_axis[AXIS_Z]=axis_nr;
+		joystick[joy_nr]->axis_inverse[AXIS_Z]=inverse;
+	  }
+	  else if(name=="throttle"){
+		axis_joy[AXIS_THROTTLE]=joy_nr;
+		joystick[joy_nr]->axis_axis[AXIS_THROTTLE]=axis_nr;
+		joystick[joy_nr]->axis_inverse[AXIS_THROTTLE]=inverse;
+
+	  }
+	  else{
+		CONFIG_LOG(logvs::NOTICE, "joystick: unknown axis %s", name.c_str());
+		return;
+	  }
+
+	  CONFIG_LOG(logvs::VERBOSE, "joystick #%d: axis %s nr=%d invert=%d", joy_nr, name.c_str(), axis_nr, inverse);
   }
-  else if(name=="hatswitch"){
-    string nr_str=node->attr_value("nr");
-    string margin_str=node->attr_value("margin");
-
-    if(nr_str.empty() || margin_str.empty()){
-      CONFIG_LOG(logvs::NOTICE, "joystick: you have to assign a number and a margin to the hatswitch");
-      return;
-    }
-    int nr=atoi(nr_str.c_str());
-
-    float margin=atof(margin_str.c_str());
-    hatswitch_margin[nr]=margin;
-
-    hatswitch_axis[nr]=axis_nr;
-    hatswitch_joystick[nr]=joy_nr;
-
-    vector<easyDomNode *>::const_iterator siter;
-  
-    hs_value_index=0;
-    for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
-      configNode *cnode=(configNode *)(*siter);
-      checkHatswitch(nr,cnode);
-    }
-  }
-  else{
-    CONFIG_LOG(logvs::NOTICE, "joystick: unknown axis %s", name.c_str());
-    return;
-  }
-
 }
 
 /* *********************************************************** */
@@ -402,7 +420,7 @@ void GameVegaConfig::checkHatswitch(int nr,configNode *node){
 void GameVegaConfig::checkBind(configNode *node){
   node->setValid(false);
   if(node->Name()!="bind"){
-    CONFIG_LOG(logvs::NOTICE, "bindings: not a bind node");
+    CONFIG_LOG(logvs::NOTICE, "bindings: '%s': not a bind node", node->Name().c_str());
     return;
   }
   std::string tmp=node->attr_value("modifier");
@@ -412,6 +430,9 @@ void GameVegaConfig::checkBind(configNode *node){
   string player_bound=node->attr_value("player");
   if (player_bound.empty())
     player_bound="0";
+
+  unsigned int scope = getScope(node->attr_value("scope"));
+
   KBHandler handler=commandMap[cmdstr];
   
   if(handler==NULL){
@@ -427,12 +448,17 @@ void GameVegaConfig::checkBind(configNode *node){
   string hat_str=node->attr_value("hatswitch");
   string dighswitch=node->attr_value("digital-hatswitch");
   string direction=node->attr_value("direction");
+  int joystick_nr = mouse_str.empty() ? (joy_str.empty() ? -1 : atoi(joy_str.c_str())) : MOUSE_JOYSTICK;
+  if (joystick_nr >= 0 && joystick_nr != MOUSE_JOYSTICK && joystick_nr >= MAX_JOYSTICKS) {
+	  CONFIG_LOG(logvs::WARN, "warning: joystick %d is out of range (max=%d)", joystick_nr, MAX_JOYSTICKS-1);
+	  return ;
+  }
+  bool joystick_available = (joystick_nr < 0 && GetNumJoysticks() > 0) || (joystick_nr >= 0 && joystick[joystick_nr]->isAvailable());
+
   if (!player_str.empty()) {
     if (!joy_str.empty()) {
-      int jn = atoi(joy_str.c_str());
-      if (jn<MAX_JOYSTICKS) {
-	joystick[jn]->player=atoi(player_str.c_str());
-      }
+      for (size_t i = joystick_nr>=0 ? joystick_nr : 0; i < (joystick_nr>=0 ? joystick_nr+1 : MAX_JOYSTICKS); ++i)
+        joystick[i]->player=atoi(player_str.c_str());
     }else if (!mouse_str.empty()) {
       joystick[MOUSE_JOYSTICK]->player=atoi(player_str.c_str());
     }
@@ -441,20 +467,20 @@ void GameVegaConfig::checkBind(configNode *node){
   if(!keystr.empty()){
     // normal keyboard key
       // now map the command to a callback function and bind it
-    if(keystr.length()==1){
-      BindKey(keystr[0],modifier,XMLSupport::parse_int(player_bound), handler,KBData(additional_data));
+	Utf8Iterator utf8_it = Utf8Iterator::begin(keystr);
+    if(*utf8_it && (utf8_it+1) == utf8_it.end()){
+      BindKey(WSK_UTF32_TO_CODE(*utf8_it),modifier,XMLSupport::parse_int(player_bound), scope, handler,KBData(additional_data));
     }
     else{
-      int glut_key=key_map[keystr];
-      if(glut_key==0){
+      KeyMap::iterator wskey_it = key_map.find(keystr);
+      if (wskey_it == key_map.end()){
           CONFIG_LOG(logvs::NOTICE, "bindings: No such special key: %s", keystr.c_str());
           return;
       }
-      BindKey(glut_key,modifier,XMLSupport::parse_int(player_bound),handler,KBData(additional_data));
+      BindKey(wskey_it->second, modifier, XMLSupport::parse_int(player_bound), scope, handler,KBData(additional_data));
     }
 
-    //    cout << "bound key " << keystr << " to " << cmdstr << endl;
-
+    CONFIG_LOG(logvs::VERBOSE, "bound key %s to %s (mod:%x,scope:%x)", keystr.c_str(), cmdstr.c_str(), modifier, scope);
   }
   else if(!buttonstr.empty()){
     // maps a joystick button or analogue hatswitch button
@@ -469,30 +495,25 @@ void GameVegaConfig::checkBind(configNode *node){
 
     	  int hatswitch_nr=atoi(hat_str.c_str());
 
-    	  BindHatswitchKey(hatswitch_nr,button_nr,handler,KBData(additional_data));
+    	  BindHatswitchKey(hatswitch_nr,button_nr,scope,handler,KBData(additional_data));
 	
-    	  //	cout << "Bound hatswitch nr " << hatswitch_nr << " button: " << button_nr << " to " << cmdstr << endl;
+    	  CONFIG_LOG(logvs::VERBOSE, "Bound hatswitch nr %d button: %d to %s (mod:%x,scope:%x)",
+    			     hatswitch_nr, button_nr, cmdstr.c_str(), modifier, scope);
       }
       else{
-		// joystick button
-		int joystick_nr;
-		if (mouse_str.empty())
-		  joystick_nr=atoi(joy_str.c_str());
-		else
-		  joystick_nr=(MOUSE_JOYSTICK);
-
 		// now map the command to a callback function and bind it
 		// yet to check for correct buttons/joy-nr
-		BindJoyKey(joystick_nr,button_nr,handler,KBData(additional_data));
+		BindJoyKey(joystick_nr,button_nr,scope,handler,KBData(additional_data));
 
-		//cout << "Bound joy= " << joystick_nr << " button= " << button_nr << "to " << cmdstr << endl;
+		CONFIG_LOG(logvs::VERBOSE, "Bound joy=%d button=%d to %s (mod:%x,scope:%x)",
+				   joystick_nr, button_nr, cmdstr.c_str(), modifier, scope);
 
-		if(!joystick[joystick_nr]->isAvailable()){
+		if(!joystick_available){
 			static bool first[MAX_JOYSTICKS], init = false;
 			if (!init) { memset(first,0xff,sizeof(first)); init=true; }
-			if (first[joystick_nr]) {
+			if (first[joystick_nr >= 0 ? joystick_nr : 0]) {
 				CONFIG_LOG(logvs::NOTICE, "bindings: warning, joystick #%d is not yet plugged!", joystick_nr);
-				first[joystick_nr]=false;
+				first[joystick_nr >= 0 ? joystick_nr : 0]=false;
 			}
 		}
       }
@@ -507,29 +528,25 @@ void GameVegaConfig::checkBind(configNode *node){
 
       int hsw_nr=atoi(dighswitch.c_str());
 
-      int joy_nr;
-      if (mouse_str.empty()) {
-    	  joy_nr=atoi(joy_str.c_str());
-      } else {
-    	  joy_nr=MOUSE_JOYSTICK;
-      }
-      if(joystick[joy_nr]->isAvailable()) {
-    	  if(hsw_nr >= joystick[joy_nr]->nr_of_hats) {
-    		  CONFIG_LOG(logvs::NOTICE, "bindings: joystick #%d: refusing to bind digital hatswitch %d: no such hatswitch", joy_nr, hsw_nr);
-    		  return;
+      if(joystick_available) {
+    	  if(hsw_nr >= joystick[joystick_nr >= 0 ? joystick_nr : 0]->nr_of_hats) {
+    		  if (hsw_nr >= joystick[joystick_nr >= 0 ? joystick_nr : 0]->nr_of_axes) {
+    			  CONFIG_LOG(logvs::WARN, "bindings: joystick #%d: refusing to bind digital hatswitch %d: no such hatswitch", joystick_nr, hsw_nr);
+    			  return ;
+    		  } else {
+    			  CONFIG_LOG(logvs::NOTICE, "bindings: joystick #%d: no digital hatswitch %d, will use axis", joystick_nr, hsw_nr);
+    		  }
     	  }
       } else {
-    	  CONFIG_LOG(logvs::NOTICE, "bindings: warning: bind digital hatswitch %d: joystick #%d not plugged!", hsw_nr, joy_nr);
+    	  CONFIG_LOG(logvs::NOTICE, "bindings: warning: bind digital hatswitch %d: joystick #%d not plugged!", hsw_nr, joystick_nr);
       }
       int dir_index;
 
       if(direction=="center"){
     	  dir_index=VS_HAT_CENTERED;
-      }
-      else if(direction=="up"){
+      } else if(direction=="up"){
     	  dir_index=VS_HAT_UP;
-      }
-      else if(direction=="right"){
+      } else if(direction=="right"){
     	  dir_index=VS_HAT_RIGHT;
       }      else if(direction=="left"){
     	  dir_index=VS_HAT_LEFT;
@@ -549,10 +566,10 @@ void GameVegaConfig::checkBind(configNode *node){
         return;
       }
 
-      BindDigitalHatswitchKey(joy_nr,hsw_nr,dir_index,handler,KBData(additional_data));
+      BindDigitalHatswitchKey(joystick_nr,hsw_nr,dir_index,scope,handler,KBData(additional_data));
 
-      CONFIG_LOG(logvs::NOTICE, "Bound joy %d hatswitch %d dir_index %d to command %s",
-                 joy_nr, hsw_nr, dir_index, cmdstr.c_str());
+      CONFIG_LOG(logvs::VERBOSE, "Bound joy %d hatswitch %d dir_index %d to command %s",
+                 joystick_nr, hsw_nr, dir_index, cmdstr.c_str());
 
     }
 #if 1
@@ -792,6 +809,8 @@ CommandMap initGlobalCommandMap() {
  commandMap["Cockpit::ToggleMsgCenterLog"]=CockpitKeys::toggleMsgCenterLog;
     
  commandMap["Cockpit::Quit"]=CockpitKeys::Quit;
+ commandMap["Cockpit::ConfirmQuit"]=CockpitKeys::ConfirmQuit;
+ commandMap["Cockpit::QuitNow"]=CockpitKeys::QuitNow;
 
  commandMap["Joystick::Mode::InertialXY"]      =FlyByKeyboard::JoyInertialXYPulsorKey;
  commandMap["Joystick::Mode::InertialXYToggle"]=FlyByKeyboard::JoyInertialXYToggleKey;
@@ -807,5 +826,11 @@ CommandMap initGlobalCommandMap() {
 
  commandMap["ConsoleKeys::BringConsole"]=ConsoleKeys::BringConsole;
  commandMap["NewShader"]=doReloadShader;
+
+ commandMap["Base::NextLink"]=BaseKeys::NextLink;
+ commandMap["Base::PrevLink"]=BaseKeys::PrevLink;
+ commandMap["Base::EnterLink"]=BaseKeys::EnterLink;
+ commandMap["Base::Computer"]=BaseKeys::Computer;
+
  return commandMap;
 }

@@ -23,7 +23,7 @@ static float GetY (float x) {
 }
 
 void InputDFA::OrderHandler (const KBData& keys, KBSTATE k) {
-  int key = atoi(keys.data.c_str());
+  int key = atoi(keys.data().c_str());
   if (k==PRESS) {
     if (k<='Z'&&k>='A')
       CurDFA->queueOrder=true;
@@ -539,13 +539,13 @@ void InputDFA::ContextAcquire() {
 void InputDFA::ContextSwitch (){
 #ifdef USE_INPUT_DFA
   switch (state) {
-  case NONE:UnbindMouse(0);
+  case NONE:UnbindMouse(0, inGetCurrentScope());
       break;
-  case UNITS_SELECTED:UnbindMouse(0);
+  case UNITS_SELECTED:UnbindMouse(0, inGetCurrentScope());
     break;
-  case LOCATION_SELECT:UnbindMouse(0);
+  case LOCATION_SELECT:UnbindMouse(0, inGetCurrentScope());
     break;
-  case TARGET_SELECT:UnbindMouse(0);
+  case TARGET_SELECT:UnbindMouse(0, inGetCurrentScope());
     break;
   }
 #endif

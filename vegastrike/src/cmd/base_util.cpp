@@ -565,7 +565,7 @@ namespace BaseUtil {
 
 	void ExitGame()
 	{
-		CockpitKeys::QuitNow();
+		CockpitKeys::QuitNow(KBData(),PRESS);
 	}
 
 }

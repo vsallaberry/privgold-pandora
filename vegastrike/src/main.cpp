@@ -66,6 +66,7 @@
 #include "cmd/music.h"
 #include "ship_commands.h"
 #include "gamemenu.h"
+#include "command.h"
 #include "log.h"
 #include "vs_log_modules.h"
 #include "common/common.h"
@@ -840,8 +841,12 @@ void bootstrap_main_loop () {
           _Universe->AccessCockpit(i)->savegame->LoadSavedMissions();
         }
 
-    GAME_LOG(logvs::NOTICE, "Running Main Loop");
-             _Universe->Loop(main_loop);
+    if (BaseInterface::CurrentBase == NULL || (game_options.simulate_while_at_base||_Universe->numPlayers()>1)) {
+    	GAME_LOG(logvs::NOTICE, "Running Main Loop");
+        _Universe->Loop(main_loop);
+    } else {
+    	GAME_LOG(logvs::NOTICE, "Base Loop is running");
+    }
 
     // Execute Director once to initialize python objects before hiding splashscreen.
     extern void ExecuteDirector(); // star_system_generic.cpp
