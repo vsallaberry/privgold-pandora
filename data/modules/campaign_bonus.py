@@ -250,7 +250,7 @@ def OptionalTalkingHead(sprite):
 
 
 def IntroCutscene():
-	return None#delete this line for intro cutscene with talons
+	return None #comment this line for intro cutscene with talons
 	return Cutscene('Pirate_Encounter','IntroCutscene.spr',(0,0),(3.104,1.2416),'Intro_Cutscene',["                                                                                                 ","                                                                                      ","                                                                                 ","                                                                   ","                                                  ","                                                                                   ","                                                                                                ","                                                                                           ","                                                                                           ","                                                                                         ","                                                                ","                                                 ","                                                                                    ","                                                                                                             ","                                                                            ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                ","                                                                                "],"intro.m3u","mining_base.m3u").MakeEnqueue()
 
 sorenseed=7
@@ -291,7 +291,7 @@ def SorenCargoMission(priv,destsys,destbase,cargo,aggressor,lastreward=0,NextMis
 		[InSystemCondition("Gemini/Midgard","Heimdal")],
 		[InSystemCondition(destsys[-1],destbase)],
 		AddCredits(lastreward),
-		LoadMission('ambush','ambush',(priv.name+"_mission",(destsys[-2],),0,aggressor,sorenseed%7+1,'','',getDialog(aggressor,cargo),destsys,destbase,False)),
+		LoadMission('ambush','ambush',(priv.name+"_mission",(destsys[-2],),0,aggressor,sorenseed%7+1,'','',getDialog(aggressor,cargo),destsys,destbase,False),vars=dict(MISSION_SHORTDESC=sorenspeech.get('shortdesc','Campaign mission'))),
 		(cargo,30),
 		priv.name+"_mission",
 		sorenspeech,
@@ -492,7 +492,7 @@ def DemetriaRevolutionMission(priv,demetriaseed,path,base,aggressor,lastreward,F
 		[InSystemCondition(path[0])]+prequisites,	
 		[InSystemCondition(sys,base)],
 		AddCredits(lastreward,ChangeSystemOwner(path[0],"AWACS")),
-		LoadMission('ambush','ambush',(priv.name+"_mission",(path[-2],),0,aggressor,demetriaseed%7+1,'','',getDemetriaDialog(aggressor,0),path,base,False)),
+		LoadMission('ambush','ambush',(priv.name+"_mission",(path[-2],),0,aggressor,demetriaseed%7+1,'','',getDemetriaDialog(aggressor,0),path,base,False),vars=dict(MISSION_SHORTDESC=demetriaspeech1.get('shortdesc','Campaign mission'))),
 		('Weapons',30),
 		priv.name+"_mission",
 		demetriaspeech1,
@@ -530,10 +530,10 @@ def LoadBonusCampaign():
 	#FOR USE LATER AddPythonSprite("Corporate_Affiliate","blackclear.spr",(0.5875, 0),(.7,1),'Talk_To_Corporate_Affiliate',"#\nimport Base\nimport VS\nBase.Message('comment')\nVS.StopAllSounds()\nVS.playSound('barspeech/campaign/bartender_counteroffer.ogg',(0,0,0),(0,0,0))\n"+OptionalTalkingHead("bases/heads/refinery.spr"),AddPythonSprite("demetria",DEMETRIA_SPRITE_SMALL[0],DEMETRIA_SMALL_POSITION,(.18,.54),DEMETRIA_SPRITE_SMALL[1],"#\nimport Base\nimport VS\nBase.Message('comment')\nVS.StopAllSounds()\nVS.playSound('barspeech/campaign/demetria_counteroffer.ogg',(0,0,0),(0,0,0))\n"+OptionalTalkingHead(DEMETRIA_SPRITE_SMALL[2]))),
 	#DEMETRIA_SMALL_POSITION=(0.034, -0.138125, 0.1758125, 0.5385)
 	DEMETRIA_SMALL_POSITION=(-.88, -0.048125, 0.1758125, 0.5385)
-	priv.Init(CampaignNode().Init(priv,[InSystemCondition("Gemini/Tingerhoff","DoNotEnter")],None,None,GoToSubnode(0,IntroCutscene()),None,[MakeMission(priv,
+	priv.Init(CampaignNode().Init(priv,[InSystemCondition("Gemini/Troy","Achilles")],None,None,GoToSubnode(0,IntroCutscene()),None,[MakeMission(priv,
 			DESTINEE_SPRITE,
-			[InSystemCondition("Gemini/Tingerhoff","DoNotEnter")],
-			[InSystemCondition("Gemini/Tingerhoff","Munchen")],
+			[InSystemCondition("Gemini/Tingerhoff","Munchen"),SaveVariableCondition("jones_dead",1.0)],
+			[InSystemCondition("Gemini/Tingerhoff","Munchen")], #DoNotEnter
 			None,
 			None,
 			'cleansweep',(0,8,1500,0,('Gemini/Nexus','Gemini/Capella','Gemini/Crab-12','Gemini/New_Caledonia','Gemini/17-ar'),priv.name+"_mission",1,3,.4,0,'pirates',True,False),
@@ -558,7 +558,7 @@ def LoadBonusCampaign():
 						[("We know you're trying to deliver those weapons to the militia in the neighborhood.",False,"campaign/destinee1.wav"),("Your weapons run stops here. We own this space, pal! You're nothing.",False),("Unless you give up your ship, you're toast!",False),("Not a chance, pal",True)],
 						['Gemini/Nexus','Gemini/Capella','Gemini/Crab-12','Gemini/New_Caledonia'],
 						'Glasgow',
-						False)),
+						False),vars=dict(MISSION_SHORTDESC=destinee2speech.get('shortdesc','Campaign mission'))),
 				("Weapons",40),
 				priv.name+"_mission",
 				destinee2speech,
@@ -648,7 +648,7 @@ def LoadBonusCampaign():
 			[InSystemCondition("Gemini/Telar")],
 			[InSystemCondition("Gemini/Junction","Speke")],
 			AddCredits(14000),
-			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/J900","Gemini/Junction","Gemini/Rikel","Gemini/17-ar"),0,'militia',4,'','',[("We knew you'd double cross us. We were fixing to catch you Ultimate runners lickity split.",False,"campaign/syrai2nodump.wav"),("Dump your cargo and we'll get the judge to give you a good plea bargain!",False)],['Gemini/J900', 'Gemini/Junction'], 'Speke')),
+			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/J900","Gemini/Junction","Gemini/Rikel","Gemini/17-ar"),0,'militia',4,'','',[("We knew you'd double cross us. We were fixing to catch you Ultimate runners lickity split.",False,"campaign/syrai2nodump.wav"),("Dump your cargo and we'll get the judge to give you a good plea bargain!",False)],['Gemini/J900', 'Gemini/Junction'], 'Speke'), vars=dict(MISSION_SHORTDESC=syrai2speech.get('shortdesc','Campaign mission'))),
 			("Ultimate",40),
 			priv.name+"_mission",
 			syrai2speech,
@@ -662,7 +662,7 @@ def LoadBonusCampaign():
 			[InSystemCondition("Gemini/Telar")],
 			[InSystemCondition("Gemini/Junction")],#don't specify so you can meet on Victoria
 			AddCredits(14000),
-			LoadMission("ambush_scan","ambush_scan",(priv.name+"_mission",("Gemini/J900","Gemini/Junction","Gemini/Rikel","Gemini/17-ar"),10,'militia',8,'','',[("We knew you'd double cross us. We were fixing to catch you Ultimate runners lickity split.",False,"campaign/syrai2nodump.wav"),("Dump your cargo and we'll get the judge to give you a good plea bargain!",False)],['Gemini/J900', 'Gemini/Junction'], 'Speke',True,'Ultimate',[("Thank you for helping us track this down.",False,"campaign/syrai2dump.wav"),("With any luck we'll be able to use the imprints on this to get an authoration to shut down the pirates in Telar.",False),("Destinee will meet you personally on Victoria",False)])),
+			LoadMission("ambush_scan","ambush_scan",(priv.name+"_mission",("Gemini/J900","Gemini/Junction","Gemini/Rikel","Gemini/17-ar"),10,'militia',8,'','',[("We knew you'd double cross us. We were fixing to catch you Ultimate runners lickity split.",False,"campaign/syrai2nodump.wav"),("Dump your cargo and we'll get the judge to give you a good plea bargain!",False)],['Gemini/J900', 'Gemini/Junction'], 'Speke',True,'Ultimate',[("Thank you for helping us track this down.",False,"campaign/syrai2dump.wav"),("With any luck we'll be able to use the imprints on this to get an authoration to shut down the pirates in Telar.",False),("Destinee will meet you personally on Victoria",False)]),vars=dict(MISSION_SHORTDESC=syrai2speech.get('shortdesc','Campaign mission'))),
 			("Ultimate",40),
 			priv.name+"_mission",
 			syrai2speech,
@@ -675,7 +675,7 @@ def LoadBonusCampaign():
 			[InSystemCondition("Gemini/Junction","Speke")],
 			[InSystemCondition("Gemini/Telar")],
 			AddCredits(20000),
-			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/Telar",),0,'militia',4,'','',[("You are hereby under arrest for collaborating with and assisting Telar based pirates.",False,"campaign/syrai3.wav"),("Surrender or be destroyed. We know you are responsible for recent drug runs, and we intend to prosecute.",False)],['Gemini/J900', 'Gemini/Telar'], '',False)),
+			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/Telar",),0,'militia',4,'','',[("You are hereby under arrest for collaborating with and assisting Telar based pirates.",False,"campaign/syrai3.wav"),("Surrender or be destroyed. We know you are responsible for recent drug runs, and we intend to prosecute.",False)],['Gemini/J900', 'Gemini/Telar'], '',False),vars=dict(MISSION_SHORTDESC=syrai3speech.get('shortdesc','Campaign mission'))),
 			("Food",40),
 			priv.name+"_mission",
 			syrai3speech,
@@ -706,7 +706,7 @@ def LoadBonusCampaign():
 			[InSystemCondition("Gemini/Telar")],
 			[InSystemCondition("Gemini/Midgard","Heimdal")],
 			None,
-			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/New_Detroit","Gemini/44-p-im","Gemini/Newcastle"),0,('AWACS','AWACS'),[1,2],('stiletto','stiletto'),'',[("We Know you have information about and perhaps leading to one Soren Malakai.",False,"campaign/syrai5.wav"),"We've put a contract out for him and his contributors.","Unless you surrender yourself and cargo to us, we will be forced to destroy you","Eject and be spared"],['Gemini/J900','Gemini/Junction','Gemini/New_Constantinople','Gemini/New_Detroit','Gemini/Perry','Gemini/Midgard'],'Anapolis',False)),
+			LoadMission("ambush","ambush",(priv.name+"_mission",("Gemini/New_Detroit","Gemini/44-p-im","Gemini/Newcastle"),0,('AWACS','AWACS'),[1,2],('stiletto','stiletto'),'',[("We Know you have information about and perhaps leading to one Soren Malakai.",False,"campaign/syrai5.wav"),"We've put a contract out for him and his contributors.","Unless you surrender yourself and cargo to us, we will be forced to destroy you","Eject and be spared"],['Gemini/J900','Gemini/Junction','Gemini/New_Constantinople','Gemini/New_Detroit','Gemini/Perry','Gemini/Midgard'],'Anapolis',False), vars=dict(MISSION_SHORTDESC=syrai5speech.get('shortdesc','Campaign mission'))),
 			("Information_Pod",1),
 			priv.name+"_mission",
 			syrai5speech,

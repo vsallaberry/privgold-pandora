@@ -123,7 +123,7 @@ def LoadLastMission(which=None):
 	last_args = players[plr].last_args
 	last_briefing_vars = players[plr].last_briefing_vars
 	last_briefing = players[plr].last_briefing
-
+	
 	ret = True
 	if len(last_briefing_vars) and which in last_briefing_vars[0] and 'MISSION_TYPE' in last_briefing_vars[0][which] and last_briefing_vars[0][which]['MISSION_TYPE']=='CARGO' and NotEnoughCargoRoom(plr):
 		ret= False

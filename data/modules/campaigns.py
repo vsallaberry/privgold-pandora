@@ -5,6 +5,14 @@ campaigns=[]
 
 _loaded=False
 
+(_myloglevel,_,_,_) = debug.log_levelModuleFileLine()
+
+def _debug(msg,level=debug.NOTICE,stackdec=0):
+	global _myloglevel
+	if _myloglevel >= level:
+		return debug.debug(msg,level,stackdec+1)
+	return 0
+
 def loadAll(cockpit):
 	global _loaded
 	_loaded=True
@@ -1389,20 +1397,20 @@ class StealGun(InSystemCondition):
 		self.stoleit=False
 	def __call__(self):
 		import VS
-		debug.debug("CHECKING INSYSTEM COND")
+		_debug("CHECKING RF STEALGUN COND",debug.INFO)
 		if (InSystemCondition.__call__(self)):
-			debug.debug("CHECKING GUN")
+			_debug("CHECKING RF STEALGUN",debug.INFO)
 			if (VS.getPlayer().removeWeapon(self.guntype,0,True)!=-1):
 				import universe
 				universe.addTechLevel("tech",False)
 				#add sprite!
 				import quest
 				quest.removeQuest(VS.getCurrentPlayer(),"removed_"+self.guntype,1)
-				debug.debug("REMOVED GUN")
+				_debug("RF: REMOVED GUN")
 				self.stoleit=True
 				return True
 			else:
-				debug.debug("CANNOT REMOVE GUN")
+				_debug("RF: CANNOT REMOVE GUN")
 		import quest
 		if (quest.checkSaveValue(VS.getCurrentPlayer(),"removed_"+self.guntype,1)):
 			return True
@@ -1619,8 +1627,8 @@ def LoadRFLynchCampaign():
 		LYNCH_SPRITE,
 		TrueSubnode(),
 		None,
-		[KillOrPay.Init(rf,
-				[InSystemCondition("Gemini/Pyrenees","Basque")],
+		[KillOrPay.Init(rf, ## Maybe The condition should be on gun_stolen (start RF), but at least with access_to_library, we ensure that lynch will not show up before miggs is killed (killed at end on main lynch campaign, which sets the access_library to not 0
+				[InSystemCondition("Gemini/Pyrenees","Basque"),NotCondition(SaveVariableCondition("access_to_library",0.0))],
 				[],
 				LYNCH_SPRITE,
 				TrueSubnode(),
