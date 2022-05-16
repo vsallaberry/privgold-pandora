@@ -124,6 +124,19 @@ case $target in
     ;;
 esac
 
+dnl --------------------------------------------------------------------------
+dnl Check if compiling for Win32
+dnl --------------------------------------------------------------------------
+AC_MSG_CHECKING([for Win32 platform])
+AC_EGREP_CPP(yes,
+[
+#if defined(WIN32) || defined(_WIN32)
+  yes
+#endif
+], is_win32=yes, is_win32=no )
+AC_MSG_RESULT(${is_win32})
+
+
 VS_SYS_LIBS=""
 AC_MSG_CHECKING([for libsocket])
 saved_LIBS="${LIBS}"
@@ -205,8 +218,18 @@ AC_TYPE_INTMAX_T
 AC_HEADER_TIME
 AC_STRUCT_TM
 AC_C_VOLATILE
+
 AC_CHECK_TYPES([ptrdiff_t])
-AC_CHECK_TYPES([boolean])
+
+if test x$is_win32 = "xyes"; then
+ AC_MSG_CHECKING([for win32 boolean type])
+ AC_COMPILE_IFELSE([[#include <windows.h>
+ int main() { boolean ret = 0; return ret; }]], [have_boolean=yes], [have_boolean=no])
+ AC_MSG_RESULT([${have_boolean}])
+ test "x${have_boolean}" = "xyes" && AC_DEFINE_UNQUOTED([HAVE_BOOLEAN],[1],[win32_TYPE_boolean])
+else
+    AC_CHECK_TYPES([boolean])
+fi
 
 # Checks for library functions.
 AC_FUNC_CLOSEDIR_VOID
@@ -415,18 +438,6 @@ fi
 AM_CONDITIONAL([VS_MAKE_NO_CLIENT], [test "x$build_client" = "xno"])
 
 VS_CXXFLAGS="${VS_CXXFLAGS} ${USER_FLAGS}"
-
-dnl --------------------------------------------------------------------------
-dnl Check if compiling for Win32
-dnl --------------------------------------------------------------------------
-AC_MSG_CHECKING([for Win32 platform])
-AC_EGREP_CPP(yes,
-[
-#if defined(WIN32) || defined(_WIN32)
-  yes
-#endif
-], is_win32=yes, is_win32=no )
-AC_MSG_RESULT(${is_win32})
 
 dnl Add libs required for Windows
 dnl I don't use -mwindows since I like having the console around
@@ -746,7 +757,7 @@ AC_DEFUN([CHECK_FOR_GLUT_LIB], [
 ])
 saved_LIBS="$LIBS"
 
-GLUT_LIB_LIST="glut32 glut"
+GLUT_LIB_LIST="glut32 glut freeglut"
 
 for GLUT_LIB_NAME in $GLUT_LIB_LIST ; do
     CHECK_FOR_GLUT_LIB

@@ -682,6 +682,13 @@ do_build_fun() {
             #--with-expat-libs=/opt/local/lib --with-expat-inc=/opt/local/include/ \
             #--disable-unordered-map
             boost_internal=$(echo "${boost_internal}" | sed -e 's/_/./g')
+            
+            case "${gfx}" in
+                glut) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl2-config";;
+                glut1|sdl1) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl-config";;
+                sdl2) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl2-config"
+            esac
+
             if test ${#config_args[@]} -eq 0; then
                 add_config_args \
                 --with-png-inc="${VEGA_PREFIX}/include" --with-png-libs="${VEGA_PREFIX}/lib" \
@@ -699,14 +706,11 @@ do_build_fun() {
                 test "${target_libdirname}" != "lib" && add_config_args --with-vegastrike-libdir-name="${target_libdirname}"
 
                 case "${gfx}" in
-                    glut) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl2-config"
-                          add_config_args "--disable-sdl-windowing" --with-sdl=2.0.0 --with-sdl-inc="${VEGA_PREFIX}/include/SDL2" \
-                                                                   --with-sdl-libs="-L${VEGA_PREFIX}/lib -lSDL2";;
+                    glut) add_config_args "--disable-sdl-windowing" --with-sdl=2.0.0 --with-sdl-inc="${VEGA_PREFIX}/include/SDL2" \
+                                                                    --with-sdl-libs="-L${VEGA_PREFIX}/lib -lSDL2";;
                     glut1) add_config_args --disable-sdl-windowing;;
-                    sdl1) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl-config"
-                          add_config_args --enable-sdl-windowing;;
-                    sdl2) export SDL_CONFIG="${VEGA_PREFIX}/bin/sdl2-config"
-                          add_config_args "--enable-sdl-windowing" --with-sdl=2.0.0 --with-sdl-inc="${VEGA_PREFIX}/include/SDL2" \
+                    sdl1) add_config_args --enable-sdl-windowing;;
+                    sdl2) add_config_args "--enable-sdl-windowing" --with-sdl=2.0.0 --with-sdl-inc="${VEGA_PREFIX}/include/SDL2" \
                                                                    --with-sdl-libs="-L${VEGA_PREFIX}/lib -lSDL2main -lSDL2";;
                     *) echo "!! unknown gfx '${gfx}'"; exit 1;;
                 esac
@@ -718,6 +722,15 @@ do_build_fun() {
                             --enable-macosx-bundle \
                             --with-macos-deployment-target="${target_osx_version_min}" \
                             --with-al-inc="${VEGA_PREFIX}/include/AL" --with-openal-libs="${VEGA_PREFIX}/lib"
+                        ;;
+                    mingw*|cygwin*|msys*)
+                        case "${target_arch}" in 
+                            i[0-9]86|x86) glut_prefix=${VEGA_PREFIX2};; 
+                            *) glut_prefix=${VEGA_PREFIX};;
+                        esac 
+                        add_config_args \
+                            --with-al-inc="${VEGA_PREFIX}/include" --with-openal-libs="${VEGA_PREFIX}/lib" \
+                            --with-glut-inc="${glut_prefix}/include/GL" --with-glut-libs="${glut_prefix}/lib"
                         ;;
                     *)
                         add_config_args \
@@ -800,7 +813,7 @@ do_run_fun() {
             test "${do_debug}" = "stop" && for a in "--one-line-on-crash" 'thread backtrace all' "--one-line-on-crash" 'quit'; do gdbargs[${#gdbargs[@]}]=$a; done \
             || args="${args}${args:+ }-Cgraphics/fullscreen=false"
             ( unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike${exe}" \
-               --batch -o "run -Clog/colorize=yes ${args}" "${gdbargs[@]}" 2>&1;) | tee "${log}"
+               --batch -o "run -Clog/colorize=yes -Clog/file=stderr ${args}" "${gdbargs[@]}" 2>&1;) | tee "${log}"
 
             #{ { "${build}/vegastrike" --batch -o "run" 2>&1 >&3; } 3>&2 | tee "${log}"
 
@@ -808,6 +821,7 @@ do_run_fun() {
             #  |  { unset PYTHON PYTHONHOME PYTHONPATH; lldb "${build}/vegastrike" 2>&1; } | tee "${mydir}/${log}" & privpid=$!; ret=$?
         else
             # RUN vegastrike
+            case "${target_sysname}" in msys*|cygwin*|mingw*) ;; *) touch -t 197001010000 "${log}";; esac
             #"${build}/vegastrike${exe}" "-Clog/file=${log}" "-Clog/colorize=yes" "${run_args[@]}" 2>&1 | tee "${log}"; ret=$?
             ("${build}/vegastrike${exe}" "-Clog/file=${log}" "-Clog/colorize=yes" "${run_args[@]}" & vegapid=$!
              tail -F "${log}" & tailpid=$!
@@ -1051,6 +1065,7 @@ do_delivery_fun_real() {
         mkdir -p "${bundledir}" || exit $?
         mkdir -p "${bundle_bindir}" || exit $?
         mkdir -p "${bundle_toolsdir}" || exit $?
+        touch "${bundledir}"
 
         case "${target_sysname}" in
             darwin*)
@@ -1065,7 +1080,7 @@ do_delivery_fun_real() {
             linux*|*bsd*)
                 mkdir -p "${bundle_resdir}/share" || exit $?
                 xcopy "${VEGA_PREFIX}/share/terminfo" "${bundle_resdir}/share" || exit $?
-                xcopy "${mydir}/tools/linux_bundle/PrivateerGold/" "${bundledir}" || exit $?
+                #xcopy "${mydir}/tools/linux_bundle/PrivateerGold/" "${bundledir}" || exit $?
                 xcopy "${bundle_src}/Contents/MacOS/launcher.sh" "${bundle_bindir}" || exit $?
                 mkdir -p "${bundledir}/etc" && cp -a "${VEGA_PREFIX}/share/alsa" "${bundledir}/etc/alsa" || exit $?
                 ;;

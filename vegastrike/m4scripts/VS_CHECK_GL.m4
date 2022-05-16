@@ -85,6 +85,7 @@ AC_DEFUN([FIND_GLU_LIB], [
 GLU
 MesaGLU
 openglu32
+glu32
 EOF
 `
 

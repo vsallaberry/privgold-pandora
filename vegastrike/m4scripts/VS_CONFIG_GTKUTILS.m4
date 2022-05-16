@@ -26,6 +26,11 @@ if test x"$CHECK_GTK" = x"2"; then
   if test "x$HAVE_GTK2" = "xyes"; then
     GTK_CFLAGS="-DGTK $GTK2_CFLAGS"
     GTK_LIBS=$GTK2_LIBS
+    PKG_CHECK_MODULES([GLIB2], [glib-2.0], [HAVE_GLIB2=yes], [AC_MSG_RESULT([no])] )
+    if test "x$HAVE_GLIB2" = "xyes"; then
+        GTK_CFLAGS="$GTK_CFLAGS $GLIB2_CFLAGS"
+        GTK_LIBS="$GTK_LIBS $GLIB2_LIBS"
+    fi
     AC_SUBST(GTK_CFLAGS)
     AC_SUBST(GTK_LIBS)
     HAVE_GTK=yes

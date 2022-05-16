@@ -4,9 +4,15 @@ AC_DEFUN([VS_CHECK_SDL],
 # Check for SDL
 #--------------------------------------------------------------------------
 AC_ARG_ENABLE(sdl, AC_HELP_STRING([--disable-sdl], [Use GLUT instead of SDL]), _sdl=$enableval)
+AC_ARG_WITH(sdl, AC_HELP_STRING([--with-sdl=<version>], [specify sdl minimum version]))
+
 if test "x$_sdl" != "xno" ; then
 
 SDL_VERSION=1.0.1
+if test "x$with_sdl" != "xno" && test "x$with_sdl" != "xyes"; then
+    SDL_VERSION=$with_sdl
+fi
+
 AM_PATH_SDL($SDL_VERSION, have_SDL=yes, have_SDL=no)
 
 if test "x$have_SDL" = "xyes" ; then
