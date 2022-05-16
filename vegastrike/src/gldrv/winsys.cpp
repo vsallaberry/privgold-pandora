@@ -81,6 +81,14 @@ static int winsys_kbshift(unsigned int ch, bool shifton, bool sendlower) {
     }
 }
 
+#define WS_GL_PRINT_GL_STRING(attr)                          	 		\
+    do {                                                           		\
+        const GLubyte * value = glGetString(attr);                      \
+        if (value != NULL) {                                     		\
+            WINSYS_LOG(logvs::NOTICE, "  %s = %s", #attr, value);       \
+        }                                                       		\
+    } while(0)
+
 /*---------------------------------------------------------------------------*/
 
 #if defined( SDL_WINDOWING ) && defined (HAVE_SDL)
@@ -232,12 +240,12 @@ void winsys_set_joystick_func( winsys_joystick_func_t func )
 // Helper macros to display GL attrs
 #define WS_STR(x) #x
 #define WS_SDL_PRINT_GL_ATTR(attr)                             	 		\
-    {                                                           		\
+    do {                                                           		\
         int value;                                              		\
         if (SDL_GL_GetAttribute(attr, &value) == 0) {           		\
             WINSYS_LOG(logvs::NOTICE, "  %s = %d", WS_STR(attr), value);\
         }                                                       		\
-    }
+    } while(0)
 void winsys_sdl_print_gl_attributes() {
     WS_SDL_PRINT_GL_ATTR(SDL_GL_RED_SIZE);
     WS_SDL_PRINT_GL_ATTR(SDL_GL_GREEN_SIZE);
@@ -251,10 +259,15 @@ void winsys_sdl_print_gl_attributes() {
     WS_SDL_PRINT_GL_ATTR(SDL_GL_MULTISAMPLEBUFFERS);
     WS_SDL_PRINT_GL_ATTR(SDL_GL_MULTISAMPLESAMPLES);
     WS_SDL_PRINT_GL_ATTR(SDL_GL_ACCELERATED_VISUAL);
+    WS_SDL_PRINT_GL_ATTR(SDL_GL_DOUBLEBUFFER);
 #if SDL_VERSION_ATLEAST(2,0,0)
     WS_SDL_PRINT_GL_ATTR(SDL_GL_RETAINED_BACKING);
+    WS_SDL_PRINT_GL_ATTR(SDL_GL_CONTEXT_MAJOR_VERSION);
+    WS_SDL_PRINT_GL_ATTR(SDL_GL_CONTEXT_MINOR_VERSION);
 #endif
-    WS_SDL_PRINT_GL_ATTR(SDL_GL_DOUBLEBUFFER);
+    WS_GL_PRINT_GL_STRING(GL_VENDOR);
+    WS_GL_PRINT_GL_STRING(GL_RENDERER);
+    WS_GL_PRINT_GL_STRING(GL_VERSION);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -425,10 +438,10 @@ static void setup_sdl_video_mode()
         WINSYS_LOG(logvs::NOTICE, "warning: cannot retrieve SDL display mode: %s", SDL_GetError());
     } else {
 
-        WINSYS_LOG(logvs::NOTICE, "(SDL%d:%s) Setting Screen to %dx%d @%d %s (glCtx=%p)",
+        WINSYS_LOG(logvs::NOTICE, "(SDL%d:%s) Setting Screen to %dx%d @%d %dbpp %s (glCtx=%p)",
                    WINSYS_SDL_MAJOR, SDL_GetCurrentVideoDriver(),
                    display_mode.w, display_mode.h, display_mode.refresh_rate,
-                   SDL_GetPixelFormatName(display_mode.format),
+				   SDL_BITSPERPIXEL(display_mode.format), SDL_GetPixelFormatName(display_mode.format),
                    SDL_GL_GetCurrentContext());
     }
 }
@@ -460,7 +473,6 @@ void winsys_init( int *argc, char **argv, const char *window_title,
     // SDL_INIT_AUDIO|
     Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
     static int maximized = XMLSupport::parse_bool (vs_config->getVariable ("graphics","maximized","false"));
-    static bool get_stencil = XMLSupport::parse_bool (vs_config->getVariable ("graphics","glut_stencil","true"));
     static bool vsync = XMLSupport::parse_bool (vs_config->getVariable ("graphics/sdl2","vsync","true"));
     g_game.x_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","x_resolution","1024"));
     g_game.y_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","y_resolution","768"));
@@ -498,13 +510,20 @@ void winsys_init( int *argc, char **argv, const char *window_title,
     SDL_GL_SetAttribute(SDL_GL_ACCUM_GREEN_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_ACCUM_BLUE_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_ACCUM_ALPHA_SIZE, 0);
-    SDL_GL_SetAttribute(SDL_GL_STEREO, 0);//0
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);*/
+    SDL_GL_SetAttribute(SDL_GL_STEREO, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);*/
+    if (gl_options.anti_aliasing > 0) {
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gl_options.anti_aliasing);
+    } else {
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    }
     SDL_GL_SetAttribute(SDL_GL_RETAINED_BACKING, 1);
     SDL_GL_SetAttribute(SDL_GL_ACCELERATED_VISUAL, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    if (get_stencil) {
+    if (gl_options.stencil) {
         /* Not sure if this is sufficient to activate stencil buffer  */
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     } else {
@@ -612,10 +631,10 @@ void winsys_init( int *argc, char **argv, const char *window_title,
         WINSYS_LOG(logvs::NOTICE, "(SDL%d) warning: cannot retrieve SDL display mode: %s",
                    WINSYS_SDL_MAJOR, SDL_GetError());
     } else {
-        WINSYS_LOG(logvs::NOTICE, "(SDL%d) Screen INITIALIZED (%dx%d @%d %s /GLctx=%p",
+        WINSYS_LOG(logvs::NOTICE, "(SDL%d) Screen INITIALIZED (%dx%d @%d %dbpp %s,GLctx=%p)",
                    WINSYS_SDL_MAJOR,
                    display_mode.w, display_mode.h, display_mode.refresh_rate,
-                   SDL_GetPixelFormatName(display_mode.format),
+				   SDL_BITSPERPIXEL(display_mode.format), SDL_GetPixelFormatName(display_mode.format),
                    SDL_GL_GetCurrentContext());
     }
     winsys_sdl_print_gl_attributes();
@@ -801,7 +820,7 @@ void winsys_process_events()
                         (*keyboard_func)( key, mod, released, x, y );
                         continue ;
                     }
-                } else if (iswprint(event.key.keysym.sym)
+                } else if (iswprint(event.key.keysym.sym) && SDL_HasEvent(SDL_TEXTINPUT)
                 && ((kb_unicode_mode & WS_UNICODE_FULL) != 0 || !HasKeyBinding(event.key.keysym.sym, mod))) {
                     // UNICODE KEYDOWN
                     WINSYS_DBG(logvs::DBG+1,
@@ -861,6 +880,7 @@ void winsys_process_events()
             if (keyboard_func == NULL) {
                 break ;
             }
+            WINSYS_DBG(logvs::DBG+2, "SDL%d TEXTINPUT %s q:%zu", WINSYS_SDL_MAJOR, event.edit.text, unicode_keysym_queue.size());
             // Get the unicode value
             for (Utf8Iterator it = Utf8Iterator(event.text.text); it != it.end(); ++it) {
                 wchar_t u32 = *it;
@@ -870,7 +890,7 @@ void winsys_process_events()
                 if (!unicode_keysym_queue.empty()) {
                     keysym_to_unicode[unicode_keysym_queue.front()] = key;
                     unicode_keysym_queue.pop();
-                } else if (event.type != SDL_TEXTEDITING){
+                } else { // if (event.type != SDL_TEXTEDITING){
                     WINSYS_DBG(logvs::DBG, "WARNING: received TEXTINPUT with keysym queue empty");
                 }
 
@@ -1028,6 +1048,10 @@ void winsys_process_events()
 
         } // end switch
 
+        if (!unicode_keysym_queue.empty()) {
+        	WINSYS_DBG(logvs::DBG+2, "warning: unicode queue is not empty (%zu)", unicode_keysym_queue.size());
+        }
+
         if (sdl_lockaudio) {
             SDL_LockAudio();
             SDL_UnlockAudio();
@@ -1166,6 +1190,13 @@ static void setup_sdl_video_mode()
 #if SDL_VERSION_ATLEAST(1,2,10)
     SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, 1);
 #endif
+    if (gl_options.anti_aliasing > 0) {
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, gl_options.anti_aliasing);
+    } else {
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+    	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+    }
     width = g_game.x_resolution;
     height =g_game.y_resolution  ;
 
@@ -1234,7 +1265,6 @@ void winsys_init( int *argc, char **argv, const char *window_title,
 
 	// SDL_INIT_AUDIO|
 	Uint32 sdl_flags = SDL_INIT_VIDEO|SDL_INIT_JOYSTICK;
-    static bool get_stencil=XMLSupport::parse_bool (vs_config->getVariable ("graphics","glut_stencil","true"));
     g_game.x_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","x_resolution","1024"));
     g_game.y_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","y_resolution","768"));
     gl_options.fullscreen = XMLSupport::parse_bool (vs_config->getVariable ("graphics","fullscreen","false"));
@@ -1265,9 +1295,11 @@ void winsys_init( int *argc, char **argv, const char *window_title,
      */
     SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 
-    if (get_stencil) {
+    if (gl_options.stencil) {
         /* Not sure if this is sufficient to activate stencil buffer  */
         SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 8 );
+    } else {
+    	SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE, 0 );
     }
 
     SDL_WM_SetCaption( window_title, window_title );
@@ -2021,12 +2053,17 @@ void winsys_glut_print_gl_attributes() {
     WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_ACCUM_BLUE_SIZE);
     WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_ACCUM_ALPHA_SIZE);
     WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_DOUBLEBUFFER);
+    WS_GLUT_PRINT_GL_ATTR(GLUT_MULTISAMPLE);
+    WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_NUM_SAMPLES);
 #ifdef GLUT_WINDOW_RGBA
     WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_RGBA);
 #endif
 #ifdef GLUT_WINDOW_COLORMAP_SIZE
     WS_GLUT_PRINT_GL_ATTR(GLUT_WINDOW_COLORMAP_SIZE);
 #endif
+    WS_GL_PRINT_GL_STRING(GL_VENDOR);
+    WS_GL_PRINT_GL_STRING(GL_RENDERER);
+    WS_GL_PRINT_GL_STRING(GL_VERSION);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2040,7 +2077,7 @@ void winsys_glut_print_gl_attributes() {
 void winsys_init( int *argc, char **argv, const char *window_title,
 		  const char *icon_title )
 {
-    int width, height;
+    int width, height, glut_flags;
     int glutWindow;
     int maximized;
     int status;
@@ -2054,26 +2091,26 @@ void winsys_init( int *argc, char **argv, const char *window_title,
     gl_options.color_depth = XMLSupport::parse_int (vs_config->getVariable ("graphics","colordepth","32"));
     maximized = XMLSupport::parse_bool (vs_config->getVariable ("graphics","maximized","false"));
     glutInit( argc, argv );
-    static bool get_stencil=XMLSupport::parse_bool (vs_config->getVariable ("graphics","glut_stencil","true"));
     kb_sendlower = XMLSupport::parse_bool(vs_config->getVariable("keyboard","lower_keys","true"));
-    if (get_stencil) {
+    glut_flags = GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | (gl_options.anti_aliasing > 0 ? GLUT_MULTISAMPLE : 0);
+    if (gl_options.stencil) {
 #ifdef __APPLE__
       if (!(
 #endif
-            glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL )
+            glutInitDisplayMode( glut_flags | GLUT_STENCIL )
 #ifdef __APPLE__
             ,1
 #endif
 
 #ifdef __APPLE__
             )) {
-        glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
+        glutInitDisplayMode( glut_flags );
       }
 #endif
       ;
 
     }else {
-      glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
+      glutInitDisplayMode( glut_flags );
     }
 
     char str [1024];

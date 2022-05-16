@@ -293,6 +293,8 @@ typedef struct {
   bool ext_clamp_to_border;
   bool smooth_lines;
   bool smooth_points;
+  int anti_aliasing;
+  bool stencil;
 } gl_options_t;
 extern gl_options_t gl_options;
 

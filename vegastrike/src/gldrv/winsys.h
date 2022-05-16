@@ -93,17 +93,22 @@ typedef enum {
 	WSK_RETURN = 13,
 	WSK_TAB = '\t',
 	WSK_ESCAPE = 27,
+#if 1
+	WSK_BACKSPACE = SDLK_BACKSPACE,
+    WSK_DELETE = SDLK_DELETE,
+#else
 	WSK_BACKSPACE =
-#ifdef __APPLE__
+# ifdef __APPLE__
     127,
-#else
+# else
     8,
-#endif
+# endif
 	WSK_DELETE = 
-#ifdef __APPLE__
+# ifdef __APPLE__
     8,
-#else
+# else
     127,
+# endif
 #endif
     /* Arrows + Home/End pad */
     WSK_UP = WSK_KEY(SDL_SCANCODE_UP),
@@ -182,6 +187,10 @@ typedef enum {
     WSK_RETURN = 13,
     WSK_TAB = '\t',
     WSK_ESCAPE = 27,
+#if 1
+	WSK_BACKSPACE = SDLK_BACKSPACE,
+    WSK_DELETE = SDLK_DELETE,
+#else
     WSK_BACKSPACE =
 #ifdef __APPLE__
     127,
@@ -193,6 +202,7 @@ typedef enum {
     8,
 #else
     127,
+#endif
 #endif
     /* Arrows + Home/End pad */
     WSK_UP = SDLK_UP,

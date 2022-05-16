@@ -475,6 +475,9 @@ void GFXInit (int argc, char ** argv){
     bool handle_unicode_display
             = XMLSupport::parse_bool(vs_config->getVariable("display","enable_unicode","true"));
     
+    gl_options.anti_aliasing = XMLSupport::parse_int(vs_config->getVariable ("graphics","gl_anti_aliasing","0"));
+    gl_options.stencil = XMLSupport::parse_bool(vs_config->getVariable ("graphics","stencil","true"));
+
     winsys_init (&argc,argv,"Vega Strike",(char*)icon_file.c_str());
     //winsys_show_cursor(0);
     
