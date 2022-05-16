@@ -44,6 +44,7 @@
 #include "gfx/camera.h"
 #include "log.h"
 #include "vs_log_modules.h"
+#include "options.h"
 
 #if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
 # define strcasecmp(s1,s2) stricmp(s1,s2)
@@ -61,6 +62,7 @@ static float mymin (float a, float b) {return a<b?a:b;}
 using namespace Orders;
 extern void DestroyMount(Mount*);
 
+extern vs_options game_options;
 
 void Mount::SetMountPosition(const Vector &v)
 {
@@ -8867,8 +8869,7 @@ void Unit::EjectCargo (unsigned int index)
 								 // changes control to that cockpit
 					cp->SetParent (cargo,"","",Position());
 					if (tmpcontent=="return_to_cockpit") {
-						static bool simulate_while_at_base=XMLSupport::parse_bool(vs_config->getVariable("physics","simulate_while_docked","false"));
-						if ((simulate_while_at_base)||(_Universe->numPlayers()>1))
+						if ((game_options.simulate_while_at_base)||(_Universe->numPlayers()>1))
 							this->TurretFAW();
 
 								 // make unit a sitting duck in the mean time
@@ -8893,7 +8894,7 @@ void Unit::EjectCargo (unsigned int index)
 						//          cargo->Kill();
 						//this->UpgradeInterface(this); // this seriously breaks the game...
 						//          DockedScript(cargo,this);      // this just don't work.
-						if ((simulate_while_at_base)||(_Universe->numPlayers()>1))
+						if ((game_options.simulate_while_at_base)||(_Universe->numPlayers()>1))
 							this->TurretFAW();
 
 					}

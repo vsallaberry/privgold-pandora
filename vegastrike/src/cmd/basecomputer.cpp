@@ -69,8 +69,12 @@ struct dirent { char d_name[1]; };
 #include <dirent.h>
 #endif
 #include <sys/stat.h>
+#include "options.h"
+
 //end for directory thing
 extern const char * DamagedCategory;
+
+extern vs_options game_options;
 
 int BaseComputer::dirty=0;
 
@@ -3075,8 +3079,7 @@ void BaseComputer::loadNewsControls(void) {
     picker->clear();
 
     // Load the picker.
-    static const bool newsFromCargolist = XMLSupport::parse_bool(vs_config->getVariable("cargo","news_from_cargolist","false"));
-    if(newsFromCargolist && Network==NULL) {
+    if(game_options.news_from_cargolist && Network==NULL) {
         gameMessage last;
         int i = 0;
         vector<std::string> who;
@@ -3090,6 +3093,7 @@ void BaseComputer::loadNewsControls(void) {
         if(playerUnit) {
             const int playerNum=UnitUtil::isPlayerStarship(playerUnit);
             int len = getSaveStringLength(playerNum, NEWS_NAME_LABEL);
+            VS_DBG("basecomputer", logvs::DBG, "%d news", len);
             for (int i=len-1; i>=0; i--) {
                 picker->addCell(new SimplePickerCell(getSaveString(playerNum, NEWS_NAME_LABEL, i)));
             }

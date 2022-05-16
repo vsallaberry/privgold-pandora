@@ -1615,7 +1615,7 @@ void AggressiveAI::Execute () {
       if (AIjumpCheat) {
 		  static int i=0;
 		  if (!i) {
-			  VSFileSystem::vs_fprintf (stderr,"FIXME: warning ship not equipped to jump");
+			  VS_LOG("unit", logvs::NOTICE, "FIXME: warning ship not equipped to jump");
 			  i=1;
 		  }
 		  parent->jump.drive=-1;

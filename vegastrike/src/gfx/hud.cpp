@@ -298,7 +298,25 @@ float TextPlane::GetCharWidth(int c, float myFontMetrics) const {
   float dubyawid = use_bit?glutBitmapWidth(fnt,'W'):glutStrokeWidth(fnt,'W');
   return charwid*myFontMetrics/dubyawid;
 }
-                                   
+
+float TextPlane::GetStringWidth(const std::string & str) const {
+	static bool use_bit = XMLSupport::parse_bool(vs_config->getVariable ("graphics","high_quality_font","false"));
+	float width = 0.0;
+
+	for (Utf8Iterator it = Utf8Iterator::begin(str); it != it.end(); ++it) {
+		if (*it == '#' && *(++it) != '#' && *it != '_') { //allows escape character '##', '#_' to print a '#', or '_'
+			//Considering nexts are chars(not wchars).Could do 'if (*(text_it+5) != 0)' but it has cost.
+			if (it.pos() + 6 <= it.end().pos()) {
+				it += 6;
+			}
+			continue ;
+		}
+		width += use_bit ? glutBitmapWidth(this->GetFont(), *it) /(float)(.5*g_game.x_resolution)
+				         : this->GetCharWidth(*it);
+	}
+	return width;
+}
+
 template<class IT>
 bool TextPlane::doNewLine(IT begin, IT end,
                           float cur_pos, float end_pos,

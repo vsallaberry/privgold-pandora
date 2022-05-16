@@ -64,6 +64,7 @@ template<class StringPredicate> class MessageWhoPredicate;
 typedef MessageWhoPredicate<MessageStrEqualPred> MessageWhoStrPredicate;
 class MessageTruePredicate {
 public:
+	virtual ~MessageTruePredicate() {}
     virtual bool operator() (gameMessage & other) const { (void)other; return true; }
 };
 
@@ -182,6 +183,7 @@ bool MessageCenter::last(unsigned int n, gameMessage & m, MsgPredicate predicate
 class MessageStrEqualPred {
 public:
     explicit MessageStrEqualPred(const std::string & str) : _str(str) {};
+    virtual ~MessageStrEqualPred() {}
     virtual bool operator() (const std::string & other) const { return _str == other; }
 protected:
     const std::string & _str;
@@ -197,6 +199,7 @@ public:
                         const MessageCenter::FilterList & fromNOT= MessageCenter::EmptyFilterList())
         : _who(who), _whoNOT(whoNOT), _from(from), _fromNOT(fromNOT)
     {}
+    virtual ~MessageWhoPredicate() {}
     virtual bool operator() (gameMessage & gm) const {
         StringPredicate toPred(gm.to.get());
         StringPredicate fromPred(gm.from.get());

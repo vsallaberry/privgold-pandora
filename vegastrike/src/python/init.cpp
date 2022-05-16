@@ -214,7 +214,7 @@ BOOST_PYTHON_MODULE_INIT(Vegastrike)
 }*/
 #endif
 
-static const std::string pretty_python_script(const std::string & pythonscript, size_t maxsize = 50) {
+std::string Python::prettyPythonScript(const std::string & pythonscript, size_t maxsize) {
     std::string res = pythonscript;
     for (std::string::iterator it = res.begin(); it != res.end(); ++it) {
         if (*it == '\n') *it = ';';
@@ -226,7 +226,7 @@ static const std::string pretty_python_script(const std::string & pythonscript, 
 static int python_run(const std::string & str) {
 	char * temppython = strdup(str.c_str());
 	if (PYTHON_LOG(logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
-		PYTHON_LOG(logvs::NOTICE, "running '%s'...",pretty_python_script(str).c_str());
+		PYTHON_LOG(logvs::NOTICE, "running '%s'...",Python::prettyPythonScript(str).c_str());
 	}
 	int ret = PyRun_SimpleString(temppython);
 	Python::reseterrors();
@@ -430,7 +430,7 @@ void Python::init() {
 
 	char * temppython = strdup(changepath.c_str());
     if (PYTHON_LOG(logvs::VERBOSE, "running '%s'...",temppython) <= 0) {
-        PYTHON_LOG(logvs::NOTICE, "running '%s'...", pretty_python_script(changepath).c_str());
+        PYTHON_LOG(logvs::NOTICE, "running '%s'...", prettyPythonScript(changepath).c_str());
     }
 	PyRun_SimpleString(temppython);	
 	Python::reseterrors();

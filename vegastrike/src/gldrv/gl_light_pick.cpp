@@ -73,7 +73,7 @@ void unpicklights () {
 #if defined (VS_GL_LIGHTS_FROM_FUTURE)
         VS_LOG("gl", GFXLIGHT_FAILURE_LVL, "unpicklights() - uh oh");
 #else
-        VS_LOG("gl", logvs::VERBOSE, "unpicklights() - uh oh");
+        VS_DBG("gl", logvs::DBG, "unpicklights() - uh oh");
 #endif
 	    (*_llights)[*i].Target()=-1;
 	    continue;//a lengthy operation... Since picked lights may have been smashed

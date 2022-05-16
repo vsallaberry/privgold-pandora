@@ -596,9 +596,9 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
       double res=checkFloatExpr(anode,mode);
       
       if(mode==SCRIPT_RUN){
-	sprintf(outbuffer,beforestring.c_str());
+	snprintf(outbuffer, sizeof(outbuffer), "%s", beforestring.c_str());
 	outstring+=outbuffer;
-	sprintf(outbuffer,"%f",res);
+	snprintf(outbuffer, sizeof(outbuffer), "%f",res);
 	outstring+=outbuffer;
       }
     }
@@ -607,9 +607,9 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
       int res=checkIntExpr(anode,mode);
 
       if(mode==SCRIPT_RUN){
-	sprintf(outbuffer,beforestring.c_str());
+	snprintf(outbuffer, sizeof(outbuffer),"%s", beforestring.c_str());
 	outstring+=outbuffer;
-	sprintf(outbuffer,"%d",res);
+	snprintf(outbuffer, sizeof(outbuffer), "%d", res);
 	outstring+=outbuffer;
       }
     }
@@ -625,9 +625,9 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
 
 	string * strptr=(string *)res_vi->object;
 
-	sprintf(outbuffer,beforestring.c_str());
+	snprintf(outbuffer, sizeof(outbuffer), "%s", beforestring.c_str());
 	outstring+=outbuffer;
-	sprintf(outbuffer,"%s",strptr->c_str());
+	snprintf(outbuffer, sizeof(outbuffer), "%s",strptr->c_str());
 	outstring+=outbuffer;
       }
       deleteVarInst(res_vi);
@@ -642,7 +642,7 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
   }//while
 
   if(mode==SCRIPT_RUN){
-    sprintf(outbuffer,endstring.c_str());
+    snprintf(outbuffer, sizeof(outbuffer), "%s", endstring.c_str());
     outstring+=outbuffer;
     (*outstrptr)=outstring;
   }
@@ -702,7 +702,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
       double res=checkFloatExpr(anode,mode);
       
       if(mode==SCRIPT_RUN){
-	printf(beforestring.c_str());
+	printf("%s", beforestring.c_str());
 	printf("%f",res);
       }
     }
@@ -711,7 +711,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
       int res=checkIntExpr(anode,mode);
 
       if(mode==SCRIPT_RUN){
-	printf(beforestring.c_str());
+	printf("%s", beforestring.c_str());
 	printf("%d",res);
       }
     }
@@ -720,7 +720,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
       bool res=checkBoolExpr(anode,mode);
 
       if(mode==SCRIPT_RUN){
-	printf(beforestring.c_str());
+	printf("%s", beforestring.c_str());
 	if(res==true){
 	  printf("true");
 	}
@@ -741,7 +741,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
 
 	string * strptr=(string *)res_vi->object;
 
-	printf(beforestring.c_str());
+	printf("%s", beforestring.c_str());
 	printf("%s",strptr->c_str());
       }
       deleteVarInst(res_vi);
@@ -756,7 +756,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
   }//while
 
   if(mode==SCRIPT_RUN){
-    printf(endstring.c_str());
+    printf("%s", endstring.c_str());
   }
 
   //  printf("--end==\n");
@@ -861,7 +861,7 @@ varInst *Mission::callRnd(missionNode *node,int mode){
   vi->float_val=((float)rand())/(((float)RAND_MAX)+1);
 
   char buffer[100];
-  sprintf(buffer,"rnd returning %f", (vi->float_val));
+  snprintf(buffer, sizeof(buffer), "rnd returning %f", (vi->float_val));
   debug(7,node,mode,buffer);
 
   return vi;
@@ -936,7 +936,7 @@ QVector Mission::getVec3Arg(missionNode *node,int mode,int arg_nr){
 missionNode *Mission::getArgument(missionNode *node,int mode,int arg_nr){
       if(node->subnodes.size() < (unsigned int) (arg_nr+1)){
 	char buf[200];
-	sprintf(buf," needs at least %d arguments",arg_nr+1);
+	snprintf(buf, sizeof(buf), " needs at least %d arguments", arg_nr+1);
 	fatalError(node,mode,method_str(node)+buf);
 	assert(0);
       }

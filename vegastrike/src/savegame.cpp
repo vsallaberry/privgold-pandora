@@ -601,6 +601,7 @@ void SaveGame::ReadMissionStringData (char * &buf, bool select_data, const std::
 			vecstring->push_back (AnyStringScanInString(buf2));
     }
   }
+  VS_DBG("game", logvs::DBG, "%s(): %d missionstring data", __func__, mdsize);
   buf = buf2;
   this->PurgeZeroStarships();
 }

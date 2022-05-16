@@ -87,14 +87,18 @@ public:
     unsigned int SetFlags(unsigned int flags);
 
     float GetFontHeight() const;
-    float GetCharWidth(int c, float myFontMetrics) const;
-    
+    float GetCharWidth(int c) const {
+    	return this->GetCharWidth(c, myFontMetrics.i);
+    }
+    float GetStringWidth(const std::string & str) const;
+
 private:
     template<class IT>
     bool doNewLine(IT begin, IT end,
                    float cur_pos, float end_pos,
                    float metrics,
                    bool last_row);
+    float GetCharWidth(int c, float myFontMetrics) const;
 };
 
 float getFontHeight(void * font);

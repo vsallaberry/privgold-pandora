@@ -22,6 +22,7 @@ class vs_options
 		int garbagecollectfrequency;
 		int numoldsystems;
 		bool deleteoldsystems;
+		bool simulate_while_at_base;
 		
 		/* Audio Options */
 		int threadtime;

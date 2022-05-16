@@ -31,6 +31,7 @@
 #include "in_kb.h"
 #include "main_loop.h"
 #include "aux_texture.h"
+#include "vs_log_modules.h"
 
 using std::string;
 using namespace VSFileSystem;
@@ -416,7 +417,7 @@ void Texture::Load (const char * FileNameRGB, const char *FileNameA, int stage, 
                     data = NULL;
                     FileNameA = NULL;
                  }
-           }else FileNameA=0;
+           }else FileNameA=NULL;
 	}
 	if( err1>Ok)
 		data = this->ReadImage( &f, NULL, true, NULL);
@@ -484,7 +485,11 @@ void Texture::Transfer (int maxdimension,GFXBOOL detailtexture)
 	//Implement this in D3D
 	//if(mode == _8BIT)
 	//	glColorTable(GL_SHARED_TEXTURE_PALETTE_EXT, GL_RGB8, 256, GL_RGB, GL_UNSIGNED_BYTE, palette);
-	
+	GFX_LOG(logvs::VERBOSE, "Transfering texture #%d %s, %lux%lu (fmt:%d, filter:%d cube:%d max:%d, detail:%d)",
+			name, !strncmp(VSFileSystem::datadir.c_str(),texfilename.get().c_str(),VSFileSystem::datadir.size())
+			       ? texfilename.get().substr(VSFileSystem::datadir.length()).c_str() : texfilename.get().c_str(),
+			sizeX, sizeY, mode, ismipmapped, img_sides, maxdimension, detailtexture);
+
 	TEXTUREFORMAT internformat;
 	
     switch (mode)

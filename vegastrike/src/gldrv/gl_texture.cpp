@@ -730,9 +730,10 @@ GFXBOOL /*GFXDRVAPI*/ GFXTransferTexture (unsigned char *buffer, int handle, int
 		maxdimension = gl_options.max_texture_dimension;
 	}
 
-    VS_LOG("gltex", logvs::INFO, "Transferring %dx%d texture, page %d (eff: %dx%d - limited at %d)",
+    VS_LOG("gltex", logvs::INFO, "Transferring %dx%d texture, format %d, page %d (eff: %dx%d - limited at %d)",
         textures[handle].iwidth,
         textures[handle].iheight,
+		internformat,
         pageIndex,
         textures[handle].width,
         textures[handle].height,

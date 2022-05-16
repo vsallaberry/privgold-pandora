@@ -862,7 +862,7 @@ void VDU::DrawTarget(GameCockpit *cp, Unit * parent, Unit * target) {
 	tp->bgcol=tpbg;
   }
 }
-
+#include "unicode.h"
 static std::list<TextPlane> DrawHelpBuild() {
     std::list<TextPlane> textplanes;
     char text[8192] = { 0, };
@@ -871,9 +871,13 @@ static std::list<TextPlane> DrawHelpBuild() {
     
     unsigned int    cur_line = 0;
     size_t          max_len = 0;
+    float           max_width = 0.;
     const easyDomNode * bindings = vs_config->Bindings();
 
+    static std::string help_font = vs_config->getVariable("message_center", "font",
+    		                       vs_config->getVariable("graphics", "font", "helvetica12"));
     TextPlane help_tp(GFXColor(0.0,1.0,0.2,1.0),GFXColor(0.0,0.0,0.0,0.0));
+    help_tp.SetFont(help_font);
     help_tp.SetPos(-0.95,0.92);
     help_tp.Draw(); // needed to compute font metrics
     
@@ -881,6 +885,7 @@ static std::list<TextPlane> DrawHelpBuild() {
     help_tp.GetSize(W, H); if (H<0) H=-H; if (W<0) W=-W;
     help_tp.GetPos(Y, X);
     help_tp.GetCharSize(charW, charH);
+    charW = help_tp.GetCharWidth('W');
     VS_DBG("universe", logvs::DBG, "HELP : pos %f,%f sz %f,%f Csz %f,%f",X,Y,W,H,charW,charH);
     
     for (std::vector<easyDomNode*>::const_iterator it = bindings->subnodes.begin();
@@ -893,10 +898,11 @@ static std::list<TextPlane> DrawHelpBuild() {
             help_tp.SetText(text);
             textplanes.push_back(help_tp);
             cur_line = 0;
-            X += (charW * (max_len*0.7));
+            X += max_width;
             help_tp.SetPos(X, Y);
             pos = 0;
             max_len = 0;
+            max_width = 0.;
             *text = 0;
         }
         std::string key_name = (*it)->attr_value("key");
@@ -916,8 +922,10 @@ static std::list<TextPlane> DrawHelpBuild() {
                            key_name.c_str(), cmd_name.c_str());
         if (n_chars > sizeof(text) - pos) n_chars = sizeof(text) - pos;
         if (n_chars < 0) n_chars = 0;
+        float width = 1.5 * help_tp.GetStringWidth(text + pos);
         pos += n_chars;
         if (n_chars > max_len) max_len = n_chars;
+        if (width > max_width) max_width = width;
         ++cur_line;
     }
     help_tp.SetText(text);
@@ -929,7 +937,7 @@ static std::list<TextPlane> DrawHelpBuild() {
 void VDU::DrawHelp(GameCockpit * parentcp, Unit * target) {
     static std::list<TextPlane> textplanes = DrawHelpBuild();
     for (std::list<TextPlane>::iterator it = textplanes.begin(); it != textplanes.end(); ++it) {
-        static float background_alpha = 0.3;//XMLSupport::parse_float(vs_config->getVariable(
+        static float background_alpha = 0.4;//XMLSupport::parse_float(vs_config->getVariable(
         //"graphics","hud","text_background_alpha","0.0625"));
         GFXColor tpbg = it->bgcol;
         bool automatte = (0 == tpbg.a);
@@ -939,18 +947,29 @@ void VDU::DrawHelp(GameCockpit * parentcp, Unit * target) {
     }
 }
 
+#define VDU_FPS_FMT "fps:%.2f | loop:%.2lf | time:%.1lfs"
+static float fpsMaxWidth(TextPlane * tp) {
+	char text[50];
+	unsigned int n = snprintf(text, sizeof(text)/sizeof(*text), VDU_FPS_FMT,
+	                          999.99, 999.99, 99999.9);
+	return tp->GetStringWidth(text);
+}
+
 static void DrawFPS(TextPlane * tp) {
-    static float background_alpha = 0.2;
-    static float charW = -1;
-    if (charW == -1) {
-        float charH;
-        tp->GetCharSize(charW, charH);
-    }
+	static float background_alpha = 0.2;
+	static std::string fontName = vs_config->getVariable("message_center", "font",
+								  vs_config->getVariable("graphics", "font", "helvetica12"));
+	static void * font = getFontFromName(fontName);
+
+	void * saveFont = tp->GetFont();
+	font = tp->SetFont(font);
+	static float maxWidth = fpsMaxWidth(tp);
+
     char text[50];
-    unsigned int n = snprintf(text, sizeof(text)/sizeof(*text),
-                              "fps:%.2f | loop:%.2lf | time:%.1lfs",
+    unsigned int n = snprintf(text, sizeof(text)/sizeof(*text), VDU_FPS_FMT,
                               cur_fps, cur_loop, UniverseUtil::GetGameTime());
-    tp->SetPos(1.0 - (charW * n), 0.97);
+
+    tp->SetPos(1.0 - (maxWidth * 1.2), 0.97);
     GFXColor tpbg = tp->bgcol, tpfg = tp->col;
     tp->col = GFXColor(0.0, 1.0, 0.0, 1.0);
     bool automatte = (0 == tpbg.a);
@@ -958,6 +977,7 @@ static void DrawFPS(TextPlane * tp) {
     tp->Draw(text, 0, true, false, automatte);
     tp->bgcol=tpbg;
     tp->col=tpfg;
+    tp->SetFont(saveFont);
 }
 
 void VDU::DrawMessages(GameCockpit* parentcp,Unit *target){

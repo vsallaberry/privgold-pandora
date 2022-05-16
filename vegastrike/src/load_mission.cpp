@@ -222,6 +222,7 @@ std::string UnpickleAllMissions (char * &buf) {
     }
     free(temp);
   }
+  VS_DBG("game", logvs::DBG, "%s(): %d missions: '%s'", __func__, nummissions, retval.c_str());
   return retval;
 }
 void LoadMission (const char * mn, bool loadFirstUnit) {

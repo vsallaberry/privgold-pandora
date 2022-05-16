@@ -739,10 +739,11 @@ void bootstrap_main_loop () {
 		GAME_LOG(logvs::NOTICE, "UNIT FILE NAME = %s", _Universe->AccessCockpit(k)->unitfilename[0].c_str());
 		*/
 	  } else {
-		if (loadLastSave)
+		if (loadLastSave) {
 		  _Universe->AccessCockpit(k)->savegame->ParseSaveGame (savegamefile,mysystem,mysystem,pos,setplayerXloc,credits,_Universe->AccessCockpit()->unitfilename,k);
-		else
+		} else {
 		  _Universe->AccessCockpit(k)->savegame->SetOutputFileName (savegamefile);
+		}
       }
           CopySavedShips(playername[k],k,_Universe->AccessCockpit()->unitfilename,true);
 	  playersaveunit.push_back(_Universe->AccessCockpit(k)->GetUnitFileName());
@@ -831,7 +832,7 @@ void bootstrap_main_loop () {
 	if (loadLastSave) {
 		// Don't write if we didn't load...
 		for (unsigned int i=0;i<_Universe->numPlayers();++i) {
-			WriteSaveGame(_Universe->AccessCockpit(i),false);
+			WriteSaveGame(_Universe->AccessCockpit(i),true);
 		}
 	}
 	cur_check = getNewTime();

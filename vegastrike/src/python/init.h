@@ -1,9 +1,11 @@
+#ifndef VS_PYTHON_INIT_H
+#define VS_PYTHON_INIT_H
+
 //#define HAVE_PYTHON
 #include "config.h"
 
 #ifdef HAVE_PYTHON
-#ifndef PY_INIT_H_
-#define PY_INIT_H_
+#include <string>
 #include "gfx/vec.h"
 #include <boost/version.hpp>
 #if BOOST_VERSION != 102800 
@@ -24,6 +26,7 @@ public:
     static void initpython();
 	static void test();
 	static void reseterrors();
+	static std::string prettyPythonScript(const std::string & pythonscript, size_t maxsize = 50);
 };
 
 BOOST_PYTHON_BEGIN_CONVERSION_NAMESPACE

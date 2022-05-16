@@ -23,6 +23,10 @@
 #include "configxml.h"
 #include "unit_util.h"
 #include "load_mission.h"
+#include "options.h"
+
+extern vs_options game_options;
+
 #if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
 # define strcasecmp(s1,s2) stricmp(s1,s2)
 #endif
@@ -434,8 +438,7 @@ void UpgradingInfo::SetupCargoList () {
         CargoList->AddTextItem ("Load","Load");
       }else
       if (mode==NEWSMODE) {
-	static bool news_from_cargolist=XMLSupport::parse_bool(vs_config->getVariable("cargo","news_from_cargolist","false"));
-	if (news_from_cargolist) {
+	if (game_options.news_from_cargolist) {
 		gameMessage last;
 		int i=0;
 		vector <std::string> who;
@@ -804,8 +807,7 @@ bool UpgradingInfo::SelectItem (const char *item, int button, int buttonstate) {
      	gameMessage last;
 	vector <std::string> who;
 	CargoInfo->ChangeTextItem ("name","");
-	static bool news_from_cargolist=XMLSupport::parse_bool(vs_config->getVariable("cargo","news_from_cargolist","false"));
-	if (news_from_cargolist) {
+	if (game_options.news_from_cargolist) {
 		who.push_back ("news");
 		if ((mission->msgcenter->last(cargonumber,last,who))) {
 			CargoInfo->ChangeTextItem ("description",last.message.get().c_str(),true);

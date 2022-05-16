@@ -644,9 +644,10 @@ namespace UniverseUtil
 	}
 	void IOmessage(int delay,string from,string to,string message) {
 		if (to=="news"&&(!game_options.news_from_cargolist))
-			for (int i=0;i<_Universe->numPlayers();i++)
-				pushSaveString(i, "news", string("#")+message);
-		else
+			for (int i = 0; i < _Universe->numPlayers(); ++i) {
+				pushSaveString(i, "news", std::string("#")+message);
+			}
+		else if (mission && mission->msgcenter)
 			mission->msgcenter->add(from,to,message,delay);
 	}
 	Unit *GetContrabandList (string faction) {
@@ -778,7 +779,8 @@ namespace UniverseUtil
         if (VS_LOG("universe", logvs::VERBOSE, "Executing python command: ") > 0) {
             logvs::log_printf("    %s\n", cpycode);
         } else {
-            VS_LOG("universe", logvs::NOTICE, "Executing python command...");
+            VS_LOG("universe", logvs::NOTICE, "Executing python command '%s'...",
+            		Python::prettyPythonScript(pythonCode).c_str());
         }
 		::Python::reseterrors();
 		PyRun_SimpleString(const_cast<char*>(cpycode));
