@@ -1,3 +1,39 @@
+#ifndef VGL_NV_fragment_program2
+
+# ifndef GL_ARB_shader_texture_lod
+#  define VGL_ARB_shader_texture_lod 0
+# else
+#  extension GL_ARB_shader_texture_lod : enable
+#  define VGL_ARB_shader_texture_lod GL_ARB_shader_texture_lod
+# endif
+
+# if (VGL_ARB_shader_texture_lod == 0)
+
+#  ifndef GL_ATI_shader_texture_lod
+#   define VGL_ATI_shader_texture_lod 0
+#  else
+#   extension GL_ATI_shader_texture_lod : enable
+#   define VGL_ATI_shader_texture_lod GL_ATI_shader_texture_lod
+#  endif
+
+#  if (VGL_ATI_shader_texture_lod == 0)
+#   define NO_TEXTURE_LOD 1
+#  endif
+
+# endif
+
+#endif
+
+#ifdef NO_TEXTURE_LOD
+vec4 texture2DLod(sampler2D sampler, vec2 P, float lod)
+{
+    // Turn into bias
+    if (lod <= 1.0)
+        lod = -10.0;
+    return texture2D(sampler, P, lod-1.);
+}
+#endif
+                    
 uniform int light_enabled[gl_MaxLights];
 uniform int max_light_enabled;
 //samplers

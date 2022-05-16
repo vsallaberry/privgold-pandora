@@ -1,3 +1,39 @@
+#ifndef VGL_NV_fragment_program2
+
+# ifndef GL_ARB_shader_texture_lod
+#  define VGL_ARB_shader_texture_lod 0
+# else
+#  extension GL_ARB_shader_texture_lod : enable
+#  define VGL_ARB_shader_texture_lod GL_ARB_shader_texture_lod
+# endif
+
+# if (VGL_ARB_shader_texture_lod == 0)
+
+#  ifndef GL_ATI_shader_texture_lod
+#   define VGL_ATI_shader_texture_lod 0
+#  else
+#   extension GL_ATI_shader_texture_lod : enable
+#   define VGL_ATI_shader_texture_lod GL_ATI_shader_texture_lod
+#  endif
+
+#  if (VGL_ATI_shader_texture_lod == 0)
+#   define NO_TEXTURE_LOD 1
+#  endif
+
+# endif
+
+#endif
+
+#ifdef NO_TEXTURE_LOD
+vec4 texture2DLod(sampler2D sampler, vec2 P, float lod)
+{
+    // Turn into bias
+    if (lod <= 1.0)
+        lod = -10.0;
+    return texture2D(sampler, P, lod-1.);
+}
+#endif
+
 uniform sampler2D diffuseMap;
 uniform sampler2D envMap;
 uniform sampler2D specMap;
@@ -38,11 +74,6 @@ float selfshadowStep(float VNdotL) { return smoothstep(0.0,0.25,VNdotL); } // co
 float shininessMap(float shininess, vec4 specmap) { return clamp(dot(specmap.rgb,vec3(1.0/3.0))*shininess,1.0,256.0); } // luma-based shininess modulation
 float shininess2Lod(float shininess) { return max(0.0,7.0-log2(shininess+1.0))+3.0; }
 
-vec4 texture2DLod(sampler2D sampler, vec2 P, float lod)
-{
-    // Turn into bias
-    return texture2D(sampler, P, lod);
-}
 vec3 envMapping(in vec3 reflection, in float shininess, in vec4 specmap)
 {
    float envLod = shininess2Lod(shininessMap(shininess,specmap));
