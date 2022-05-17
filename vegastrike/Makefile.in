@@ -2567,7 +2567,7 @@ unicode_conv_SOURCES = \
   src/common/common.cpp
 
 test_LDFLAGS = 
-test_CXXFLAGS = -I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS
+test_CXXFLAGS = -I.. -DVS_LOG_NO_XML -DVS_UNIT_TESTS -DVS_UTF8_ITERATOR_TESTS -DVS_FUNCTORS_TESTS
 test_SOURCES = \
   tests/test.cpp \
   tests/log.link.cpp \

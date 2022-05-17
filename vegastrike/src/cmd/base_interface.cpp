@@ -1,6 +1,6 @@
 /*
  * Vega Strike
- * Copyright (C) 2001-2021 VegaStrike developers
+ * Copyright (C) 2001-2022 VegaStrike developers
  *
  * http://vegastrike.sourceforge.net/
  *
@@ -1400,7 +1400,7 @@ void BaseInterface::InitCallbacks () {
 	CurrentBase=this;
 //	UpgradeCompInterface(caller,baseun);
 	CallComp=false;
-	//if (CommandInterpretor) CommandInterpretor->enable(false);
+	if (CommandInterpretor) CommandInterpretor->enable(false);
 	if (!(game_options.simulate_while_at_base||_Universe->numPlayers()>1)) {
 		GFXLoop(base_main_loop);
 	}
@@ -1880,7 +1880,7 @@ void BaseInterface::Draw () {
         mission->gametime += GetElapsedTime(); //DirectorLoop not run in base
         Mission::RenderMessages(NULL);
     }
-    if(CommandInterpretor && CommandInterpretor->console){
+    if(CommandInterpretor && CommandInterpretor->enabled()){
         GFXColorf(GFXColor(1,1,1,1));
         CommandInterpretor->renderconsole();
     }

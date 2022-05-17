@@ -1,6 +1,6 @@
 /*
  * Vega Strike
- * Copyright (C) 2001-2021 VegaStrike developers
+ * Copyright (C) 2001-2022 VegaStrike developers
  *
  * http://vegastrike.sourceforge.net/
  *

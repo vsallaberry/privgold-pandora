@@ -48,6 +48,7 @@
 #include "cmd/base.h"
 #include "in_kb_data.h"
 #include "main_loop.h"
+#include "command.h"
 #include <set>
 #include <string>
 #include "cmd/unit_const_cache.h"
@@ -2769,10 +2770,10 @@ void GameCockpit::Draw() {
       dietime=0;
     }    
   }
-  //if(CommandInterpretor.console){
-  //  GFXColorf(textcol);
-  //  CommandInterpretor.renderconsole();
-  //}
+  if(CommandInterpretor && CommandInterpretor->enabled()){
+    GFXColorf(textcol);
+    CommandInterpretor->renderconsole();
+  }
   GFXAlphaTest (ALWAYS,0);  
   static bool mouseCursor = XMLSupport::parse_bool (vs_config->getVariable ("joystick","mouse_cursor","false"));
   static bool mousecursor_pancam = XMLSupport::parse_bool (vs_config->getVariable ("joystick","mouse_cursor_pancam","false"));

@@ -7,10 +7,22 @@
 #include "main_loop.h"
 #include "vs_random.h"
 #include "python/python_class.h"
+#include "cmd/base.h"
+#include "universe_util.h"
+#include "save_util.h"
+#include "options.h"
+#include "configxml.h"
 
 #ifdef HAVE_SDL
 #   include <SDL.h>
 #endif
+
+#include "log.h"
+
+#define CMD_LOG(level, ...) VS_LOG("interpreter", level, __VA_ARGS__)
+#define CMD_DBG(level, ...) VS_DBG("interpreter", level, __VA_ARGS__)
+
+extern vs_options game_options;
 
 // Introduction Comments {{{
 // The {{{ and }}} symbols are VIM Fold Markers.
@@ -273,7 +285,7 @@ coms::coms(const coms &in) {
 	functor = in.functor;
 }
 coms::~coms() {
-//	std::cout << "Destroying coms object\n";
+	CMD_DBG(logvs::DBG, "Destroying coms object");
 };
 // }}}
 class HoldCommands;
@@ -343,7 +355,7 @@ why:
 		HoldCommands() {
 
 			if(rcCMD != 0x0) {
-				std::cout << "Error, there shouldn't be 2 holdCommands objects!\n";
+				CMD_LOG(logvs::WARN, "Error, there shouldn't be 2 holdCommands objects!");
 			}
 			rcCMD = this;
 			finishmeoff = false;
@@ -391,22 +403,25 @@ why:
 
 // {{{ command interpretor constructor
 commandI::commandI() {
-	std::cout << "Command Interpretor Created\n\r";
+	CMD_LOG(logvs::NOTICE, "Command Interpretor Created");
 	// {{{ add some base commands
 
-	Functor<commandI> *dprompt = new Functor<commandI>(this, &commandI::prompt);
+	TFunctor *dprompt = make_functor(this, &commandI::prompt);
     //fill with dummy function.
 	dprompt->attribs.hidden = true;
 	addCommand(dprompt, "prompt");
 
-	Functor<commandI> *newFunct = new Functor<commandI>(this, &commandI::dummy);
+	TFunctor *newFunct =make_functor(this, &commandI::dummy);
 	newFunct->attribs.hidden = true;
 	addCommand(newFunct, "dummy");
 
-	Functor<commandI> *dcommands = new Functor<commandI>(this, &commandI::pcommands);
+	TFunctor *dcommands = make_functor(this, &commandI::pcommands);
 	addCommand(dcommands, "commands");
 
-	Functor<commandI> *dhelp = new Functor<commandI>(this, &commandI::help);
+	addCommand(make_functor(this, &commandI::cmd_fflush), "fflush");
+	addCommand(make_functor(this, &commandI::cmd_clear), "clear");
+
+	TFunctor *dhelp = make_functor(this, &commandI::help);
 	addCommand(dhelp, "help");
 	// }}}
 	// set some local object variables {{{
@@ -447,6 +462,14 @@ commandI::~commandI() {
 		}
 };
 // }}}
+
+// {{{ overriden RText::get_prompt()
+std::string commandI::get_prompt(const std::string & beforeCursor, const std::string & afterCursor) {
+	return std::string("#FF1100") + (menumode ? menu_in->Name + ":" : ">")
+			+ " " + "#FF1100" + beforeCursor + "#000000"+"|" + "#FF1100" + afterCursor;
+}
+// }}}
+
 // {{{ Menu object destructor
 menu::~menu() {
 	for(mItem *iter;
@@ -459,12 +482,18 @@ menu::~menu() {
 // }}}
 
 // {{{ UNFINISHED HELP COMMAND
-void commandI::help(std::string &helponthis) {
-        std::string buf;
-        buf.append("Sorry, there is no help system yet\n\r ");
+void commandI::help(const char * helponthis) {
+    std::string buf;
+    buf.append("Sorry, there is no help system yet\n\r ");
 	buf.append("But most commands are self supporting, just type them to see what they do.\n\r");
-//        conoutf(this, &buf);
-
+	if (!helponthis || !*helponthis) {
+		buf.append("+ Type  Esc to exit interpreter, 'commands' to have commands list,\n\r");
+		buf.append("+ Left/Right/Home/End/ctrl+a/e to navigate through the prompt,\n\r");
+		buf.append("+ Up/Down to navigate through history, PageUp/PageDown to scroll the console,\n\r");
+		buf.append("+ Ctrl+u/ctrl+k to delete before/after cursor.\n\r");
+		buf.append("+ ':' is an alias for python (:print 'hello', :1+(3.1*2)), '!' an alias to repeat last command.\n\r");
+	}
+    conoutf(buf);
 };
 // }}}
 // {{{ send prompt ONLY when 0 charactors are sent with a newline
@@ -472,21 +501,29 @@ void commandI::prompt() {
 	std::string l;
 	l.append("Wooooooooooo\n");
 	conoutf(l);
-//	std::cout << "Prompt called :)\n";
+	CMD_DBG(logvs::DBG, "Prompt called :)");
 };
 // }}}
 // {{{ dummy function
 void commandI::dummy(std::vector<std::string *> *d) {
     // {{{
-	std::string outs;
-	int rand = vsrandom.genrand_int32();
-	if(rand % 2 == 0) {
-		outs.append("Wtf?\n\r");
-	} else
-		outs.append("Try: commands\n\r");
+	std::string outs("Error: unknown command '" + *(d->front()) + "'. Try: 'commands' or 'help'\n\r");
 	conoutf(outs);
 	// }}}
 }
+// }}}
+// {{{ flush all FILE *
+void commandI::cmd_fflush() {
+	if (fflush(NULL) != 0)
+		conoutf("! fflush error");
+	CMD_DBG(logvs::DBG, "fflush :)");
+};
+// }}}
+// {{{ clear the console
+void commandI::cmd_clear() {
+	conlines.clear();
+	CMD_DBG(logvs::DBG, "clear :)");
+};
 // }}}
 //list all the commands {{{
 #include <iomanip>
@@ -529,14 +566,14 @@ void commandI::pcommands() {
 // }}}
 // {{{ addCommand - Add a command to the interpreter
 void commandI::addCommand(TFunctor *com, const char *name){
-	std::cout << "Adding command: " << name << std::endl;
+	CMD_LOG(logvs::INFO, "Adding command: %s", name);
 	coms *newOne = new coms(com);
 	// See the very bottom of this file for comments about possible optimization
 	newOne->Name.append(name);
 	//push the new command back the vector.
 	if(!rcCMDEXISTS && rcCMD == 0x0) {
 		if(rcCMD != 0x0) {
-			std::cout << "Apparently rcCMD is not 0x0.. \n";
+			CMD_LOG(logvs::VERBOSE, "Apparently rcCMD is not 0x0..");
 		}
 		rcCMD = new HoldCommands();
 		rcCMDEXISTS = true;
@@ -551,26 +588,27 @@ void commandI::remCommand(char *name){
 	if(findme->rc.size() < 1) return;
 	for(std::vector<coms>::iterator iter = findme->rc.begin(); iter < findme->rc.end();iter++) {
 		if((*(iter)).Name.compare(name) == 0) {
-			std::cout << "Removing: " << name << std::endl;
+			CMD_LOG(logvs::INFO, "Removing: %s", name);
 			delete (*(iter)).functor;
 			findme->rc.erase(iter);
 			return;
 		}
 	}
-	std::cout << "Error, command " << name << " not removed, try using the TFunctor *com version instead. Also, this is case sensitive ;)\n";
+	CMD_LOG(logvs::WARN, "Error, command %s not removed, "
+			             "try using the TFunctor *com version instead. Also, this is case sensitive ;)", name);
 }
 void  commandI::remCommand(TFunctor *com) {
 	HoldCommands::procs *findme = rcCMD->getProc(this);
     if(findme->rc.size() < 1) return;
     for(std::vector<coms>::iterator iter = findme->rc.begin(); iter < findme->rc.end();iter++) {
         if((*(iter)).functor == com) {
-			std::cout << "Removing: " << (*(iter)).Name << std::endl;
+        	CMD_LOG(logvs::INFO, "Removing: %s", (*(iter)).Name.c_str());
             delete (*(iter)).functor;
             findme->rc.erase(iter);
             return;
         }
     }
-	std::cout << "Error, couldn't find the command that owns the memory area: " << com << std::endl;
+    CMD_LOG(logvs::WARN, "Error, couldn't find the command that owns the memory area: %zx", (size_t) com);
 }
 // }}}
 // {{{ Find a command in the command interpretor
@@ -775,28 +813,11 @@ bool commandI::execute(std::string *incommand, bool isDown, int sock_in)
 bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 	size_t ls, y;
 	bool breaker = false;
-// ************
-	while(breaker == false) {
-		ls = incommand->find(" ");
-		if(ls != 0) {
-			breaker = true;
-		} else {
-			incommand->replace(ls, 1, "");
-		}
-	}
-	for(y = incommand->find("\r\n"); y != std::string::npos; y = incommand->find("\r\n", y+1)) {
-                incommand->replace(y, 2, "");
-        }
-	for(y = incommand->find("  "); y != std::string::npos; y = incommand->find("  ", y+1)) {
-		incommand->replace(y, 1, "");
-	}
 
-	breaker = false; //reset our exit bool
-
-    //************ try to replace erase leading space if there is one
+	//************ try to replace erase leading space, CR, LF if there is one
 	//eg, someone types: " do_something" instead of "do_something"
 	while(breaker == false) {
-		ls = incommand->find(" ");
+		ls = incommand->find_first_of(" \r\n");
 		if(ls != 0) {
 			breaker = true;
 		} else {
@@ -818,15 +839,15 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 //				}
 			} else if(console) printit = true;
 			if(printit) {
-				std::string webout;
+				std::string webout(">");
 				webout.append(incommand->c_str());
-				webout.append("\n\r");
+				//webout.append("\n\r");
 				conoutf(webout);
 			}
 		}
 // }}}
-	//replace \r\n with a space {{{
 
+	/*//replace \r\n with a space {{{
 	for(y = incommand->find("\r\n"); y != std::string::npos; y = incommand->find("\r\n", y+1)) {
         incommand->replace(y, 2, " ");
     }
@@ -835,8 +856,9 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 	for(y = incommand->find("  "); y != std::string::npos; y = incommand->find("  ", y+1)) {
 		incommand->replace(y, 1, "");
 	}
-	// }}}
-        // {{{ ! to the last command typed
+	// }}}*/
+
+    // {{{ ! to the last command typed
 	{
         size_t x = incommand->find("!");
         if(x == 0) {
@@ -851,52 +873,63 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
     }
     // }}}
 
-
 	breaker = false; //reset our exit bool
 
 	//done with formatting
 	//now make what our std::vector<std::string> {{{
 	std::vector<std::string> strvec; //to replace newincommand
 								// to reduce data replication by one;
+    coms * pTheCommand = NULL;
     {
-	std::string::const_iterator scroller = incommand->begin();
-	size_t last = 0, next = 0;
-	bool quote = false;
-	bool escape = false;
-	next=incommand->find(" ");
-	for(next = incommand->find("\"\"", 0); (next=incommand->find("\"\"",last),(last!=std::string::npos)); last=(next!=std::string::npos)?next+1:std::string::npos) {
-		if(next < std::string::npos)
-			incommand->replace(next, 2, "\" \""); //replace "" with " "
-	}
-	std::string starter("");
-	strvec.push_back(starter);
-	for(scroller = incommand->begin(); scroller < incommand->end(); scroller++)
-	{
-		if(*scroller == '\\') {
-			escape = true;
-			continue;
-		}
-		if(escape) {
-			if(*scroller == '\"') strvec[strvec.size()-1] += *scroller;
-			continue;
-		}
-		if(*scroller=='\"') {
-			if(quote) {
-			quote = false;
-			} else {
-			quote = true;
-			}
-			continue;
-		}
-		if(*scroller==' ' && !quote) {
-			strvec.push_back(starter);
-		continue;
-		}
-		strvec[strvec.size()-1] += *scroller;
-	}
-
-	}
+    	size_t last = 0, next = 0;
+    	bool quote = false;
+    	bool escape = false;
+    	/*
+    	//next=incommand->find(" ");
+    	for(next = incommand->find("\"\"", 0); (next=incommand->find("\"\"",last),(last!=std::string::npos)); last=(next!=std::string::npos)?next+1:std::string::npos) {
+    		if(next < std::string::npos)
+    			incommand->replace(next, 2, "\" \""); //replace "" with " "
+    	}*/
+    	std::string starter("");
+    	strvec.push_back(starter);
+    	for(std::string::const_iterator scroller = incommand->begin(); scroller < incommand->end(); scroller++)
+    	{
+    		if (strvec.size() == 2 && pTheCommand == NULL) {
+    			try {
+    				pTheCommand = findCommand(strvec[0].c_str(), sock_in);
+    			} catch(...) {}
+    		}
+    		bool escape_possible = (pTheCommand == NULL || pTheCommand->functor == NULL || pTheCommand->functor->attribs.escape_chars);
+    		if(escape_possible && *scroller == '\\') {
+    			escape = true;
+    			continue;
+    		}
+    		if(escape) {
+    			if(*scroller == '\"') strvec[strvec.size()-1] += *scroller;
+    			continue;
+    		}
+    		if(escape_possible && *scroller=='\"') {
+    			if(quote) {
+    				quote = false;
+    				if (scroller != incommand->end() && *(scroller+1) == '\"') // replaces the find "\"\"" above
+    					incommand->insert(scroller + 1 - incommand->begin(), 1, ' ');
+    			} else {
+    				quote = true;
+    			}
+    			continue;
+    		}
+    		if((strvec.size() == 1 || escape_possible)
+    		&& !quote && incommand->find_first_of(" \r\n") == scroller - incommand->begin()) {
+    			while (incommand->find_first_of(" \r\n", (size_t)(scroller-incommand->begin()+1)) == scroller-incommand->begin()+1)
+    				++scroller;
+    			strvec.push_back(starter);
+    		    continue;
+    		}
+    		strvec[strvec.size()-1] += *scroller;
+    	}
+    }
     // }}}
+
     {
 		// if the last argument is a space, erase it. {{{
         std::vector<std::string>::iterator iter = strvec.end();
@@ -906,8 +939,18 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
         }
 		// }}}
     }
+
+    if (VS_LOG_START("interpreter", logvs::INFO, "command arguments: ") > 0) {
+    	for (size_t i = 0; i < strvec.size(); ++i) {
+    		logvs::log_printf("<%s> ", strvec[i].c_str());
+    	}
+    	VS_LOG_END("interpreter", logvs::INFO, "");
+    }
+
 	try {
-	coms &theCommand = *findCommand((char *)strvec[0].c_str(), sock_in);
+		if (pTheCommand == NULL)
+			pTheCommand = findCommand(strvec[0].c_str(), sock_in);
+		coms & theCommand = *pTheCommand;
 
 //Now, we try to replace what was typed with the name returned by findCommand {{{
 //to autocomplete words (EX: translate gos into gossip so the gossip
@@ -923,7 +966,16 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 			lastcommand.erase();lastcommand.append(*incommand); //set the
 		// last command entered - use ! to trigger
 		}
-			//Try to execute now {{{
+		{
+			// save the command history into savegame (indeed commands can alter game/saves/...)
+			std::string message("interpreter command\\\\" + *incommand + "\\\\");
+			UniverseUtil::IOmessage(0, "interpreter", "news", message);
+			if (!game_options.news_from_cargolist) {
+				for (int i = 0; i < _Universe->numPlayers(); ++i)
+					pushSaveString(i, "dynamic_news", std::string("#")+message);
+			}
+		}
+		//Try to execute now {{{
 		try {
 			//maybe if/else if would be more efficient, if this ever
 			//gets really large.
@@ -937,19 +989,22 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 			std::string l;
 			l.append("Command processor: Exception occured: ");
 			l.append(e.what());
+			CMD_LOG(logvs::NOTICE, "%s", l.c_str());
 			l.append("\n\r");
-			std::cout << l;
 			conoutf(l);
 		} catch (...) {
 			std::string y;
-			y.append("Command processor: exception occurered: Unknown, most likely cause: Wrong Arg_type arguement sent with addCommand.\n\r");
-			std::cout << y;
+			y.append("Command processor: exception occurered: Unknown, most likely cause: Wrong Arg_type arguement sent with addCommand.");
+			CMD_LOG(logvs::NOTICE, "%s", y.c_str());
+			y.append("\n\r");
 			conoutf(y);
 		}
 
     // }}}
 	} catch(const char *in) { //catch findCommand error
-		std::cout << in;
+		CMD_LOG(logvs::WARN, "%s", in);
+	} catch (std::exception & e) {
+		CMD_LOG(logvs::WARN, "Command processor: Exception occured: %s", e.what());
 	}
 	return true;
 }
@@ -1007,10 +1062,10 @@ bool commandI::addMenu(menu *menu_in) {
 std::string commandI::displaymenu() {
     if(menumode) {
         std::ostringstream ps;
-		ps << menu_in->Display << "\n";
+		ps << "#de9a4a" << menu_in->Display << "#000000" << "\n";
         for(std::vector<mItem *>::iterator iter = menu_in->items.begin();
             iter < menu_in->items.end(); iter++) {
-            ps << (*(iter))->Name << " " << (*(iter))->display;
+            ps << "#00DA00" << (*(iter))->Name << "#000000" << " " << (*(iter))->display;
 			if((*(iter))->predisplay.size() > 0)
 					 ps << " " << display((*(iter))->predisplay);
 			ps << "\n";
@@ -1353,17 +1408,281 @@ void commandI::breakmenu() {
 
 commandI *CommandInterpretor = NULL;
 
+// ---------------------------------------------------------------------------
+# include <fcntl.h>
+
+#if defined(_WIN32)
+# define flockfile(f) //_lock_file(f) // deadlock if used
+# define funlockfile(f) //_unlock_file(f) // deadlock if used
+# define pipe(fds) _pipe(fds, PIPE_BUF, _O_BINARY)
+#else
+# //define STREAMWRITER_IO_UNBLOCK
+# include <sys/select.h>
+#endif
+
+#ifndef PIPE_BUF
+# define PIPE_BUF 512
+#endif
+
+const StreamWriter::threadid_type StreamWriter::thread_invalid = (threadid_type)-1;
+
+static FILE * open_file(int fd, const char * mode, int buffering, int bufsz) {
+	FILE * fp;
+	int fc;
+	if ((fp = fdopen(fd, mode)) == NULL
+		|| setvbuf(fp, NULL, buffering, bufsz) != 0
+# if defined(STREAMWRITER_IO_UNBLOCK)
+		|| (fc = fcntl(fd, F_GETFL)) == -1
+		|| fcntl(fd, F_SETFL, fc | O_NONBLOCK) == -1
+# endif
+	) {
+		CMD_LOG(logvs::WARN, "StreamWriter: error fdopen/setvbuf/fcntl");
+	}
+	return fp;
+}
+
+StreamWriter::StreamWriter(unsigned int _flags)
+: flags(_flags), _running(false), tid(thread_invalid) {
+	int ret = -1, pipeout[2], pipein[2];
+	if (pipe(pipeout) == 0 && (ret = pipe(pipein)) != 0) {
+		close(pipeout[0]);
+		close(pipeout[1]);
+	}
+	if (ret == 0) {
+		const int buffering = _IONBF; //_IOLBF;
+		const int bufsz = PIPE_BUF;
+		fout_wr = open_file(pipeout[1], "w", buffering, bufsz);
+		fout_rd = open_file(pipeout[0], "r", buffering, bufsz);
+		fin_wr  = open_file(pipein[1], "w", buffering, bufsz);
+		fin_rd  = open_file(pipein[0], "r", buffering, bufsz);
+	} else {
+		CMD_LOG(logvs::WARN, "%s(): cannot create pipe: %s", __func__, strerror(errno));
+		fin_rd = fin_wr = fout_rd = fout_wr = NULL;
+	}
+}
+
+StreamWriter::StreamWriter(FILE * fin, FILE * fout, unsigned int _flags)
+	: flags(_flags), _running(false), tid(thread_invalid),
+	  fout_wr(fout), fout_rd(fout), fin_wr(fin), fin_rd(fin) {}
+
+StreamWriter::~StreamWriter() {
+	stop();
+	if (fout_rd)
+		fclose(fout_rd);
+	if (fout_wr)
+		fclose(fout_wr);
+	if (fin_rd)
+		fclose(fin_rd);
+	if (fin_wr)
+		fclose(fin_wr);
+}
+
+StreamWriter::threadret_type StreamWriter::thread_body(void * data) {
+	StreamWriter * swriter = (StreamWriter *) data;
+	FILE * foutrd = swriter->outrd_get();
+	FILE * log_file = logvs::log_getfile();
+
+	swriter->_running = true;
+	if (foutrd == NULL)
+		return (threadret_type)NULL;
+
+	int fd_in = fileno(foutrd);
+
+	/*FILE * finwr = swriter->inwr_get();
+	int fd_out = finwr ? fileno(finwr) : -1;*/
+
+#if defined(_WIN32)
+	HANDLE hfoutrd = (HANDLE) _get_osfhandle(fd_in);
+#else
+	fd_set rd_fds, err_fds;
+	int fd_max = fd_in + 1;
+	//fd_set wr_fds; int fd_max = 1 + (fd_in > fd_out ? fd_in : fd_out);*/
+#endif
+	char buf[1024];
+	size_t off = 0;
+	do {
+		CMD_DBG(logvs::DBG, "%s(%p): looping fd=%d isCmd:%d", __func__, swriter, fd_in, dynamic_cast<CmdStreamWriter*>(swriter)!=NULL);
+#if !defined(_WIN32)
+		FD_ZERO(&rd_fds);
+		FD_ZERO(&err_fds);
+		FD_SET(fd_in, &rd_fds);
+		//FD_ZERO(&wr_fds); if (fd_out != -1) FD_SET(fd_out, &wr_fds);
+		int ret = select(fd_max, &rd_fds, NULL, &err_fds, NULL);
+		CMD_DBG(logvs::DBG, "%s(%p): select ret %d %s", __func__, swriter, ret, ret<0?strerror(errno):"");
+		if (ret < 0) {
+			if (errno == EINTR) continue ;
+			break ;
+		} else if (ret == 0) {
+			break ;
+		}
+		if (FD_ISSET(fd_in, &err_fds)) {
+			CMD_DBG(logvs::DBG, "%s(%p): fd %d error", __func__, swriter, fd_in);
+			break ;
+		}
+		if (FD_ISSET(fd_in, &rd_fds))
+#else
+		int ret = WaitForSingleObject(hfoutrd, INFINITE);
+		CMD_DBG(logvs::DBG, "%s(%p): WaitForSingleObject ret %d", __func__, swriter, ret);
+		if (ret != 0)
+			break ;
+#endif
+		{
+			//flockfile(swriter->outwr_get());
+#if defined STREAMWRITER_IO_UNBLOCK
+			while (1)
+#endif
+			{
+				ssize_t n = read(fd_in, buf + off, sizeof(buf)-1-off);
+				CMD_DBG(logvs::DBG, "%s(%p): read at %zu: %zd %s", __func__, swriter, off, n, n<0?strerror(errno):"");
+				if (n < 0 && errno == EINTR)
+					continue ;
+				if (n <= 0)
+					break ;
+				buf[off+n] = 0;
+				if (*buf != 0) {
+					std::string s(buf);
+					std::string::size_type eol = (swriter->flags & SWF_WAITEOL) == 0 ? 0 : s.find_last_of("\r\n");
+					if (eol == std::string::npos && off + n + 1 < sizeof(buf)-1) {
+						off += n; // no eol detected but space remaining in buffer, -> wait.
+					} else {
+						swriter->out(s);
+						off = 0;
+					}
+				}
+			}
+			//funlockfile(swriter->outwr_get());
+		}
+
+	} while (swriter->_running);
+	if (off > 0) {
+		swriter->out(std::string(buf));
+	}
+	CMD_DBG(logvs::DBG, "%s(%p): end thread", __func__, swriter);
+	swriter->_running = false;
+	return (threadret_type)NULL;
+}
+
+bool StreamWriter::run() {
+	int ret;
+	if (_running)
+		return true;
+	if ((flags & SWF_THREAD) == 0) {
+		thread_body(this);
+		return true;
+	}
+#if defined(_WIN32)
+	DWORD wtid;
+	tid = CreateThread(NULL, 0, StreamWriter::thread_body, this, 0, &wtid);
+	ret = (tid == INVALID_HANDLE_VALUE) ? -1 : 0;
+#else
+	ret = pthread_create(&tid, NULL, StreamWriter::thread_body, this);
+#endif
+	if (ret < 0) {
+		CMD_LOG(logvs::WARN, "cannot create StreamWriter thread: %s", strerror(errno));
+		return false;
+	}
+	while (!_running)
+		usleep(100);
+	return true;
+}
+
+void StreamWriter::out(const std::string & s) {
+	CMD_LOG(logvs::NOTICE, "StreamWriter::out> %s", s.c_str());
+}
+
+void StreamWriter::stop() {
+	if (fout_wr) fflush(fout_wr);
+	if (fout_rd) fflush(fout_rd);
+	if (fin_wr) fflush(fin_wr);
+	if (fin_rd) fflush(fin_rd);
+	if (_running) {
+		usleep(100);
+		_running = false;
+		if (fout_wr)
+			write(fileno(fout_wr), "\0", 1);
+	}
+	if ((flags & SWF_THREAD) == 0 || tid == (threadid_type)(thread_invalid))
+		return ;
+#if defined(_WIN32)
+	WaitForSingleObjectEx(tid, INFINITE, FALSE);
+	CloseHandle(tid);
+#else
+	pthread_join(tid, NULL);
+#endif
+	tid = (threadid_type)(thread_invalid);
+}
+
+size_t StreamWriter::out_write(const std::string & s) {
+	if (fout_wr) {
+		fflush(fout_wr);
+		ssize_t n = write(fileno(fout_wr), s.c_str(), s.length());
+		if (n >= 0)
+			return n;
+	}
+	return 0;
+}
+
+size_t StreamWriter::in_write(const std::string & s) {
+	if (fin_wr) {
+		fflush(fin_wr);
+		ssize_t n = write(fileno(fin_wr), s.c_str(), s.length());
+		if (n >= 0)
+			return n;
+	}
+	return 0;
+}
+
+void CmdStreamWriter::out(const std::string & s) {
+	CMD_DBG(logvs::DBG, "CmdStreamWriter::out> %s", s.c_str());
+	cmdI.conoutf(s);
+}
+
 // {{{ Python object
 
-RegisterPythonWithCommandInterpreter::RegisterPythonWithCommandInterpreter(commandI *addTo) {
-	Functor<RegisterPythonWithCommandInterpreter> *l = new Functor<RegisterPythonWithCommandInterpreter>
-		(this, &RegisterPythonWithCommandInterpreter::runPy);
+RegisterPythonWithCommandInterpreter::RegisterPythonWithCommandInterpreter(commandI *addTo) : cmdI(addTo) {
+	TFunctor *l = make_functor(this, &RegisterPythonWithCommandInterpreter::runPy);
+	l->attribs.escape_chars = false;
 	addTo->addCommand(l, "python");
 }
 
+/*
+static PyThreadState *gtstate = NULL;
+static void py_threads_deinit() {
+	if (gtstate) {
+	        PyEval_AcquireThread(gtstate);
+	        gtstate = NULL;
+	        Py_Finalize();
+	}
+}
+static void py_threads_init()
+{
+    if (gtstate)
+        return;
+    //Py_Initialize();
+    PyEval_InitThreads(); // Create (and acquire) the interpreter lock
+    gtstate = PyEval_SaveThread(); // Release the thread state
+}
+*/
+
 //run a python string
 void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
+	static char stdin_str[] 	= { 's','t','d','i','n',0 };
+	static char stdout_str[] 	= { 's','t','d','o','u','t',0 };
+	static char stderr_str[] 	= { 's','t','d','e','r','r',0 };
+	static char r_str[] 		= { 'r', 0 };
+	static char w_str[] 		= { 'w', 0 };
+
+	/*
+	PyThreadState *tstate;
+	PyEval_AcquireLock();
+	tstate = Py_NewInterpreter();
+	if (tstate == NULL) {
+	    CMD_LOG(logvs::WARN, "Sorry -- can't create an interpreter");
+	    return;
+	}*/
+
 	std::string pyRunString;
+
 	pyRunString.append(argsin); //append the arguments in to the string to run
 	size_t x = pyRunString.find("python "); //strip out the name of the command
 	//and the first space
@@ -1378,10 +1697,80 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 			x = pyRunString.find("<BR>");
 		}
 	}
+	CMD_DBG(logvs::DBG, "pyRunString: %s", pyRunString.c_str());
 
 	char *temppython = strdup(pyRunString.c_str()); //copy to a char *
-	PyRun_SimpleString(temppython); //run it
-	Python::reseterrors();
+
+	PyObject * mainmod = PyImport_AddModule("__main__");
+	PyObject * globals = PyModule_GetDict(mainmod);
+	Py_INCREF(globals);
+
+	PyObject * pyStdin = PySys_GetObject(stdin_str);
+	PyObject * pyStdout = PySys_GetObject(stdout_str);
+	PyObject * pyStderr = PySys_GetObject(stderr_str);
+
+	CmdStreamWriter writer(*cmdI);
+	FILE * stdinFile = writer.inrd_get();
+	FILE * stdoutFile = writer.outwr_get();
+
+	PyObject * pyNewStdin = PyFile_FromFile(stdinFile, stdin_str, r_str, NULL);
+	PyObject * pyNewStdout = PyFile_FromFile(stdoutFile, stdout_str, w_str, NULL);
+	PyFile_SetBufSize(pyNewStdin, 0);
+	PyFile_SetBufSize(pyNewStdout, 0);
+	PySys_SetObject(stdin_str, pyNewStdin);
+	PySys_SetObject(stdout_str, pyNewStdout);
+	PySys_SetObject(stderr_str, pyNewStdout);
+
+	/* TODO STDIN with python not supported for themoment */
+	if (writer.inrd_get()) close(fileno(writer.inrd_get()));
+
+	writer.run();
+
+	PyObject * pyRes = PyRun_String(temppython, cmdI->getmenumode() ? Py_file_input : Py_single_input, globals, globals);
+	fflush(NULL);
+	if (pyRes == NULL) {
+		PyObject * pyExStr = PyObject_Str(PyErr_Occurred());
+		if (pyExStr) {
+			PyObject * pyErrType, * pyErrMsg, * pyErrTrace;
+			PyErr_Fetch(&pyErrType, &pyErrMsg, &pyErrTrace);
+			PyObject * pyErrTypeStr = PyObject_Repr(pyErrType);
+			PyObject * pyErrMsgStr = PyObject_Str(pyErrMsg);
+			//PyObject * pyErrTraceStr = PyObject_Repr(pyErrTrace);
+
+			cmdI->conoutf(std::string("Exception #ff0000")
+										+ PyString_AsString(pyErrTypeStr)
+					                    + "#000000: " + PyString_AsString(pyErrMsgStr)
+										+ "\r\n");
+			writer.out_write("#de9a4a");
+			PyTraceBack_Print(pyErrTrace, pyNewStdout);
+
+			Py_DECREF(pyExStr);
+			Py_DECREF(pyErrTypeStr);
+			Py_DECREF(pyErrMsgStr);
+			//Py_DECREF(pyErrTraceStr);
+		}
+		PyErr_Print();
+		PyErr_Clear();
+	} else {
+		if (! PyObject_TypeCheck(pyRes, Py_TYPE(Py_None))) {
+			PyObject * pyResStr = PyObject_Str(pyRes);
+			cmdI->conoutf(std::string(PyString_AsString(pyResStr))+"\r\n");
+			Py_DECREF(pyResStr);
+		}
+		Py_DECREF(pyRes);
+	}
+	fflush(NULL);
+	PySys_SetObject(stdin_str, pyStdin);
+	PySys_SetObject(stdout_str, pyStdout);
+	PySys_SetObject(stderr_str, pyStderr);
+
+	Py_XDECREF(globals);
+	Py_XDECREF(pyNewStdin);
+	Py_XDECREF(pyNewStdout);
+
+	//Py_EndInterpreter(tstate);
+	//PyEval_ReleaseLock();
+
 	free (temppython); //free the copy char *
 }
 
@@ -1395,27 +1784,33 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 */
 
 //if(!keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode))
-void commandI::keypress(int code, int modifiers, bool isDown, int x, int y) {
-
-	if(CommandInterpretor && CommandInterpretor->console) {
-		if(code==WSK_ESCAPE) {
-			CommandInterpretor->console = false;
+void commandI::keypress(int code, int modifiers, bool released, int x, int y) {
+	if (!CommandInterpretor) {
+		if (BaseInterface::CurrentBase) {
+			BaseInterface::CurrentBase->InitCallbacks();
+		} else {
 			restore_main_loop();
-//			SDL_EnableUNICODE(false);
+		}
+		return ;
+	}
+	if(CommandInterpretor->enabled()) {
+		if(code==WSK_ESCAPE || (code == 'd' && (modifiers == WSK_MOD_LCTRL || modifiers == WSK_MOD_RCTRL)
+				                && CommandInterpretor->getcurcommand().empty())) {
+			CommandInterpretor->enable(false);
 			return;
 		};
-		if(code==WSK_RETURN && isDown) {
+		if(code==WSK_RETURN && !released) {
 			std::string commandBuf = CommandInterpretor->getcurcommand();
 			commandBuf.append("\r\n");
-			CommandInterpretor->execute(&commandBuf, isDown, 0); //execute console on enter
+			CommandInterpretor->execute(&commandBuf, released, 0); //execute console on enter
 			//don't return so the return get's processed by
 			//CommandInterpretor->ConsoleKeyboardI, so it can clear the
 			//command buffer
 		}
-		CommandInterpretor->ConsoleKeyboardI(code, isDown);
+		CommandInterpretor->ConsoleKeyboardI(code, modifiers, released);
 		return;
 	} else {
-		restore_main_loop();
+		CommandInterpretor->enable(false);
 		return;
 	}
 
@@ -1441,7 +1836,26 @@ void commandI::keypress(int code, int modifiers, bool isDown, int x, int y) {
 */
 }
 
-
+void commandI::enable(bool bEnable) {
+	if (bEnable) {
+		if (!enabled()) {
+			CMD_LOG(logvs::NOTICE, "enabling command interpreter...");
+			this->console = true;
+			winsys_set_keyboard_func((winsys_keyboard_func_t)&commandI::keypress);
+		    winsys_set_kb_mode(WS_UNICODE_FULL, WS_KB_REPEAT_ENABLED_DEFAULT, WS_KB_REPEAT_INTERVAL,
+		    		           (unsigned int *)kbmode_backup+0, kbmode_backup+1, kbmode_backup+2);
+		}
+	} else if (enabled()) {
+		CMD_LOG(logvs::NOTICE, "disabling command interpreter...");
+		this->console = false;
+		winsys_set_kb_mode((unsigned int)kbmode_backup[0], kbmode_backup[1], kbmode_backup[2], NULL, NULL, NULL);
+		if (BaseInterface::CurrentBase) {
+			BaseInterface::CurrentBase->InitCallbacks();
+		} else {
+			restore_main_loop();
+		}
+	}
+}
 
 /* ***************************************************************
  Possible Optimizations:
@@ -1479,11 +1893,7 @@ namespace ConsoleKeys {
         //this way, keyboard state stays synchronized
         if(newState==RELEASE){
 			if (CommandInterpretor) {
-				winsys_set_keyboard_func((winsys_keyboard_func_t)&commandI::keypress);
-	            CommandInterpretor->console = true;
-#if defined(HAVE_SDL) && !SDL_VERSION_ATLEAST(2,0,0)
-	            SDL_EnableUNICODE(true);
-#endif
+	            CommandInterpretor->enable();
 			}
         }
     }

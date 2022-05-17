@@ -17,17 +17,30 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+/*
+ * Copyright (C) 2022 Vincent Sallaberry
+ *   New Functor class (#define FUNCTORS_NEW_FUNCTOR_CLASS)
+ *   Only one function pointer is stored, easier to add new prototypes.
+ */
+
 #include <cstdlib>
+#include <string>
+#include <vector>
+
 #ifdef FUNCTORS_INC
 #else
 #define FUNCTORS_INC 1
+
+#define FUNCTORS_NEW_FUNCTOR_CLASS
+
 class Attributes {
         public:
-        Attributes() { hidden = false; webbcmd = false; immcmd = false;};
+        Attributes() : hidden(false), webbcmd(false), immcmd(false), type(0), escape_chars(true) {}
         bool hidden; //hidden
         bool webbcmd; //web command
         bool immcmd; //immortal command
         int type;
+        bool escape_chars;
 	//nothing returns yet anyway, strings may be the most useful?
         class returnType {
                 public:
@@ -49,7 +62,179 @@ class TFunctor {
 		virtual ~TFunctor(){};
 		virtual void *Call(std::vector<std::string>&d, int &sock_in, bool *isDown)=0;
 };
-template <class TClass> class Functor : public TFunctor 
+
+template <class TClass> class FunctorFun {
+    public:
+        typedef void (TClass::*void_fun)();                                                                 //fpt1
+		typedef void (TClass::*strRef_fun)(std::string &);                                                  //fpt2
+		typedef void (TClass::*cpChar_fun)(const char *);                                                   //fpt3
+		typedef void (TClass::*cpCharA_fun)(const char *array[]);                                           //ftp4
+		typedef void (TClass::*_2pChar_fun)(const char *, const char *);                                    //fpt5
+		typedef void (TClass::*pBool_fun)(bool *);                                                          //fpt6
+		typedef void (TClass::*int_fun)(int);                                                               //fpt7
+		typedef void (TClass::*char_fun)(char);                                                             //fpt8
+		typedef void (TClass::*pStrVecP_fun)(std::vector<std::string *> *d);                                //fpt9
+		typedef void (TClass::*pStrVecP_intRef_fun)(std::vector<std::string *> *d, int &sock_in);           //fpt10
+		typedef void (TClass::*strRef_intRef_fun)(std::string &, int&);                                     //fpt11
+		typedef void (TClass::*pStrVecP_intRef_bool_fun)(std::vector<std::string *> *, int &, bool);        //fpt12
+        typedef void (TClass::*strVecRef_fun)(const std::vector<std::string> &d);                           //fpt13 - new
+};
+
+#ifdef FUNCTORS_NEW_FUNCTOR_CLASS
+// New 2022 method (only one function pointer is stored, easier to add new prototypes)
+/*
+ * Example:
+ *   class Run {
+ *   public:
+ *     void run_str(std::string & args) {
+ *         fprintf(stderr, "calling, args: %s\n", args.c_str());
+ *     }
+ *   };
+ *   int main() {
+ *     std::vector<std::string> v; int a;
+ *     make_functor(new Run(), &Run::run_str)->Call(v, a, NULL);
+ *     return 0;
+ *   }
+ *
+ * *** Adding a new call prototype:
+ * 1) (optional) add your new type 'typedef void (TClass::*newtype_fun)(ClassX clsx);' in FunctorFun class
+ * 2) add the protected polyCall() method for new type in Functor class:
+ *    virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::newtype_fun _fun) {
+ *        (*this->where.*_fun)(ClassX());
+ *        return NULL;
+ *    }
+ */
+
+template <class TClass, typename TFun> class Functor : public TFunctor
+{
+    public:
+        Functor(TClass * _where, TFun _fun) : where(_where), fun(_fun) {};
+        virtual ~Functor() {}
+        void * Call(std::vector<std::string>&d, int &sock_in, bool *isDown) {
+            void * ret = polyCall(d, sock_in, isDown, fun);
+            return ret == NULL ? &(attribs.m_return) : ret;
+        }
+    protected:
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::void_fun _fun) { //1
+            (*this->where.*_fun)();
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::strRef_fun _fun) { //2
+        	std::string a;
+        	unsigned int x;
+        	for(x = 0; x < d.size(); x++) {
+        		a.append(d[x]);
+        		a.append(" ");
+        	}
+        	(*this->where.*_fun)(a);
+        	return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::cpChar_fun _fun) { //3
+        	if(d.size() >= 2) {
+        		(*this->where.*_fun)(d[1].c_str());
+        	} else (*this->where.*_fun)((const char *)NULL);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::cpCharA_fun _fun) { //4
+        	std::vector<const char *> buf;
+        	for(unsigned int c = 0; c < d.size(); ) {
+        		buf.push_back(d[c].c_str());
+        		c++;
+        		if( !(c < d.size() ) ) {
+        			buf.push_back(" ");
+        		}
+        	}
+        	(*this->where.*_fun)(&buf[0]);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::_2pChar_fun _fun) { //5
+        	if(d.size() < 2) {
+        		(*this->where.*_fun)((const char *)NULL, (const char *)NULL);
+        	} else if(d.size() < 3) {
+        		(*this->where.*_fun)(d[1].c_str(), (const char *)NULL);
+        	} else {
+        		(*this->where.*_fun)(d[1].c_str(), d[2].c_str());
+        	}
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::pBool_fun _fun) { //6
+        	(*this->where.*_fun)(isDown);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::int_fun _fun) { //7
+        	if(d.size() < 2) {
+        		(*this->where.*_fun)(0);
+        	} else {
+        		(*this->where.*_fun)(atoi(d[1].c_str()));
+        	}
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::char_fun _fun) { //8
+        	if(d.size() < 2) {
+        		char err = 0;
+        		(*this->where.*_fun)(err);
+        	}  else {
+        		(*this->where.*_fun)(d[1][0]);
+        	}
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::pStrVecP_fun _fun) { //9
+        	std::vector<std::string *> dup;
+        	std::vector<std::string>::iterator ptr = d.begin();
+        	while(ptr < d.end()) {
+        		dup.push_back(&(*(ptr)));
+        		ptr++;
+        	}
+        	(*this->where.*_fun)(&dup);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::pStrVecP_intRef_fun _fun) { //10
+        	std::vector<std::string *> dup;
+        	std::vector<std::string>::iterator ptr = d.begin();
+        	while(ptr < d.end()) {
+        		dup.push_back(&(*(ptr)));
+        		ptr++;
+        	}
+        	(*this->where.*_fun)(&dup, sock_in);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::strRef_intRef_fun _fun) { //11
+        	std::string a;
+        	unsigned int x;
+        	for(x = 0; x < d.size(); x++) {
+        		a.append(d[x]);
+        		a.append(" ");
+        	}
+        	(*this->where.*_fun)(a, sock_in);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::pStrVecP_intRef_bool_fun _fun) {//12
+        	std::vector<std::string *> dup;
+        	std::vector<std::string>::iterator ptr = d.begin();
+        	while(ptr < d.end()) {
+        		dup.push_back(&(*(ptr)));
+        		ptr++;
+        	}
+        	(*this->where.*_fun)(&dup, sock_in, false);
+            return NULL;
+        }
+        virtual void * polyCall(std::vector<std::string>&d, int &sock_in, bool *isDown, typename FunctorFun<TClass>::strVecRef_fun _fun) { //13
+            (*this->where.*_fun)(d);
+            return NULL;
+        }
+
+        TClass * where;
+        TFun fun;
+};
+
+// Easy way to create a functor without need of specifyuiing template parameters (like std::make_pair)
+template <class TClass, typename TFun> Functor<TClass, TFun> * make_functor(TClass * where, TFun fun) {
+    return new Functor<TClass, TFun>(where, fun);
+}
+
+#else
+// Old 2005 method (TFun parameter is not used, it is here for compatibility with new 2022 method)
+template <class TClass, typename TFun=typename FunctorFun<TClass>::void_fun> class Functor : public TFunctor
 {
 	// To add a new callback method, add a new fpt type here,
 	//set it to NULL in nullify, then add it to the list
@@ -67,6 +252,7 @@ template <class TClass> class Functor : public TFunctor
 		void (TClass::*fpt10)(std::vector<std::string *> *d, int &sock_in);
 		void (TClass::*fpt11)(std::string &, int&);		
 		void (TClass::*fpt12)(std::vector<std::string *> *, int &, bool);
+		void (TClass::*fpt13)(const std::vector<std::string> &);
 		TClass* pt2Object; // pointer to object
         public:
 		// New singularlized call method {{{:
@@ -168,6 +354,8 @@ template <class TClass> class Functor : public TFunctor
 					ptr++;
 				}
 				(*pt2Object.*fpt12)(&dup, sock_in, false);
+			} else if(fpt13 != NULL) { // (const std::vector<std::string> &d) {{{
+				(*pt2Object.*fpt13)(d);
 			} // }}}
 			return &(attribs.m_return);
 			return NULL;
@@ -185,6 +373,7 @@ template <class TClass> class Functor : public TFunctor
 			fpt10 = NULL;
 			fpt11 = NULL;
 			fpt12 = NULL;
+			fpt13 = NULL;
 		}; // Nullify }}}
 		// Constructors, call nullify, set pt2object and function pointer {{{
 		Functor(TClass* _pt2Object, void(TClass::*_fpt)())
@@ -222,12 +411,100 @@ template <class TClass> class Functor : public TFunctor
 		
 		Functor(TClass* _Obj, void(TClass::*_fpt)(std::vector<std::string *> *d, int &, bool))
 		{ nullify();pt2Object = _Obj, fpt12=_fpt; }
+
+		Functor(TClass* _Obj, void(TClass::*_fpt)(const std::vector<std::string> &d))
+		{ nullify();pt2Object = _Obj, fpt13=_fpt; }
  // }}}
 
 		virtual ~Functor(){};
 
 
 };
+
+// Easy way to create a functor without need of specifyuiing template parameters (like std::make_pair)
+template <class TClass, typename TFun> Functor<TClass, TFun> * make_functor(TClass * where, TFun fun) {
+    return new Functor<TClass,TFun>(where, fun);
+}
+
+#endif // ! FUNCTORS_NEW_FUNCTOR_CLASS
+
+
+
+/* *******************************************
+ * FUNCTOR UNITARY TESTS
+ * *******************************************/
+
+
+#if defined(VS_FUNCTORS_TESTS)
+# include <stdio.h>
+
+namespace vs_functors_tests {
+
+# define STR(x) #x
+# define PTEST(hdr,cond,res,...) fprintf(stderr, hdr " %s [%s] - %d" "\n", __VA_ARGS__, res, STR(cond), __LINE__)
+# define TESTV(_hdr, cond, ...) ((cond) ? (0) \
+                                        : (PTEST(_hdr,cond,"FAILED",__VA_ARGS__)*0+1))
+# define TEST(hdr,cond) TESTV("%s" hdr, cond, "")
+
+class Run {
+public:
+    void run_str(std::string & args) {
+        fprintf(stderr, "calling, args: %s\n", args.c_str());
+    }
+    void run_vec(const std::vector<std::string> & vec) {
+        fprintf(stderr, "calling, args:");
+        for (std::vector<std::string>::const_iterator it = vec.begin(); it != vec.end(); ++it) {
+            fprintf(stderr, " %s", it->c_str());
+        }
+        fprintf(stderr, "\n");
+    }
+};
+
+class Run2 {
+public:
+    void run(const char * arg1, const char * arg2) {
+        fprintf(stderr, "calling, arg1: %s, arg2: %s\n", arg1, arg2);
+    }
+    void run_strRef_intRef(std::string & s, int & i) {
+        fprintf(stderr, "calling, s:%s, i:%d, setting to 'ohoh', 912\n", s.c_str(), i);
+        s = "hoho"; i = 912;
+    }
+};
+
+
+int test_functor() {
+	unsigned int nerrors = 0;
+	fprintf(stderr, "\n+ Functors Tests...\n");
+
+    Run * run = new Run();
+    Functor<Run, FunctorFun<Run>::strRef_fun> * functor = new Functor<Run, FunctorFun<Run>::strRef_fun>(run, &Run::run_str);
+    Functor<Run, FunctorFun<Run>::strVecRef_fun> * functor2 = new Functor<Run, FunctorFun<Run>::strVecRef_fun>(run, &Run::run_vec);
+    std::vector<std::string> v;
+    int a = 0;
+    v.push_back("hello");
+    v.push_back("new");
+    v.push_back("world");
+    v.push_back("!");
+    functor->Call(v, a, NULL);
+    functor2->Call(v, a, NULL);
+    make_functor(run, &Run::run_str)->Call(v, a, NULL);
+    make_functor(run, &Run::run_vec)->Call(v, a, NULL);
+
+    Run2 *run2 = new Run2;
+    make_functor(run2, &Run2::run)->Call(v, a, NULL);
+    std::string s("hello"); a = 2;
+    make_functor(run2, &Run2::run_strRef_intRef)->Call(v, a, NULL); fprintf(stderr, "  strRef: %s intRef: %d\n", s.c_str(), a);
+    nerrors += TEST("Run2==run_strRef_intRef", a == 912);
+
+    fprintf(stderr, "Functor tests: %u error(s)\n", nerrors);
+    return nerrors;
+}
+
+} // ! namespace vs_functor_tests
+
+#endif // !# if defined(VS_FUNCTORS_TESTS)
+/* ***********************************************************/
+
 
 #endif
 
@@ -240,6 +517,5 @@ template <class TClass> class Functor : public TFunctor
  * vim600: sw=4 ts=4 fdm=marker
  * vim<600: sw=4 ts=4
  */
-
 
 

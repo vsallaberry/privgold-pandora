@@ -23,7 +23,7 @@ add_executable(test ${TEST_SOURCES})
     #target_compile_options(vssetup_dlg PUBLIC "${DLG_CFLAGS}") # works also but set_s.._properties is more precise
 #endif()
 
-target_compile_options(test PUBLIC "-DVS_LOG_NO_XML" "-DVS_UNIT_TESTS" "-DVS_UTF8_ITERATOR_TESTS")
+target_compile_options(test PUBLIC "-DVS_LOG_NO_XML" "-DVS_UNIT_TESTS" "-DVS_UTF8_ITERATOR_TESTS" "-DVS_FUNCTORS_TESTS")
 target_include_directories(test PUBLIC .. ../src ${TOOLS_EXPAT_INCLUDE_DIRS})
 target_link_libraries(test ${TST_LIB})
 add_dependencies(test get_scm_revision)

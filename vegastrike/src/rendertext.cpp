@@ -11,6 +11,10 @@
 #include "gfx/hud.h"
 #include "gldrv/winsys.h"
 #include <sstream>
+#include "unicode.h"
+#include "log.h"
+#include "configxml.h"
+
 // ****************
 // Console Rendering System by Rogue
 // 2005-08-a-few-days
@@ -37,7 +41,9 @@ RText::RText() {
 	ndraw = 15;
 	WORDWRAP = 85;
 	conskip = 0;
-//	histpos = 0;
+	histpos = 0;
+	curpos = 0;
+	scrollpos = 0;
 	saycommand("");
 }
 // }}}
@@ -47,7 +53,7 @@ RText::~RText() {
 }
 // }}}
 // Set the text width, not used  .. yet{{{
-int RText::text_width(char *str)
+int RText::text_width(const char *str)
 {
 return 0;
 };
@@ -59,20 +65,30 @@ return 0;
 #define FONTH 64
 // }}}
 // Draw text, used by the console, should be private, use conoutf to print to the console {{{
-void RText::draw_text(std::string &str, float left, float top, int gl_num)
+void RText::draw_text(const std::string &str, float left, float top, int gl_num)
 {
+	static void * font = getFontFromName(vs_config->getVariable("graphics", "interpreter_font",
+										 vs_config->getVariable("graphics", "font", "helvetica12")));
     int x = float_to_int(left);
     int y = float_to_int(top);
 	
-    std::string::iterator iter = str.begin();
+    std::string::const_iterator iter = str.begin();
     GFXColor foreground(1, 1, 1, 1);
     GFXColor background(0.05f, 0.05f, 0.2f, 0.5f);
     TextPlane newTextPlane(foreground,background);
+    newTextPlane.SetFont(font);
     newTextPlane.SetPos(x, y);
     newTextPlane.SetCharSize(.8, .12);
     newTextPlane.Draw(str);
 };
 // }}}
+
+// {{{ RText::get_prompt()
+std::string RText::get_prompt(const std::string & beforeCursor, const std::string & afterCursor) {
+	return "#FF1100" "> " "#FF1100" + beforeCursor + "#000000" + "|" + "#FF1100" + afterCursor;
+}
+// }}}
+
 // render the console, only call if bool console == true {{{
 void RText::renderconsole()// render buffer
 {
@@ -85,12 +101,21 @@ void RText::renderconsole()// render buffer
 //	int length = 0;
 //	for(std::vector<cline>::iterator iter = conlines.begin();
 //	iter < conlines.end(); iter++) length++;
-	{for(std::vector<cline>::iterator iter = conlines.begin(); iter < conlines.end(); iter++)  {
-	if(nd < ndraw) 
-		refs.push_back((*(iter)).cref);
-	else iter = conlines.end();
-	nd++;
-	}}
+	{
+	if (scrollpos > 0) {
+		++nd;
+		refs.push_back("...");
+	}
+	for(std::vector<cline>::iterator iter = conlines.begin() + scrollpos; iter < conlines.end(); iter++)  {
+		if(nd < ndraw)
+			refs.push_back((*(iter)).cref);
+		else iter = conlines.end();
+		nd++;
+	}
+	if (scrollpos + ndraw <= conlines.size()) {
+		refs.back() = "...";
+	}
+	}
     size_t j = 0;
     float x = -1;
     float y = -0.5;
@@ -108,12 +133,16 @@ void RText::renderconsole()// render buffer
     y = 1;
     std::ostringstream drawCommand;
 	std::string shorter;
-	shorter.append(getcurcommand() );
-	while (shorter.size() > 80) { 
-		shorter.erase(shorter.begin()); 
+	shorter.append(getcurcommand());
+	int shortpos = curpos;
+	while (shorter.size() > 80) {
+		Utf8Iterator u8it = ++Utf8Iterator::begin(shorter);
+		shorter.erase(0, u8it.pos());
+		if (shortpos > u8it.pos())
+			shortpos -= u8it.pos();
 	} //erase the front of the current command while it's larger than 80
 	// charactors, as to not draw off the screen
-    drawCommand << workIt << "#FF1100> " << "#FF1100" << shorter << "#00000";
+    drawCommand << workIt << get_prompt(shorter.substr(0,shortpos), shorter.substr(shortpos)) << "#000000";
     std::string Acdraw; //passing .str() straight to draw_text produces an 
 		//error with gcc 4, because it's constant I believe
     Acdraw.append(drawCommand.str());
@@ -122,8 +151,9 @@ void RText::renderconsole()// render buffer
 };
 // }}}
 //append a line to the console, optional "highlight" method , untested {{{
-void RText::conline(std::string &sf, bool highlight)        // add a line to the console buffer
+void RText::conline(const std::string &csf, bool highlight)        // add a line to the console buffer
 {
+	std::string sf(csf);
 	{
 		// std::string::npos could be negative, and comparing to unsigned int wont fly
 		int search =0;
@@ -151,20 +181,20 @@ void RText::conline(std::string &sf, bool highlight)        // add a line to the
 };
 // }}}
 // print a line to the console, broken at \n's {{{
-void RText::conoutf(char *in) {
+void RText::conoutf(const char *in) {
 	std::string foobar(in);
 	conoutf(foobar);
 	return;
 }
 
-void RText::conoutf(std::string &s, int a, int b, int c)
+void RText::conoutf(const std::string &s, int a, int b, int c)
 {
 #ifdef HAVE_SDL
 	// NOTE: first call must be single-threaded!
 	SDL_mutex * mymutex = _rtextSDLMutex();
 	SDL_LockMutex(mymutex);
 #endif
-	std::cout << s << std::endl;
+	VS_LOG("interpreter", logvs::NOTICE, "%s", s.substr(0,s.find_last_not_of("\r\n")+1).c_str());
 // Old {{{
 //	{
 //		for(int x = WORDWRAP; x < s.size(); x = x+WORDWRAP) {
@@ -198,7 +228,7 @@ void RText::conoutf(std::string &s, int a, int b, int c)
 		} else if( customer.size() >= WORDWRAP) {
 			customer += s[burger];
 			std::string fliptheburger;
-			while( customer[customer.size()-1] != ' ') {
+			while( customer.size() && customer[customer.size()-1] != ' ') {
 				fliptheburger += customer[customer.size()-1];
 				std::string::iterator oldfloormeat = customer.end();
 				oldfloormeat--; 
@@ -225,7 +255,8 @@ void RText::conoutf(std::string &s, int a, int b, int c)
 };
 // }}}
 //same as above, but I think it works better {{{
-void RText::conoutn(std::string &s, int a, int b, int c) {
+void RText::conoutn(const std::string &cs, int a, int b, int c) {
+	std::string s(cs);
 	size_t x = s.find("\n");
 	size_t xlast = 0;
 	if(x >= std::string::npos) {
@@ -249,40 +280,118 @@ void RText::conoutn(std::string &s, int a, int b, int c) {
 //does nothing now
 void RText::saycommand(const char *init)///
 { //actually, it appends "init" to commandbuf
-//Unused.
 //  SDL_EnableUNICODE((init!=NULL));
 //    if(!editmode) keyrepeat(saycommandon);
-//  if(!init) init = "";
-//  commandbuf.append(init);
-
+    if(init && *init)
+    	commandbuf.append(init);
 };
 // }}}
 // Console Keyboard Input {{{
-void RText::ConsoleKeyboardI(int code, bool isdown)
+void RText::ConsoleKeyboardI(int code, int mod, bool released)
 {
-	if(isdown) {
+	if(!released) {
+		if (mod == WSK_MOD_LCTRL || mod == WSK_MOD_RCTRL) {
+			// Special line edit modes (begin/end/cut) and shortcuts (ctrl+a=HOME, ...)
+			switch (code) {
+			case 'a':
+				code = WSK_HOME;
+				mod = 0;
+				break ;
+			case 'e':
+				code = WSK_END;
+				mod = 0;
+				break ;
+			case 'd':
+				code = WSK_DELETE;
+				mod = 0;
+				break ;
+			case WSK_UP:
+				code = WSK_PAGEUP;
+				mod = 0;
+				break ;
+			case WSK_DOWN:
+				code = WSK_PAGEDOWN;
+				mod = 0;
+				break ;
+			case 'k':
+				commandbuf.erase(curpos);
+				curpos = commandbuf.size();
+				return ;
+			case 'u':
+				commandbuf.erase(0, curpos);
+				curpos = 0;
+				return ;
+			}
+		}
 		switch(code){
 //pop teh back of commandbuf
-	                case WSK_BACKSPACE:
-				{
-				std::string::iterator iter = commandbuf.begin();
-				if(iter < commandbuf.end()) {
-					iter = commandbuf.end();
-					iter--;
-					commandbuf.erase(iter);
+	        case WSK_BACKSPACE:
+				if (curpos > 0 && commandbuf.size()) {
+					Utf8Iterator iter = Utf8Iterator::end(commandbuf);
+					while (iter.pos() > curpos)
+						--iter;
+					size_t oldpos = iter.pos();
+					--iter;
+					VS_DBG("interpreter", logvs::DBG+1, "Backspace buf#%zu<%s> oldpos:%zu newpos:%zu curpos:%d",
+						   commandbuf.size(), commandbuf.c_str(), oldpos, iter.pos(), curpos);
+					commandbuf.erase(iter.pos(), oldpos - iter.pos());
+					curpos = iter.pos();
+					if (vhistory.size()) {
+						if (vhistory.back().empty())
+							vhistory.pop_back();
+						histpos = vhistory.size() - 1;
+					}
 				}
 				break;
-				}
-	                case WSK_LEFT:
-//this should move a put pointer for commandbuf
-//right should move it the other way.
-//		                for(int i = 0; commandbuf[i]; i++) if(!commandbuf[i+1]) commandbuf[i] = 0;
+
+	        case WSK_DELETE:
+	        	if (curpos < commandbuf.size()) {
+	        		commandbuf.erase(curpos, (++Utf8Iterator::begin(commandbuf, curpos)).pos());
+	        		if (vhistory.size()) {
+	        			if (vhistory.back().empty())
+	        				vhistory.pop_back();
+	        			histpos = vhistory.size() - 1;
+	        		}
+	        	}
+	        	break;
+
+	        case WSK_LEFT:
+	        	if (curpos > 0) {
+	        		Utf8Iterator iter = Utf8Iterator::end(commandbuf);
+	        		while (iter.pos() > curpos)
+	        			--iter;
+	        		curpos = (--iter).pos();
+	        	}
 		        break;
 
-			case WSK_RETURN:
+	        case WSK_RIGHT:
+	        	if (curpos < commandbuf.size())
+	        		curpos += (++Utf8Iterator::begin(commandbuf, curpos)).pos();
+	        	break;
+
+	        case WSK_UP:
+	        	if (!vhistory.size() || histpos < 1)
+	        		break ;
+	        	if (histpos >= vhistory.size() - 1 && vhistory.back() != commandbuf) {
+	        		vhistory.push_back(commandbuf);
+	        	} else {
+	        		--histpos;
+	        	}
+	        	commandbuf.assign(vhistory[histpos]);
+	        	curpos = commandbuf.size();
+	        	break ;
+
+	        case WSK_DOWN:
+	        	if (!vhistory.size() || histpos + 1 >= vhistory.size())
+	        		break ;
+	        	++histpos;
+	        	commandbuf.assign(vhistory[histpos]);
+	        	curpos = commandbuf.size();
+	        	break ;
+
+	        case WSK_RETURN:
 				if(commandbuf[0])
 				{
-					
 					std::vector<std::string>::iterator iter = vhistory.end();
 					bool noSize = false;
 					if(iter <=vhistory.begin() && iter >= vhistory.end()) noSize = true;
@@ -297,8 +406,7 @@ void RText::ConsoleKeyboardI(int code, bool isdown)
 						}
 					} else if(noSize)vhistory.push_back(commandbuf);
 					
-//					histpos = vhistory.end();
-//					histpos--;
+					histpos = vhistory.size() - 1;
 				//commands beginning with / are executed
 				//in localPlayer.cpp just before this is called
 				};
@@ -307,12 +415,39 @@ void RText::ConsoleKeyboardI(int code, bool isdown)
 //clear the buffer
 					commandbuf.erase();
 				}
+				curpos = 0;
 				break;
+
+	        case WSK_HOME:
+	        	curpos = 0;
+	        	break ;
+
+	        case WSK_END:
+	        	curpos = commandbuf.size();
+	        	break ;
+
+	        case WSK_PAGEUP:
+	        	if (scrollpos + ndraw <= conlines.size()) ++scrollpos;
+	        	VS_DBG("interpreter", logvs::DBG+1, "PAGEUP scollpos:%d", scrollpos);
+	        	break ;
+
+	        case WSK_PAGEDOWN:
+	        	if (scrollpos > 0) --scrollpos;
+	        	VS_DBG("interpreter", logvs::DBG+1, "PAGEDOWN scollpos:%d", scrollpos);
+	        	break ;
+
 			default:
 //add it to the command buffer
-				if (code>0&&code<256) {
-					unsigned char k = (unsigned char)code;
-					commandbuf+=k;
+				if (code>0&&(code<128||WSK_CODE_IS_UTF32(code))) {
+					char utf8[MB_LEN_MAX+1];
+					size_t u8sz = utf32_to_utf8(utf8, WSK_CODE_TO_UTF32(code));
+					commandbuf.insert(curpos, utf8);
+					curpos += u8sz;
+					if (vhistory.size()) {
+						if (vhistory.back().empty())
+							vhistory.pop_back();
+						histpos = vhistory.size() - 1;
+					}
 				};
 				break;
 		}

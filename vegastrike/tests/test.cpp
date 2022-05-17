@@ -37,6 +37,7 @@
 
 #include "unicode.h"
 #include "multimap.h"
+#include "functors.h"
 
 #include "vs_log_modules.cpp"
 
@@ -91,6 +92,8 @@ int main(int argc, char ** argv) {
     nerrs += utf8_iterator_tests::utf8_iterator_test();
 
     nerrs += ChainedMultimapTests::test_multimap();
+
+    nerrs += vs_functors_tests::test_functor();
 
     return nerrs;
 }

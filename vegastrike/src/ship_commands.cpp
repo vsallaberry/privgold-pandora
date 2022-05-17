@@ -12,15 +12,15 @@ static inline float vs_fminf(float a, float b) { return (a<b)?a:b; };
 static inline float vs_fmaxf(float a, float b) { return (a>b)?a:b; };
 
 class ShipCommands {
-		Functor<ShipCommands> *csetkps;
-		Functor<ShipCommands> *cleft;
-		Functor<ShipCommands> *cright;
-		Functor<ShipCommands> *cup;
-		Functor<ShipCommands> *cdown;
-		Functor<ShipCommands> *cslide;
-		Functor<ShipCommands> *cfire;
-		Functor<ShipCommands> *croll;
-		Functor<ShipCommands> *cpymenu;
+		TFunctor *csetkps;
+		TFunctor *cleft;
+		TFunctor *cright;
+		TFunctor *cup;
+		TFunctor *cdown;
+		TFunctor *cslide;
+		TFunctor *cfire;
+		TFunctor *croll;
+		TFunctor *cpymenu;
 		bool broll;
 		bool bleft;
 		bool bright;
@@ -30,9 +30,9 @@ class ShipCommands {
 		ShipCommands() {
 			//create some functors, register them with the command interp {{{
 			cslide = cright = cdown = cup = cleft = croll = cfire = NULL;
-			cpymenu = new Functor<ShipCommands>(this, &ShipCommands::pymenu);
+			cpymenu = make_functor(this, &ShipCommands::pymenu);
 			CommandInterpretor->addCommand(cpymenu, "pymenu");
-			csetkps = new Functor<ShipCommands>(this, &ShipCommands::setkps);
+			csetkps = make_functor(this, &ShipCommands::setkps);
 			CommandInterpretor->addCommand(csetkps, "setspeed");
 			// }}}
 			// set some local bools false {{{
