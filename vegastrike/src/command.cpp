@@ -1449,8 +1449,8 @@ StreamWriter::StreamWriter(unsigned int _flags)
 		close(pipeout[1]);
 	}
 	if (ret == 0) {
-		const int buffering = _IONBF; //_IOLBF;
-		const int bufsz = PIPE_BUF;
+		const int buffering = _IOLBF; //_IONBF,_IOLBF,_IOFBF;
+		const int bufsz = BUFSIZ; //PIPE_BUF;
 		fout_wr = open_file(pipeout[1], "w", buffering, bufsz);
 		fout_rd = open_file(pipeout[0], "r", buffering, bufsz);
 		fin_wr  = open_file(pipein[1], "w", buffering, bufsz);
@@ -1591,6 +1591,7 @@ void StreamWriter::out(const std::string & s) {
 }
 
 void StreamWriter::stop() {
+	CMD_DBG(logvs::DBG, "StreamWriter::stop() this=%p", this);
 	if (fout_wr) fflush(fout_wr);
 	if (fout_rd) fflush(fout_rd);
 	if (fin_wr) fflush(fin_wr);
@@ -1639,13 +1640,16 @@ void CmdStreamWriter::out(const std::string & s) {
 
 // {{{ Python object
 
-RegisterPythonWithCommandInterpreter::RegisterPythonWithCommandInterpreter(commandI *addTo) : cmdI(addTo) {
+RegisterPythonWithCommandInterpreter::RegisterPythonWithCommandInterpreter(commandI *addTo)
+	: cmdI(addTo),
+	  writer(CmdStreamWriter(*cmdI)) {
 	TFunctor *l = make_functor(this, &RegisterPythonWithCommandInterpreter::runPy);
 	l->attribs.escape_chars = false;
 	addTo->addCommand(l, "python");
 }
 
-/*
+//#define CMD_PYTHON_THREADS
+#ifdef CMD_PYTHON_THREADS
 static PyThreadState *gtstate = NULL;
 static void py_threads_deinit() {
 	if (gtstate) {
@@ -1662,7 +1666,13 @@ static void py_threads_init()
     PyEval_InitThreads(); // Create (and acquire) the interpreter lock
     gtstate = PyEval_SaveThread(); // Release the thread state
 }
-*/
+#endif
+
+static int close_py_file(FILE * fp) {
+	// do not close the file;
+	CMD_DBG(logvs::DBG, "ignoring python close request for %p", fp);
+	return 0;
+}
 
 //run a python string
 void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
@@ -1671,15 +1681,6 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 	static char stderr_str[] 	= { 's','t','d','e','r','r',0 };
 	static char r_str[] 		= { 'r', 0 };
 	static char w_str[] 		= { 'w', 0 };
-
-	/*
-	PyThreadState *tstate;
-	PyEval_AcquireLock();
-	tstate = Py_NewInterpreter();
-	if (tstate == NULL) {
-	    CMD_LOG(logvs::WARN, "Sorry -- can't create an interpreter");
-	    return;
-	}*/
 
 	std::string pyRunString;
 
@@ -1703,23 +1704,44 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 
 	PyObject * mainmod = PyImport_AddModule("__main__");
 	PyObject * globals = PyModule_GetDict(mainmod);
+
+#ifdef CMD_PYTHON_THREADS
+	PyThreadState *tstate;
+	py_threads_init();
+	PyEval_AcquireLock();
+	tstate = Py_NewInterpreter();
+	if (tstate == NULL) {
+	    CMD_LOG(logvs::WARN, "Sorry -- can't create an interpreter");
+	    return;
+	}
+	PyObject * main_globals = globals;
+	mainmod = PyImport_AddModule("__main__");
+	globals = PyModule_GetDict(mainmod);
+	PyDict_Merge(globals, main_globals, 1);
+#endif
+
 	Py_INCREF(globals);
 
 	PyObject * pyStdin = PySys_GetObject(stdin_str);
 	PyObject * pyStdout = PySys_GetObject(stdout_str);
 	PyObject * pyStderr = PySys_GetObject(stderr_str);
 
-	CmdStreamWriter writer(*cmdI);
 	FILE * stdinFile = writer.inrd_get();
 	FILE * stdoutFile = writer.outwr_get();
 
-	PyObject * pyNewStdin = PyFile_FromFile(stdinFile, stdin_str, r_str, NULL);
-	PyObject * pyNewStdout = PyFile_FromFile(stdoutFile, stdout_str, w_str, NULL);
-	PyFile_SetBufSize(pyNewStdin, 0);
-	PyFile_SetBufSize(pyNewStdout, 0);
+	PyObject * pyNewStdin = PyFile_FromFile(stdinFile, stdin_str, r_str, close_py_file);
+	PyObject * pyNewStdout = PyFile_FromFile(stdoutFile, stdout_str, w_str, close_py_file);
+	PyObject * pyNewStderr = PyFile_FromFile(stdoutFile, stdout_str, w_str, close_py_file);
+	PyFile_IncUseCount((PyFileObject *)pyNewStdin);
+	PyFile_IncUseCount((PyFileObject *)pyNewStdout);
+	PyFile_IncUseCount((PyFileObject *)pyNewStderr);
+	PyFile_SetBufSize(pyNewStdin, 1);//PIPE_BUF);
+	PyFile_SetBufSize(pyNewStdout, 1);//PIPE_BUF);
+	PyFile_SetBufSize(pyNewStderr, 1);//PIPE_BUF);
+
 	PySys_SetObject(stdin_str, pyNewStdin);
 	PySys_SetObject(stdout_str, pyNewStdout);
-	PySys_SetObject(stderr_str, pyNewStdout);
+	PySys_SetObject(stderr_str, pyNewStderr);
 
 	/* TODO STDIN with python not supported for themoment */
 	if (writer.inrd_get()) close(fileno(writer.inrd_get()));
@@ -1759,17 +1781,27 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 		}
 		Py_DECREF(pyRes);
 	}
-	fflush(NULL);
+	writer.stop();
 	PySys_SetObject(stdin_str, pyStdin);
 	PySys_SetObject(stdout_str, pyStdout);
 	PySys_SetObject(stderr_str, pyStderr);
 
-	Py_XDECREF(globals);
+	PyFile_DecUseCount((PyFileObject *)pyNewStdin);
+	PyFile_DecUseCount((PyFileObject *)pyNewStdout);
+	PyFile_DecUseCount((PyFileObject *)pyNewStderr);
 	Py_XDECREF(pyNewStdin);
 	Py_XDECREF(pyNewStdout);
+	Py_XDECREF(pyNewStderr);
 
-	//Py_EndInterpreter(tstate);
-	//PyEval_ReleaseLock();
+#if !defined(CMD_PYTHON_THREADS)
+	Py_XDECREF(globals);
+#else
+	PyDict_Merge(main_globals, globals, 1);
+	Py_XDECREF(main_globals);
+	Py_XDECREF(globals);
+	Py_EndInterpreter(tstate);
+	PyEval_ReleaseLock();
+#endif
 
 	free (temppython); //free the copy char *
 }

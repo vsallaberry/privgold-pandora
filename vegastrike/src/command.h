@@ -149,16 +149,6 @@ class commandI : public RText {
 		void enable(bool bEnable = true);
 };
 
-class RegisterPythonWithCommandInterpreter {
-public:
-	RegisterPythonWithCommandInterpreter(commandI *cI);
-	void runPy(std::string &argsin);
-protected:
-	commandI * cmdI;
-};
-
-enum { ARG_1INT, ARG_NONE, ARG_1STR, ARG_2STR, ARG_1CSTR, ARG_2CSTR, ARG_1CSTRARRAY, ARG_1BOOL, ARG_1STRVEC, ARG_1STRVECSPEC, ARG_1STRSPEC };
-
 // ---------------------------------------------------------------------------
 class StreamWriter {
 public:
@@ -212,6 +202,18 @@ protected:
 	void out(const std::string & s);
 	commandI & cmdI;
 };
+// ---------------------------------------------------------------------------
+
+class RegisterPythonWithCommandInterpreter {
+public:
+	RegisterPythonWithCommandInterpreter(commandI *cI);
+	void runPy(std::string &argsin);
+protected:
+	commandI * cmdI;
+	CmdStreamWriter writer;
+};
+
+enum { ARG_1INT, ARG_NONE, ARG_1STR, ARG_2STR, ARG_1CSTR, ARG_2CSTR, ARG_1CSTRARRAY, ARG_1BOOL, ARG_1STRVEC, ARG_1STRVECSPEC, ARG_1STRSPEC };
 // ---------------------------------------------------------------------------
 
 namespace ConsoleKeys {

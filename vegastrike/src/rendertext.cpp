@@ -370,11 +370,11 @@ void RText::ConsoleKeyboardI(int code, int mod, bool released)
 	        	break;
 
 	        case WSK_UP:
-	        	if (!vhistory.size() || histpos < 1)
+	        	if (!vhistory.size())
 	        		break ;
 	        	if (histpos >= vhistory.size() - 1 && vhistory.back() != commandbuf) {
 	        		vhistory.push_back(commandbuf);
-	        	} else {
+	        	} else if (histpos > 0){
 	        		--histpos;
 	        	}
 	        	commandbuf.assign(vhistory[histpos]);
