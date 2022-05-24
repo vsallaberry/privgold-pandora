@@ -60,7 +60,8 @@ static int maxz=1;
 static int minz=-1;
 
 typedef vsUMap<int, int> 			JoystickIDMap;
-typedef std::deque<JoystickEvent> 	JoystickEventQueue;
+//typedef std::deque<JoystickEvent> 	JoystickEventQueue;
+typedef std::deque<unsigned int> 	JoystickEventQueue;
 
 static JoystickIDMap 		joystickIDMap;
 static JoystickEventQueue 	joystickEventQueue;
@@ -80,7 +81,6 @@ void RestoreJoystick() {
           glutJoystickFunc (myGlutJoystickCallback,JoystickPollingRate());
   }
 #else
-	//winsys_set_joystick_func(NULL);
   winsys_set_joystick_func(JoystickGameHandler);
 #endif
 }
@@ -150,10 +150,17 @@ JoyStick::JoyStick () {
   for (int j=0;j<MAX_AXES;++j) {
     axis_axis[j]=-1;
     axis_inverse[j]=false;
-    joy_axis[j]=axis_axis[j]=0;
+    joy_axis[j]=0;
   }
-    joy_buttons=0;
+  joy_buttons=0;
+  for (unsigned int j = 0; j < MAX_DIGITAL_HATSWITCHES; ++j) {
+    digital_hat[j] = VS_HAT_CENTERED;
+  }
+
+  joy_available = false;
+  joy_x=joy_y=joy_z=0;
 }
+
 int JoystickPollingRate () {
     return (game_options.polling_rate);
 }
@@ -185,7 +192,7 @@ void InitJoystick(){
 		delete joystick[j];
 	joystick[j] = NULL;
     for(int h=0;h<MAX_DIGITAL_HATSWITCHES;h++){
-      for(int v=0;v<MAX_DIGITAL_VALUES;v++){
+      for(int v=0; v < 1+MAX_DIGITAL_VALUES; ++v){
 	UnbindDigitalHatswitchKey(j,h,v,INSC_ALL);
       }
     }
@@ -274,13 +281,14 @@ JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
     joy_axis[j]=0;
   }
   joy_buttons=0;
-
+  for (unsigned int j = 0; j < MAX_DIGITAL_HATSWITCHES; ++j) {
+	  digital_hat[j] = VS_HAT_CENTERED;
+  }
   player=which;//by default bind players to whichever joystick it is
-  debug_digital_hatswitch=game_options.debug_digital_hatswitch;
   if (which!=MOUSE_JOYSTICK)
       deadzone=game_options.deadband; else
 	  deadzone=game_options.mouse_deadband;;
-  joy_available = 0;
+  joy_available = false;
   joy_x=joy_y=joy_z=0;
   if (which==MOUSE_JOYSTICK) {
     InitMouse(which);
@@ -291,7 +299,7 @@ JoyStick::JoyStick(int which): mouse(which==MOUSE_JOYSTICK) {
 JoyStick::~JoyStick() {
 #if !defined(NO_SDL_JOYSTICK) && defined(HAVE_SDL)
 	if (joy != NULL) {
-		//SDL_JoystickClose(joy);
+		//SDL_JoystickClose(joy); // done by SDL when unplugged
 	}
 #endif
 }
@@ -376,7 +384,7 @@ void JoyStick::GetMouse (float &x, float &y, float &z, int &buttons) {
   GetMouseXY (_mx,_my);
   GetMouseDelta (_dx,_dy);
   if (0&&(_dx||_dy))
-    JOY_DBG(logvs::DBG, "dx:%d dy:%d",_dx,_dy);
+    JOY_DBG(logvs::DBG+1, "dx:%d dy:%d",_dx,_dy);
   if (!game_options.warp_mouse) {
     fdx=(float)(_dx = _mx-g_game.x_resolution/2);
     def_mouse_sens=25;
@@ -445,6 +453,9 @@ void JoyStick::GetJoyStick(float &x,float &y, float &z, int &buttons)
       }
         x=y=z=0;
         joy_buttons=buttons=0;
+      for (int h = 0; h < MAX_DIGITAL_HATSWITCHES; ++h) {
+    	digital_hat[h] = 0;
+      }
         return;
     } else if (mouse) {
       GetMouse (x,y,z,buttons);
@@ -473,7 +484,6 @@ void JoyStick::GetJoyStick(float &x,float &y, float &z, int &buttons)
    }
    for(int h=0;h<nr_of_hats;h++){
        digital_hat[h]=SDL_JoystickGetHat(joy,h);
-       JOY_DBG(logvs::DBG+1, "JoyHAT %d = %d", h, digital_hat[h]);
    }
    for(a=0;a<MAX_AXES;a++)
        joy_axis[a]=((float)axi[a]/32768.0);
@@ -498,12 +508,16 @@ int JoyStick::NumButtons(){
 }
 
 void JoystickQueuePush(const JoystickEvent & joydata) {
-	joystickEventQueue.push_back(joydata);
+	joystickEventQueue.push_back(joydata.which);
+}
+
+void JoystickQueuePush(unsigned int which) {
+	joystickEventQueue.push_back(which);
 }
 
 void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
 	(void)x; (void)y; (void)z; (void)buttons; (void)state;
-	JoystickQueuePush(JoystickEvent(which));
+	JoystickQueuePush(which); //JoystickEvent(which));
 }
 
 void JoystickProcessQueue(int player) {
@@ -512,23 +526,35 @@ void JoystickProcessQueue(int player) {
 	if (md.size() > 0 && joystick[MOUSE_JOYSTICK]->isAvailable() && joystick[MOUSE_JOYSTICK]->player == player) {
 		float x, y, z; int buttons;
 		joystick[MOUSE_JOYSTICK]->GetJoyStick (x,y,z,buttons);
-		JoystickQueuePush(JoystickEvent(MOUSE_JOYSTICK));
+		JoystickQueuePush(MOUSE_JOYSTICK); //JoystickEvent(MOUSE_JOYSTICK));
+		JOY_DBG(logvs::DBG+1, "JoystickQueue MOUSE PILOT");
 	}
 	for (JoystickEventQueue::iterator it = joystickEventQueue.begin(); it != joystickEventQueue.end(); ) {
-		unsigned int which = it->which;
+		unsigned int which = *it; //it->which;
 		if (!joystick[which]->isAvailable()) {
 			it = joystickEventQueue.erase(it);
 		} else if (joystick[which]->player == player) {
 			if (!done[which]) {
 				ProcessJoystick(which);
+				if (!joystickEventQueue.size())
+					break ;
 			}
-			if (done[which] || (joystick[which]->joy_buttons == 0)) { // The game loop needs to receive repeated buttons events
+			bool hat_active = false;
+			for (unsigned int ih = 0; ih < /*joystick[which]->nr_of_hats*/ MAX_DIGITAL_HATSWITCHES; ++ih) {
+				if (joystick[which]->digital_hat[ih] != VS_HAT_CENTERED) {
+					JOY_DBG(logvs::DBG, "!!! hat active joy%d hat%d val %d", which, ih, joystick[which]->digital_hat[ih]);
+					hat_active = true;
+					break ;
+				}
+			}
+			if (done[which] || (joystick[which]->joy_buttons == 0 && hat_active == false)) {
+				// The game loop needs to receive repeated buttons events
 				it = joystickEventQueue.erase(it);
 			} else {
 				++it;
 			}
 			done[which] = true;
-		} else if (joystick[it->which]->player >= _Universe->numPlayers()) {
+		} else if (joystick[which]->player >= _Universe->numPlayers()) {
 			it = joystickEventQueue.erase(it);
 		} else {
 			++it;

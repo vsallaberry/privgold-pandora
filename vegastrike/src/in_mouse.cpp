@@ -53,17 +53,8 @@ int getMouseButtonStatus() {
   return ret;
 }
 
-struct MouseEvent {
-  enum EventType { CLICK, DRAG, MOTION } type;
-  int button;
-  int state;
-  int mod;
-  int x;
-  int y;
-  MouseEvent(EventType type, int button, int state, int mod, int x, int y) : type(type), button(button), state(state), mod(mod), x(x), y(y) { }
-};
-
 static deque<MouseEvent> eventQueue;
+
 void mouseClickQueue(int button, int state, int x, int y) {
   int mod = 0;
   //glutGetModifiers();
@@ -210,19 +201,25 @@ static void DefaultMouseHandler (KBSTATE, int x, int y, int delx, int dely,int m
 }
 
 void UnbindMouse (int button, unsigned int scope) {
-	for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
-		mouseBindings[iscp][button]=DefaultMouseHandler;
+	for (int ibutt = (button < 0) ? 0 : button; ibutt < ((button < 0) ? NUM_BUTTONS : button+1); ++ibutt) {
+		for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
+			mouseBindings[iscp][ibutt]=DefaultMouseHandler;
+		}
+		MouseState[ibutt] = UP;
 	}
 }
 
 void BindMouse (int button, unsigned int scope, MouseHandler handler) {
-	for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
-		mouseBindings[iscp][button]=handler;
+	for (int ibutt = (button < 0) ? 0 : button; ibutt < ((button < 0) ? NUM_BUTTONS : button+1); ++ibutt) {
+		for (unsigned int iscp = (scope >= INSC_ALL) ? 0 : scope; iscp < ((scope >= INSC_ALL) ? INSC_ALL : scope+1); ++iscp) {
+			mouseBindings[iscp][ibutt]=handler;
+		}
 	}
 	handler (RESET,mousex,mousey,0,0,0);
 }
 
 void RestoreMouse() {
+  eventQueue.clear();
   winsys_set_mouse_func (mouseClickQueue);
   winsys_set_motion_func (mouseDragQueue);
   winsys_set_passive_motion_func(mouseMotionQueue);
@@ -245,6 +242,7 @@ void ProcessMouse () {
 	  memset(buttons, 0, sizeof(buttons));
 	  do {
 		  MouseEvent e = eventQueue.front();
+		  eventQueue.pop_front();
 		  switch(e.type) {
 		  case MouseEvent::CLICK:
 			  mouseClick0(e.button, e.state, e.mod, e.x, e.y);
@@ -271,13 +269,12 @@ void ProcessMouse () {
 			  mouseMotion(e.x, e.y);
 			  break;
 		  }
-		  eventQueue.pop_front();
 	  } while(eventQueue.size());
 
 	  if (available) {
 		  float x, y, z; int buttons;
 		  joystick[MOUSE_JOYSTICK]->GetJoyStick(x,y,z,buttons);
-		  JoystickQueuePush(JoystickEvent(MOUSE_JOYSTICK));
+		  JoystickQueuePush(MOUSE_JOYSTICK); //JoystickEvent(MOUSE_JOYSTICK));
 	  }
   }
   /*

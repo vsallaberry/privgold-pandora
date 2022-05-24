@@ -51,9 +51,8 @@ const int MAX_JOYSTICKS=16;
 const int MOUSE_JOYSTICK = MAX_JOYSTICKS-1;
 const int MAX_BUTTONS=48;
 const int MAX_DIGITAL_HATSWITCHES=4;
-const int MAX_DIGITAL_VALUES=9;
 
-enum { VS_HAT_CENTERED=0,VS_HAT_LEFT,VS_HAT_RIGHT,VS_HAT_DOWN,VS_HAT_UP,VS_HAT_RIGHTUP,VS_HAT_RIGHTDOWN,VS_HAT_LEFTUP,VS_HAT_LEFTDOWN };
+enum { VS_HAT_CENTERED=0,VS_HAT_LEFT,VS_HAT_RIGHT,VS_HAT_DOWN,VS_HAT_UP,VS_HAT_RIGHTUP,VS_HAT_RIGHTDOWN,VS_HAT_LEFTUP,VS_HAT_LEFTDOWN,MAX_DIGITAL_VALUES };
 
 
 extern JoyStick *joystick[MAX_JOYSTICKS];
@@ -92,8 +91,6 @@ class JoyStick {
     unsigned char digital_hat[MAX_DIGITAL_HATSWITCHES];
 #endif
 
-    bool debug_digital_hatswitch;
-
     int joy_buttons;
     bool joy_available;
     float joy_xmin,joy_xmax,joy_ymin,joy_ymax, joy_zmin, joy_zmax;
@@ -130,6 +127,7 @@ int GetJoystickByID(int id);
 void RestoreJoystick();
 void JoystickGameHandler(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state);
 void JoystickProcessQueue(int player);
+void JoystickQueuePush(unsigned int which);
 void JoystickQueuePush(const JoystickEvent & joydata);
 
 #endif // _JOYSTICK_H_

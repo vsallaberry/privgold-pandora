@@ -42,6 +42,9 @@ namespace BaseKeys {
  	void PrevLink(const KBData&,KBSTATE newState);
  	void EnterLink(const KBData&,KBSTATE newState);
  	void Computer(const KBData&,KBSTATE newState);
+ 	void Launch(const KBData & data, KBSTATE newState);
+ 	void MainMenu(const KBData & data, KBSTATE newState);
+ 	void GameMenu(const KBData & data, KBSTATE newState);
 }
 
 class BaseInterface {

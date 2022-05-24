@@ -907,12 +907,18 @@ BaseInterface::Room::Link * BaseInterface::Room::MouseOver (BaseInterface *base,
 }
 
 namespace BaseKeys {
+	inline static bool acceptEvent(const KBData & data, KBSTATE newState) {
+		return newState == PRESS || (data.type() == KBData::TYPE_MS && newState == RELEASE);
+	}
+	inline static bool doEvent(const KBData & data, KBSTATE newState) {
+		return (data.type() == KBData::TYPE_MS) ? newState == RELEASE : newState == PRESS;
+	}
 	enum BASE_LINK_CMD_ENUM { BASE_LINK_NONE = -2, BASE_PREV_LINK, BASE_ENTER_LINK, BASE_NEXT_LINK };
-	static void handleLink(BASE_LINK_CMD_ENUM what, const KBData&, KBSTATE newState) {
-		if (newState != PRESS)
+	static void handleLink(BASE_LINK_CMD_ENUM what, const KBData& data, KBSTATE newState) {
+		if (!acceptEvent(data, newState))
 			return ;
 		BaseInterface * base = BaseInterface::CurrentBase;
-		if (base == NULL || base->curroom < 0 || base->curroom > base->rooms.size())
+		if (base == NULL || base->curroom < 0 || base->curroom >= base->rooms.size())
 			return ;
 		int curroom = base->curroom;
 		BaseInterface::Room * room = base->rooms[curroom];
@@ -930,9 +936,9 @@ namespace BaseKeys {
 			GetMouseXY(mx, my);
 			CalculateRealXAndY(mx,my,&x,&y);
 		}
-		if (base && base == BaseInterface::CurrentBase && curroom == base->curroom)
-			room->Click(base, x, y, button, WS_MOUSE_DOWN);
-		if (base && base == BaseInterface::CurrentBase && curroom == base->curroom)
+		if (base == BaseInterface::CurrentBase && curroom == base->curroom)
+			room->Click(base, x, y, button, newState == PRESS ? WS_MOUSE_DOWN : WS_MOUSE_UP);
+		if (data.type() != KBData::TYPE_MS && base == BaseInterface::CurrentBase && curroom == base->curroom)
 			room->Click(base, x, y, button, WS_MOUSE_UP);
 	}
 	void NextLink(const KBData & data, KBSTATE newState) {
@@ -945,46 +951,51 @@ namespace BaseKeys {
  		handleLink(BASE_ENTER_LINK, data, newState);
  	}
  	void Computer(const KBData & data, KBSTATE newState) {
- 		if (newState != PRESS || BaseInterface::CurrentBase == NULL)
+ 		BaseInterface * base = BaseInterface::CurrentBase;
+ 		if (!acceptEvent(data, newState) || base == NULL)
  			return ;
  		BaseInterface::Room::Comp comp("BaseKeys::Computer", "");
  		for (unsigned int i = 0; i < BaseComputer::LOADSAVE/* DISPLAY_MODE_COUNT*/; ++i) {
  			comp.modes.push_back((enum BaseComputer::DisplayMode)i);
  		}
- 		comp.Click(BaseInterface::CurrentBase, -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_DOWN);
- 		comp.Click(BaseInterface::CurrentBase, -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_UP);
+ 		comp.Click(base, -2.0, -2.0, WS_LEFT_BUTTON, newState == PRESS ? WS_MOUSE_DOWN : WS_MOUSE_UP);
+ 		if (data.type() != KBData::TYPE_MS && base == BaseInterface::CurrentBase)
+ 			comp.Click(base, -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_UP);
+ 	}
+ 	void Launch(const KBData & data, KBSTATE newState) {
+ 		BaseInterface * base = BaseInterface::CurrentBase;
+ 		if (!acceptEvent(data, newState) || base == NULL)
+ 			return ;
+ 		BaseInterface::Room::Launch launch("BaseKeys::Launch", "");
+ 		launch.Click(base,  -2.0, -2.0, WS_LEFT_BUTTON, newState == PRESS ? WS_MOUSE_DOWN : WS_MOUSE_UP);
+ 		if (data.type() != KBData::TYPE_MS && base == BaseInterface::CurrentBase)
+ 			launch.Click(base,  -2.0, -2.0, WS_LEFT_BUTTON, WS_MOUSE_UP);
+ 	}
+ 	void MainMenu(const KBData & data, KBSTATE newState) {
+ 		BaseInterface * base = BaseInterface::CurrentBase;
+ 		if (!doEvent(data, newState))
+ 			return ;
+ 		BaseUtil::LoadBaseInterface(data.data().empty() ? "main_menu" : data.data());
+ 	}
+ 	void GameMenu(const KBData & data, KBSTATE newState) {
+ 		BaseInterface * base = BaseInterface::CurrentBase;
+ 		if (!doEvent(data, newState))
+ 			return ;
+ 		if (base != NULL) {
+ 			base->Terminate();
+ 		}
+ 		UniverseUtil::startMenuInterface(false);
  	}
 }
 
-// This is a hack to emulate link navigation with joystick.
-// We could use the KeyBindings mechanism provided by in_sdl/in_joystick
-// (assuming we can differenciate game bindings and base bindings).
+#define BASE_INTERFACE_JOYSTICK_QUEUE
+// Use KeyBindings (scope=Base) to process Joystick events
 void BaseInterface::Joystick(unsigned int which, float x, float y, float z, unsigned int buttons, unsigned int state) {
-	static const bool joy_link_nav_emul = XMLSupport::parse_bool(vs_config->getVariable("joystick", "base_link_nav", "true"));
-	static bool init_done = false;
-	static enum BaseKeys::BASE_LINK_CMD_ENUM prev_cmd[MAX_JOYSTICKS];
-	BaseInterface * base = CurrentBase;
-	if (!joy_link_nav_emul || base == NULL || !(base->python_kbhandler.empty()) || which >= GetNumJoysticks())
-		return ;
-	if (!init_done) {
-		for (size_t i = 0; i < sizeof(prev_cmd)/sizeof(*prev_cmd); ++i) prev_cmd[i] = BaseKeys::BASE_LINK_NONE;
-		init_done = true;
-	}
-	enum BaseKeys::BASE_LINK_CMD_ENUM what = BaseKeys::BASE_LINK_NONE;
-	if (buttons != 0) {
-		what = BaseKeys::BASE_ENTER_LINK;
-	} else if (fabs(x) >= 0.8 && x*x > y*y) {
-		what = x>0 ? BaseKeys::BASE_NEXT_LINK : BaseKeys::BASE_PREV_LINK;
-	} else if (fabs(y) >= 0.8 && y*y > x*x) {
-		what = y>0 ? BaseKeys::BASE_NEXT_LINK : BaseKeys::BASE_PREV_LINK;
-	}
-	if (what != prev_cmd[which]) {
-		prev_cmd[which] = what;
-		if (what != BaseKeys::BASE_LINK_NONE) {
-			BASE_LOG(logvs::VERBOSE, "joystick: #%d x:%g y:%g z:%g buttons:%x", which, x, y, z, buttons);
-			BaseKeys::handleLink(what, KBData(), PRESS);
-		}
-	}
+#if defined(BASE_INTERFACE_JOYSTICK_QUEUE)
+	JoystickQueuePush(which);
+#else
+	ProcessJoystick(which);
+#endif
 }
 
 BaseInterface *BaseInterface::CurrentBase=NULL;
@@ -1052,6 +1063,22 @@ void base_main_loop() {
 	if (!RefreshGUI()) {
 		restore_main_loop();
 	}else {
+#if defined(BASE_INTERFACE_JOYSTICK_QUEUE)
+		ProcessMouse();
+		for (int i = 0; i < _Universe->numPlayers(); ++i) {
+			_Universe->SetActiveCockpit(i);
+			_Universe->pushActiveStarSystem(_Universe->AccessCockpit(i)->activeStarSystem);
+# if defined(HAVE_SDL)
+			JoystickProcessQueue(i);
+# else
+			for (int j = 0; j < MAX_JOYSTICKS; ++j) {
+				if (joystick[j]->player==i)
+					ProcessJoystick(j);
+			}
+# endif // !defined(HAVE_SDL)
+			_Universe->popActiveStarSystem();
+		}
+#endif // !defined(BASE_INTERFACE_JOYSTICK_QUEUE)
 		GFXEndScene();
 		micro_sleep(1000);
 	}
@@ -1249,7 +1276,11 @@ void BaseInterface::ClickWin (int button, int state, int x, int y) {
 #endif
 			               ProcessMouseClick(button,state,x,y);
 		} else {
+#ifdef BASE_INTERFACE_JOYSTICK_QUEUE
+			mouseClickQueue(button, state, x, y);
+#else
 			CurrentBase->Click(x,y,button,state);
+#endif
 		}
 	}else {
 		NavigationSystem::mouseClick(button,state,x,y);	  

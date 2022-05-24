@@ -78,7 +78,7 @@ GameVegaConfig::GameVegaConfig(const char *configfile): VegaConfig( configfile)
     }
   }
 
-  for(int i=0;i<=MAX_AXES;i++){
+  for(int i = 0; i < MAX_AXIS; ++i){
     axis_axis[i]=-1;
     axis_joy[i]=-1;
   }
@@ -433,21 +433,30 @@ void GameVegaConfig::checkBind(configNode *node){
 
   unsigned int scope = getScope(node->attr_value("scope"));
 
-  KBHandler handler=commandMap[cmdstr];
-  
-  if(handler==NULL){
-    CONFIG_LOG(logvs::NOTICE, "bindings: No such command: %s", cmdstr.c_str());
-    return;
+  KBHandler handler;
+  {
+	  CommandMap::iterator cmd_it = commandMap.find(cmdstr);
+	  if(cmd_it == commandMap.end()){
+		  CONFIG_LOG(logvs::WARN, "bindings: No such command: %s", cmdstr.c_str());
+		  return;
+	  }
+	  handler = cmd_it->second;
   }
-  string player_str=node->attr_value("player");
-  string joy_str=node->attr_value("joystick");
-  string mouse_str=node->attr_value("mouse");
-  string keystr=node->attr_value("key");
-  string additional_data=node->attr_value("data");
-  string buttonstr=node->attr_value("button");
-  string hat_str=node->attr_value("hatswitch");
-  string dighswitch=node->attr_value("digital-hatswitch");
-  string direction=node->attr_value("direction");
+  
+  std::string player_str=node->attr_value("player");
+  std::string joy_str=node->attr_value("joystick");
+  std::string mouse_str=node->attr_value("mouse");
+  std::string keystr=node->attr_value("key");
+  std::string additional_data=node->attr_value("data");
+  std::string buttonstr=node->attr_value("button");
+  std::string hat_str=node->attr_value("hatswitch");
+  std::string dighswitch=node->attr_value("digital-hatswitch");
+  std::string direction=node->attr_value("direction");
+  // For backward compatibility, atoi("all") will give 0, the old vegastrike versions will not crash with this config.
+  if (!strcasecmp(mouse_str.c_str(), "all")) mouse_str = "-1";
+  if (!strcasecmp(joy_str.c_str(), "all")) joy_str = "-1";
+  if (!strcasecmp(buttonstr.c_str(), "all")) buttonstr = "-1";
+
   int joystick_nr = mouse_str.empty() ? (joy_str.empty() ? -1 : atoi(joy_str.c_str())) : MOUSE_JOYSTICK;
   if (joystick_nr >= 0 && joystick_nr != MOUSE_JOYSTICK && joystick_nr >= MAX_JOYSTICKS) {
 	  CONFIG_LOG(logvs::WARN, "warning: joystick %d is out of range (max=%d)", joystick_nr, MAX_JOYSTICKS-1);
@@ -474,7 +483,7 @@ void GameVegaConfig::checkBind(configNode *node){
     else{
       KeyMap::iterator wskey_it = key_map.find(keystr);
       if (wskey_it == key_map.end()){
-          CONFIG_LOG(logvs::NOTICE, "bindings: No such special key: %s", keystr.c_str());
+          CONFIG_LOG(logvs::WARN, "bindings: No such special key: %s", keystr.c_str());
           return;
       }
       BindKey(wskey_it->second, modifier, XMLSupport::parse_int(player_bound), scope, handler,KBData(additional_data));
@@ -489,7 +498,7 @@ void GameVegaConfig::checkBind(configNode *node){
       if(joy_str.empty()&&mouse_str.empty()){
     	  // it has to be the analogue hatswitch
     	  if(hat_str.empty()){
-    		  CONFIG_LOG(logvs::NOTICE, "bindings: you got to give a analogue hatswitch number");
+    		  CONFIG_LOG(logvs::WARN, "bindings: you got to give a analogue hatswitch number");
     		  return;
     	  }
 
@@ -522,7 +531,7 @@ void GameVegaConfig::checkBind(configNode *node){
       // digital hatswitch or ...
 
       if(dighswitch.empty() || direction.empty() || (mouse_str.empty()&&joy_str.empty())){
-        CONFIG_LOG(logvs::NOTICE, "bindings: you have to specify joystick,digital-hatswitch,direction");
+        CONFIG_LOG(logvs::WARN, "bindings: you have to specify joystick,digital-hatswitch,direction");
         return;
       }
 
@@ -560,9 +569,11 @@ void GameVegaConfig::checkBind(configNode *node){
     	  dir_index=VS_HAT_LEFTUP;
       }      else if(direction=="leftdown"){
     	  dir_index=VS_HAT_LEFTDOWN;
+      }  else if(direction=="axes"){
+    	  dir_index=MAX_DIGITAL_VALUES;
       }
       else{
-        CONFIG_LOG(logvs::NOTICE, "bindings: no valid direction string %s", direction.c_str());
+        CONFIG_LOG(logvs::WARN, "bindings: no valid direction string %s", direction.c_str());
         return;
       }
 
@@ -587,6 +598,9 @@ void GameVegaConfig::bindKeys(){
 }
 
 /* *********************************************************** */
+static void defaultHandler(const KBData&,KBSTATE) {
+	//nothing
+}
 CommandMap initGlobalCommandMap() {
   //  I don't knwo why this gives linker errors!
   CommandMap commandMap;
@@ -831,6 +845,11 @@ CommandMap initGlobalCommandMap() {
  commandMap["Base::PrevLink"]=BaseKeys::PrevLink;
  commandMap["Base::EnterLink"]=BaseKeys::EnterLink;
  commandMap["Base::Computer"]=BaseKeys::Computer;
+ commandMap["Base::Launch"]=BaseKeys::Launch;
+ commandMap["Base::GameMenu"]=BaseKeys::GameMenu;
+ commandMap["Base::MainMenu"]=BaseKeys::MainMenu;
+
+ commandMap["none"]=defaultHandler;
 
  return commandMap;
 }

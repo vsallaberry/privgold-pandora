@@ -83,7 +83,6 @@ void vs_options::init()
 	joystick_exponent = XMLSupport::parse_floatf(vs_config->getVariable ("joystick","joystick_exponent","1.0"));
 	polling_rate = XMLSupport::parse_int(vs_config->getVariable("joystick","polling_rate","0"));
 	force_use_of_joystick = XMLSupport::parse_bool(vs_config->getVariable("joystick","force_use_of_joystick","false"));
-	debug_digital_hatswitch = XMLSupport::parse_bool(vs_config->getVariable("joystick","debug_digital_hatswitch","false"));
 	deadband = XMLSupport::parse_floatf(vs_config->getVariable ("joystick","deadband","0.05"));
 	mouse_deadband = XMLSupport::parse_floatf(vs_config->getVariable ("joystick","mouse_deadband","0.025"));
 	warp_mouse = XMLSupport::parse_bool(vs_config->getVariable ("joystick","warp_mouse","false"));

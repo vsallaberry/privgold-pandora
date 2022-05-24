@@ -23,6 +23,17 @@
 #define _MOUSE_H_
 #include "in.h"
 
+struct MouseEvent {
+  enum EventType { CLICK, DRAG, MOTION } type;
+  int button;
+  int state;
+  int mod;
+  int x;
+  int y;
+  MouseEvent(EventType type, int button, int state, int mod, int x, int y) : type(type), button(button), state(state), mod(mod), x(x), y(y) { }
+};
+
+
 extern int mousex, mousey;
 int getMouseButtonStatus ();//returns button status that are bitwise anded (i.e. 1,3 down  the number looks like 0x1|(0x1<<2)
 void InitMouse();
@@ -34,6 +45,11 @@ int getMouseDrawFunc();
 void GetMouseDelta (int &dx, int &dy);
 int lookupMouseButton (int winsys_button);//returns 0 for left click, 1 for middle, 2 for right. ....
 void GetMouseXY(int &mx, int &my);
+
+void mouseClickQueue(int button, int state, int x, int y);
+void mouseDragQueue(int x, int y);
+void mouseMotionQueue(int x, int y);
+
 #endif
 
 

@@ -87,7 +87,6 @@ class vs_options
 		float joystick_exponent; // joystick axes are 32-bit floats.
 		int polling_rate;
 		bool force_use_of_joystick;
-		bool debug_digital_hatswitch;
 		float deadband;
 		float mouse_deadband;
 		bool warp_mouse;

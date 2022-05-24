@@ -303,7 +303,7 @@ namespace CockpitKeys {
 	static Vector R;
 	for (int i=0;i<NUM_CAM;i++) {
 	if(newState==PRESS) {
-		if (!vs_config->checkVersion(XMLCONFIG_MAKEVERSION(1,2,4)) && QuitAllow) {
+		if (!vs_config->checkVersion(XMLCONFIG_MAKEVERSION(1,2,4)) && QuitAllow) { // Backward compat with old configs
 			QuitNow(data,newState);
 		}
 		Q = _Universe->AccessCockpit()->AccessCamera(i)->Q;
@@ -775,8 +775,9 @@ void clickhandler (KBSTATE k, int x, int y, int delx, int dely, int mod) {
 */
 
 void InitializeInput() {
-	BindKey(WSK_ESCAPE,0,0, INSC_ALL, Quit,KBData()); // always have quit on esc
-	BindKey('q',0,0, INSC_ALL, ConfirmQuit,KBData()); // always have quit on esc
+	BindKey(WSK_ESCAPE,	0,0, INSC_ALL, Quit,		KBData()); // always have quit on esc
+	BindKey('q',		0,0, INSC_ALL, ConfirmQuit,	KBData()); // always have quit on esc
+	BindJoyKey(MOUSE_JOYSTICK, 0,INSC_BASE, BaseKeys::EnterLink,KBData()); // Always enter link on click
 	if (!vs_config->checkVersion(XMLCONFIG_MAKEVERSION(1,2,4))) {
 		// with an old vega config, always have prev/next/enter link on keyboard, joystick, mouse wheel.
 		BindKey(WSK_LEFT,	0,0, INSC_BASE, BaseKeys::PrevLink,KBData());
@@ -785,7 +786,21 @@ void InitializeInput() {
 		BindKey(WSK_DOWN,	0,0, INSC_BASE, BaseKeys::NextLink,KBData());
 		BindKey(' ',		0,0, INSC_BASE, BaseKeys::EnterLink,KBData());
 		BindKey(WSK_RETURN,	0,0, INSC_BASE, BaseKeys::EnterLink,KBData());
-		//BindJoyKey(0, JOYkey, handler, data)
+
+		BindJoyKey(MOUSE_JOYSTICK, 2,INSC_BASE, BaseKeys::NextLink,KBData()); // Always next link on right-click
+		BindJoyKey(MOUSE_JOYSTICK, 3,INSC_BASE, BaseKeys::PrevLink,KBData()); // Always prev link on wheel-up
+		BindJoyKey(MOUSE_JOYSTICK, 4,INSC_BASE, BaseKeys::NextLink,KBData()); // Always next link on wheel-down
+
+		BindJoyKey(				-1, -1,	INSC_BASE,		BaseKeys::EnterLink, KBData());
+		BindDigitalHatswitchKey(-1, 0,  VS_HAT_LEFT, 	INSC_BASE, 		BaseKeys::PrevLink, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_UP,   	INSC_BASE, 		BaseKeys::PrevLink, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_RIGHT,	INSC_BASE, 		BaseKeys::NextLink, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_DOWN, 	INSC_BASE, 		BaseKeys::NextLink, KBData());
+		BindDigitalHatswitchKey(-1,0,MAX_DIGITAL_VALUES,INSC_BASE, 		NULL,               KBData());
+		BindDigitalHatswitchKey(-1, 0,  VS_HAT_LEFT, 	INSC_COCKPIT, 	FlyByKeyboard::RightKey, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_UP,   	INSC_COCKPIT, 	FlyByKeyboard::UpKey, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_RIGHT,	INSC_COCKPIT, 	FlyByKeyboard::LeftKey, KBData());
+		BindDigitalHatswitchKey(-1, 0, 	VS_HAT_DOWN, 	INSC_COCKPIT, 	FlyByKeyboard::DownKey, KBData());
 	}
 }
 
