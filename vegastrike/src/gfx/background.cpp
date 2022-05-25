@@ -31,9 +31,9 @@
 #include "config_xml.h"
 #include <float.h>
 	const float size = 100;
-Background::Background(const char *file, int numstars, float spread,std::string filename):Enabled (true),stars(NULL) {
-	string temp;
-        static string starspritetextures = vs_config->getVariable("graphics","far_stars_sprite_texture","");
+Background::Background(const char *file, int numstars, float spread,const std::string & filename):Enabled (true),stars(NULL) {
+	std::string temp;
+        static std::string starspritetextures = vs_config->getVariable("graphics","far_stars_sprite_texture","");
         static float starspritesize = XMLSupport::parse_float(vs_config->getVariable("graphics","far_stars_sprite_size","2"));
 
         if(starspritetextures.length()==0) {
@@ -43,11 +43,11 @@ Background::Background(const char *file, int numstars, float spread,std::string 
         }
 	up = left = down = front=right=back=NULL;
 	static int max_cube_size =XMLSupport::parse_int (vs_config->getVariable("graphics","max_cubemap_size","1024"));
-        string suffix = ".image";
-	temp = string(file)+"_up.image";
+        std::string suffix = ".image";
+	temp = std::string(file)+"_up.image";
 	up = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size);
 	if (!up->LoadSuccess()) {
-	  temp = string(file)+"_up.bmp";
+	  temp = std::string(file)+"_up.bmp";
 	  delete up;
 	  up = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size);
 	  if (up->LoadSuccess()) {
@@ -57,10 +57,10 @@ Background::Background(const char *file, int numstars, float spread,std::string 
 	SphereBackground = NULL;
 
 	if (!up->LoadSuccess()) {
-	  temp = string(file)+"_sphere.image";
+	  temp = std::string(file)+"_sphere.image";
 	  if (VSFileSystem::LookForFile(temp, VSFileSystem::TextureFile) > VSFileSystem::Ok) {
 	    // > Ok means failed to load.
-	    temp = string(file)+"_sphere.bmp";
+	    temp = std::string(file)+"_sphere.bmp";
 	    suffix=".bmp"; // backwards compatibility
 	  }
 	  SphereBackground = new SphereMesh (20,8,8,temp.c_str(),NULL,true);
@@ -74,27 +74,27 @@ Background::Background(const char *file, int numstars, float spread,std::string 
 	//up->Clamp();
 	//up->Filter();
 
-	temp = string(file)+"_left"+suffix;
+	temp = std::string(file)+"_left"+suffix;
 	left = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size );
 	//left->Clamp();
 	//left->Filter();
 
-	temp = string(file)+"_front"+suffix;
+	temp = std::string(file)+"_front"+suffix;
 	front = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size );
 	//front->Clamp();
 	//front->Filter();
 
-	temp = string(file)+"_right"+suffix;
+	temp = std::string(file)+"_right"+suffix;
 	right = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size);
 	//right->Clamp();
 	//right->Filter();
 
-	temp = string(file)+"_back"+suffix;
+	temp = std::string(file)+"_back"+suffix;
 	back = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size);
 	//back->Clamp();
 	//back->Filter();
 
-	temp = string(file)+"_down"+suffix;
+	temp = std::string(file)+"_down"+suffix;
 	down = new Texture(temp.c_str(),0,MIPMAP,TEXTURE2D,TEXTURE_2D,GFXTRUE,max_cube_size);
 	//down->Clamp();
 	//down->Filter();

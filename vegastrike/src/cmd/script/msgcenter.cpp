@@ -52,7 +52,7 @@
 const MessageTruePredicate MessageCenter::_true_predicate = MessageTruePredicate();
 const MessageCenter::FilterList MessageCenter::_emptyFilterList = MessageCenter::FilterList();
 
-void MessageCenter::add(std::string from, std::string to, std::string message, double delay) {
+void MessageCenter::add(const std::string & from, const std::string & to, const std::string & message, double delay) {
     gameMessage msg;
     
     msg.from = from;

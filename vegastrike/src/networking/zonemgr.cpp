@@ -27,12 +27,12 @@ ZoneMgr::ZoneMgr()
 /**** addZone                                                                               *****/
 /************************************************************************************************/
 
-void			ZoneMgr::addSystem( string & sysname, string & system)
+void			ZoneMgr::addSystem( const std::string & sysname, const std::string & system)
 {
 	Systems.insert( sysname, system);
 }
 
-string			ZoneMgr::getSystem( string & name)
+const std::string &	ZoneMgr::getSystem( const std::string & name) const
 {
 	return Systems.get( name);
 }
@@ -40,7 +40,7 @@ string			ZoneMgr::getSystem( string & name)
 /**** getZoneBuffer : returns a buffer containing zone info                                *****/
 /************************************************************************************************/
 
-void displayUnitInfo(Unit *un, const string callsign, const char *type) {
+void displayUnitInfo(Unit *un, const std::string & callsign, const char *type) {
 	cout << type;
 	if (!un) {
 		cout << "\'" << callsign << "\' (dead)" << endl;
@@ -65,7 +65,7 @@ void  ZoneMgr::getZoneBuffer( unsigned short zoneid, NetBuffer & netbuf)
 	LI k;
 	int nbclients=0;
 	Packet packet2;
-	string savestr, xmlstr;
+	std::string savestr, xmlstr;
 
 	// Loop through client in the same zone to send their current_state and save and xml to "clt"
 	std::set<ObjSerial> activeObjects;
@@ -123,10 +123,10 @@ void  ZoneMgr::getZoneBuffer( unsigned short zoneid, NetBuffer & netbuf)
 	}
 }
 
-StarSystem *	ZoneMgr::addZone( string starsys)
+StarSystem *	ZoneMgr::addZone( const std::string & starsys)
 {
 	StarSystem * sts=NULL;
-	string sysfile = starsys+".system";
+	std::string sysfile = starsys+".system";
 	if( (sts = GetLoadedStarSystem( sysfile.c_str() ))) {
 		cerr<<"--== STAR SYSTEM " << starsys << " ALREADY EXISTS ==--"<<endl;
 		return sts;
@@ -138,7 +138,7 @@ StarSystem *	ZoneMgr::addZone( string starsys)
 	//list<Unit *> ulst;
 	// Generate the StarSystem
 	_Universe->netLock(true);
-	string starsysfile = starsys+".system";
+	std::string starsysfile = starsys+".system";
 	// ComputeSystemSerials now done in Universe::Generate1
 	//UniverseUtil::ComputeSystemSerials( starsysfile);
 	//sts = new StarSystem( starsysfile.c_str(), Vector(0,0,0));
@@ -264,7 +264,7 @@ Unit *	ZoneMgr::getUnit( ObjSerial unserial, unsigned short zone)
 /**** addClient                                                                             *****/
 /************************************************************************************************/
 
-StarSystem *	ZoneMgr::addClient( ClientPtr cltw, string starsys, unsigned short & num_zone)
+StarSystem *	ZoneMgr::addClient( ClientPtr cltw, const std::string & starsys, unsigned short & num_zone)
 {
 	// Remove the client from old starsystem if needed and add it in the new one
 	StarSystem * sts=NULL;
@@ -953,7 +953,7 @@ void ZoneInfo::display() {
 	un_iter iter = (star_system->getUnitList()).createIterator();
 	while (Unit *un=*iter) {
 		char name[15] = "    NPC ";
-		string callsign;
+		std::string callsign;
 		int cp;
 		if ((cp=_Universe->whichPlayerStarship(un))!=-1) {
 			sprintf(name,"*Plr% 3d ",cp);
@@ -1032,21 +1032,22 @@ int		ZoneMgr::displayMemory()
 }
 
 
-std::string ZoneMgr::Systems::insert( std::string sysname, std::string system )
+std::string ZoneMgr::Systems::insert( const std::string & sysname, const std::string & system )
 {
     if( sysname != "" && system != "" )
         _map.insert( SystemPair( sysname, system ) );
     return sysname;
 }
 
-std::string ZoneMgr::Systems::get( std::string sysname )
+const std::string & ZoneMgr::Systems::get( const std::string & sysname ) const
 {
-    SystemIt it = _map.find(sysname);
-    if( it == _map.end() ) return string( "");
+	static const std::string empty;
+    SystemConstIt it = _map.find(sysname);
+    if( it == _map.end() ) return empty;
     return it->second;
 }
 
-bool ZoneMgr::Systems::remove( std::string sysname )
+bool ZoneMgr::Systems::remove( const std::string & sysname )
 {
     size_t s = _map.erase( sysname );
     if( s == 0 ) return false;

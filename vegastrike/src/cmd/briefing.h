@@ -3,8 +3,7 @@
 #include "gfx/hud.h"
 #include <list>
 #include <vector>
-using std::list;
-using std::vector;
+
 class BriefingOrder {
  public:
   Vector vec;
@@ -36,7 +35,7 @@ class Briefing{
   };
   Camera cam;
   TextPlane tp;
-  vector <Ship *> starships;  
+  std::vector <Ship *> starships;
   void Render();
   void Update();
   //-1 returns file not found

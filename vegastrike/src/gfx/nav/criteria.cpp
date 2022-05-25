@@ -65,7 +65,7 @@ CriteriaNode* CriteriaRoot::unhook() {
   return NULL;
 }
 
-CriteriaNode* CriteriaRoot::unhook(CriteriaNode *child) {
+CriteriaNode* CriteriaRoot::unhookChild(CriteriaNode *child) {
   assert(child == m_child);
   m_child = NULL;
   return child;
@@ -138,8 +138,8 @@ CriteriaNode* CriteriaNot::unhook() {
   return this;
 }
 
-CriteriaNode* CriteriaNot::unhook(CriteriaNode *child) {
-  return getParent()->unhook(this);
+CriteriaNode* CriteriaNot::unhookChild(CriteriaNode *child) {
+  return getParent()->unhookChild(this);
 }
 
 vector<CriteriaNode*> CriteriaNot::getChildren() const {
@@ -191,10 +191,10 @@ CriteriaBinaryOperator::CriteriaBinaryOperator(CriteriaNode *child, CriteriaNode
 }
 
 CriteriaNode* CriteriaBinaryOperator::unhook() {
-  return getParent()->unhook(this);
+  return getParent()->unhookChild(this);
 }
 
-CriteriaNode* CriteriaBinaryOperator::unhook(CriteriaNode *child) {
+CriteriaNode* CriteriaBinaryOperator::unhookChild(CriteriaNode *child) {
   assert((m_left == child) || (m_right==child));
 
   if(child == m_left) {
@@ -311,7 +311,7 @@ CriteriaNode* CriteriaOr::clone() const {
 /////////////////////////////////////////////////////////////////
 
 CriteriaNode* CriteriaLeaf::unhook() {
-  return getParent()->unhook(this);
+  return getParent()->unhookChild(this);
 }
 
 vector<CriteriaNode*> CriteriaLeaf::getChildren() const {

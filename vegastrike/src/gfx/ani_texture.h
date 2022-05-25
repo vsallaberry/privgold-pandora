@@ -19,9 +19,9 @@ class AnimatedTexture: public Texture {
   int texstage;
   int timeSource;
 
-  vector<StringPool::Reference> frames; //Filenames for each frame
-  vector<Vector> frames_maxtc; //Maximum tcoords for each frame
-  vector<Vector> frames_mintc; //Minimum tcoords for each frame
+  std::vector<StringPool::Reference> frames; //Filenames for each frame
+  std::vector<Vector> frames_maxtc; //Maximum tcoords for each frame
+  std::vector<Vector> frames_mintc; //Minimum tcoords for each frame
   
   VideoFile *vidSource;
   

@@ -10,7 +10,7 @@
 #include "pilot.h"
 using std::string;
 namespace UnitUtil {
-	void switchFg(Unit *my_unit,string arg){
+	void switchFg(Unit *my_unit,const string & arg){
 		if (!my_unit)return;
 		string type= my_unit->name;
 		int nr_waves_left=0;
@@ -41,7 +41,7 @@ namespace UnitUtil {
 		}
 		return sex;
 	}
-	bool commAnimation(Unit *my_unit,string anim){
+	bool commAnimation(Unit *my_unit,const string & anim){
 		if (!my_unit)return false;
 		Cockpit * tmp;
 		if ((tmp=_Universe->isPlayerStarship (my_unit))) {

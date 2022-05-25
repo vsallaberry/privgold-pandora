@@ -49,7 +49,7 @@ protected:
 };
 
 namespace NebulaXML {
-	FOGMODE parse_fogmode (string val);
+	FOGMODE parse_fogmode (const std::string & val);
 
 		enum Names {
 		UNKNOWN,

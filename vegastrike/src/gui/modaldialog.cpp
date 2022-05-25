@@ -242,7 +242,7 @@ void ListQuestionDialog::CreateControlsForListWindow(Window* window) {
 
 // Initialization of our Question Dialog class.
 // Create a window, load controls, and set the title.
-void QuestionDialog::init(const std::string& title) {
+void QuestionDialog::initWithTitle(const std::string& title) {
 	setWindow(new Window);
 	initControls();
 
@@ -281,7 +281,7 @@ class AlertDialog : public QuestionDialog
 //  hits the OK button.
 void showAlert(const std::string& title) {
     AlertDialog* dialog = new AlertDialog;
-	dialog->init(title);
+	dialog->initWithTitle(title);
 	dialog->run();
 }
 
@@ -315,7 +315,7 @@ bool YesNoDialog::processWindowCommand(const EventCommandId& command, Control* c
 // The result is supplied in the callback.
 void showYesNoQuestion(const std::string& title, ModalDialogCallback* cb, const std::string& id) {
     YesNoDialog* dialog = new YesNoDialog;
-	dialog->init(title);
+	dialog->initWithTitle(title);
 	dialog->setCallback(cb, id);
 	dialog->run();
 }
@@ -357,7 +357,7 @@ SimplePicker *ListQuestionDialog::getPicker() {
 void showListQuestion(const std::string& title, const std::vector<std::string>& options,
                       ModalDialogCallback* cb, const std::string& id) {
     ListQuestionDialog* dialog = new ListQuestionDialog;
-	dialog->init(title);
+	dialog->initWithTitle(title);
 	dialog->setCallback(cb, id);
 
     // Fill the picker with the choices supplied by the caller.

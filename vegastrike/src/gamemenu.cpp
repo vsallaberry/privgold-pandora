@@ -18,6 +18,9 @@
 #include "gfxlib_struct.h"
 #include "cmd/music.h"
 
+using std::string;
+using std::vector;
+
 extern void TerminateCurrentBase( void);
 vector<unsigned int > gamemenu_keyboard_queue;
 
@@ -244,7 +247,7 @@ void GameMenu::createNetworkControls(GroupControl *serverConnGroup, std::vector 
 }
 
 namespace UniverseUtil {
-  void startMenuInterface(bool firstTime, string error) {
+  void startMenuInterface(bool firstTime, const string & error) {
 	winsys_set_keyboard_func(gamemenu_keyboard_handler);
 	winsys_set_mouse_func(EventManager::ProcessMouseClick);
 	winsys_set_passive_motion_func(EventManager::ProcessMousePassive);

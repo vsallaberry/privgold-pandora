@@ -6,7 +6,7 @@ void Mission::call_unit_toxml(missionNode *node,int mode,varInst *ovi){
   Unit *my_object=getUnitObject(node,mode,ovi);
 
   if (my_object) {
-   string fgid=my_object->getFgID();
+   std::string fgid=my_object->getFgID();
    Flightgroup *fg=my_object->getFlightgroup();
 
   

@@ -635,9 +635,10 @@ bool InitConsole(bool forcealloc, int argc, char ** argv) {
 		char * newargv[] = { exe, tmpname, NULL };
 #else //defined(__linux__)
 # define TERMEXE_SUFFIX ""
+		static char s_term_arg[3] = { '-', 'e', 0 };
 		const char * const searchs[] = { "xterm", "gnome-terminal", "konsole", NULL };
 
-		char * newargv[] = { exe, "-e", tmpname, NULL };
+		char * newargv[] = { exe, s_term_arg, tmpname, NULL };
 #endif
 		for (const char * const * search = searchs; *search; ++search) {
 			snprintf(exe, sizeof(exe), "%s%s", *search, TERMEXE_SUFFIX);

@@ -12,11 +12,6 @@
 #include "vsnet_socketflags.h"
 #include "vsnet_debug.h"
 
-using std::cout;
-using std::endl;
-using std::list;
-//using namespace std;
-
 class Packet
 {
     DECLARE_VALID

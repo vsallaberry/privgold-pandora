@@ -6,6 +6,10 @@
 #include "warpto.h"
 #include "universe_util.h"
 #include <string>
+
+using std::string;
+using std::vector;
+
 static void DockedScript(Unit * docker, Unit * base) {
   static string script = vs_config->getVariable("AI","DockedToScript","");
   if (script.length()>0) {

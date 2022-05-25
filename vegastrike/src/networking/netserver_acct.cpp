@@ -6,6 +6,9 @@
 #include "networking/lowlevel/netbuffer.h"
 #include "networking/fileutil.h"
 #include "networking/lowlevel/vsnet_sockethttp.h"
+
+using std::string;
+
 extern int acct_con;
 
 /**************************************************************/

@@ -10,8 +10,6 @@
 #include <vector>
 #include <list>
 #include <iostream>
-using std::string;
-using std::vector;
 
 #include "gfx/vec.h"
 #include "networking/const.h"
@@ -96,56 +94,56 @@ namespace VSFileSystem
 
 	int		GetReadBytes( char * fmt, va_list ap);
 
-	typedef vsUMap<string,VSError> FileLookupCache;
-	VSError CachedFileLookup(FileLookupCache &cache, const string& file, VSFileType type);
+	typedef vsUMap<std::string,VSError> FileLookupCache;
+	VSError CachedFileLookup(FileLookupCache &cache, const std::string& file, VSFileType type);
 
 	/************************************************************************************************/
 	/**** VSFileSystem global variables                                                          ****/
 	/************************************************************************************************/
 
 	extern bool	    use_volumes;
-	extern string   volume_format;
+	extern std::string   volume_format;
     extern enum VSVolumeFormat q_volume_format;
 
-	extern vector <std::string> curdir;//current dir starting from datadir
-	extern vector <std::string> savedpwd;
-	extern vector<string>       Rootdir;
-	extern string sharedtextures;
-	extern string sharedsounds;
-	extern string sharedmeshes;
-	extern string sharedunits;
-	extern string sharedsectors;
-	extern string sharedcockpits;
-	extern string shareduniverse;
-	extern string sharedanims;
-	extern string sharedsprites;
-	extern string savedunitpath;
-	extern string moddir;
-	extern string datadir;
-	extern string homedir;									// User home directory including .vegastrike subdir
-	extern string bindir;
-	extern string resourcesdir;
+	extern std::vector <std::string> curdir;//current dir starting from datadir
+	extern std::vector <std::string> savedpwd;
+	extern std::vector<std::string>       Rootdir;
+	extern std::string sharedtextures;
+	extern std::string sharedsounds;
+	extern std::string sharedmeshes;
+	extern std::string sharedunits;
+	extern std::string sharedsectors;
+	extern std::string sharedcockpits;
+	extern std::string shareduniverse;
+	extern std::string sharedanims;
+	extern std::string sharedsprites;
+	extern std::string savedunitpath;
+	extern std::string moddir;
+	extern std::string datadir;
+	extern std::string homedir;									// User home directory including .vegastrike subdir
+	extern std::string bindir;
+	extern std::string resourcesdir;
 
-	extern string config_file;
-	extern string weapon_list;
-	extern string universe_name;
-	extern string HOMESUBDIR;
-	extern vector<string>		current_path;
-	extern vector<string>		current_directory;
-	extern vector<string>		current_subdirectory;
-	extern vector<VSFileType>	current_type;
+	extern std::string config_file;
+	extern std::string weapon_list;
+	extern std::string universe_name;
+	extern std::string HOMESUBDIR;
+	extern std::vector<std::string>	current_path;
+	extern std::vector<std::string>	current_directory;
+	extern std::vector<std::string>	current_subdirectory;
+	extern std::vector<VSFileType>	current_type;
 
-	extern vector< vector <string> >	SubDirectories;		// Subdirectories where we should look for VSFileTypes files
-	extern vector<string>				Directories;
-	extern vector<string>				Rootdir;			// Root directories where we should look for VSFileTypes files
+	extern std::vector<std::vector<std::string>	> SubDirectories;// Subdirectories where we should look for VSFileTypes files
+	extern std::vector<std::string>	Directories;
+	extern std::vector<std::string>	Rootdir;			// Root directories where we should look for VSFileTypes files
 
-	extern vector<int>					UseVolumes;			// Tells us for which VSFileType we will use volumes
+	extern std::vector<int>			UseVolumes;			// Tells us for which VSFileType we will use volumes
 															// 0 tells FileType doesn't use volumes
 															// 1 tells it uses a volume based on the FileType
 															// 2 tells it uses a big data volume
 
-	extern string failed;
-	extern vsUMap<string, CPK3 *>	pk3_opened_files; 			// Map of the currently opened PK3 volume/resource files
+	extern std::string failed;
+	extern vsUMap<std::string, CPK3 *>	pk3_opened_files; 			// Map of the currently opened PK3 volume/resource files
 	/************************************************************************************************/
 	/**** VSFileSystem wrappers to stdio calls                                                   ****/
 	/************************************************************************************************/
@@ -212,14 +210,14 @@ namespace VSFileSystem
 	/**** vs_path functions : mostly obsolete stuff now                                          ****/
 	/************************************************************************************************/
 
-	string GetHashName (const std::string &name);
-	string GetHashName (const std::string &name,const class Vector & scale, int faction);
-	string GetSharedTextureHashName(const std::string &);
-	string GetSharedSoundHashName(const std::string&);
-	string GetSharedMeshHashName(const std::string &, const class Vector &scale, int faction);
-	string MakeSharedStarSysPath (const std::string &);
-	string MakeSharedPath (const std::string &path);
-	string GetCorrectStarSysPath (const std::string &,bool &autogenerated);
+	std::string GetHashName (const std::string &name);
+	std::string GetHashName (const std::string &name,const class Vector & scale, int faction);
+	std::string GetSharedTextureHashName(const std::string &);
+	std::string GetSharedSoundHashName(const std::string&);
+	std::string GetSharedMeshHashName(const std::string &, const class Vector &scale, int faction);
+	std::string MakeSharedStarSysPath (const std::string &);
+	std::string MakeSharedPath (const std::string &path);
+	std::string GetCorrectStarSysPath (const std::string &,bool &autogenerated);
 
 	//string GetSharedUnitPath ();
 	//string GetSharedMeshPath (const std::string &name);
@@ -244,42 +242,42 @@ namespace VSFileSystem
     typedef std::list<std::pair<std::pair<std::string,std::string>,std::string> > ConfigOverrides_type;
 
 	// Initialize paths
-	void	InitPaths( string conf, string subdir="", ConfigOverrides_type * overrides = NULL );
+	void	InitPaths( const std::string & conf, const std::string & subdir="", ConfigOverrides_type * overrides = NULL );
 	void	InitDataDirectory();
 	void	InitHomeDirectory();
-	void	LoadConfig( string subdir="", ConfigOverrides_type * overrides = NULL );
+	void	LoadConfig( const std::string & subdir="", ConfigOverrides_type * overrides = NULL );
 	void	InitMods();
 	void	ChangeToProgramDirectory(const char *argv0);
 
 	// Create a directory
 	VSError	CreateDirectoryAbs( const char * filename);
-	VSError	CreateDirectoryAbs( const string &filename);
+	VSError	CreateDirectoryAbs( const std::string &filename);
 	// Create a directory in home_path
 	VSError	CreateDirectoryHome( const char * filename);
-	VSError	CreateDirectoryHome( const string &filename);
+	VSError	CreateDirectoryHome( const std::string &filename);
 	// Create a directory in data_path_path
 	VSError	CreateDirectoryData( const char * filename);
-	VSError	CreateDirectoryData( const string &filename);
+	VSError	CreateDirectoryData( const std::string &filename);
 
 	/********** DO NO USE FileExists functions directly : USE LookForFile instead **********/
 	// Test if a directory exists (absolute path)
 	bool	DirectoryExists( const char * filename);
-	bool	DirectoryExists( const string &filename);
+	bool	DirectoryExists( const std::string &filename);
 	// Returns positive int or index in archive if found or -1 if not found
 	// Test if a file exists (absolute path)
-	int		FileExists( const string &root, const char * filename, VSFileType type=UnknownFile, bool lookinvolume=true);
-	int		FileExists( const string &root, const string &filename, VSFileType type=UnknownFile, bool lookinvolume=true);
+	int		FileExists( const std::string &root, const char * filename, VSFileType type=UnknownFile, bool lookinvolume=true);
+	int		FileExists( const std::string &root, const std::string &filename, VSFileType type=UnknownFile, bool lookinvolume=true);
 	// Test if a file exists relative to home_path
 	int		FileExistsHome( const char * filename, VSFileType type=UnknownFile);
-	int		FileExistsHome( const string &filename, VSFileType type=UnknownFile);
+	int		FileExistsHome( const std::string &filename, VSFileType type=UnknownFile);
 	// Test if a file exists relative to data_path
 	int		FileExistsData( const char * filename, VSFileType type=UnknownFile);
-	int		FileExistsData( const string &filename, VSFileType type=UnknownFile);
+	int		FileExistsData( const std::string &filename, VSFileType type=UnknownFile);
 
 	VSError	GetError(const char * str=NULL);
 
 	VSError	LookForFile( VSFile & f, VSFileType type, VSFileMode mode=ReadOnly);
-	VSError	LookForFile( const string & filename, VSFileType type, VSFileMode mode=ReadOnly);
+	VSError	LookForFile( const std::string & filename, VSFileType type, VSFileMode mode=ReadOnly);
 
 	/************************************************************************************************/
 	/**** VSFileSystem::VSFile functions                                                         ****/
@@ -305,10 +303,10 @@ namespace VSFileSystem
 			VSFileMode		file_mode;
 			VSVolumeType	volume_type;
 
-			string			filename;
-			string			subdirectoryname;
-			string			directoryname;
-			string			rootname;
+			std::string		filename;
+			std::string		subdirectoryname;
+			std::string		directoryname;
+			std::string		rootname;
 
 			long			size;
 			bool			valid;
@@ -320,7 +318,7 @@ namespace VSFileSystem
 			VSFile();
 			VSFile( const char * buffer, long size, VSFileType type=ZoneBuffer, VSFileMode=ReadOnly);
 			VSFile( const char * filename, VSFileType type=UnknownFile, VSFileMode=ReadOnly);
-			VSFile( const string &filename, VSFileType type=UnknownFile) { /*VSFile::*//*c++11/clang*/VSFile( filename.c_str(), type); }
+			VSFile( const std::string &filename, VSFileType type=UnknownFile) { /*VSFile::*//*c++11/clang*/VSFile( filename.c_str(), type); }
   			~VSFile();
 
 			FILE *	GetFP() { return this->fp; } // This is still needed for special cases (when loading PNG files)
@@ -329,22 +327,22 @@ namespace VSFileSystem
 			/********************************** OPEN A FILE *********************************/
 			// Open an existing file read only
 			VSError	OpenReadOnly( const char * filename, VSFileType type=UnknownFile);
-			VSError	OpenReadOnly( const string &filename, VSFileType type=UnknownFile) { return OpenReadOnly( filename.c_str(), type); }
+			VSError	OpenReadOnly( const std::string &filename, VSFileType type=UnknownFile) { return OpenReadOnly( filename.c_str(), type); }
 			// Open an existing file read/write
 			VSError	OpenReadWrite( const char * filename, VSFileType type=UnknownFile);
-			VSError	OpenReadWrite( const string &filename, VSFileType type=UnknownFile) { return OpenReadWrite( filename.c_str(), type); }
+			VSError	OpenReadWrite( const std::string &filename, VSFileType type=UnknownFile) { return OpenReadWrite( filename.c_str(), type); }
 			// Open (truncate) or create a file read/write
 			VSError	OpenCreateWrite( const char * filename, VSFileType type=UnknownFile);
-			VSError	OpenCreateWrite( const string &filename, VSFileType type=UnknownFile) { return OpenCreateWrite( filename.c_str(), type); }
+			VSError	OpenCreateWrite( const std::string &filename, VSFileType type=UnknownFile) { return OpenCreateWrite( filename.c_str(), type); }
 			// Close the file
 			void	Close();
 
 			/********************************** READ/WRITE OPERATIONS IN A FILE *********************************/
 			size_t	Read( void * ptr, size_t length);			// Read length in ptr (store read bytes number in length)
 			VSError	ReadLine( void * ptr, size_t length);		// Read a line of maximum length
-			string	ReadFull();									// Read the entire file and returns the content in a string
+			std::string	ReadFull();									// Read the entire file and returns the content in a string
 			size_t	Write( const void * ptr, size_t length);	// Write length from ptr (store written bytes number in length)
-			size_t	Write( const string &content);				// Write a string
+			size_t	Write( const std::string &content);				// Write a string
 			VSError	WriteLine( const void * ptr);				// Write a line
 			void	WriteFull( void * ptr);						// Write
 
@@ -545,18 +543,18 @@ namespace VSFileSystem
 			bool	Valid();				// Tells wether the file is valid or not
 
 			/********************************** FILE PATH *********************************/
-			const string& GetFilename() const { return this->filename; }
-			const string& GetDirectory() const { return this->directoryname; }
-			const string& GetSubDirectory() const { return this->subdirectoryname; }
-			const string& GetRoot() const { return this->rootname; }
+			const std::string& GetFilename() const { return this->filename; }
+			const std::string& GetDirectory() const { return this->directoryname; }
+			const std::string& GetSubDirectory() const { return this->subdirectoryname; }
+			const std::string& GetRoot() const { return this->rootname; }
 
-			void SetFilename(const string &filename) { this->filename = filename; }
-			void SetDirectory(const string &directory) { this->directoryname = directory; }
-			void SetSubDirectory(const string &subdirectory) { this->subdirectoryname = subdirectory; }
-			void SetRoot(const string &root) { this->rootname = root; }
+			void SetFilename(const std::string &filename) { this->filename = filename; }
+			void SetDirectory(const std::string &directory) { this->directoryname = directory; }
+			void SetSubDirectory(const std::string &subdirectory) { this->subdirectoryname = subdirectory; }
+			void SetRoot(const std::string &root) { this->rootname = root; }
 
-			string	GetFullPath();
-            string  GetAbsPath();
+			std::string	GetFullPath();
+            std::string  GetAbsPath();
 
 			void	SetType( VSFileType type);
 			void	SetAltType( VSFileType type);

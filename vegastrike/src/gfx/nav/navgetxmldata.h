@@ -5,8 +5,6 @@
 #include <string>
 #include <fstream>
 
-using namespace std;
-
-string retrievedata(string data, string type);
+std::string retrievedata(const std::string & data, const std::string & type);
 
 #endif

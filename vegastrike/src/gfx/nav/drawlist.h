@@ -30,7 +30,7 @@ public:
 };
 
 void drawdescription(Unit* source, float x, float y, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col);
-void drawdescription(string text, float x, float y, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col);
+void drawdescription(const std::string & text, float x, float y, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col);
 
 void drawlistitem(int type, float size, float x, float y, Unit* source, navscreenoccupied* screenoccupation, bool inmouserange, bool currentistail, float unselectedalpha, GFXColor* factioncolours);
 

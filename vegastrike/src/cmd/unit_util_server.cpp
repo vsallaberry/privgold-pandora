@@ -6,7 +6,7 @@
 using std::string;
 
 namespace UnitUtil {
-	void switchFg(Unit *my_unit,string arg){
+	void switchFg(Unit *my_unit,const string & arg){
 		if (!my_unit)return;
 		string type= my_unit->name;
 		int nr_waves_left=0;
@@ -24,5 +24,5 @@ namespace UnitUtil {
 		my_unit->SetFg (fg,fg->nr_ships_left-1);
 	}
 	int communicateTo(Unit *my_unit,Unit *other_unit,float mood){return 0;}
-	bool commAnimation(Unit *my_unit,string anim){ return false;}
+	bool commAnimation(Unit *my_unit,const string & anim){ return false;}
 }

@@ -129,7 +129,7 @@ void vs_options::init()
 	
 }
 
-string vs_options::getCallsign(int squadnum)
+std::string vs_options::getCallsign(int squadnum)
 {
 	return(vs_config->getVariable(std::string("player")+((squadnum>0)?XMLSupport::tostring(squadnum+1):std::string("")),"callsign","pilot"));
 }

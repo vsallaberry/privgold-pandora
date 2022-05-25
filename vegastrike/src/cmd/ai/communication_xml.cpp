@@ -5,6 +5,10 @@
 #include "communication.h"
 #include <assert.h>
 #include "vsfilesystem.h"
+
+using std::string;
+using std::vector;
+
 static int unitlevel;
 using namespace XMLSupport;
 using XMLSupport::EnumMap;
@@ -49,7 +53,7 @@ void FSM::beginElement(void *userData, const XML_Char *names, const XML_Char **a
 	((FSM*)userData)->beginElement(names, AttributeList(atts));
 }
 
-extern int createSound( string file, bool val);
+extern int createSound( const std::string & file, bool val);
 void FSM::beginElement(const string &name, const AttributeList attributes) {
 using namespace CommXML;
 	AttributeList::const_iterator iter;

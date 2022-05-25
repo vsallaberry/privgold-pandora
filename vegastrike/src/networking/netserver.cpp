@@ -71,6 +71,9 @@
 #include "netversion.h"
 ObjSerial SERVER_NETVERSION = NETWORK_VERSION;
 
+using std::string;
+using std::vector;
+
 extern class vs_options game_options;
 
 double	clienttimeout;
@@ -98,7 +101,7 @@ extern const Unit* getUnitFromUpgradeName(const string& upgradeName, int myUnitF
 extern int GetModeFromName(const char *);  // 1=add, 2=mult, 0=neither.
 static const string LOAD_FAILED = "LOAD_FAILED";
 // Takes in a category of an upgrade or cargo and returns true if it is any type of mountable weapon.
-extern bool isWeapon (std::string name);
+extern bool isWeapon (const std::string & name);
 extern Cargo* GetMasterPartList(const char *input_buffer);
 extern void ExecuteDirector();
 
@@ -1789,7 +1792,7 @@ void	NetServer::closeAllSockets()
 	}
 }
 
-void	NetServer::addSystem( string & sysname, string & system)
+void	NetServer::addSystem( const std::string & sysname, const std::string & system)
 {
 	zonemgr->addSystem( sysname, system);
 }

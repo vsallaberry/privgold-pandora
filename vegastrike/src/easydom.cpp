@@ -43,12 +43,12 @@ easyDomNode::easyDomNode() : valid(false) {
 }
 
 easyDomNode::~easyDomNode() {
-    for (vector<easyDomNode*>::const_iterator it = subnodes.begin(); it != subnodes.end(); ++it) {
+    for (std::vector<easyDomNode*>::const_iterator it = subnodes.begin(); it != subnodes.end(); ++it) {
         delete *it;
     }
 }
 
-void easyDomNode::set(easyDomNode *_parent,string _name,const XML_Char **atts ){
+void easyDomNode::set(easyDomNode *_parent,const std::string & _name,const XML_Char **atts ){
   parent=_parent;
   //  attributes=_attributes;
 
@@ -74,12 +74,12 @@ void easyDomNode::addChild(easyDomNode *child){
   subnodes.push_back(child);
 }
 
-string easyDomNode::attr_value(string search_name){
+std::string easyDomNode::attr_value(const std::string & search_name){
   return attribute_map[search_name];
 }
 
 void easyDomNode::printNode(std::ostringstream& out,int recurse_level,int level){
-	vsUMap<string,string>::const_iterator iter;
+	vsUMap<std::string,std::string>::const_iterator iter;
  //vector<string>::const_iterator iter2;
 
  out << "<" << name ;
@@ -89,7 +89,7 @@ void easyDomNode::printNode(std::ostringstream& out,int recurse_level,int level)
   }
   out << ">" << endl;
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
   
   if(recurse_level>0){
     for(siter= subnodes.begin() ; siter!=subnodes.end() ; siter++){
@@ -102,7 +102,7 @@ void easyDomNode::printNode(std::ostringstream& out,int recurse_level,int level)
   }
 }
 
-void easyDomNode::printNode(ostream& out,int recurse_level,int level){
+void easyDomNode::printNode(std::ostream& out,int recurse_level,int level){
     std::ostringstream oss;
     printNode(oss, recurse_level, level);
     out << oss.str();

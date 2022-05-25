@@ -61,6 +61,9 @@
 
 #include <boost/python/detail/extension_class.hpp>
 #endif
+using std::string;
+using std::vector;
+
 vector<Vector> perplines;
 //static SphereMesh *foo;
 //static Unit *earth;
@@ -1153,7 +1156,7 @@ static bool isJumping(const vector <unorigdest*>&pending,Unit * un)
 }
 
 
-QVector SystemLocation(std::string system);
+QVector SystemLocation(const std::string & system);
 double howFarToJump();
 QVector ComputeJumpPointArrival(QVector pos,std::string origin ,std::string destination)
 {

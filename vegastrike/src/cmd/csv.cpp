@@ -1,9 +1,10 @@
 #include "csv.h"
 #include "vsfilesystem.h"
-using namespace std;
 
+using std::string;
+using std::vector;
 
-static string::size_type findQuot(string s,string chr, int offset=0){
+static string::size_type findQuot(const string & s,const string & chr, int offset=0){
 	if (offset>=s.length())
           return string::npos;
 	string::size_type quot=s.substr(offset).find(chr);
@@ -11,7 +12,7 @@ static string::size_type findQuot(string s,string chr, int offset=0){
           return quot+offset;
 	return quot;//string::npos
 }
-static string elimiQuote(string s, string delim="\"\"\""){
+static string elimiQuote(const string & s, const string & delim="\"\"\""){
   string ret;
   int sl=s.length();
   ret.reserve(sl);
@@ -40,7 +41,7 @@ static string elimiQuote(string s, string delim="\"\"\""){
   ret=ret+s;*/
   return ret;
 }
-vector <std::string> readCSV (std::string s,std::string delim) {
+vector <std::string> readCSV (const std::string & s, const std::string & delim) {
     // Proposed readCSV code -- begin
     //   Working this way should be much more efficient, and
     //   also allows flexibility in separators (if you specify
@@ -153,7 +154,24 @@ vector <std::string> readCSV (std::string s,std::string delim) {
     // Original readCSV code -- end
     */
 }
-static std::string addQuote(std::string s, string delim=",;") {
+static std::string addQuote(const std::string & s, const string & delim=",;") {
+  // Proposed addQuote code -- begin
+  if (s.find_first_of(delim+"\"")!=string::npos) {
+      if (s.find('\"')!=string::npos) {
+          //Replace " by ""
+          std::string as;
+          int sl = s.length();
+          as.reserve(2*sl);
+          for (int i=0; i<sl; i++) if (s[i]!='\"') as += s[i]; else as += "\"\"";
+          return "\"" + as + "\"";
+      }
+      //Add single quotes to the sides
+      return "\"" + s + "\"";
+  }
+  return s;
+}
+/*
+static std::string addQuote(std::string s, const string & delim=",;") {
   // Proposed addQuote code -- begin
   if (s.find_first_of(delim+"\"")!=string::npos) {
       if (s.find('\"')!=string::npos) {
@@ -184,8 +202,8 @@ static std::string addQuote(std::string s, string delim=",;") {
   }
   // Original addQuote code -- end
   */
-}
-std::string writeCSV(const vector<string> &key, const vector<string> &table, std::string delim){
+//}
+std::string writeCSV(const vector<string> &key, const vector<string> &table, const std::string & delim){
   unsigned int i;
   unsigned int wid = key.size();
   std::string ret;
@@ -204,7 +222,7 @@ std::string writeCSV(const vector<string> &key, const vector<string> &table, std
   }
   return ret;
 }
-void CSVTable::Init (std::string data) {
+void CSVTable::Init (const std::string & data) {
    // Clear optimizer
    optimizer_setup = false;
    optimizer_keys.clear();
@@ -280,7 +298,7 @@ void CSVTable::Init (std::string data) {
    // Original Init code -- end
    */
 }
-CSVTable::CSVTable(std::string data,std::string root) {
+CSVTable::CSVTable(const std::string & data, const std::string & root) {
 	this->rootdir=root;
 	Init(data);
 //   VSFileSystem::VSFile f;
@@ -291,11 +309,11 @@ CSVTable::CSVTable(std::string data,std::string root) {
 //   }
 }
 
-CSVTable::CSVTable(VSFileSystem::VSFile & f,std::string root) {
+CSVTable::CSVTable(VSFileSystem::VSFile & f, const std::string & root) {
 	this->rootdir = root;
 	Init(f.ReadFull());
 }
-CSVRow::CSVRow(CSVTable * parent, std::string key) {
+CSVRow::CSVRow(CSVTable * parent, const std::string & key) {
    this->parent=parent;
    iter=parent->rows[key]*parent->key.size();
 }
@@ -319,14 +337,14 @@ const string& CSVRow::getKey(unsigned int which) const
 {
 	return parent->key[which];
 }
-bool CSVTable::RowExists(string name, unsigned int &where) {
+bool CSVTable::RowExists(const string & name, unsigned int &where) {
 	vsUMap<string,int>::iterator i = rows.find(name);
    if (i==rows.end())
       return false;
    where = (*i).second;
    return true;
 }
-bool CSVTable::ColumnExists(string name, unsigned int &where) {
+bool CSVTable::ColumnExists(const string & name, unsigned int &where) {
 	vsUMap<string,int>::iterator i = columns.find(name);
    if (i==columns.end())
       return false;
@@ -340,7 +358,7 @@ string CSVRow::getRoot()  {
   fprintf (stderr,"Error getting root for unit\n");
   return "";
 }
-void CSVTable::SetupOptimizer(std::vector<std::string> keys, unsigned int type)
+void CSVTable::SetupOptimizer(const std::vector<std::string> & keys, unsigned int type)
 {
     optimizer_setup = true;
     optimizer_type = type;

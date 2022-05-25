@@ -12,9 +12,9 @@ public:
   virtual void Destroy(){Destructor();}
   virtual ~PythonMissionBaseClass();
   virtual void Execute ();
-  virtual void callFunction (std::string s);
+  virtual void callFunction (const std::string &);
   virtual std::string Pickle();
-  virtual void UnPickle(std::string s);
+  virtual void UnPickle(const std::string &);
 };
 
 #endif

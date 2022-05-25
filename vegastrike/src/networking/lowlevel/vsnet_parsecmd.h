@@ -92,57 +92,57 @@ namespace Adapter
     struct ResolveRequest : public Base
     {
         struct entry {
-            char   ft;
-            string file;
+            char   		ft;
+            std::string file;
         };
 
-        typedef vector<entry>::iterator iterator;
+        typedef std::vector<entry>::iterator iterator;
 
-        short         num;
-        vector<entry> files;
+        short         		num;
+        std::vector<entry> 	files;
     };
 
     struct ResolveResponse : public Base
     {
         struct entry {
-            string file;
-            char   ok;
+            std::string file;
+            char   		ok;
         };
 
-        typedef vector<entry>::iterator iterator;
+        typedef std::vector<entry>::iterator iterator;
 
-        short         num;
-        vector<entry> files;
+        short         		num;
+        std::vector<entry> 	files;
     };
 
     struct DownloadRequest : public Base
     {
         struct entry {
-            char   ft;
-            string file;
+            char   		ft;
+            std::string file;
         };
 
-        typedef vector<entry>::iterator iterator;
+        typedef std::vector<entry>::iterator iterator;
 
-        short         num;
-        vector<entry> files;
+        short         		num;
+        std::vector<entry> 	files;
     };
 
     struct DownloadError : public Base
     {
-        string file;
+        std::string file;
     };
 
     struct Download : public Base
     {
-        string          file;
+        std::string     file;
         short           payload_len;
         unsigned char*  payload;
     };
 
     struct DownloadFirstFragment : public Base
     {
-        string          file;
+        std::string     file;
         int             file_len;
         short           payload_len;
         unsigned char*  payload;

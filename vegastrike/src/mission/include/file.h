@@ -33,7 +33,6 @@ void LoadMission(char *filename);
 void ScanNode (string *parent, easyDomNode *node, string filename);
 void CheckVar(string parent, string current, string name, string value);
 
-using std::string;
 //using XMLSupport::AttributeList;
 
 class missionNode;

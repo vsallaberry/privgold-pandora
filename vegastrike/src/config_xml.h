@@ -35,12 +35,10 @@
 #include "easydom.h"
 #include "in_kb.h"
 
-using std::string;
-
 using XMLSupport::AttributeList;
 
-typedef vsUMap<string,KBHandler> CommandMap;
-typedef vsUMap<string,unsigned int> KeyMap;
+typedef vsUMap<std::string,KBHandler> CommandMap;
+typedef vsUMap<std::string,unsigned int> KeyMap;
 
 class GameVegaConfig: public VegaConfig {
  public:

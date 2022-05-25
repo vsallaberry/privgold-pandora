@@ -3,7 +3,7 @@
 
 using namespace FactionUtil;
 
-vector <Faction *> factions; //the factions
+std::vector <Faction *> factions; //the factions
 
 void Faction::ParseAllAllies() {
 
@@ -20,7 +20,7 @@ void Faction::ParseAllAllies() {
 }
 void Faction::ParseAllies (unsigned int thisfaction) {
 	unsigned int i,j;
-	vector <faction_stuff> tempvec;
+	std::vector <faction_stuff> tempvec;
 	for (i=0;i<faction.size();i++) {
 		for (j=0; j<factions.size();j++) {
 			if (strcmp (faction[i].stats.name,factions[j]->factionname)==0) {

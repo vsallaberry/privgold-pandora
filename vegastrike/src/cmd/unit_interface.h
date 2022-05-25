@@ -13,10 +13,10 @@ extern void SwitchUnits (Unit * ol, Unit * nw);
 extern Cargo * GetMasterPartList(const char *input_buffer);
 extern Unit&GetUnitMasterPartList();
 class UpgradingInfo;
-void BuyShip(Unit*base, Unit*un, std::string name, bool my_fleet=false, UnitContainer * buyer=NULL, UpgradingInfo *baseinfo=NULL);
+void BuyShip(Unit*base, Unit*un, const std::string & name, bool my_fleet=false, UnitContainer * buyer=NULL, UpgradingInfo *baseinfo=NULL);
 class UpgradingInfo {
   void DoDone();
-  friend void BuyShip(Unit*,Unit*,std::string,bool,UnitContainer*,UpgradingInfo*);
+  friend void BuyShip(Unit*,Unit*,const std::string &,bool,UnitContainer*,UpgradingInfo*);
 public:
   bool readnews;
   bool drawovermouse;
@@ -45,7 +45,7 @@ public:
   vector <BaseMode> availmodes;
   string title;
   vector <string> curcategory;
-  vector <CargoColor>&FilterCargo(Unit *un, const string filterthis, bool inv, bool removezero);
+  vector <CargoColor>&FilterCargo(Unit *un, const std::string & filterthis, bool inv, bool removezero);
   vector <CargoColor>&GetCargoFor(Unit *un);
   vector <CargoColor>&GetCargoList ();
   vector <CargoColor>&MakeActiveMissionCargo();

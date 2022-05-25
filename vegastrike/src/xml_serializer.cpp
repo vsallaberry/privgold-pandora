@@ -74,9 +74,9 @@ std::string negationFloatStarHandler (const XMLType &input,void *mythis) {
 }
 std::string stringStarHandler (const XMLType &input,void *mythis) {
   if (!input.w.p) {
-    return string ("");
+    return std::string ("");
   }
-  return * ((string *)(input.w.p));
+  return * ((std::string *)(input.w.p));
 }
 std::string stringHandler (const XMLType &input,void *mythis) {
   return input.str;
@@ -151,27 +151,27 @@ bool XMLSerializer::Write (const char * modificationname) {
   return true;
 }
 
-static string TabString( int level) {
-  string ret="";
+static std::string TabString( int level) {
+  std::string ret="";
   for (int i=0;i<level;i++) {
     ret+='\t';
   }
   return ret;
 }
-string XMLSerializer::WriteString()
+std::string XMLSerializer::WriteString()
 {
-  string ret="";
+  std::string ret="";
   for (unsigned int i=0;i<topnode.subnodes.size();i++) {
     ret += topnode.subnodes[i].WriteString( mythis,0);
   }
   return ret;
 }
-string XMLnode::WriteString(void *mythis, int level) {
-  string ret;
+std::string XMLnode::WriteString(void *mythis, int level) {
+  std::string ret;
   char buffer[MAXBUFFER];
   memset( buffer, 0, MAXBUFFER);
   ret = TabString(level);ret = ret + "<" + val;
-  ret += string( buffer);
+  ret += std::string( buffer);
   for (unsigned int i=0;i<elements.size();i++) {
     ret += elements[i].WriteString(mythis);
   }
@@ -186,8 +186,8 @@ string XMLnode::WriteString(void *mythis, int level) {
   }
   return ret;
 }
-string XMLElement::WriteString( void * mythis) {
-  string ret( " "+elem+"=\""+((*handler)(value,mythis))+"\"");
+std::string XMLElement::WriteString( void * mythis) {
+  std::string ret( " "+elem+"=\""+((*handler)(value,mythis))+"\"");
   return ret;
 }
 
@@ -196,9 +196,9 @@ XMLSerializer::XMLSerializer (const char * filename, const char *modificationnam
   // In network mode we don't care about saving filename, we want always to save with modification
   // name since we only work with savegames
   if( Network!=NULL)
-	  this->filename = string( modificationname);
+	  this->filename = std::string( modificationname);
   else
-	  this->filename = string( filename);
+	  this->filename = std::string( filename);
 }
 void XMLSerializer::AddTag (const std::string &tag) {
   curnode->subnodes.push_back (XMLnode(tag,curnode));
@@ -209,7 +209,7 @@ void XMLSerializer::AddElement (const std::string &element, XMLHandler *handler,
   curnode->elements.push_back (XMLElement (element,input,handler));
 }
 
-void XMLSerializer::EndTag (const std::string endname) {
+void XMLSerializer::EndTag (const std::string & endname) {
   if (curnode)
     if (endname==curnode->val) 
       curnode = curnode->up;

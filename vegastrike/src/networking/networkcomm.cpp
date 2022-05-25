@@ -167,7 +167,7 @@ NetworkCommunication::NetworkCommunication()
     private_init( );
 }
 
-NetworkCommunication::NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, string cryptomethod)
+NetworkCommunication::NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, const std::string & cryptomethod)
 {
 	min_freq = minfreq;
 	max_freq = maxfreq;
@@ -303,10 +303,10 @@ void	NetworkCommunication::RemoveFromSession( ClientPtr clt)
 /**** Send text message                                                             ****/
 /**** Broadcast string function param as a text message to the current frequency    ****/
 /***************************************************************************************/
-void	NetworkCommunication::SendMessage( SOCKETALT & send_sock, ObjSerial serial, string message)
+void	NetworkCommunication::SendMessage( SOCKETALT & send_sock, ObjSerial serial, const std::string & message)
 {
 	Packet p;
-	string encrypted;
+	std::string encrypted;
 	// If max log size is reached we remove the oldest message
 	if( this->message_history.size()==this->max_messages)
 		this->message_history.pop_front();
@@ -434,13 +434,13 @@ void	NetworkCommunication::RecvSound( const char * sndbuffer, int length, bool e
 #endif
 }
 
-void	NetworkCommunication::RecvMessage( string message, bool encrypted)
+void	NetworkCommunication::RecvMessage( const std::string & message, bool encrypted)
 {
 	// If max log size is reached we remove the oldest message
 	if( this->message_history.size()==this->max_messages)
 		this->message_history.pop_front();
 
-	string decrypted;
+	std::string decrypted;
 #ifdef CRYPTO
 	if( encrypted)
 	{
@@ -451,7 +451,7 @@ void	NetworkCommunication::RecvMessage( string message, bool encrypted)
 
 	this->message_history.push_back( message);
 	// Display message
-	string color;
+	std::string color;
 	if( secured)
 		color = "#DD0000";
 	else
@@ -747,9 +747,9 @@ void	NetworkCommunication::GenerateKey()
 #endif
 }
 
-string	NetworkCommunication::EncryptBuffer( const char * buffer, unsigned int length)
+std::string	NetworkCommunication::EncryptBuffer( const char * buffer, unsigned int length)
 {
-	string result;
+	std::string result;
 #ifdef CRYPTO
 	if( crypto_method == "rsa")
 	{
@@ -805,9 +805,9 @@ string	NetworkCommunication::EncryptBuffer( const char * buffer, unsigned int le
 	return result;
 }
 
-string	NetworkCommunication::DecryptBuffer( const char * buffer, unsigned int length)
+std::string	NetworkCommunication::DecryptBuffer( const char * buffer, unsigned int length)
 {
-	string result;
+	std::string result;
 #ifdef CRYPTO
 	if( crypto_method == "rsa")
 	{

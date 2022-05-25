@@ -96,15 +96,15 @@ private:
   void SetActiveCockpit (int whichcockpit);
   void SetActiveCockpit (Cockpit * which);
   virtual void WriteSaveGame(bool auto_save) {}
-  virtual void SetupCockpits (std::vector <std::string> players);
+  virtual void SetupCockpits (const std::vector <std::string> & players);
   virtual void activateLightMap(int stage=1) {}
   virtual void SelectCamera(int cam) {}
   //virtual unsigned int CurrentCockpit(){return 0;}
-  Cockpit * createCockpit( std::string player);
+  Cockpit * createCockpit( const std::string & player);
 
   const std::vector <std::string> &getAdjacentStarSystems(const std::string &ss) const;
   std::string getGalaxyProperty (const std::string &sys, const std::string & prop);
-  std::string getGalaxyPropertyDefault (const std::string & sys, const std::string & prop, const std::string def="");
+  std::string getGalaxyPropertyDefault (const std::string & sys, const std::string & prop, const std::string & def="");
   GalaxyXML::Galaxy* getGalaxy(){return galaxy;}
   bool StillExists(StarSystem * ss);
   void setActiveStarSystem(StarSystem * ss) {
@@ -145,7 +145,7 @@ private:
   ///Loads Defaults in Graphics Drivers
   //void StartGFX();
   ///Should load the Universe data file. Now just inits system with test.xml
-  virtual class StarSystem * Init(string systemfile, const Vector & centroid=Vector (0,0,0), const string planetname=string());
+  virtual class StarSystem * Init(const std::string & systemfile, const Vector & centroid=Vector (0,0,0), const std::string & planetname=std::string());
   ///Begins a scene
   virtual void StartDraw() {}
   // Update starsystems (for server side)
@@ -189,12 +189,12 @@ private:
   }
   */
 
-  StarSystem *getStarSystem(string name);
+  StarSystem *getStarSystem(const std::string & name);
   StarSystem *scriptStarSystem() {
     if(script_system!=NULL){ return script_system; }
     else { return activeStarSystem(); };
   }
-  bool setScriptSystem(string name){
+  bool setScriptSystem(const std::string & name){
     if(name=="-active-"){
       script_system=NULL;
       return true;

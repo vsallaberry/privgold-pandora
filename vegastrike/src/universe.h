@@ -55,7 +55,7 @@ class GameUniverse: public Universe
 	public:
 		StarSystem * GenerateStarSystem (const char * file, const char * jumpback, Vector origin);
 		void WriteSaveGame(bool auto_save);
-		void SetupCockpits (std::vector <std::string> players);
+		virtual void SetupCockpits (const std::vector <std::string> & players);
 		void activateLightMap(int stage=1);
 		///inits graphics with args
 		GameUniverse(int argc, char **argv, const char * galaxy);
@@ -65,7 +65,7 @@ class GameUniverse: public Universe
 		///Loads Defaults in Graphics Drivers
 		void StartGFX();
 		///Should load the Universe data file. Now just inits system with test.xml
-		class StarSystem * Init(string systemfile, const Vector & centroid=Vector (0,0,0), const string planetname=string());
+		class StarSystem * Init(const std::string & systemfile, const Vector & centroid=Vector (0,0,0), const std::string & planetname=std::string());
 		///Begins a scene
 		void StartDraw();
 		///Runs the main loop

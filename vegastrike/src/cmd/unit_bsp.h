@@ -81,8 +81,8 @@ typedef class Vector TVECTOR;
 
 struct bsp_tree {
     double a,b,c,d;
-    vector <bsp_polygon> tri;
-    vector <bsp_tree> triplane;
+    std::vector <bsp_polygon> tri;
+    std::vector <bsp_tree> triplane;
     struct bsp_tree * left;
     struct bsp_tree * right;
   bsp_tree(): tri(), triplane() {left = right = NULL;}
@@ -96,7 +96,7 @@ void dividePlane (const bsp_polygon & tri, const bsp_tree &unificator, bsp_polyg
 void FreeBSP (bsp_tree ** tree);
 
 // Were static
-bsp_tree * buildbsp(bsp_tree * bsp,vector <bsp_polygon>&, vector <bsp_tree>&, char Vplane);
+bsp_tree * buildbsp(bsp_tree * bsp,std::vector <bsp_polygon>&, std::vector <bsp_tree>&, char Vplane);
 bool Cross (const bsp_polygon &x, bsp_tree &result);
 void bsp_stats (bsp_tree * tree);
 void write_bsp_tree (bsp_tree *tree,int level=0);//assume open file

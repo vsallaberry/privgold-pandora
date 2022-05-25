@@ -335,7 +335,7 @@ bool TextPlane::doNewLine(IT begin, IT end,
   return cur_pos+((begin+1!=end)?this->GetCharWidth(*begin,metrics):0)>=end_pos;
 }
                                    
-int TextPlane::Draw(const string & newText, int offset,bool startlower, bool force_highquality, bool automatte)
+int TextPlane::Draw(const std::string & newText, int offset,bool startlower, bool force_highquality, bool automatte)
 {
   int retval=1;
   bool drawbg = (bgcol.a!=0);

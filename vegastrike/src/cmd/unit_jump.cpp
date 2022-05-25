@@ -6,6 +6,9 @@
 #include "vs_log_modules.h"
 #include <stdlib.h>
 
+using std::string;
+using std::vector;
+
 // From star_system_jump.cpp
 extern Hashtable<std::string, StarSystem, 127> star_system_table;
 extern std::vector <unorigdest *> pendingjump;
@@ -40,7 +43,7 @@ inline std::vector <Unit *> ComparePrimaries (Unit * primary, StarSystem *origin
 }
 extern void DealPossibleJumpDamage (Unit *un, bool is_active_player = false);
 extern void ActivateAnimation(Unit *);
-void WarpPursuit(Unit* un, StarSystem * sourcess, std::string destination);
+void WarpPursuit(Unit* un, StarSystem * sourcess, const std::string & destination);
 
 template <class UnitType>
 bool GameUnit<UnitType>::TransferUnitToSystem (unsigned int kk, StarSystem * &savedStarSystem, bool dosightandsound) {

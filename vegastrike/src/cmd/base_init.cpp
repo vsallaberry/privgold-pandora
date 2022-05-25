@@ -28,19 +28,19 @@ static BoostPythonDictionary GetEventDataPython()
 static boost::python::tuple GetRandomBarMessage () {
 	gameMessage last;
 	int i=0;
-	vector <std::string> who;
-	vector <std::string> say;
-	vector <std::string> sounds;
-	string newmsg;
-	string newsound;
+	std::vector <std::string> who;
+	std::vector <std::string> say;
+	std::vector <std::string> sounds;
+	std::string newmsg;
+	std::string newsound;
 	who.push_back ("bar");
 	while (( mission->msgcenter->last(i++,last,who))) {
 		newmsg=last.message;
 		newsound="";
 		std::string::size_type first=newmsg.find_first_of("[");
 		{
-			string::size_type last=newmsg.find_first_of("]");
-			if (first!=string::npos&&(first+1)<newmsg.size()) {
+			std::string::size_type last=newmsg.find_first_of("]");
+			if (first!=std::string::npos&&(first+1)<newmsg.size()) {
 				newsound=newmsg.substr(first+1,last-first-1);
 				newmsg=newmsg.substr(0,first);
 			}

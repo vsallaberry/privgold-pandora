@@ -106,7 +106,7 @@ Animation * FactionUtil::GetRandExplosionAnimation (int whichfaction, std::strin
 
 void FactionUtil::LoadFactionPlaylists() {
   for (unsigned int i=0;i<factions.size();i++) {
-	string fac=FactionUtil::GetFaction(i);
+	std::string fac=FactionUtil::GetFaction(i);
     fac+=".m3u";
     factions[i]->playlist= muzak->Addlist (fac.c_str());
   }

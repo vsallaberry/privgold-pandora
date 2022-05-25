@@ -6,7 +6,7 @@
 #include "faction_generic.h"
 
 namespace BriefingUtil {
-	int addShip(string name, string faction, Vector vec){
+	int addShip(const std::string & name, const std::string & faction, Vector vec){
 		return mission->briefing->AddStarship(name.c_str(),
 			FactionUtil::GetFactionIndex(faction),
 			vec);
@@ -81,7 +81,7 @@ void InitBriefing() {
 #define voidWRAPPED2(name,atype,a,btype,b) def name(self,a,b): ~    MYPRINT(name)
 #define voidWRAPPED3(name,atype,a,btype,b,ctype,c) def name(self,a,b,c): ~    MYPRINT(name)
 
-WRAPPED3(int,addShip,string,name,string,faction,Vector,vec,0)
+WRAPPED3(int,addShip,std::string,name,std::string,faction,Vector,vec,0)
 voidWRAPPED1(removeShip,int,ship)
 voidWRAPPED3(enqueueOrder,int,ship,Vector,dest,float,time)
 voidWRAPPED3(replaceOrder,int,ship,Vector,dest,float,time)

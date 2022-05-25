@@ -7,6 +7,9 @@
 #include "universe_util.h"
 #include "lin_time.h"
 
+using std::string;
+using std::vector;
+
 char * getnoslash (char * inp) {
   char * tmp=inp;
   for (unsigned int i=0;inp[i]!='\0';i++) {
@@ -374,7 +377,7 @@ void Planet::AddSatellite (Unit * orbiter) {
 }
 extern float ScaleJumpRadius(float);
 extern Flightgroup * getStaticBaseFlightgroup(int faction);
-Unit * Planet::beginElement(QVector x,QVector y,float vely, const Vector & rotvel, float pos,float gravity,float radius,const char * filename,BLENDFUNC blendSrc, BLENDFUNC blendDst, const vector<string> &dest,int level,  const GFXMaterial & ourmat, const vector <GFXLightLocal>& ligh, bool isunit, int faction,string fullname, bool inside_out){
+Unit * Planet::beginElement(QVector x,QVector y,float vely, const Vector & rotvel, float pos,float gravity,float radius,const char * filename,BLENDFUNC blendSrc, BLENDFUNC blendDst, const vector<string> &dest,int level,  const GFXMaterial & ourmat, const vector <GFXLightLocal>& ligh, bool isunit, int faction,const std::string & fullname, bool inside_out){
   //this function is OBSOLETE
   Unit * un=NULL;
   if (level>2) {
@@ -422,7 +425,7 @@ Planet::Planet()
   this->shield.number=2;
 }
 
-void Planet::InitPlanet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,string fullname, bool inside_out, unsigned int lights_num)
+void Planet::InitPlanet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,const std::string & fullname, bool inside_out, unsigned int lights_num)
 {
   atmosphere = NULL;
   terrain = NULL;
@@ -506,7 +509,7 @@ void Planet::InitPlanet(QVector x,QVector y,float vely,const Vector & rotvel, fl
   }
 }
 
-Planet::Planet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,string fullname, bool inside_out, unsigned int lights_num)
+Planet::Planet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,const std::string & fullname, bool inside_out, unsigned int lights_num)
 {
   inside=false;
   terraintrans = NULL;
@@ -535,7 +538,7 @@ Planet::Planet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,f
 
 }
 
-extern vsUMap<std::string,std::string> readPlanetTypes(std::string filename);
+//extern vsUMap<std::string,std::string> readPlanetTypes(std::string filename);
 
 string Planet::getHumanReadablePlanetType () const{
   //static std::map<std::string, std::string> planetTypes (readPlanetTypes("planet_types.xml"));

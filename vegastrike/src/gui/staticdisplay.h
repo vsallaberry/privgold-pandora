@@ -44,7 +44,7 @@ public:
 
     // Text that appears on the control.
     virtual std::string text(void) { return m_paintText.text(); };
-    virtual void setText(std::string t) { m_paintText.setText(t); };
+    virtual void setText(const std::string & t) { m_paintText.setText(t); };
 
     // Set justification.
     virtual Justification justification(void) { return m_paintText.justification(); };
@@ -110,7 +110,7 @@ public:
    virtual void draw(void) {if (texturename.length()) texture.draw(m_rect);}
 
     // Text that appears on the control.
-    virtual void setTexture(std::string t) { texturename=t;texture.read(t); };
+    virtual void setTexture(const std::string & t) { texturename=t;texture.read(t); };
 
     // CONSTRUCTION
 public:

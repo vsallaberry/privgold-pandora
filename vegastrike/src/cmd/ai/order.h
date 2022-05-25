@@ -135,7 +135,7 @@ class Order {
   ///searches the suborders recursively for the first order that has an orderlist
   Order *findOrderList();
   std::string createFullOrderDescription(int level=0);
-  void setActionString(std::string astring) { actionstring=astring; };
+  void setActionString(const std::string & astring) { actionstring=astring; };
   std::string getActionString() { return actionstring; };
   virtual float getMood() {return 0;}
  protected:

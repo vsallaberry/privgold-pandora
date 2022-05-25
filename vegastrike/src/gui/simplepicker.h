@@ -117,7 +117,7 @@ class ValuedPickerCell : public SimplePickerCell
 {
 public:
   // CONSTRUCTION
-  ValuedPickerCell(T value, const std::string text, const std::string& id = "", const GFXColor& c = GUI_CLEAR, int newTag = 0)
+  ValuedPickerCell(T value, const std::string & text, const std::string& id = "", const GFXColor& c = GUI_CLEAR, int newTag = 0)
     :
     SimplePickerCell(text, id, c, newTag),
     m_value(value) {}

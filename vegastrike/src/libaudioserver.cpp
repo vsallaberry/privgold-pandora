@@ -21,7 +21,7 @@ QVector AUDListenerLocation() {
 }
 
 // From communication_xml.cpp
-int createSound( std::string file, bool val) { return -1;}
+int createSound( const std::string & file, bool val) { return -1;}
 
 //soundContainer::~soundContainer () {}
 

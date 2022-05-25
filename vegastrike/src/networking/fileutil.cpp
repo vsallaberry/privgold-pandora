@@ -25,9 +25,9 @@ using namespace VSFileSystem;
 
 bool	FileUtil::use_crypto = false;
 
-void	FileUtil::WriteSaveFiles( string savestr, string xmlstr, string name)
+void	FileUtil::WriteSaveFiles( const std::string & savestr, const std::string & xmlstr, const std::string & name)
 {
-	string savefile;
+	std::string savefile;
 
 	// Write the save file
 	savefile = name+".save";
@@ -52,9 +52,9 @@ void	FileUtil::WriteSaveFiles( string savestr, string xmlstr, string name)
 	f.Close();
 }
 
-vector<string>	FileUtil::GetSaveFromBuffer( NetBuffer &buffer)
+std::vector<std::string>	FileUtil::GetSaveFromBuffer( NetBuffer &buffer)
 {
-	vector<string> saves;
+	std::vector<std::string> saves;
 	// Extract the length of save file
 	saves.push_back( buffer.getString() );
 	saves.push_back( buffer.getString() );
@@ -62,7 +62,7 @@ vector<string>	FileUtil::GetSaveFromBuffer( NetBuffer &buffer)
 	return saves;
 }
 
-int		FileUtil::HashStringCompute( std::string buffer, unsigned char * digest)
+int		FileUtil::HashStringCompute( const std::string & buffer, unsigned char * digest)
 {
 #ifdef CRYPTO
 if( use_crypto)
@@ -149,7 +149,7 @@ else
 }
 
 // Warning : now takes an absolute path
-int		FileUtil::HashCompare( string filename, unsigned char * hashdigest, VSFileType type)
+int		FileUtil::HashCompare( const std::string & filename, unsigned char * hashdigest, VSFileType type)
 {
 #ifdef CRYPTO
 if( use_crypto)
@@ -192,7 +192,7 @@ else
 #endif
 }
 
-int		FileUtil::HashFileCompute( string filename, unsigned char * hashdigest, VSFileType type)
+int		FileUtil::HashFileCompute( const std::string & filename, unsigned char * hashdigest, VSFileType type)
 {
 #ifdef CRYPTO
 if( use_crypto)

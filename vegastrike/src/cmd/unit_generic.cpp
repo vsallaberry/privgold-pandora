@@ -46,6 +46,10 @@
 #include "vs_log_modules.h"
 #include "options.h"
 
+
+using std::string;
+using std::vector;
+
 #if !defined(HAVE_STRCASECMP) && defined(HAVE_STRICMP)
 # define strcasecmp(s1,s2) stricmp(s1,s2)
 #endif
@@ -787,7 +791,7 @@ std::string speedStarHandler (const XMLType &input,void *mythis)
 }
 
 
-static list<Unit*> Unitdeletequeue;
+static std::list<Unit*> Unitdeletequeue;
 static Hashtable <void *, Unit, 2095> deletedUn;
 int deathofvs=1;
 void CheckUnit(Unit * un)
@@ -808,7 +812,7 @@ void UncheckUnit (Unit * un)
 }
 
 
-string GetUnitDir(string filename)
+string GetUnitDir(const string & filename)
 {
 	return filename.substr(0,filename.find("."));
 }
@@ -929,7 +933,7 @@ Unit::Unit (std::vector <Mesh *> & meshes, bool SubU, int fact):cumulative_trans
 
 
 extern void update_ani_cache();
-Unit::Unit(const char *filename, bool SubU, int faction,std::string unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml):cumulative_transformation_matrix(identity_matrix)
+Unit::Unit(const char *filename, bool SubU, int faction,const std::string & unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml):cumulative_transformation_matrix(identity_matrix)
 {
 	ZeroAll();
 	image = new UnitImages;
@@ -1311,9 +1315,9 @@ void Unit::Init()
 std::string getMasterPartListUnitName();
 using namespace VSFileSystem;
 extern std::string GetReadPlayerSaveGame (int);
-CSVRow GetUnitRow(string filename, bool subu, int faction, bool readLast, bool &read);
+CSVRow GetUnitRow(const string & filename, bool subu, int faction, bool readLast, bool &read);
 #if 0
-static std::string csvUnit(std::string un)
+static std::string csvUnit(const std::string & un)
 {
 	string::size_type i=un.find_last_of(".");
 	string::size_type del=un.find_last_of("/\\:");
@@ -1326,7 +1330,7 @@ static std::string csvUnit(std::string un)
 	return un+".csv";
 }
 #endif
-void Unit::Init(const char *filename, bool SubU, int faction,std::string unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml)
+void Unit::Init(const char *filename, bool SubU, int faction,const std::string & unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml)
 {
 	static bool UNITTAB = XMLSupport::parse_bool(vs_config->getVariable("physics","UnitTable","false"));
 	CSVRow unitRow;
@@ -2304,7 +2308,7 @@ float Unit::getRelation (const Unit * targ) const
 }
 
 
-void Unit::setTargetFg(string primary,string secondary,string tertiary)
+void Unit::setTargetFg(const string & primary,const string & secondary,const string & tertiary)
 {
 	target_fgid[0]=primary;
 	target_fgid[1]=secondary;
@@ -2412,7 +2416,7 @@ double howFarToJump()
 }
 
 
-QVector SystemLocation(std::string system)
+QVector SystemLocation(const std::string & system)
 {
 	string xyz=_Universe->getGalaxyProperty(system,"xyz");
 	QVector pos;
@@ -2425,7 +2429,7 @@ QVector SystemLocation(std::string system)
 }
 
 
-static std::string NearestSystem (std::string currentsystem,QVector pos)
+static std::string NearestSystem (const std::string & currentsystem,QVector pos)
 {
 	if (pos.i==0&&pos.j==0&&pos.k==0)
 		return "";
@@ -5345,7 +5349,7 @@ void Unit::ProcessDeleteQueue()
 }
 
 
-Unit * makeBlankUpgrade (string templnam, int faction)
+Unit * makeBlankUpgrade (const std::string & templnam, int faction)
 {
 	Unit * bl =  UnitFactory::createServerSideUnit (templnam.c_str(),true,faction);
 	for (int i= bl->numCargo()-1;i>=0;i--) {
@@ -5359,7 +5363,7 @@ Unit * makeBlankUpgrade (string templnam, int faction)
 
 static const string LOAD_FAILED = "LOAD_FAILED";
 
-const Unit * makeFinalBlankUpgrade (string name, int faction)
+const Unit * makeFinalBlankUpgrade (const std::string & name, int faction)
 {
 	char * unitdir = GetUnitDir(name.c_str());
 	string limiternam = name;
@@ -5376,7 +5380,7 @@ const Unit * makeFinalBlankUpgrade (string name, int faction)
 }
 
 
-const Unit * makeTemplateUpgrade (string name, int faction)
+const Unit * makeTemplateUpgrade (const std::string & name, int faction)
 {
 	char * unitdir = GetUnitDir(name.c_str());
 	string limiternam = string(unitdir)+string(".template");
@@ -5391,7 +5395,7 @@ const Unit * makeTemplateUpgrade (string name, int faction)
 }
 
 
-const Unit * loadUnitByCache(std::string name,int faction)
+const Unit * loadUnitByCache(const std::string & name,int faction)
 {
 	const Unit * temprate= UnitConstCache::getCachedConst (StringIntKey(name,faction));
 	if (!temprate)
@@ -5756,7 +5760,7 @@ void Unit::TargetTurret (Unit * targ)
 }
 
 
-void WarpPursuit(Unit* un, StarSystem * sourcess, std::string destination)
+void WarpPursuit(Unit* un, StarSystem * sourcess, const std::string & destination)
 {
 	static bool AINotUseJump=XMLSupport::parse_bool(vs_config->getVariable("physics","no_ai_jump_points","false"));
 	if (AINotUseJump) {
@@ -7079,7 +7083,7 @@ const string& delimiters = " ")
 }
 
 
-std::string CheckBasicSizes (const std::string tokens)
+std::string CheckBasicSizes (const std::string & tokens)
 {
 	if (tokens.find ("small")!=string::npos) {
 		return "small";
@@ -7350,7 +7354,7 @@ return cancompletefully;
 }
 
 
-Unit * CreateGenericTurret (std::string tur,int faction)
+Unit * CreateGenericTurret (const std::string & tur,int faction)
 {
 	return new Unit (tur.c_str(),true,faction,"",0,0);
 }
@@ -7362,7 +7366,7 @@ bool Unit::UpgradeSubUnits (const Unit * up, int subunitoffset, bool touchme, bo
 }
 
 
-bool Unit::UpgradeSubUnitsWithFactory (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage, Unit * (*createupgradesubunit) (std::string s, int faction))
+bool Unit::UpgradeSubUnitsWithFactory (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage, Unit * (*createupgradesubunit) (const std::string & s, int faction))
 {
 	bool cancompletefully=true;
 	int j;
@@ -7494,7 +7498,7 @@ class DoubleName
 	public:
 		string s;
 		double d;
-		DoubleName (string ss,double dd) {
+		DoubleName (const string & ss,double dd) {
 			d =dd;s=ss;
 		}
 		DoubleName () {
@@ -7504,7 +7508,7 @@ class DoubleName
 
 extern int GetModeFromName (const char *);
 
-extern Unit * CreateGameTurret (std::string tur,int faction);
+extern Unit * CreateGameTurret (const std::string & tur,int faction);
 
 extern char * GetUnitDir (const char *);
 double Unit::Upgrade (const std::string &file, int mountoffset, int subunitoffset, bool force, bool loop_through_mounts)
@@ -7559,7 +7563,7 @@ double Unit::Upgrade (const std::string &file, int mountoffset, int subunitoffse
 
 vsUMap<int, DoubleName> downgrademap;
 int curdowngrademapoffset = 5*sizeof (Unit);
-bool AddToDowngradeMap (std::string name,double value, int unitoffset,vsUMap<int,DoubleName> &tempdowngrademap)
+bool AddToDowngradeMap (const std::string & name,double value, int unitoffset,vsUMap<int,DoubleName> &tempdowngrademap)
 {
 	using vsUMap;
 	vsUMap<int,DoubleName>::iterator i =downgrademap.find (unitoffset);
@@ -8344,7 +8348,7 @@ float RepairPrice(float operational, float price) {
   return .5*price*(1-operational)*g_game.difficulty;
 }
 
-extern bool isWeapon (std::string name);
+extern bool isWeapon (const std::string & name);
 
 // item must be non-null... but baseUnit or credits may be NULL.
 bool Unit::RepairUpgradeCargo(Cargo *item, Unit *baseUnit, float *credits) {
@@ -9579,7 +9583,7 @@ bool Unit::TransferUnitToSystem (StarSystem * Current)
 /*** UNIT_REPAIR STUFF                                                               ***/
 /***************************************************************************************/
 extern float rand01();
-bool isWeapon (std::string name)
+bool isWeapon (const std::string & name)
 {
 	if (name.find("Weapon")!=std::string::npos) {
 		return true;

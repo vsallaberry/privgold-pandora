@@ -40,7 +40,7 @@ ContinuousTerrain::ContinuousTerrain (const char * filename, const Vector & Scal
 	if (tmp[k]=='^') {
 	  tmp[k]='\0';
 
-	  vector <bsp_polygon> polies;
+	  std::vector <bsp_polygon> polies;
 	  md[i].mesh= Mesh::LoadMesh(tmp,Vector(1,1,1),0,NULL);
 	  sscanf (tmp+i+1,"%f,%f",&sizeX,&sizeZ);
 	  md[i].mesh->GetPolys(polies);

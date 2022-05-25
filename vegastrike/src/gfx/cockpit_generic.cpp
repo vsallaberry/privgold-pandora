@@ -30,8 +30,12 @@
 //#include "gui/glut_support.h"
 #include "networking/netclient.h"
 #include "save_util.h"
+#include "vs_log_modules.h"
 extern float rand01();
 #define SWITCH_CONST .9
+
+using std::string;
+using std::vector;
 
 vector <int> respawnunit;
 vector <int> switchunit;
@@ -74,6 +78,7 @@ void Cockpit::EjectDock() {
 
 using namespace VSFileSystem;
 void Cockpit::Init (const char * file, bool isDisabled) {
+  GFX_DBG(logvs::DBG, "Cockpit::Init(%s)...", file);
   retry_dock=0;
   shakin=0;
   autopilot_time=0;
@@ -821,7 +826,7 @@ bool Cockpit::Update () {
   return false;
 }
 
-void visitSystemHelp (Cockpit * cp, string systemname,float num) {
+void visitSystemHelp (Cockpit * cp, const std::string & systemname,float num) {
 	string key (string("visited_")+systemname);
 	vector<float> *v = &cp->savegame->getMissionData(key);
 	if (v->empty()){
@@ -831,7 +836,7 @@ void visitSystemHelp (Cockpit * cp, string systemname,float num) {
 	}
 	
 }
-void Cockpit::visitSystem ( string systemname ) {
+void Cockpit::visitSystem ( const std::string & systemname ) {
 	visitSystemHelp (this,systemname,1.0);
 	int adj = UniverseUtil::GetNumAdjacentSystems(systemname);
 	for (int i=0;i<adj;++i) {

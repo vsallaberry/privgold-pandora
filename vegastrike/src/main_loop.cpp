@@ -91,7 +91,7 @@ int allexcept=0;
 #endif
 int shiftup(int);
 string getUnitNameAndFgNoBase(Unit * target);
-const Unit * loadUnitByCache(std::string name,int faction);
+const Unit * loadUnitByCache(const std::string & name,int faction);
 ContinuousTerrain * myterrain;
 int numf = 0;
 CoordinateSelect *locSel=NULL;

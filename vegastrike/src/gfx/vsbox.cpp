@@ -7,7 +7,7 @@ inline ostream &operator<<(ostrstream os, const Vector &obj) {
   return os << "(" << obj.i << "," << obj.j << "," << obj.k << ")";
 }
 */
-string tostring(const Vector &v) {
+std::string tostring(const Vector &v) {
 	return std::string("(") + XMLSupport::tostring(v.i) + ", " + XMLSupport::tostring(v.j) + ", " + XMLSupport::tostring(v.k) + ")";
 }
 
@@ -18,7 +18,7 @@ Box::Box(const Vector &corner1, const Vector &corner2) : corner_min(corner1), co
   blendSrc = ONE;
   blendDst=ONE;
   Box *oldmesh;
-  string hash_key = string("@@Box") + "#" + tostring(corner1) + "#" + tostring(corner2);
+  std::string hash_key = std::string("@@Box") + "#" + tostring(corner1) + "#" + tostring(corner2);
   //  cerr << "hashkey: " << hash_key << endl;
   if(0 != (oldmesh = (Box*)meshHashTable.Get(hash_key)))
     {
@@ -72,11 +72,11 @@ Box::Box(const Vector &corner1, const Vector &corner2) : corner_min(corner1), co
   meshHashTable.Put(hash_key, this);
   orig = this;
   refcount++;
-  draw_queue = new vector<MeshDrawContext>[NUM_ZBUF_SEQ+1];
+  draw_queue = new std::vector<MeshDrawContext>[NUM_ZBUF_SEQ+1];
 #undef VERTEX
 }
 
-void Box::ProcessDrawQueue(int) {
+void Box::ProcessDrawQueueBox(int) {
   if(!draw_queue[0].size()) return;
   GFXBlendMode(SRCALPHA,INVSRCALPHA);
   GFXColor(0.0,.90,.3,.4);

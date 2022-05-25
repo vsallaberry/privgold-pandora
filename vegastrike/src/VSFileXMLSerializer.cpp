@@ -15,7 +15,7 @@ namespace XMLDOM {
     {
         VSFileSystem::VSFile file;
         if (file.OpenReadOnly(path, fileType) > VSFileSystem::Ok)
-            throw Audio::FileOpenException(string("Cannot open \"") + path + "\"");
+            throw Audio::FileOpenException(std::string("Cannot open \"") + path + "\"");
         
         char buffer[4096];
         size_t rode;

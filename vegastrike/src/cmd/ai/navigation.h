@@ -57,7 +57,7 @@ public:
   void SetDest (const QVector&);
   virtual void Execute();
   virtual ~MoveTo();
-  virtual string getOrderDescription() { return "moveto"; };
+  virtual std::string getOrderDescription() { return "moveto"; };
 };
 /**
  * This AI script attempts to change headings to face a given direction
@@ -85,7 +85,7 @@ protected:
    ChangeHeading(const QVector &final_heading, int switchback, float turning_speed=1, bool term=false) : Order(FACING,SLOCATION), turningspeed(turning_speed), switchbacks(switchback),terminatingX(0),terminatingY(0),last_velocity(0,0,0),final_heading(final_heading), terminating(term) {}
   void SetDest (const QVector&);
   virtual void Execute();
-  virtual string getOrderDescription() { return "chhead"; };
+  virtual std::string getOrderDescription() { return "chhead"; };
   virtual ~ChangeHeading();
 };
 /**
@@ -97,7 +97,7 @@ class FaceTarget : public ChangeHeading {
 public:
   FaceTarget (bool fini=false, int accuracy =3);
   virtual void Execute ();
-  virtual string getOrderDescription() { return "facet"; };
+  virtual std::string getOrderDescription() { return "facet"; };
   virtual ~FaceTarget();
 };
 /**
@@ -121,7 +121,7 @@ public:
   AutoLongHaul (bool fini=false, int accuracy =1);
   virtual void Execute ();
   virtual void SetParent(Unit* parent1);
-  virtual string getOrderDescription() { return "ASAP"; };
+  virtual std::string getOrderDescription() { return "ASAP"; };
   virtual ~AutoLongHaul();
 };
 /**
@@ -136,7 +136,7 @@ class FaceTargetITTS : public ChangeHeading {
 public:
   FaceTargetITTS (bool fini=false, int accuracy = 3);
   virtual void Execute();
-  virtual string getOrderDescription() { return "faceitts"; }
+  virtual std::string getOrderDescription() { return "faceitts"; }
   virtual ~FaceTargetITTS();
 };
  class FormUp : public MoveTo {
@@ -146,7 +146,7 @@ public:
    void SetPos (const QVector &);
   virtual void SetParent (Unit * parent1);
    virtual void Execute();
-   virtual string getOrderDescription () {return "formup";}
+   virtual std::string getOrderDescription () {return "formup";}
    virtual ~FormUp();
  };
  class FormUpToOwner : public MoveTo {
@@ -156,7 +156,7 @@ public:
    void SetPos (const QVector &);
   virtual void SetParent (Unit * parent1);
    virtual void Execute();
-   virtual string getOrderDescription () {return "formuptoowner";}
+   virtual std::string getOrderDescription () {return "formuptoowner";}
    virtual ~FormUpToOwner();
  };
  class FaceDirection: public ChangeHeading {
@@ -166,7 +166,7 @@ public:
   FaceDirection (float distToMatchFacing, bool fini=false, int accuracy = 3);
   virtual void SetParent (Unit * parent1);
   virtual void Execute();
-  virtual string getOrderDescription() { return "facedir"; }
+  virtual std::string getOrderDescription() { return "facedir"; }
   virtual ~FaceDirection();
  };
 

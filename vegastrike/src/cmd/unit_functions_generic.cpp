@@ -19,6 +19,10 @@
 // Those functions are generic ones
 
 // From unit.cpp
+
+using std::string;
+using std::vector;
+
 double saved_interpolation_blend_factor;
 double interpolation_blend_factor;
 bool cam_setup_phase=false;
@@ -74,7 +78,7 @@ const Unit* getUnitFromUpgradeName(const string& upgradeName, int myUnitFaction 
     return num;
   }
 // From unit_customize.cpp
-Unit * CreateGameTurret (std::string tur,int faction) {
+Unit * CreateGameTurret (const std::string & tur,int faction) {
   return UnitFactory::createUnit (tur.c_str(),true,faction);
 }
 void SetShieldZero(Unit * un) {

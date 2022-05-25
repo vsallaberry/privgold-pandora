@@ -25,10 +25,10 @@ namespace UniverseUtil
 {
 
 	void playVictoryTune(){}
-	int musicAddList(string str) {
+	int musicAddList(const string & str) {
 		return 0;
 	}
-	void musicLayerPlaySong(string str,int layer) {
+	void musicLayerPlaySong(const string & str,int layer) {
 	}
 	void addParticle (QVector loc, Vector velocity, Vector color, float size)
 		{}
@@ -50,15 +50,15 @@ namespace UniverseUtil
 	}
 
 	void musicMute(bool stopSound){}
-	void playSound(string soundName, QVector loc, Vector speed) {
+	void playSound(const string & soundName, QVector loc, Vector speed) {
 	}
-  void playSoundCockpit(string soundName) {
+  void playSoundCockpit(const string & soundName) {
   }
-	void cacheAnimation(string aniName) {
+	void cacheAnimation(const string & aniName) {
 	}
-	void playAnimation(string aniName, QVector loc, float size) {
+	void playAnimation(const string & aniName, QVector loc, float size) {
 	}
-	void playAnimationGrow(string aniName, QVector loc, float size, float growpercent) {
+	void playAnimationGrow(const string & aniName, QVector loc, float size, float growpercent) {
 	}
 	unsigned int getCurrentPlayer() {
 		return _Universe->CurrentCockpit();
@@ -96,12 +96,12 @@ namespace UniverseUtil
 	void showSplashProgress(float progress) {}
 	void hideSplashScreen() {}
 	bool isSplashScreenShowing() { return false; }
-	void startMenuInterface(bool firstTime, string error) {
+	void startMenuInterface(bool firstTime, const string & error) {
 		// Critical game error... enough to bring you back to the game menu!
 		printf("GAME ERROR: %s\n",error.c_str());
 	}
 
-	void sendCustom(int cp, string cmd, string args, string id) {
+	void sendCustom(int cp, const string & cmd, const string & args, const string & id) {
 		if (cp<0 || cp>=_Universe->numPlayers()) {
 			fprintf(stderr, "sendCustom %s with invalid player %d\n", cmd.c_str(), cp);
 			return;

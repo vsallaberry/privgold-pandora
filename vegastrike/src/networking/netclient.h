@@ -55,9 +55,7 @@ namespace VsnetDownload {
   };
 };
 
-using std::vector;
-using std::string;
-extern vector<ObjSerial>	localSerials;
+extern std::vector<ObjSerial>	localSerials;
 extern bool isLocalSerial( ObjSerial sernum);
 
 extern ObjSerial CLIENT_NETVERSION;
@@ -76,7 +74,7 @@ class	NetClient
 
         UnitContainer		game_unit;		// Unit struct from the game corresponding to that client
 
-        string              _serverip;      // used during login
+        std::string         _serverip;      // used during login
         unsigned short      _serverport;    // used during login
         SOCKETALT			*clt_tcp_sock;	// Comm. socket...memory allocated in class
         SOCKETALT			*clt_udp_sock;	// Comm. socket...memory allocated in class
@@ -91,13 +89,13 @@ class	NetClient
         int					nbclients;		// Number of clients in the zone
         int					zone;			// Zone id in universe
         char				keeprun;		// Bool to test client stop
-        string				callsign;		// Callsign of the networked player
-        string				password;		// Callsign of the networked player
-		vector<string>			ship_select_list;
+        std::string			callsign;		// Callsign of the networked player
+        std::string			password;		// Callsign of the networked player
+		std::vector<std::string>	ship_select_list;
 		int				selected_ship;
   
-        vector<string> lastsave;            // If [0] is empty, [1] will contain a login error message.
-        string         error_message;       // Errors when logging in
+        std::vector<std::string>	lastsave;            // If [0] is empty, [1] will contain a login error message.
+        std::string         error_message;       // Errors when logging in
 
         ClientsMap 			Clients;		// Clients in the same zone
 
@@ -144,37 +142,37 @@ class	NetClient
                 void Reinitialize();//sets all values back to defaults
 		~NetClient();
 	
-		int connectLoad(string user, string pass, string &error); // First step of loading... returns ships.
-		vector<string>* loginSavedGame(int ship=0); // Second half of loading process... returns savegame
+		int connectLoad(const std::string & user, const std::string & pass, std::string &error); // First step of loading... returns ships.
+		std::vector<std::string>* loginSavedGame(int ship=0); // Second half of loading process... returns savegame
 		void startGame(); // Third half of loading process.
 	
 		/**** netclient_login.cpp stuff ****/
-		void SetConfigServerAddress( string & host, unsigned short &port ); // reads config vars, sets address/port and returns them.
+		void SetConfigServerAddress( std::string & host, unsigned short &port ); // reads config vars, sets address/port and returns them.
 	
-		void GetCurrentServerAddress( string & host, unsigned short &port );
-		void SetCurrentServerAddress( string host, unsigned short port );
+		void GetCurrentServerAddress( std::string & host, unsigned short &port );
+		void SetCurrentServerAddress( const std::string & host, unsigned short port );
 
 		// Returns the list of valid ships to use upon logging in.
-		const vector<string>& shipSelections () { return ship_select_list; }
+		const std::vector<std::string>& shipSelections () { return ship_select_list; }
 		bool	selectShip(int ship);
 	
 		int				authenticate();
-		int loginAuth( string str_callsign, string str_passwd, string &error); // Loops until receiving login response
-		int loginLoop(string &error);
-		vector<string>	&loginAcctLoop( string str_callsign, string str_passwd);
+		int loginAuth( const std::string & str_callsign, const std::string & str_passwd, std::string &error); // Loops until receiving login response
+		int loginLoop(std::string &error);
+		std::vector<std::string>	&loginAcctLoop( const std::string & str_callsign, const std::string & str_passwd);
 		void			loginAccept( Packet & p1);
 		void			loginChooseShip( Packet & p1);
-		SOCKETALT		init( const char* addr, unsigned short port, string &error);
-		VsnetHTTPSocket*		init_acct( const std::string &addr);
+		SOCKETALT		init( const char* addr, unsigned short port, std::string &error);
+		VsnetHTTPSocket*init_acct( const std::string &addr);
 		void	synchronizeTime(SOCKETALT*); // Sends time packets back and forth to find the actual double time on the server.
 
 // start() should not used...  Use init() instead.
 //		void	start( char * addr, unsigned short port);
 //		void	checkKey();
 	
-		void	setCallsign( char * calls) { this->callsign = string( calls);}
-		void	setCallsign( string calls) { this->callsign = calls;}
-		string	getCallsign() {return this->callsign;}
+		void	setCallsign( char * calls) { this->callsign = std::string( calls);}
+		void	setCallsign( const std::string & calls) { this->callsign = calls;}
+		std::string	getCallsign() {return this->callsign;}
 		void	setUnit( Unit * un) { game_unit.SetUnit( un);}
 		Unit *	getUnit() { return game_unit.GetUnit();}
 
@@ -194,7 +192,7 @@ class	NetClient
 		// Send a position update
 	
 		void	send (Cmd cmd, NetBuffer& netbuf, int mode, const char* file, int line);
-		void	sendCustom(string cmd, string args, string id);
+		void	sendCustom(const std::string & cmd, const std::string & args, const std::string & id);
 		void	sendPosition( const ClientState* cs );
 		void	sendCloak( bool engage );
 		// Send a PING-like packet to say we are still alive (UDP)
@@ -213,20 +211,20 @@ class	NetClient
 		void	scanRequest( Unit * target);
 		void	targetRequest( Unit * target);
 		void	respawnRequest( );
-		void	textMessage(const string &data);
-		void	fireRequest( ObjSerial serial, const vector<int> &mount_indicies, char mis);
-		void	unfireRequest( ObjSerial serial, const vector<int> &mount_indicies);
+		void	textMessage(const std::string &data);
+		void	fireRequest( ObjSerial serial, const std::vector<int> &mount_indicies, char mis);
+		void	unfireRequest( ObjSerial serial, const std::vector<int> &mount_indicies);
 
 		void	cargoRequest( ObjSerial buyer, ObjSerial seller, const std::string &cargo,unsigned int quantity,
 	        int mountOffset, int subunitOffset);
 		void	shipRequest( const std::string &cargo, unsigned char type );
-		void	missionRequest( unsigned short packetType, string mission, int pos);
+		void	missionRequest( unsigned short packetType, const std::string & mission, int pos);
 		void	communicationRequest( const class CommunicationMessage &c, ObjSerial sendTo);
 		void	downloadZoneInfo();
 		void	AddObjects( NetBuffer & netbuf);
 		ClientPtr	AddClientObject( Unit *un, ObjSerial cltserial=0);
 
-		bool	jumpRequest( string newsystem, ObjSerial jumpserial);
+		bool	jumpRequest( const std::string & newsystem, ObjSerial jumpserial);
 		bool	readyToJump();
 		void	unreadyToJump();
 
@@ -237,7 +235,7 @@ class	NetClient
 		/********************* Communication stuff **********************/
 	private:
 	public:
-		void	createNetComm( float minfreq, float maxfreq, bool video, bool secured, string method);
+		void	createNetComm( float minfreq, float maxfreq, bool video, bool secured, const std::string & method);
 		void	destroyNetComm();
 		void	startCommunication();
 		void	stopCommunication();
@@ -254,10 +252,10 @@ class	NetClient
 		void	switchWebcam();
 		bool	hasWebcam();
 
-		void	sendTextMessage( string message);
+		void	sendTextMessage( const std::string & message);
 		bool	IsNetcommActive() const;
 		bool	IsNetcommSecured() const;
-                static void Reconnect(std::string srvipaddr, unsigned short port);
+                static void Reconnect(const std::string & srvipaddr, unsigned short port);
                 static void CleanUp();
     private:
         NetClient( const NetClient& );
@@ -267,7 +265,7 @@ class	NetClient
 Unit * getNetworkUnit( ObjSerial cserial);
 bool isLocalSerial( ObjSerial sernum);
 
-extern vector<ObjSerial>	localSerials;
+extern std::vector<ObjSerial>	localSerials;
 void Reconnect(std::string ip,std::string port); 
 #endif
 

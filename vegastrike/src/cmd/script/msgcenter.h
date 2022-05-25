@@ -74,7 +74,7 @@ public:
     /* the list of names (from/to) to be filtered */
     typedef std::vector<std::string> FilterList;
     
-    void        add(std::string from, std::string to, std::string message, double delay=0.0);
+    void        add(const std::string & from, const std::string & to, const std::string & message, double delay=0.0);
     
     template <class MsgPredicate>
     bool        last(unsigned int n, gameMessage & m, MsgPredicate predicate);
@@ -93,7 +93,7 @@ public:
                const FilterList & from    = EmptyFilterList(),
                const FilterList & fromNOT = EmptyFilterList());
     
-    vector<gameMessage> messages;
+    std::vector<gameMessage> messages;
 
     static const FilterList & EmptyFilterList() { return _emptyFilterList; }
     

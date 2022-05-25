@@ -37,7 +37,7 @@ class PointStarVlist:public StarVlist{
   GFXVertexList * vlist;
   GFXVertexList * nonstretchvlist;
 public:
-  PointStarVlist (int num, float spread,const std::string &our_system_name);
+  PointStarVlist (int num, float spread, const std::string & our_system_name);
   ~PointStarVlist();
   bool BeginDrawState(const QVector &center, const Vector & vel,const Vector & angular_vel,bool rotate, bool yawpitch, int whichTexture);
   void Draw(bool, int whichTexture);

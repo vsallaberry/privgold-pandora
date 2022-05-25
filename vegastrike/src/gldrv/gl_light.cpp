@@ -28,6 +28,8 @@ using std::stack;
 #include "config_xml.h"
 #include "log.h"
 
+using std::vector;
+
 GLint GFX_MAX_LIGHTS=8;
 GLint GFX_OPTIMAL_LIGHTS=4;
 GFXBOOL GFXLIGHTING=GFXFALSE;

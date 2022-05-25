@@ -27,11 +27,11 @@ void Mesh::SelectCullFace (int whichdrawqueue) {
 }
 void Mesh::CreateLogos(struct MeshXML *, int faction, Flightgroup * fg) {
 }
-Texture * Mesh::TempGetTexture(struct MeshXML *, std::string filename, std::string factionname, GFXBOOL detail )const {
+Texture * Mesh::TempGetTexture(struct MeshXML *, const std::string & filename, const std::string & factionname, GFXBOOL detail )const {
 	return NULL;
 }
    
-Texture * Mesh::TempGetTexture (struct MeshXML*, int index, std::string factionname)const {
+Texture * Mesh::TempGetTexture (struct MeshXML*, int index, const std::string & factionname)const {
 	return NULL;    
 }
 const GFXMaterial &Mesh::GetMaterial () {
@@ -64,8 +64,8 @@ Mesh::~Mesh()
 	  delete vlist;
 	  if (meshHashTable.Get(hash_name)==this)
 	    meshHashTable.Delete(hash_name);
-          vector <Mesh *>* hashers = bfxmHashTable.Get(hash_name);
-          vector <Mesh *>::iterator finder;
+          std::vector <Mesh *>* hashers = bfxmHashTable.Get(hash_name);
+          std::vector <Mesh *>::iterator finder;
           if (hashers) {
             for (int i=hashers->size()-1;i>=0;--i) {
               if ((*hashers)[i]==this) {

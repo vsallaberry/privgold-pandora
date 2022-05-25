@@ -21,15 +21,18 @@
 
 #include "options.h"
 
+using std::string;
+using std::vector;
+
 extern vs_options game_options;
-std::string PickledDataSansMissionName (std::string pickled) {
+std::string PickledDataSansMissionName (const std::string & pickled) {
   string::size_type newline = pickled.find ("\n");
   if (newline!=string::npos)
     return pickled.substr(newline+1,pickled.length()-(newline+1));
   else
     return pickled;
 }
-std::string PickledDataOnlyMissionName (std::string pickled) {
+std::string PickledDataOnlyMissionName (const std::string & pickled) {
   string::size_type newline = pickled.find ("\n");
   return pickled.substr (0,newline);  
 }
@@ -57,7 +60,7 @@ struct delayed_mission {
   std::string str;
   std::string script;
   unsigned int player;
-  delayed_mission (std::string str,std::string script) {
+  delayed_mission (const std::string & str, const std::string & script) {
     this->str= str;
     this->script=script;
     player = _Universe->CurrentCockpit();
@@ -92,10 +95,10 @@ void processDelayedMissions() {
     }
   }
 }
-void delayLoadMission (std::string str) {
+void delayLoadMission (const std::string & str) {
   delayed_missions.push_back (delayed_mission(str,string("")));
 }
-void delayLoadMission (std::string str,std::string script) {
+void delayLoadMission (const std::string & str, const std::string & script) {
   delayed_missions.push_back (delayed_mission(str,script));
 }
 void SaveGame::ReloadPickledData () {
@@ -116,20 +119,19 @@ void SaveGame::ReloadPickledData () {
     }
   }
 }
-void UnpickleMission (std::string pickled) {
+void UnpickleMission (const std::string & to_pickle) {
 
-  std::string file= PickledDataOnlyMissionName(pickled);
-  pickled = PickledDataSansMissionName(pickled);
+  std::string file = PickledDataOnlyMissionName(to_pickle);
+  const std::string & pickled = PickledDataSansMissionName(to_pickle);
   if (pickled.length()) {
     active_missions.push_back (new Mission(file.c_str()));
     active_missions.back()->initMission();
     active_missions.back()->SetUnpickleData(pickled);
   }
 }
-std::string lengthify (std::string tp) {
+std::string lengthify (const std::string & tp) {
     int len = tp.length();
-    tp = XMLSupport::tostring(len)+" "+tp;
-    return tp;
+    return XMLSupport::tostring(len)+" "+tp;
 }
 std::string PickleAllMissions () {
   std::string res;

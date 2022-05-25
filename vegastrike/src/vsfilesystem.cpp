@@ -55,6 +55,8 @@ struct dirent { char d_name[1]; };
 using VSFileSystem::VSVolumeType;
 using VSFileSystem::VSFSNone;
 using std::string;
+using std::vector;
+
 int VSFS_DEBUG() {
   if (vs_config) {
     static int vs_debug = XMLSupport::parse_int(vs_config->getVariable("general","debug_fs","0"));
@@ -93,7 +95,7 @@ ObjSerial	getUniqueSerial()
 	return ret;
 }
 
-extern string GetUnitDir( string filename);
+extern string GetUnitDir( const string & filename);
 
 string selectcurrentdir;
 
@@ -715,7 +717,7 @@ std::string vegastrike_cwd;
 
 	// Config file has been loaded from data dir but now we look at the specified moddir in order
 	// to see if we should use a mod config file
-	void	LoadConfig( string subdir, ConfigOverrides_type * overrides)
+	void	LoadConfig( const string & subdir, ConfigOverrides_type * overrides)
 	{
 		bool found = false;
                 bool foundweapons = false;
@@ -917,7 +919,7 @@ std::string vegastrike_cwd;
         }
     }
 
-	void	InitPaths( string conf, string subdir, ConfigOverrides_type * overrides)
+	void	InitPaths( const string & conf, const string & subdir, ConfigOverrides_type * overrides)
 	{
 		config_file = conf;
 

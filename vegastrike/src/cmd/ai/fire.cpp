@@ -14,6 +14,10 @@
 #include "vs_random.h"
 #include "lin_time.h" //DEBUG ONLY
 #include "cmd/pilot.h"
+
+using std::string;
+using std::vector;
+
 static bool NoDockWithClear() {
 	static bool nodockwithclear = XMLSupport::parse_bool (vs_config->getVariable ("physics","dock_with_clear_planets","true"));
 	return nodockwithclear;

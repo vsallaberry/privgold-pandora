@@ -55,7 +55,7 @@
 using std::cout;
 using std::cerr;
 using std::endl;
-string varToString (varInst * vi) {
+std::string varToString (varInst * vi) {
   switch (vi->type) {
   case VAR_FLOAT:
     return XMLSupport::tostring ((float)vi->float_val);
@@ -66,7 +66,7 @@ string varToString (varInst * vi) {
   case VAR_OBJECT:
   default:
     if (vi->objectname=="string") {
-      return *((string *)vi->object);
+      return *((std::string *)vi->object);
     }else {
       return XMLSupport::tostring ((size_t)vi->object);
     }
@@ -74,7 +74,7 @@ string varToString (varInst * vi) {
 }
 
 //extern unsigned int AddAnimation (const QVector & pos, const float size, bool mvolatile, const std::string &name ,float per);
-void Mission::doCall_toxml(string module,varInst *ovi){
+void Mission::doCall_toxml(const std::string & module,varInst *ovi){
   if(module=="_olist"){
     call_olist_toxml(NULL,SCRIPT_RUN,ovi);
   }
@@ -83,7 +83,7 @@ void Mission::doCall_toxml(string module,varInst *ovi){
   }
 }
 
-varInst *Mission::doCall(missionNode *node,int mode,string module,string method){
+varInst *Mission::doCall(missionNode *node,int mode,const std::string & module, const std::string & method){
   varInst *vi=NULL;
 
   callback_module_type module_id=node->script.callback_module_id;
@@ -250,9 +250,9 @@ varInst *Mission::doCall(missionNode *node,int mode){
   trace(node,mode);
 
   if(mode==SCRIPT_PARSE){
-    string name=node->attr_value("name");
-    string module=node->attr_value("module");
-    string object=node->attr_value("object");
+    std::string name=node->attr_value("name");
+    std::string module=node->attr_value("module");
+    std::string object=node->attr_value("object");
     if(object.empty() && module.empty()){
       fatalError(node,mode,"you have to give a callback object or module");
       assert(0);
@@ -267,10 +267,10 @@ varInst *Mission::doCall(missionNode *node,int mode){
   }
 
   // RUNTIME && PARSE
-  string module=node->attr_value("module");
+  std::string module=node->attr_value("module");
   if(module.empty()){
     // does not work yet
-    string object=node->attr_value("object");
+    std::string object=node->attr_value("object");
     assert(0);
     //varInst *ovi=lookupVariable(object);
     varInst *ovi=NULL;
@@ -290,7 +290,7 @@ varInst *Mission::doCall(missionNode *node,int mode){
     module="_"+module;
   }
 
-  string method=node->script.name;
+  std::string method=node->script.name;
 
   varInst *vi=NULL;
 
@@ -417,7 +417,7 @@ varInst *Mission::callGetSystemName(missionNode *node,int mode){
   if(mode==SCRIPT_RUN){
     deleteVarInst(vi);
     StarSystem *ssystem=_Universe->activeStarSystem();
-    string sysname=ssystem->getName();
+    std::string sysname=ssystem->getName();
     vi=call_string_new(node,mode,sysname);
   }
   return vi;
@@ -433,7 +433,7 @@ varInst *Mission::callGetSystemFile (missionNode *node,int mode, StarSystem * ss
     if (ss==NULL) {
       ss=_Universe->activeStarSystem();
     }
-    string sysname=ss->getFileName();
+    std::string sysname=ss->getFileName();
     vi=call_string_new(node,mode,sysname);
   }
   return vi;
@@ -443,11 +443,11 @@ varInst *Mission::callGetAdjacentSystem (missionNode *node,int mode) {
   varInst *vi=newVarInst(VI_TEMP);
   vi->type=VAR_OBJECT;
   vi->objectname="string";
-  string str = getStringArgument (node,mode,0);
+  std::string str = getStringArgument (node,mode,0);
   int which= (int)getIntArg(node,mode,1);
   if(mode==SCRIPT_RUN){
     deleteVarInst(vi);
-    const string &sysname=_Universe->getAdjacentStarSystems(str)[which];
+    const std::string &sysname=_Universe->getAdjacentStarSystems(str)[which];
     vi=call_string_new(node,mode,sysname);
   }
   return vi;
@@ -457,11 +457,11 @@ varInst *Mission::callGetGalaxyProperty (missionNode *node,int mode) {
   varInst *vi=newVarInst(VI_TEMP);
   vi->type=VAR_OBJECT;
   vi->objectname="string";
-  string sys = getStringArgument (node,mode,0);
-  string prop = getStringArgument(node,mode,1);
+  std::string sys = getStringArgument (node,mode,0);
+  std::string prop = getStringArgument(node,mode,1);
   if(mode==SCRIPT_RUN){
     deleteVarInst(vi);
-    string sysname=_Universe->getGalaxyProperty(sys,prop);
+    std::string sysname=_Universe->getGalaxyProperty(sys,prop);
     vi=call_string_new(node,mode,sysname);
   }
   return vi;
@@ -469,7 +469,7 @@ varInst *Mission::callGetGalaxyProperty (missionNode *node,int mode) {
 
 varInst *Mission::callGetNumAdjacentSystems (missionNode *node,int mode) {
 
-  string sysname = getStringArgument (node,mode,0);
+  std::string sysname = getStringArgument (node,mode,0);
   int ret=0;
   if(mode==SCRIPT_RUN){
     ret=_Universe->getAdjacentStarSystems(sysname).size();
@@ -500,7 +500,7 @@ varInst *Mission::call_io_printmsglist(missionNode *node,int mode){
 varInst *Mission::call_io_message(missionNode *node,int mode){
   missionNode *args[3];
   varInst *args_vi[3];
-  string args_str[3];
+  std::string args_str[3];
 
   int delay=(int)getIntArg(node,mode,0);
 
@@ -524,20 +524,18 @@ varInst *Mission::call_io_message(missionNode *node,int mode){
 
 }
 #if 1
-string Mission::replaceNewline(string origstr){
-  string ostr=origstr;
-  
-  int breakpos=ostr.find("\\n",0);
+std::string Mission::replaceNewline(const std::string & origstr){
+  int breakpos=origstr.find("\\n",0);
   
   if(breakpos>=0){
     //printf("breakpos=%d\n",breakpos);
 
-    string newstr=ostr.replace(breakpos,2,"\n");
+    std::string newstr(origstr);
 
-    return replaceNewline(newstr);
+    return replaceNewline(newstr.replace(breakpos,2,"\n"));
   }
   else{
-    return ostr;
+    return origstr;
   }
 }
 #endif
@@ -546,10 +544,10 @@ string Mission::replaceNewline(string origstr){
 varInst *Mission::call_io_sprintf(missionNode *node,int mode){
   missionNode *outstr_node=getArgument(node,mode,0);
   varInst *outstr_vi=checkObjectExpr(outstr_node,mode);
-  string *outstrptr=getStringObject(outstr_node,mode,outstr_vi);
+  std::string *outstrptr=getStringObject(outstr_node,mode,outstr_vi);
 
   char outbuffer[1024];
-  string outstring;
+  std::string outstring;
 
   missionNode *stringnode=getArgument(node,mode,1);
   if(stringnode->tag!=DTAG_CONST){
@@ -564,10 +562,10 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
 
   int nr_of_args=node->subnodes.size();
   int current_arg=2;
-  string * fullstringptr;
-  string fullstring;
+  std::string * fullstringptr;
+  std::string fullstring;
 
-  fullstringptr=(string *)str_vi->object;
+  fullstringptr=(std::string *)str_vi->object;
   fullstring=*fullstringptr;
 
     fullstring=replaceNewline(fullstring);
@@ -576,17 +574,17 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
 
   //  if(mode==SCRIPT_RUN){
 
-  string endstring=fullstring;
+  std::string endstring=fullstring;
 
   while(current_arg<nr_of_args){
 
     int breakpos=endstring.find("%",0);
 
-    string beforestring=endstring.substr(0,breakpos);
+    std::string beforestring=endstring.substr(0,breakpos);
 
     //printf("beforestr=-%s-",beforestring.c_str());
 
-    string breakstring=endstring.substr(breakpos,2);
+    std::string breakstring=endstring.substr(breakpos,2);
 
     //printf("breakstr=-%s-\n",breakstring.c_str());
 
@@ -623,7 +621,7 @@ varInst *Mission::call_io_sprintf(missionNode *node,int mode){
 	  assert(0);
 	}
 
-	string * strptr=(string *)res_vi->object;
+	std::string * strptr=(std::string *)res_vi->object;
 
 	snprintf(outbuffer, sizeof(outbuffer), "%s", beforestring.c_str());
 	outstring+=outbuffer;
@@ -670,10 +668,10 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
 
   int nr_of_args=node->subnodes.size();
   int current_arg=1;
-  string * fullstringptr;
-  string fullstring;
+  std::string * fullstringptr;
+  std::string fullstring;
 
-  fullstringptr=(string *)str_vi->object;
+  fullstringptr=(std::string *)str_vi->object;
   fullstring=*fullstringptr;
 
     fullstring=replaceNewline(fullstring);
@@ -682,17 +680,17 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
 
   //  if(mode==SCRIPT_RUN){
 
-  string endstring=fullstring;
+  std::string endstring=fullstring;
 
   while(current_arg<nr_of_args){
 
     int breakpos=endstring.find("%",0);
 
-    string beforestring=endstring.substr(0,breakpos);
+    std::string beforestring=endstring.substr(0,breakpos);
 
     //printf("beforestr=-%s-",beforestring.c_str());
 
-    string breakstring=endstring.substr(breakpos,2);
+    std::string breakstring=endstring.substr(breakpos,2);
 
     //printf("breakstr=-%s-\n",breakstring.c_str());
 
@@ -739,7 +737,7 @@ varInst *Mission::call_io_printf(missionNode *node,int mode){
 	  assert(0);
 	}
 
-	string * strptr=(string *)res_vi->object;
+	std::string * strptr=(std::string *)res_vi->object;
 
 	printf("%s", beforestring.c_str());
 	printf("%s",strptr->c_str());
@@ -775,7 +773,7 @@ extern Music *muzak;
 varInst * Mission::call_musicAddList(missionNode *node,int mode) {
   varInst *vi=newVarInst(VI_TEMP);
   vi->type=VAR_INT;
-  string str = getStringArgument (node,mode,0);
+  std::string str = getStringArgument (node,mode,0);
   /*
   if(mode==SCRIPT_RUN){
     int ret=muzak->Addlist(str.c_str());
@@ -789,7 +787,7 @@ varInst * Mission::call_musicAddList(missionNode *node,int mode) {
 varInst * Mission::call_musicPlaySong(missionNode *node,int mode) {
   varInst *vi=newVarInst(VI_TEMP);
   vi->type=VAR_VOID;
-  string str = getStringArgument (node,mode,0);
+  std::string str = getStringArgument (node,mode,0);
   /*
   if(mode==SCRIPT_RUN){
     muzak->GotoSong(str);
@@ -811,8 +809,8 @@ varInst * Mission::call_musicPlayList(missionNode *node,int mode) {
 }
 
 varInst *Mission::callPrintFloats(missionNode *node,int mode){
-  string s1=node->attr_value("s1");
-  string s2=node->attr_value("s2");
+  std::string s1=node->attr_value("s1");
+  std::string s2=node->attr_value("s2");
 
   if(mode==SCRIPT_RUN){
     cout << "print: " << s1 ;
@@ -883,7 +881,7 @@ varInst *Mission::getObjectArg(missionNode *node,int mode){
 }
 
 
-string Mission::method_str(missionNode *node){
+std::string Mission::method_str(missionNode *node){
   return  node->attr_value("module")+"."+node->attr_value("name");
 }
 

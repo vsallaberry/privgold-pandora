@@ -55,7 +55,7 @@ public:
 
     // Label that appears on the button.
     virtual std::string label(void) { return m_label; };
-    virtual void setLabel(std::string l) { m_label = l; };
+    virtual void setLabel(const std::string & l) { m_label = l; };
 
     // Background color when mouse is over button.
     virtual GFXColor highlightColor(void) { return m_highlightColor; } ;

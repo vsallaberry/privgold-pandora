@@ -227,7 +227,7 @@ SaveGame::~SaveGame() {
   delete missionstringdata;
   delete missiondata;
 }
-void SaveGame::SetStarSystem (string sys) {
+void SaveGame::SetStarSystem (const string & sys) {
   ForceStarSystem = sys;
 }
 string SaveGame::GetStarSystem () {
@@ -324,7 +324,7 @@ vector <string> parsePipedString(string s) {
   }
   return ret;
 }
-string createPipedString(vector <string> s) {
+string createPipedString(const vector <string> & s) {
   string ret;
   for (unsigned int i=0;i<s.size()-1;i++) {
     ret += s[i]+"|";
@@ -333,7 +333,7 @@ string createPipedString(vector <string> s) {
     ret+=s.back();
   return ret;
 }
-bool CopySavedShips(std::string filename, int player_num, const std::vector<std::string> &starships, bool load) {
+bool CopySavedShips(const std::string & filename, int player_num, const std::vector<std::string> &starships, bool load) {
   Cockpit * cp = _Universe->AccessCockpit(player_num);
   for (int i=0;i<starships.size();i+=2) {
     if (i==2) i=1;
@@ -571,7 +571,7 @@ void AnyStringSkipInString (char * &buf) {
   unsigned int i=0;
   while (i<size&&*buf) ++i,++buf;
 }
-string AnyStringWriteString (string input) {
+string AnyStringWriteString (const string & input) {
   return XMLSupport::tostring ((int)input.length())+" "+input;
 }
 void SaveGame::ReadMissionStringData (char * &buf, bool select_data, const std::set<std::string> &select_data_filter) {
@@ -670,7 +670,7 @@ void SaveGame::WriteMissionStringData (std::vector <char> & ret) {
     }
   }
 }
-/*static inline void SerializeString(std::string str, std::string &outstr) {
+/*static inline void SerializeString(const std::string & str, std::string &outstr) {
     char tmp[32];
     sprintf(tmp,"%u ",str.length());
     outstr += tmp;
@@ -792,7 +792,7 @@ string SaveGame::WriteSavedUnit (SavedUnits* su) {
   return var;
 }*/
 
-string SaveGame::WritePlayerData( const QVector &FP, std::vector<std::string> unitname, const char * systemname, float credits, std::string fact)
+string SaveGame::WritePlayerData( const QVector &FP, const std::vector<std::string> & unitname, const char * systemname, float credits, const std::string & fact)
 {
 	std::ostringstream playerdata_oss;
 	playerdata_oss.unsetf(std::ostringstream::floatfield); // cleared -> equivalent to %g
@@ -877,7 +877,7 @@ string SaveGame::WriteDynamicUniverse()
 
 using namespace VSFileSystem;
 
-string SaveGame::WriteSaveGame (const char *systemname, const QVector &FP, float credits, std::vector<std::string> unitname, int player_num, std::string fact, bool write) {
+string SaveGame::WriteSaveGame (const char *systemname, const QVector &FP, float credits, const std::vector<std::string> & unitname, int player_num, const std::string & fact, bool write) {
   savestring = string("");
     GAME_LOG(logvs::NOTICE, "Writing Save Game %s",outputsavegame.c_str());
 
@@ -1070,7 +1070,7 @@ const string& GetCurrentSaveGame()
 	return CurrentSaveGameName;
 }
 
-string SetCurrentSaveGame(string newname)
+string SetCurrentSaveGame(const string & newname)
 {
 	string oldname = CurrentSaveGameName;
 	CurrentSaveGameName = newname;

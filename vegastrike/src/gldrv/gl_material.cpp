@@ -22,6 +22,9 @@
 #include "gfxlib.h"
 #include "gl_globals.h"
 #include <cstring>
+
+using std::vector;
+
 //#include "gl_globals.h"
 //#include "gfx_transform_vector.h"
 

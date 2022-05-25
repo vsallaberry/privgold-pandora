@@ -11,6 +11,7 @@
 
 #define WHICHSID(v) (((v.x*a+v.y*b+v.z*c+d)>0)*2-1)
 
+using std::vector;
 
 static int whichside (GFXVertex * t, int numvertex, float a, float b, float c, float d) {
   int count = PUNK;

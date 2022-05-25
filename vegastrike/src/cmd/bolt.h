@@ -22,8 +22,8 @@ private:
   int decal;//which image it uses
  public:
   CollideMap::iterator location;
-  static int AddTexture(bolt_draw *q, std::string filename);
-  static int AddAnimation(bolt_draw *q, std::string filename, QVector cur_position);
+  static int AddTexture(bolt_draw *q, const std::string & filename);
+  static int AddAnimation(bolt_draw *q, const std::string & filename, QVector cur_position);
   bool Collide (Unit * target);
   static bool CollideAnon (Collidable::CollideRef bolt_name, Unit* target);
   static Bolt * BoltFromIndex(StarSystem* ss,Collidable::CollideRef bolt_name);
@@ -47,11 +47,11 @@ class bolt_draw {
 public:
   class DecalQueue *boltdecals;
   static GFXVertexList * boltmesh;
-  vector <std::string> animationname;
-  vector <Animation *> animations;
-  vector <vector <Bolt> > bolts;
-  vector <vector <Bolt> > balls;
-  vector <int> cachedecals;
+  std::vector <std::string> animationname;
+  std::vector <Animation *> animations;
+  std::vector <std::vector <Bolt> > bolts;
+  std::vector <std::vector <Bolt> > balls;
+  std::vector <int> cachedecals;
   bolt_draw();
   ~bolt_draw();
   //  void UpdatePhysics();

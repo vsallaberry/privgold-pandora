@@ -4,8 +4,7 @@
 #include <vector>
 #include <string>
 #include "vsfilesystem.h"
-using std::string;
-using std::vector;
+
 struct XMLType {
   union wordlength {
     int *i;
@@ -82,17 +81,17 @@ struct XMLElement {
     handler = hand;
   }
   void Write (VSFileSystem::VSFile & f,void *mythis);
-  string WriteString (void *mythis);
+  std::string WriteString (void *mythis);
 };
 struct XMLnode {
   XMLnode *up;
   std::string val;
-  vector <XMLElement> elements;
-  vector <XMLnode> subnodes;
+  std::vector <XMLElement> elements;
+  std::vector <XMLnode> subnodes;
   XMLnode () {up=NULL;}
   XMLnode (const std::string &val, XMLnode * newup) {this->val=val;up=newup;}
   void Write (VSFileSystem::VSFile & f, void *mythis, int tablevel);
-  string WriteString( void *mythis, int tablevel);
+  std::string WriteString( void *mythis, int tablevel);
 };
 class XMLSerializer {
   std::string filename;
@@ -106,8 +105,8 @@ class XMLSerializer {
   void AddTag (const std::string &tag);
   void AddElement (const std::string &element, XMLHandler *handler, const XMLType &input);
   bool Write (const char * modificationname="");
-  string WriteString();
-  void EndTag (const std::string endname=string(""));
+  std::string WriteString();
+  void EndTag (const std::string & endname="");
   std::string getName (){return filename;}
   void setName (const std::string & fil) {this->filename = fil;}
 };

@@ -20,10 +20,10 @@
 #include "vs_log_modules.h"
 
 #define VS_PI 3.1415926535897931
-CSVRow LookupUnitRow(const string &unitname, const string &faction) {
-  string hashname=unitname+"__"+faction;
+CSVRow LookupUnitRow(const std::string &unitname, const std::string &faction) {
+  std::string hashname=unitname+"__"+faction;
   unsigned int where; //gets munged
-  for (vector<CSVTable*>::reverse_iterator i=unitTables.rbegin();i!=unitTables.rend();++i) {
+  for (std::vector<CSVTable*>::reverse_iterator i=unitTables.rbegin();i!=unitTables.rend();++i) {
     unsigned int where;
     if ((*i)->RowExists(hashname,where)) {
       return CSVRow((*i),where);
@@ -639,7 +639,7 @@ const std::string EMPTY_STRING("");
 #define OPTIM_GET(row,table,variable) (use_optimizer?(((OPTIMIZER_INDEX(variable)==CSVTable::optimizer_undefined) || (table->optimizer_indexes[OPTIMIZER_INDEX(variable)]==CSVTable::optimizer_undefined))?EMPTY_STRING:row[table->optimizer_indexes[OPTIMIZER_INDEX(variable)]]):row[#variable])
 #endif
 
-void Unit::LoadRow(CSVRow &row, string modification, string * netxml) {
+void Unit::LoadRow(CSVRow &row, const string & modification, string * netxml) {
   CSVTable *table = row.getParent();
 
   Unit::XML xml;
@@ -1380,7 +1380,7 @@ shield.range[1].   rhomax=r90;
   //printf ("spr %f mesh %f subun %f mount %f carg %f sound %f upg %f exp %f light %f tree %f\n",spritet-start,subunt-meshest,mountst-subunt,cargot-mountst,soundst-cargot,upgradet-soundst,explodet-upgradet, lightt-explodet, treet-lightt, endt-treet);
 }
 
-CSVRow GetUnitRow(string filename, bool subu, int faction, bool readlast, bool &rread) {
+CSVRow GetUnitRow(const string & filename, bool subu, int faction, bool readlast, bool &rread) {
   std::string hashname = filename+"__"+FactionUtil::GetFactionName(faction);
   for (int i=((int)unitTables.size())-(readlast?1:2);i>=0;--i) {
     unsigned int where;

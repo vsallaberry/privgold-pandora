@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <vector>
 #include "gfxlib.h"
-using std::vector;
 
 void ShowColor(float x, float y, float wid, float hei, float red, float green, float blue, float alpha);
 void ShowText(float x, float y, float wid, int size, const char *string, int no_end);

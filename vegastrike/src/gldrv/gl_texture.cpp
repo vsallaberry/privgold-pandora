@@ -27,6 +27,8 @@
 #include "gfxlib.h"
 #include "log.h"
 
+using std::vector;
+
 #ifndef GL_TEXTURE_CUBE_MAP_EXT
 #define GL_TEXTURE_CUBE_MAP_EXT           0x8513
 #define GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT 0x8515

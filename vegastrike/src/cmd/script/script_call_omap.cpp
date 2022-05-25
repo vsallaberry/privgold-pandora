@@ -54,7 +54,7 @@ varInst *Mission::call_omap(missionNode *node,int mode){
   varInst *viret=NULL;
 
   if(mode==SCRIPT_PARSE){
-    string cmd=node->attr_value("name");
+    std::string cmd=node->attr_value("name");
     node->script.method_id=module_omap_map[cmd];
   }
 
@@ -77,7 +77,7 @@ varInst *Mission::call_omap(missionNode *node,int mode){
 	omap_t::iterator iter;
 
 	for(iter=my_object->begin();iter!=my_object->end();iter++){
-	  string varname=(*iter).first ;
+	  std::string varname=(*iter).first ;
 	  varInst *vi=(*iter).second;
 	  deleteVarInst(vi,true);
 	}
@@ -92,7 +92,7 @@ varInst *Mission::call_omap(missionNode *node,int mode){
       //varInst *vi=doVariable(snode,mode); // should be getObjExpr
       varInst *var_vi=checkExpression(snode,mode); // should be getObjExpr
       
-      string name=getStringArgument(node,mode,1);
+      std::string name=getStringArgument(node,mode,1);
 
       debug(3,node,mode,"omap set");
 
@@ -113,7 +113,7 @@ varInst *Mission::call_omap(missionNode *node,int mode){
     else if(method_id==CMT_OMAP_get){
       debug(3,node,mode,"omap.get");
 
-      string name=getStringArgument(node,mode,1);
+      std::string name=getStringArgument(node,mode,1);
 
       viret=newVarInst(VI_TEMP);
       viret->type=VAR_ANY;

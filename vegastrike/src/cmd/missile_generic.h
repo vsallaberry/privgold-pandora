@@ -42,7 +42,7 @@ protected:
     /// constructor only to be called by UnitFactory
     Missile( const char * filename,
              int faction,
-	     const string &modifications,
+	     const std::string &modifications,
 	     const float damage,
 	     float phasedamage,
 	     float time,

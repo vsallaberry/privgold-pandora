@@ -244,10 +244,10 @@ static void ComposeFunctions(const KBData& composition, KBSTATE k) {
       s="";
     where=t.find("(");
     std::string args;
-    if (where!=string::npos) {
+    if (where!=std::string::npos) {
       args=t.substr(where+1);
       std::string::size_type paren=args.find(")");
-      if (paren!=string::npos)
+      if (paren!=std::string::npos)
         args=args.substr(0,paren);
       t=t.substr(0,where);    
     }
@@ -291,7 +291,7 @@ void GameVegaConfig::initCommandMap(){
 /* *********************************************************** */
 
 void GameVegaConfig::doBindings(configNode *node){
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
   
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
     configNode *cnode=(configNode *)(*siter);
@@ -312,11 +312,11 @@ void GameVegaConfig::doBindings(configNode *node){
 
 void GameVegaConfig::doAxis(configNode *node){
 
-  string name=node->attr_value("name");
-  string myjoystick=node->attr_value("joystick");
-  string axis=node->attr_value("axis");
-  string invertstr=node->attr_value("inverse");
-  string mouse_str=node->attr_value("mouse");
+  std::string name=node->attr_value("name");
+  std::string myjoystick=node->attr_value("joystick");
+  std::string axis=node->attr_value("axis");
+  std::string invertstr=node->attr_value("inverse");
+  std::string mouse_str=node->attr_value("mouse");
 
   if(name.empty() || (mouse_str.empty()&&myjoystick.empty()) || axis.empty()){
     CONFIG_LOG(logvs::NOTICE, "joystick: no correct axis desription given");
@@ -335,8 +335,8 @@ void GameVegaConfig::doAxis(configNode *node){
   }
 
   if(name=="hatswitch"){
-      string nr_str=node->attr_value("nr");
-      string margin_str=node->attr_value("margin");
+      std::string nr_str=node->attr_value("nr");
+      std::string margin_str=node->attr_value("margin");
 
       if(nr_str.empty() || margin_str.empty()){
         CONFIG_LOG(logvs::NOTICE, "joystick: you have to assign a number and a margin to the hatswitch");
@@ -351,7 +351,7 @@ void GameVegaConfig::doAxis(configNode *node){
       hatswitch_joystick[nr]=joy_nr;
 
       hs_value_index=0;
-      for(vector<easyDomNode *>::const_iterator siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
+      for(std::vector<easyDomNode *>::const_iterator siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
         configNode *cnode=(configNode *)(*siter);
         checkHatswitch(nr,cnode);
       }
@@ -399,7 +399,7 @@ void GameVegaConfig::checkHatswitch(int nr,configNode *node){
     return;
   }
 
-  string strval=node->attr_value("value");
+  std::string strval=node->attr_value("value");
 
   float val=atof(strval.c_str());
 
@@ -426,8 +426,8 @@ void GameVegaConfig::checkBind(configNode *node){
   std::string tmp=node->attr_value("modifier");
   int modifier=getModifier(tmp.c_str());
   
-  string cmdstr=node->attr_value("command");
-  string player_bound=node->attr_value("player");
+  std::string cmdstr=node->attr_value("command");
+  std::string player_bound=node->attr_value("player");
   if (player_bound.empty())
     player_bound="0";
 

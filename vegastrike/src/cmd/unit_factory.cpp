@@ -55,7 +55,7 @@ Unit* UnitFactory::createUnit( )
 Unit* UnitFactory::createUnit( const char *filename,
 		               bool        SubUnit,
 		               int         faction,
-		               std::string customizedUnit,
+		               const std::string & customizedUnit,
 		               Flightgroup *flightgroup,
 		               int         fg_subnumber, string * netxml, ObjSerial netcreate)
 {
@@ -74,7 +74,7 @@ Unit* UnitFactory::createUnit( const char *filename,
 Unit* UnitFactory::createServerSideUnit( const char *filename,
 		               bool        SubUnit,
 		               int         faction,
-		               std::string customizedUnit,
+		               const std::string & customizedUnit,
 		               Flightgroup *flightgroup,
 		               int         fg_subnumber )
 {
@@ -162,7 +162,7 @@ Planet* UnitFactory::createPlanet( QVector x,
 				   const GFXMaterial & ourmat,
 				   const std::vector <GFXLightLocal> & ligh,
 				   int faction,
-				   string fullname ,
+				   const string & fullname ,
 				   bool inside_out, ObjSerial netcreate)
 {
     Planet * p = new GamePlanet( x,

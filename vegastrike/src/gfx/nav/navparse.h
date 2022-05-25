@@ -1,13 +1,16 @@
+#ifndef VS_GFX_NAVPARSE_H
+#define VS_GFX_NAVPARSE_H
+
 #include "vsfilesystem.h"
 
 //using namespace VSFileSystem;
 using VSFileSystem::CockpitFile;
 using VSFileSystem::vs_fprintf;
-bool NavigationSystem::ParseFile(string filename)
+bool NavigationSystem::ParseFile(const std::string & filename)
 {
-	string expression = "";
-	string tag = "";
-	string data = "";
+	std::string expression = "";
+	std::string tag = "";
+	std::string data = "";
 	char next = ' ';
 	int totalitems = 0;
 
@@ -61,7 +64,7 @@ bool NavigationSystem::ParseFile(string filename)
 
 				if(tag == "console")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_small = atof( (retrievedata(data, "x_small")).c_str() );
 					float x_large = atof( (retrievedata(data, "x_large")).c_str() );
 					float y_small = atof( (retrievedata(data, "y_small")).c_str() );
@@ -82,7 +85,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button1")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -107,7 +110,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button2")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -133,7 +136,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button3")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -159,7 +162,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button4")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -185,7 +188,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button5")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -211,7 +214,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button6")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -237,7 +240,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "button7")
 				{
-					string mesh_ = retrievedata(data, "file");
+					std::string mesh_ = retrievedata(data, "file");
 					float x_ = atof( (retrievedata(data, "x")).c_str() );
 					float y_ = atof( (retrievedata(data, "y")).c_str() );
 					float dx_ = atof( (retrievedata(data, "dx")).c_str() );
@@ -314,8 +317,8 @@ bool NavigationSystem::ParseFile(string filename)
 				{
 					int how_many_sys = atoi( (retrievedata(data, "system")).c_str() );
 					int how_many_gal = atoi( (retrievedata(data, "galaxy")).c_str() );
-					string multi_sys    = retrievedata(data, "systemmultidimensional");
-					string multi_gal    = retrievedata(data, "galaxymultidimensional");
+					std::string multi_sys    = retrievedata(data, "systemmultidimensional");
+					std::string multi_gal    = retrievedata(data, "galaxymultidimensional");
 
 					if(how_many_sys == 3)
 						system_view = VIEW_3D;
@@ -339,7 +342,7 @@ bool NavigationSystem::ParseFile(string filename)
 				}
 				else if(tag == "factioncolours")
 				{
-					string factionname = retrievedata(data, "faction");
+					std::string factionname = retrievedata(data, "faction");
 					float r_ = atof( (retrievedata(data, "r")).c_str() );
 					float g_ = atof( (retrievedata(data, "g")).c_str() );
 					float b_ = atof( (retrievedata(data, "b")).c_str() );
@@ -380,3 +383,4 @@ bool NavigationSystem::ParseFile(string filename)
 		return 0;
 }
 
+#endif // !VS_GFX_NAVPARSE_H

@@ -1,7 +1,7 @@
 #include "networking/networkcomm.h"
 
 NetworkCommunication::NetworkCommunication() {}
-NetworkCommunication::NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, string method) {}
+NetworkCommunication::NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, const std::string & method) {}
 NetworkCommunication::~NetworkCommunication() {}
 
 void	NetworkCommunication::AddToSession( ClientPtr clt) {}
@@ -13,9 +13,9 @@ int		NetworkCommunication::DestroySession() { return 0;}
 void	NetworkCommunication::StartWebcamTransfer() {}
 void	NetworkCommunication::StopWebcamTransfer() {}
 void	NetworkCommunication::SendSound( SOCKETALT & socket, ObjSerial serial) {}
-void	NetworkCommunication::SendMessage( SOCKETALT & socket, ObjSerial serial, string message) {}
+void	NetworkCommunication::SendMessage( SOCKETALT & socket, ObjSerial serial, const std::string & message) {}
 void	NetworkCommunication::RecvSound( const char * sndbuffer, int length, bool encrypted) {}
-void	NetworkCommunication::RecvMessage( string message, bool encrypted) {}
+void	NetworkCommunication::RecvMessage( const std::string & message, bool encrypted) {}
 
 char *	NetworkCommunication::GetWebcamCapture() { return NULL;}
 char *	NetworkCommunication::GetWebcamFromNetwork(int & length) { return NULL; }
@@ -25,6 +25,6 @@ void	NetworkCommunication::SwitchWebcam() {}
 void	NetworkCommunication::SwitchSecured() {}
 
 void	NetworkCommunication::GenerateKey() {}
-string	NetworkCommunication::EncryptBuffer( const char * buffer, unsigned int length) { return string("");}
-string	NetworkCommunication::DecryptBuffer( const char * buffer, unsigned int length) { return string("");}
+std::string	NetworkCommunication::EncryptBuffer( const char * buffer, unsigned int length) { return std::string("");}
+std::string	NetworkCommunication::DecryptBuffer( const char * buffer, unsigned int length) { return std::string("");}
 

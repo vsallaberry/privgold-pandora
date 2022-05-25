@@ -50,10 +50,13 @@
 #define LOD_HYSTHERESIS_MAXENLARGEMENT_FACTOR 1.1
 
 using std::list;
+using std::vector;
+using std::string;
+
 Hashtable<std::string, Mesh, 503> Mesh::meshHashTable;
 Hashtable<std::string, std::vector<int>, 503> Mesh::animationSequences;
 Vector mouseline;
-int Mesh::getNumAnimationFrames(string which)const {
+int Mesh::getNumAnimationFrames(const std::string & which)const {
    if (which.empty()) {
       vector<int>* animSeq = animationSequences.Get(hash_name);
       if (animSeq) return animSeq->size();
@@ -113,7 +116,7 @@ bool Mesh::LoadExistant (Mesh * oldmesh) {
     orig = oldmesh;
     return true;
 }
-bool Mesh::LoadExistant (const string filehash, const Vector& scale, int faction) {
+bool Mesh::LoadExistant (const std::string & filehash, const Vector& scale, int faction) {
   Mesh * oldmesh;
 
   hash_name = VSFileSystem::GetHashName (filehash,scale,faction);
@@ -162,7 +165,7 @@ void Mesh::setConvex(bool b) {
 }
 using namespace VSFileSystem;
 extern Hashtable<std::string, std::vector <Mesh*>, MESH_HASTHABLE_SIZE> bfxmHashTable;
-Mesh::Mesh(std::string filename,const Vector & scale, int faction, Flightgroup *fg, bool orig):hash_name(filename)
+Mesh::Mesh(const std::string & filename,const Vector & scale, int faction, Flightgroup *fg, bool orig):hash_name(filename)
 {
   this->convex=false;
   Mesh* cpy=LoadMesh(filename.c_str(),scale,faction,fg,vector<std::string>());

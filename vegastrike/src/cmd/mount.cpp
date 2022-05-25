@@ -63,7 +63,7 @@ float Mount::ComputeAnimatedFrame(Mesh * gun) {
 		}
 	}
 }
-Mount::Mount(const string& filename, int am, int vol, float xyscale, float zscale, float func,float maxfunc, bool banked):bank(banked){ //short fix
+Mount::Mount(const std::string& filename, int am, int vol, float xyscale, float zscale, float func,float maxfunc, bool banked):bank(banked){ //short fix
   functionality=func;
   maxfunctionality=maxfunc;
   static weapon_info wi(weapon_info::BEAM);
@@ -268,7 +268,7 @@ bool Mount::PhysicsAlignedFire(Unit * caller, const Transformation &Cumulative, 
 			case weapon_info::PROJECTILE:
 			if (Network==NULL || SERVER) { // Server will create a networked unit, and send it over to the client.
 				static bool match_speed_with_target = XMLSupport::parse_float (vs_config->getVariable("physics","match_speed_with_target","true"));
-				string skript =/*string("ai/script/")+*/type->file+string(".xai");
+				std::string skript =/*string("ai/script/")+*/type->file+std::string(".xai");
 				VSError err = LookForFile( skript, AiFile);
 				if (err<=Ok) {
 					temp = UnitFactory::createMissile (type->file.c_str(),caller->faction,"",type->Damage,type->PhaseDamage,type->Range/type->Speed,type->Radius,type->RadialSpeed,type->PulseSpeed/*detonation_radius*/,this->serial);

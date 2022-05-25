@@ -64,7 +64,7 @@ call them with:
 PYTHON_BEGIN_MODULE(VS)
 	PYTHON_BEGIN_INHERIT_CLASS(VS,FireAt,"PythonFire") //begins an inherited class with a virtual Execute function...
 	//You can call any other virtual functions by defining:
-	//	void callFunction(std::string name){}
+	//	void callFunction(const std::string & name){}
 	//in your base class...  To use it, use:
 	//	MyClass->callFunction("Execute").
 	//That will do the same thing as:
@@ -194,7 +194,7 @@ template <class SuperClass> class PythonClass:public SuperClass {
     last_instance=NULL;
     return myclass;
   }
-  virtual void callFunction (std::string str) {
+  virtual void callFunction (const std::string & str) {
     PYTHONCALLBACK(void, self, str.c_str());
   }
   static PythonClass * Factory(const std::string &file) {
@@ -262,7 +262,7 @@ public:
     Python::reseterrors();
     return ret;
   }
-  virtual void UnPickle(std::string s)  {
+  virtual void UnPickle(const std::string & s)  {
     Python::reseterrors();
     PYTHONCALLBACK2(void, self, "UnPickle",s);
     Python::reseterrors();
@@ -273,7 +273,7 @@ public:
   static std::string default_Pickle(PythonMissionBaseClass & self_) {
     return (self_).PythonMissionBaseClass::Pickle();
   }
-  static void default_UnPickle(PythonMissionBaseClass & self_, std::string str) {
+  static void default_UnPickle(PythonMissionBaseClass & self_, const std::string & str) {
     (self_).PythonMissionBaseClass::UnPickle(str);
   }
   static PythonClass<PythonMissionBaseClass> * Factory (const std::string &file) {

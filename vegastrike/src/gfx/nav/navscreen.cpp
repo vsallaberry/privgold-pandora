@@ -42,6 +42,9 @@
 #include "navpath.h"
 #include "log.h"
 
+using std::string;
+using std::vector;
+
 //	This sets up the items in the navscreen
 //	**********************************
 
@@ -607,8 +610,8 @@ void NavigationSystem::DrawMission()
 	float deltay = screenskipby4[3] - screenskipby4[2];
 	float originx = screenskipby4[0]; // left
 	float originy = screenskipby4[3]; // top
-	vector <float> * killlist = &_Universe->AccessCockpit()->savegame->getMissionData (string("kills"));
-	string relationskills="Relations";
+	vector <float> * killlist = &_Universe->AccessCockpit()->savegame->getMissionData (std::string("kills"));
+	std::string relationskills="Relations";
 	
 	if (killlist->size()>0) {
 		relationskills+=" | Kills";
@@ -624,10 +627,10 @@ void NavigationSystem::DrawMission()
 
 	int numfactions = FactionUtil::GetNumFactions();
 	int i = 0;
-	string factionname = "factionname";
+	std::string factionname = "factionname";
 	float relation = 0.0;
-        static string disallowedFactions=vs_config->getVariable("graphics","unprintable_factions","");
-        static string disallowedExtension=vs_config->getVariable("graphics","unprintable_faction_extension","citizen");
+        static std::string disallowedFactions=vs_config->getVariable("graphics","unprintable_factions","");
+        static std::string disallowedExtension=vs_config->getVariable("graphics","unprintable_faction_extension","citizen");
         int totkills=0;
         int fac_loc_before=0, fac_loc=0, fac_loc_after=0;
 	for(;i < numfactions;++i)
@@ -637,13 +640,13 @@ void NavigationSystem::DrawMission()
                   if (i<killlist->size()) {
                     totkills+=(int)(*killlist)[i];
                   }
-				  if (factionname.find(disallowedExtension)!=string::npos) {
+				  if (factionname.find(disallowedExtension)!=std::string::npos) {
                     continue;                 
                   }
 
                   fac_loc_after = 0;
                   fac_loc = disallowedFactions.find(factionname, fac_loc_after);
-                  while ( fac_loc != string::npos ) {
+                  while ( fac_loc != std::string::npos ) {
                     fac_loc_before = fac_loc - 1;
                     if (fac_loc_before < 0) {
                       fac_loc_before = 0;
@@ -654,7 +657,7 @@ void NavigationSystem::DrawMission()
                     }
                     fac_loc = disallowedFactions.find(factionname, fac_loc_after);
                   }
-                  if (fac_loc != string::npos) {
+                  if (fac_loc != std::string::npos) {
                     continue;
                   }
                   relation = 	UnitUtil::getRelationFromFaction(UniverseUtil::getPlayerX(UniverseUtil::getCurrentPlayer()), i );
@@ -666,7 +669,7 @@ void NavigationSystem::DrawMission()
 		float relation01 = relation * 0.5 + 0.5;
 		relation = ((relation>1?1:relation)<-1?-1:relation);
 		int percent = (int)(relation * 100.0);
-		string relationtext (XMLSupport::tostring (percent));
+		std::string relationtext (XMLSupport::tostring (percent));
 		if (i<killlist->size()) {
 			relationtext+=" | ";
 			relationtext += XMLSupport::tostring ((int)(*killlist)[i]);
@@ -676,7 +679,7 @@ void NavigationSystem::DrawMission()
 		}
 	}
 	
-        string relationtext("Total Kills: ");
+        std::string relationtext("Total Kills: ");
         relation=1;
 		
         relationtext += XMLSupport::tostring (totkills);
@@ -726,7 +729,7 @@ void NavigationSystem::DrawMission()
 
 //	This is the mission info screen
 //	**********************************
-extern string MakeUnitXMLPretty(string str, Unit * un);
+extern string MakeUnitXMLPretty(const std::string & str, Unit * un);
 void NavigationSystem::DrawShip()
 {
 	GFXDisable(TEXTURE0);
@@ -741,7 +744,7 @@ void NavigationSystem::DrawShip()
 	float deltay = screenskipby4[3] - screenskipby4[2];
 	float originx = screenskipby4[0]; // left
 	float originy = screenskipby4[3]; // top
-	string writethis;
+	std::string writethis;
 	Unit * par;
 	int foundpos=0;
 	
@@ -941,7 +944,7 @@ void NavigationSystem::DrawSectorList()
 		else
 		        color=GFXColor(0.7,0.3,0.3,1.0);
 
-		string csector, csystem;
+		std::string csector, csystem;
 		Beautify(systemIter[index].GetName(), csector, csystem);
 		  
 		drawdescription(csystem, the_x, the_y, 1, 1, 1, screenoccupation, color);
@@ -1095,7 +1098,7 @@ QVector NavigationSystem::dxyz(QVector vector, double x_, double y_, double z_)
 
 //	**********************************
 
-void NavigationSystem::setCurrentSystem(string newSystem) {
+void NavigationSystem::setCurrentSystem(const std::string & newSystem) {
         for(unsigned i=0;i<systemIter.size();++i)
 	{
 	        if(systemIter[i].GetName()==newSystem)
@@ -1174,7 +1177,7 @@ void NavigationSystem::DrawButton(float &x1, float &x2, float &y1, float &y2, in
 	float my = mouse_y_current;
 	bool inrange = TestIfInRange(x1, x2, y1, y2, mx, my);
 
-	string label;
+	std::string label;
 	if(button_number == 1)
 	{
 	        label = "Nav/Info";
@@ -2143,7 +2146,7 @@ void NavigationSystem::TranslateCoordinates(QVector &pos, QVector &pos_flat, flo
 
 	float navscreen_width_delta = (screenskipby4[1] - screenskipby4[0]);
 	float navscreen_height_delta = (screenskipby4[3] - screenskipby4[2]);
-	float navscreen_small_delta = min(navscreen_width_delta, navscreen_height_delta);
+	float navscreen_small_delta = std::min(navscreen_width_delta, navscreen_height_delta);
 
 	the_x = (the_x * navscreen_small_delta);
 	the_x = the_x + center_nav_x;
@@ -2229,8 +2232,8 @@ void NavigationSystem::DisplayOrientationLines (float the_x, float the_y, float 
 	//**********************************
 }
 
-void Beautify (string systemfile, string & sector, string & system) {
-	string::size_type slash = systemfile.find ("/");
+void Beautify (const std::string & systemfile, string & sector, string & system) {
+	std::string::size_type slash = systemfile.find ("/");
 	if (slash==string::npos) {
 		sector="";
 		system=systemfile;

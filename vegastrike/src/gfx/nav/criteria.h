@@ -59,7 +59,7 @@ class CriteriaNode {
 
 class CriteriaParent : public CriteriaNode {
  public:
-  virtual CriteriaNode* unhook(CriteriaNode *child) =0;
+  virtual CriteriaNode* unhookChild(CriteriaNode *child) =0;
 
   virtual CriteriaNode* clone() const =0;
   CriteriaParent(CriteriaParent *parent = NULL) : CriteriaNode(parent) {}
@@ -77,7 +77,7 @@ class CriteriaRoot : public CriteriaParent {
   virtual std::string getText() const;
 
   virtual CriteriaNode* unhook();
-  virtual CriteriaNode* unhook(CriteriaNode *child);
+  virtual CriteriaNode* unhookChild(CriteriaNode *child);
   virtual std::vector<CriteriaNode*> getChildren() const;
 
   CriteriaNode* getChild() const {return m_child;}
@@ -102,7 +102,7 @@ class CriteriaNot : public CriteriaParent {
   virtual std::string getText() const;
 
   virtual CriteriaNode* unhook();
-  virtual CriteriaNode* unhook(CriteriaNode *child);
+  virtual CriteriaNode* unhookChild(CriteriaNode *child);
   virtual std::vector<CriteriaNode*> getChildren() const;
 
   virtual CriteriaNode* clone() const;
@@ -120,7 +120,7 @@ class CriteriaNot : public CriteriaParent {
 class CriteriaBinaryOperator : public CriteriaParent {
  public:
   virtual CriteriaNode* unhook();
-  virtual CriteriaNode* unhook(CriteriaNode *child);
+  virtual CriteriaNode* unhookChild(CriteriaNode *child);
   virtual std::vector<CriteriaNode*> getChildren() const;
 
   virtual CriteriaNode* clone() const =0;
@@ -170,7 +170,7 @@ class CriteriaLeaf : public CriteriaNode {
   virtual std::vector<CriteriaNode*> getChildren() const;
 
   virtual CriteriaNode* clone() const =0;
-  CriteriaLeaf(CriteriaParent *parent, std::string value)
+  CriteriaLeaf(CriteriaParent *parent, const std::string & value)
     : CriteriaNode(parent),
       m_value(value) {}
     
@@ -189,7 +189,7 @@ class CriteriaContains : public CriteriaLeaf {
   virtual std::string getText() const;
   
   virtual CriteriaNode* clone() const;
-  CriteriaContains(std::string value, CriteriaParent *parent = NULL)
+  CriteriaContains(const std::string & value, CriteriaParent *parent = NULL)
     : CriteriaLeaf(parent, value) {}
   virtual ~CriteriaContains() {}
 
@@ -209,7 +209,7 @@ class CriteriaOwnedBy : public CriteriaLeaf {
   virtual std::string getText() const;
   
   virtual CriteriaNode* clone() const;
-  CriteriaOwnedBy(std::string value, CriteriaParent *parent = NULL)
+  CriteriaOwnedBy(const std::string & value, CriteriaParent *parent = NULL)
     : CriteriaLeaf(parent, value) {}
   virtual ~CriteriaOwnedBy() {}
 };  
@@ -223,7 +223,7 @@ class CriteriaSector : public CriteriaLeaf {
   virtual std::string getText() const;
   
   virtual CriteriaNode* clone() const;
-  CriteriaSector(std::string value, CriteriaParent *parent = NULL)
+  CriteriaSector(const std::string & value, CriteriaParent *parent = NULL)
     : CriteriaLeaf(parent, value) {}
   virtual ~CriteriaSector() {}
 };  

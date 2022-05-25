@@ -29,11 +29,6 @@
 #include <assert.h>
 #include "networking/lowlevel/netui.h"
 
-using std::cout;
-using std::endl;
-using std::string;
-using std::vector;
-
 class Account
 {
 		ObjSerial	serial;
@@ -50,19 +45,19 @@ class Account
 			ADMIN,
 		  } type;
 		FILE *		fp;
-		string callsign;
-		string passwd;
-		string serverip;
-		string serverport;
+		std::string callsign;
+		std::string passwd;
+		std::string serverip;
+		std::string serverport;
 
 		// Assume player has created ship/char -> to remove in the future
 		Account() { haschar=1; isconnected=0; };
 		Account( char * scallsign, char * spasswd)
 		{
-			callsign = string(scallsign);
-			passwd = string( spasswd);
+			callsign = std::string(scallsign);
+			passwd = std::string( spasswd);
 		}
-		Account( string scallsign, string spasswd)
+		Account( const std::string & scallsign, const std::string & spasswd)
 		{
 			callsign = scallsign;
 			passwd = spasswd;
@@ -78,23 +73,23 @@ class Account
 		void		setSocket( SOCKETALT sck) { this->server_sock = sck;}
 		void		set( char * scallsign, char * spasswd)
 		{
-			callsign = string( scallsign);
-			passwd = string( spasswd);
+			callsign = std::string( scallsign);
+			passwd = std::string( spasswd);
 		}
-		void		set( string scallsign, string spasswd)
+		void		set( const std::string & scallsign, const std::string & spasswd)
 		{
 			callsign = scallsign;
 			passwd = spasswd;
 		}
 
 		int		compareName( char *str)
-		{ return callsign!=string( str); }
+		{ return callsign!=std::string( str); }
 		int		comparePass( char *str)
-		{ return passwd!=string( str); }
+		{ return passwd!=std::string( str); }
 
-		int		compareName( string str)
+		int		compareName( const std::string & str)
 		{ return callsign!=str; }
-		int		comparePass( string str)
+		int		comparePass( const std::string & str)
 		{ return passwd!=str; }
 		bool		isConnected()
 		{
@@ -109,11 +104,11 @@ class Account
 		}
                 void incConnected() {if (isconnected) isconnected++;}
 };
-Account * getAcctNoReload(const string &key);
-Account * getAcctTemplate(const string &key);
-vector<Account *> getAllAccounts();
+Account * getAcctNoReload(const std::string &key);
+Account * getAcctTemplate(const std::string &key);
+std::vector<Account *> getAllAccounts();
 void LoadAccounts(const char *filename);
 Account * getAcctSerial(ObjSerial ser);
-Account * getAcctAddress(SOCKETALT ser);
-void addAcct(std::string key,Account*);
+Account * getAcctAddress(const SOCKETALT & ser);
+void addAcct(const std::string & key,Account*);
 #endif

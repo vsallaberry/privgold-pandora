@@ -183,10 +183,10 @@ extern VegaConfig * vs_config;
 	VS_LOG_CACHED(VS_LOG_CACHED_LEVEL(name), VSLOG_STR(name), level, __VA_ARGS__)
 
 #define VS_DBG_M(name, level, ...) \
-	VS_DBG_CACHED(logvs::VSLOG_CACHE_FUN_NAME(name)(), VSLOG_STR(name), level, __VA_ARGS__)
+	VS_DBG_CACHED(VS_LOG_CACHED_LEVEL(name), VSLOG_STR(name), level, __VA_ARGS__)
 
 #define VS_LOG_START_M(name, level, ...) \
-	VS_LOG_START_CACHED(logvs::VSLOG_CACHE_FUN_NAME(name)(), VSLOG_STR(name), level, __VA_ARGS__)
+	VS_LOG_START_CACHED(VS_LOG_CACHED_LEVEL(name), VSLOG_STR(name), level, __VA_ARGS__)
 
 #define VS_LOG_END_M(name, level, ...) \
 	VS_LOG_END(VSLOG_STR(name), level, __VA_ARGS__)

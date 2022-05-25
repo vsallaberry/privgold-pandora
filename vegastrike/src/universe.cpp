@@ -61,7 +61,7 @@ using std::find;
 extern vs_options game_options;
 extern void CacheJumpStar (bool);
 extern void SortStarSystems (vector <StarSystem *> &ss, StarSystem * drawn);
-StarSystem * GameUniverse::Init (string systemfile, const Vector & centr,const string planetname)
+StarSystem * GameUniverse::Init (const std::string & systemfile, const Vector & centr,const std::string & planetname)
 {
 	static bool js = true;
 	if (js) {
@@ -129,7 +129,7 @@ GameUniverse::~GameUniverse()
 
 //sets up all the stuff... in this case the ships to be rendered
 
-void GameUniverse::SetupCockpits(vector  <string> playerNames)
+void GameUniverse::SetupCockpits(const vector  <string> & playerNames)
 {
 	for (unsigned int i=0;i<playerNames.size();++i) {
 		cockpit.push_back(NULL);

@@ -165,7 +165,7 @@ varInst *Mission::lookupLocalVariable(missionNode *asknode){
 
 /* *********************************************************** */
 
-varInst *Mission::lookupModuleVariable(string mname,missionNode *asknode){
+varInst *Mission::lookupModuleVariable(const std::string & mname,missionNode *asknode){
   // only when runtime
   missionNode *module_node=runtime.modules[mname];
 
@@ -175,7 +175,7 @@ varInst *Mission::lookupModuleVariable(string mname,missionNode *asknode){
     return NULL;
   }
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
   
   for(siter= module_node->subnodes.begin() ; siter!=module_node->subnodes.end() ; siter++){
     missionNode *varnode=(missionNode *)*siter;
@@ -194,9 +194,9 @@ varInst *Mission::lookupModuleVariable(string mname,missionNode *asknode){
 
 /* *********************************************************** */
 
-varInst *Mission::lookupClassVariable(string modulename,string varname,unsigned int classid){
+varInst *Mission::lookupClassVariable(const std::string & modulename, const std::string & varname,unsigned int classid){
   missionNode *module=runtime.modules[modulename];
-  string mname=module->script.name;
+  std::string mname=module->script.name;
 
   if(classid==0){
     // no class instance
@@ -222,8 +222,8 @@ varInst *Mission::lookupClassVariable(string modulename,string varname,unsigned 
 varInst *Mission::lookupClassVariable(missionNode *asknode){
   missionNode *module=runtime.cur_thread->module_stack.back();
   unsigned int classid=runtime.cur_thread->classid_stack.back();
-  string mname=module->script.name;
-  string varname=asknode->script.name;
+  std::string mname=module->script.name;
+  std::string varname=asknode->script.name;
 
   if(classid==0){
     // no class instance
@@ -250,7 +250,7 @@ varInst *Mission::lookupModuleVariable(missionNode *asknode){
   // only when runtime
   missionNode *module=runtime.cur_thread->module_stack.back();
   
-  string mname=module->script.name;
+  std::string mname=module->script.name;
 
   varInst *var=lookupModuleVariable(mname,asknode);
 
@@ -282,7 +282,7 @@ void Mission::doGlobals(missionNode *node,int mode){
 
   debug(3,node,mode,"doing global variables");
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
 
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() && !have_return(mode) ; siter++){
     missionNode *snode=(missionNode *)*siter;
@@ -389,11 +389,11 @@ void Mission::doDefVar(missionNode *node,int mode,bool global_var){
       assert(0);
     }
 
-    string value=node->attr_value("initvalue");
+    std::string value=node->attr_value("initvalue");
 
     debug(5,node,mode,"defining variable "+node->script.name);
 
-    string type=node->attr_value("type");
+    std::string type=node->attr_value("type");
     //    node->initval=node->attr_value("init");
 
     node->script.vartype=vartypeFromString(type);
@@ -473,7 +473,7 @@ void Mission::doDefVar(missionNode *node,int mode,bool global_var){
   }
   else{
     //module, class or local var
-    string classvar=node->attr_value("classvar");
+    std::string classvar=node->attr_value("classvar");
     if(classvar=="true"){
       // class var
       missionNode *module_node=scope_stack.back();
@@ -603,8 +603,8 @@ void Mission::doSetVar(missionNode *node,int mode){
 varInst *Mission::doConst(missionNode *node,int mode){
   if(mode==SCRIPT_PARSE){
     //string name=node->attr_value("name");
-    string typestr=node->attr_value("type");
-    string valuestr=node->attr_value("value");
+    std::string typestr=node->attr_value("type");
+    std::string valuestr=node->attr_value("value");
 
     if(typestr.empty()){
       fatalError(node,mode,"no valid const declaration");
@@ -636,7 +636,7 @@ varInst *Mission::doConst(missionNode *node,int mode){
       }
     }
     else if(typestr=="object"){
-      string objecttype=node->attr_value("object");
+      std::string objecttype=node->attr_value("object");
       if(objecttype=="string"){
 	varInst *svi=call_string_new(node,mode,valuestr);
 	vi->type=VAR_OBJECT;
@@ -702,7 +702,7 @@ void Mission::assignVariable(varInst *v1,varInst *v2){
 
 /* *********************************************************** */
 
-var_type Mission::vartypeFromString(string type){
+var_type Mission::vartypeFromString(const std::string & type){
   var_type vartype;
 
     if(type=="float"){
@@ -726,13 +726,13 @@ var_type Mission::vartypeFromString(string type){
 
 /* *********************************************************** */
 
-void Mission::saveVariables(const ostream& out){
+void Mission::saveVariables(const std::ostream& out){
   
 }
 
 /* *********************************************************** */
 
-void Mission::saveVarInst(varInst *vi,ostream& aa_out){
+void Mission::saveVarInst(varInst *vi,std::ostream& aa_out){
     char buffer[100];
     if(vi==NULL){
 
@@ -749,13 +749,13 @@ void Mission::saveVarInst(varInst *vi,ostream& aa_out){
       }
       else if(vi->type==VAR_OBJECT){
 	if(vi->objectname=="string"){
-	  string *sptr=(string *)vi->object;
+	  std::string *sptr=(std::string *)vi->object;
 	  sprintf(buffer,"type=\"object\"  object=\"%s\" value=\"%s\" >\n ", vi->objectname.c_str(),sptr->c_str());
 	}
 	else{
 	  sprintf(buffer,"type=\"object\"  object=\"%s\" value=\"0x%zx\" >\n ", vi->objectname.c_str(),(size_t)vi->object);
 	
-	  string modname="_"+vi->objectname;
+	  std::string modname="_"+vi->objectname;
 	
 
 	  doCall_toxml(modname,vi);

@@ -4,7 +4,7 @@
 class Mesh;
 class Matrix;
 struct GFXColor;
-using std::vector;
+
 class MyIndHalo {
  public:
   Vector size;
@@ -33,7 +33,7 @@ class HaloSystem {
   unsigned int numhalo () {
     return halo.size();
   }
-  unsigned int  AddHalo (const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, std::string halo_type/*when it grows*/, float activation_accel);
+  unsigned int  AddHalo (const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, const std::string & halo_type/*when it grows*/, float activation_accel);
   bool ShouldDraw (const Matrix & trans, const Vector & velocity, const Vector & accel, float maxaccel, float maxvelocity);
   void Draw (const Matrix & trans, const Vector & scale, int halo_alpha, float nebdist, float hullpercentage, const Vector & velocity, const Vector & accel, float maxaccel, float maxvelocity, int faction);//draws smoke and damage fx
   //  unsigned int size(); {return halo.size();}

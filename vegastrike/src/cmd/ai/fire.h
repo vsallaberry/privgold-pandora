@@ -45,7 +45,7 @@ public:
   void FormUp(QVector pos);
   void FormUpToOwner(QVector pos);
   void FaceDirection (float distToMatchFacing, bool finish);
-  void XMLScript (std::string script);
+  void XMLScript (const std::string & script);
   void LastPythonScript();
 
   virtual void SetParent (Unit * parent) {
@@ -56,7 +56,7 @@ public:
   FireAt();
   virtual void Execute();
   virtual std::string Pickle() {return std::string();}//these are to serialize this AI
-  virtual void UnPickle(std::string) {}
+  virtual void UnPickle(const std::string &) {}
   virtual ~FireAt();
 };
 

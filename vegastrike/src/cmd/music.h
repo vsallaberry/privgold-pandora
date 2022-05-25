@@ -64,7 +64,7 @@ class Music {
 
   void GotoSong (int whichlist,int whichsong,bool skip,int layer=-1);
 
-  static int  Addlist (std::string listfile);
+  static int  Addlist (const std::string & listfile);
   static void SetLoops(int numloops,int layer=-1);
   static void ChangeVolume(float inc=0,int layer=-1);
 
@@ -73,7 +73,7 @@ class Music {
   static void SkipRandSong(int whichlist, int layer=-1);
   static void SkipRandList(int layer=-1);
 
-  static void GotoSong (std::string mus, int layer=-1);
+  static void GotoSong (const std::string & mus, int layer=-1);
 
   static void InitMuzak();
   static void CleanupMuzak();
@@ -85,8 +85,8 @@ class Music {
 private:
   void _StopLater();
   void _StopNow();
-  void _GotoSong (std::string mus);
-  int  _Addlist (std::string listfile);
+  void _GotoSong (const std::string & mus);
+  int  _Addlist (const std::string & listfile);
   void _SetVolume(float vol=0,bool hardware=false,float latency_override=-1);
   void _SkipRandSong(int whichlist,int layer=-1);
   void _SkipRandList(int layer=-1);
@@ -119,7 +119,7 @@ private:
   volatile bool music_loading; // Opposite order of music_loaded.
   bool freeWav;
   struct AUDSoundProperties *music_load_info;
-  vector<std::string> music_load_list; // reverse order.
+  std::vector<std::string> music_load_list; // reverse order.
   
   void _LoadLastSongAsync();
 

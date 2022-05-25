@@ -46,7 +46,7 @@ const int systemambiguous=0;
 static GFXColor GrayColor(.5,.5,.5,.5);
 float GrayColorArray[4]={.5,.5,.5,.5};
 
-static void DrawNodeDescription(string text, float x_, float y_, float size_x, float size_y, bool ignore_occupied_areas, const GFXColor &col, navscreenoccupied * screenoccupation) {	//	take the head and stick it in the back
+static void DrawNodeDescription(const std::string & text, float x_, float y_, float size_x, float size_y, bool ignore_occupied_areas, const GFXColor &col, navscreenoccupied * screenoccupation) {	//	take the head and stick it in the back
 	if(text.size() == 0)
 		return;
 	TextPlane displayname;	//	will be used to display shits names
@@ -78,9 +78,9 @@ static void DrawNodeDescription(string text, float x_, float y_, float size_x, f
 	}
 }
 
-static char GetSystemColor(string source) {
+static char GetSystemColor(const std::string & source) {
 	//FIXME: update me!!!
-	vector<float> *v = &_Universe->AccessCockpit()->savegame->getMissionData ("visited_"+source);
+	std::vector<float> *v = &_Universe->AccessCockpit()->savegame->getMissionData ("visited_"+source);
 	if (v->size()){
 		float k = (*v)[0];
 		if(k>=2)
@@ -89,7 +89,7 @@ static char GetSystemColor(string source) {
 	return 'v';
 }
 
-static void DrawNode(int type,float size,float x, float y, std::string source,navscreenoccupied * screenoccupation, bool moused, GFXColor race, bool mouseover=false, bool willclick=false, string insector="") {
+static void DrawNode(int type,float size,float x, float y, const std::string & source,navscreenoccupied * screenoccupation, bool moused, GFXColor race, bool mouseover=false, bool willclick=false, const std::string & insector="") {
 	char color=GetSystemColor(source);
 	if (moused)
 		return;
@@ -161,7 +161,7 @@ public:
 	char color;
 	GFXColor race;
 	navscreenoccupied * screenoccupation;
-	systemdrawnode(int type,float size,float x, float y, std::string source, unsigned index, navscreenoccupied * so, bool moused, GFXColor race)
+	systemdrawnode(int type,float size,float x, float y, const std::string & source, unsigned index, navscreenoccupied * so, bool moused, GFXColor race)
 			:type(type),size(size),x(x),y(y),index(index),source(source), moused(moused), color(GetSystemColor(source)), race(race), screenoccupation(so) {
 		
 	}
@@ -173,7 +173,7 @@ public:
 	
 };
 
-typedef vector <systemdrawnode> systemdrawlist;
+typedef std::vector <systemdrawnode> systemdrawlist;
 //typedef Hashtable <std::string, const systemdrawnode, 127> systemdrawhashtable;
 
 bool testandset (bool &b,bool val) {
@@ -184,7 +184,7 @@ bool testandset (bool &b,bool val) {
 
 float screensmash=1;//arbitrary constant used in calculating position below
 
-NavigationSystem::SystemIterator::SystemIterator (string current_system, unsigned int max){
+NavigationSystem::SystemIterator::SystemIterator (const std::string & current_system, unsigned int max){
 	count=0;
 	maxcount=max;
 	vstack.push_back(current_system);
@@ -222,10 +222,11 @@ QVector NavigationSystem::SystemIterator::Position () {
 	}
 }
 
-string NavigationSystem::SystemIterator::operator * () {
+const std::string & NavigationSystem::SystemIterator::operator * () const {
+	static const std::string not_found("-");
 	if (which<vstack.size())
 		return vstack[which];
-	return "-";
+	return not_found;
 }
 
 NavigationSystem::SystemIterator & NavigationSystem::SystemIterator::next () {
@@ -249,7 +250,7 @@ bool checkedVisited(const std::string &n) {
 NavigationSystem::SystemIterator & NavigationSystem::SystemIterator::operator ++ () {
 	which +=1;
 	if (which>=vstack.size()) {
-		vector <string> newsys;
+		std::vector <std::string> newsys;
 		for (unsigned int i=0;i<vstack.size();++i) {
 			int nas = UniverseUtil::GetNumAdjacentSystems(vstack[i]);
 			for (int j=0;j<nas;++j) {
@@ -307,11 +308,11 @@ NavigationSystem::CachedSystemIterator::SystemInfo::SystemInfo(const string &nam
 }
 
 //Create a placeholder to avoid the problem described above
-NavigationSystem::CachedSystemIterator::SystemInfo::SystemInfo(const string &name)
+NavigationSystem::CachedSystemIterator::SystemInfo::SystemInfo(const std::string &name)
   : name(name), part_of_path(false) {}
 
-void NavigationSystem::CachedSystemIterator::SystemInfo::loadData(map<string, unsigned> * index_table) {
-	string xyz=_Universe->getGalaxyProperty(name,"xyz");
+void NavigationSystem::CachedSystemIterator::SystemInfo::loadData(std::map<string, unsigned> * index_table) {
+	std::string xyz=_Universe->getGalaxyProperty(name,"xyz");
 	QVector pos;
 	if (xyz.size() && (sscanf(xyz.c_str(), "%lf %lf %lf", &pos.i, &pos.j, &pos.k)>=3)) {
 		pos.j=-pos.j;
@@ -323,7 +324,7 @@ void NavigationSystem::CachedSystemIterator::SystemInfo::loadData(map<string, un
 	position=pos;
         
 	UpdateColor();
-	const vector <std::string> &destinations = _Universe->getAdjacentStarSystems(name);
+	const std::vector <std::string> &destinations = _Universe->getAdjacentStarSystems(name);
 	for (int i=0;i<destinations.size();++i) {
 	        if(index_table->count(destinations[i]) != 0) {
 		        lowerdestinations.push_back((*index_table)[destinations[i]]);
@@ -331,12 +332,12 @@ void NavigationSystem::CachedSystemIterator::SystemInfo::loadData(map<string, un
 	}
 }
 
-void NavigationSystem::CachedSystemIterator::init (string current_system, unsigned max_systems) {
+void NavigationSystem::CachedSystemIterator::init (const std::string & current_system, unsigned max_systems) {
 	systems.clear();
 	unsigned count=0;
-	string sys;
+	std::string sys;
 
-	map<string, unsigned> index_table;
+	std::map<std::string, unsigned> index_table;
 	std::deque<std::string> frontier;
 	frontier.push_back(current_system);
 	systems.push_back(SystemInfo(current_system));
@@ -348,7 +349,7 @@ void NavigationSystem::CachedSystemIterator::init (string current_system, unsign
 
 		int nas = UniverseUtil::GetNumAdjacentSystems(sys);
 		for (int j=0;j<nas && count<max_systems;++j) {
-	                string n = UniverseUtil::GetAdjacentSystem(sys,j);
+	                std::string n = UniverseUtil::GetAdjacentSystem(sys,j);
 			if (index_table.count(n) == 0) {
 		                frontier.push_back(n);
 				index_table[n] = systems.size();
@@ -362,7 +363,7 @@ void NavigationSystem::CachedSystemIterator::init (string current_system, unsign
 
 NavigationSystem::CachedSystemIterator::CachedSystemIterator () {}
 
-NavigationSystem::CachedSystemIterator::CachedSystemIterator (string current_system, unsigned max_systems) {
+NavigationSystem::CachedSystemIterator::CachedSystemIterator (const std::string & current_system, unsigned max_systems) {
 	init(current_system, max_systems);
 }
 
@@ -488,10 +489,10 @@ NavigationSystem::CachedSystemIterator NavigationSystem::CachedSystemIterator::o
 //
 //************************************************
 
-NavigationSystem::CachedSectorIterator::SectorInfo::SectorInfo(const string &name)
+NavigationSystem::CachedSectorIterator::SectorInfo::SectorInfo(const std::string &name)
   : name(name) {}
 
-string &NavigationSystem::CachedSectorIterator::SectorInfo::GetName () {
+std::string &NavigationSystem::CachedSectorIterator::SectorInfo::GetName () {
 	return name;
 }
 
@@ -518,10 +519,10 @@ NavigationSystem::CachedSectorIterator::CachedSectorIterator (CachedSystemIterat
 }
 
 void NavigationSystem::CachedSectorIterator::init (CachedSystemIterator &systemIter) {
-	map<string, unsigned> index_table;
+	std::map<std::string, unsigned> index_table;
 	sectors.clear();
 
-	string sys, csector,csystem;
+	std::string sys, csector,csystem;
 	unsigned index;
 
 	systemIter.seek();
@@ -627,13 +628,13 @@ void NavigationSystem::DrawGalaxy() {
 	
 	systemdrawlist mouselist;//(1, screenoccupation, factioncolours);	//	lists of items to draw that are in mouse range
 
-	string csector,csystem;
+	std::string csector,csystem;
 
 	Beautify (getCurrentSystem(),csector,csystem);
 	//what's my name
 	//***************************
 	TextPlane systemname;	//	will be used to display shits names
-	string systemnamestring = "Current System : " + csystem + " in the " + csector + " Sector.";
+	std::string systemnamestring = "Current System : " + csystem + " in the " + csector + " Sector.";
 
 //	int length = systemnamestring.size();
 //	float offset = (float(length)*0.005);

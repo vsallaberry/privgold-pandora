@@ -33,14 +33,14 @@ PythonMissionBaseClass::~PythonMissionBaseClass(){
 
 void PythonMissionBaseClass::Execute () {
 }
-void PythonMissionBaseClass::callFunction (std::string) {
+void PythonMissionBaseClass::callFunction (const std::string &) {
 }
 
 std::string PythonMissionBaseClass::Pickle() {
 	return std::string();
 }
 
-void PythonMissionBaseClass::UnPickle(std::string s)  {
+void PythonMissionBaseClass::UnPickle(const std::string & s)  {
 }
 
 

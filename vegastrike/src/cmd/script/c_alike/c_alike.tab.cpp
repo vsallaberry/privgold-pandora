@@ -1,8 +1,8 @@
 #include <string>
 #include <stdio.h>
-using std::string;
+
 bool have_yy_error=false;
-string parseCalike(char const *filename)
+std::string parseCalike(char const *filename)
 {
 	return "";
 }

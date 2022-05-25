@@ -59,7 +59,7 @@ void NavigationSystem::DrawSystem()
 	TextPlane systemname;	//	will be used to display shits names
     int faction=FactionUtil::GetFactionIndex(UniverseUtil::GetGalaxyFaction(_Universe->activeStarSystem()->getFileName()));
     //GFXColor factioncolor = factioncolours[faction];
-    string systemnamestring = "#ff0000Sector: #ffff00" + getStarSystemSector(_Universe->activeStarSystem()->getFileName()) + "  #ff0000Current System: #ffff00" + _Universe->activeStarSystem()->getName()+" ("+FactionUtil::GetFactionName(faction)+"#ffff00)";
+    std::string systemnamestring = "#ff0000Sector: #ffff00" + getStarSystemSector(_Universe->activeStarSystem()->getFileName()) + "  #ff0000Current System: #ffff00" + _Universe->activeStarSystem()->getName()+" ("+FactionUtil::GetFactionName(faction)+"#ffff00)";
 	//int length = systemnamestring.size();
 	//float offset = (float(length)*0.001);
 	//systemname.SetPos( (((screenskipby4[0]+screenskipby4[1])/2)-offset) , screenskipby4[3]); // middle position
@@ -136,7 +136,7 @@ void NavigationSystem::DrawSystem()
 			++bleh;
 			continue;
 		}
-		string temp = (*bleh)->name;
+		std::string temp = (*bleh)->name;
 		pos = (*bleh)->Position();
 		ReplaceAxes(pos);
 		
@@ -228,7 +228,7 @@ void NavigationSystem::DrawSystem()
 
 		//	Retrieve unit data
 		//	**********************************
-		string temp = (*blah)->name;
+		std::string temp = (*blah)->name;
 
 		pos = (*blah)->Position();
 		ReplaceAxes(pos);

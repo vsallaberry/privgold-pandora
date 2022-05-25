@@ -101,16 +101,16 @@ class NetworkCommunication
 		enum	CommunicationMethod { ClientBroadcast, ServerUnicast };
 
 		NetworkCommunication();
-		NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, std::string method);
+		NetworkCommunication( float minfreq, float maxfreq, bool video, bool secured, const std::string & method);
 		NetworkCommunication( int nb);
 		~NetworkCommunication();
 
 		int		InitSession( float frequency);
 		//void	SendImage( SOCKETALT & send_sock);
 		void	SendSound( SOCKETALT & send_sock, ObjSerial serial);
-		void	SendMessage( SOCKETALT & send_sock, ObjSerial serial, std::string message);
+		void	SendMessage( SOCKETALT & send_sock, ObjSerial serial, const std::string & message);
 		void	RecvSound( const char * sndbuffer, int length, bool encrypted=false);
-		void	RecvMessage( std::string message, bool encrypted=false);
+		void	RecvMessage( const std::string & message, bool encrypted=false);
 		int		DestroySession();
 
 		void	AddToSession( ClientPtr clt);

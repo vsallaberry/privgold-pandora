@@ -27,11 +27,11 @@
 #include "savegame.h"
 #include "gnuhash.h"
 
-using std::cout;
-using std::cerr;
-using std::endl;
+using std::string;
+using std::vector;
+
 PYTHON_INIT_INHERIT_GLOBALS(Director,PythonMissionBaseClass);
-float getSaveData (int whichcp, string key, unsigned int num) {
+float getSaveData (int whichcp, const std::string & key, unsigned int num) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -41,7 +41,7 @@ float getSaveData (int whichcp, string key, unsigned int num) {
   }
   return (*ans)[num];
 }
-string getSaveString (int whichcp, string key, unsigned int num) {
+string getSaveString (int whichcp, const std::string & key, unsigned int num) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return "";
   }
@@ -51,19 +51,19 @@ string getSaveString (int whichcp, string key, unsigned int num) {
   }
   return (*ans)[num];  
 }
-unsigned int getSaveDataLength (int whichcp, string key) {
+unsigned int getSaveDataLength (int whichcp, const std::string & key) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
   return (_Universe->AccessCockpit(whichcp)->savegame->getMissionDataLength(key));
 }
-unsigned int getSaveStringLength (int whichcp, string key) {
+unsigned int getSaveStringLength (int whichcp, const std::string & key) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
   return (_Universe->AccessCockpit(whichcp)->savegame->getMissionStringDataLength(key));
 }
-unsigned int pushSaveData (int whichcp, string key, float val) {
+unsigned int pushSaveData (int whichcp, const std::string & key, float val) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -74,7 +74,7 @@ unsigned int pushSaveData (int whichcp, string key, float val) {
   return ans->size()-1;
 }
 
-unsigned int eraseSaveData (int whichcp, string key, unsigned int index) {
+unsigned int eraseSaveData (int whichcp, const std::string & key, unsigned int index) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -88,7 +88,7 @@ unsigned int eraseSaveData (int whichcp, string key, unsigned int index) {
 
 }
 
-unsigned int clearSaveData (int whichcp, string key) {
+unsigned int clearSaveData (int whichcp, const std::string & key) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -101,7 +101,7 @@ unsigned int clearSaveData (int whichcp, string key) {
   return ret;
 }
 
-unsigned int pushSaveString (int whichcp, string key, string value) {
+unsigned int pushSaveString (int whichcp, const std::string & key, const std::string & value) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -112,7 +112,7 @@ unsigned int pushSaveString (int whichcp, string key, string value) {
   return ans->size()-1;
 }
 
-void putSaveString (int whichcp, string key, unsigned int num, string val) {
+void putSaveString (int whichcp, const std::string & key, unsigned int num, const std::string & val) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return;
   }
@@ -124,7 +124,7 @@ void putSaveString (int whichcp, string key, unsigned int num, string val) {
   }
 }
 
-void putSaveData (int whichcp, string key, unsigned int num, float val) {
+void putSaveData (int whichcp, const std::string & key, unsigned int num, float val) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return;
   }
@@ -136,7 +136,7 @@ void putSaveData (int whichcp, string key, unsigned int num, float val) {
   }
 }
 
-unsigned int eraseSaveString (int whichcp, string key, unsigned int index) {
+unsigned int eraseSaveString (int whichcp, const std::string & key, unsigned int index) {
   if (whichcp < 0|| whichcp >= _Universe->numPlayers()) {
     return 0;
   }
@@ -163,7 +163,7 @@ unsigned int clearSaveString (int whichcp, string key) {
   return ret;
 }
 
-vector <string> loadStringList (int playernum,string mykey) {
+vector <string> loadStringList (int playernum,const std::string & mykey) {
 	if (playernum<0||playernum>=_Universe->numPlayers()) {
 		return vector<string> ();
 	}
@@ -186,7 +186,7 @@ vector <string> loadStringList (int playernum,string mykey) {
 	}
 	return rez;
 }
-void saveStringList (int playernum,string mykey,vector<string> names) {
+void saveStringList (int playernum,const std::string & mykey, const std::vector<std::string> & names) {
 	if (playernum<0||playernum>=_Universe->numPlayers()) {
 		return;
 	}
@@ -248,14 +248,14 @@ void InitDirector() {
 }
 
 
-void Mission::loadModule(string modulename){
+void Mission::loadModule(const std::string & modulename){
   missionNode *node=director;
   
   debug(3,node,SCRIPT_PARSE,"loading module "+modulename);
   
   VS_LOG("mission",logvs::NOTICE, "  loading module %s", modulename.c_str());
   
-  string filename="modules/"+modulename+".module";
+  std::string filename="modules/"+modulename+".module";
   missionNode *import_top=importf->LoadXML(filename.c_str());
   
   if(import_top==NULL){
@@ -271,7 +271,7 @@ void Mission::loadMissionModules(){
   missionNode *node=director;
 
     while(import_stack.size()>0){
-    string importname=import_stack.back();
+    std::string importname=import_stack.back();
     import_stack.pop_back();
     
     missionNode *module=runtime.modules[importname];
@@ -309,7 +309,7 @@ bool Mission::runScript(missionNode *module_node,const string &scriptname,unsign
   return true;
 }
 
-bool Mission::runScript(string modulename,const string &scriptname,unsigned int classid){
+bool Mission::runScript(const std::string & modulename,const string &scriptname,unsigned int classid){
 
   return runScript (runtime.modules[modulename],scriptname,classid);
 }
@@ -317,7 +317,7 @@ double Mission::getGametime(){
   return gametime;
 }
 
-void Mission::addModule(string modulename){
+void Mission::addModule(const std::string & modulename){
   import_stack.push_back(modulename);
 }
 
@@ -332,7 +332,7 @@ std::string Mission::Pickle () {
     return runtime.pymissions->Pickle();
   }
 }
-void Mission::UnPickle (string pickled) {
+void Mission::UnPickle (const std::string & pickled) {
   if (runtime.pymissions)
     runtime.pymissions->UnPickle(pickled);  
 }
@@ -384,11 +384,11 @@ void Mission::DirectorStart(missionNode *node){
 
   doModule(node,SCRIPT_PARSE);
 
-  vsUMap<string,missionNode *>::iterator iter;
+  vsUMap<std::string,missionNode *>::iterator iter;
   //=runtime.modules.begin()
 
   for(iter=runtime.modules.begin();iter!=runtime.modules.end();iter++){
-    string mname=(*iter).first ;
+    std::string mname=(*iter).first ;
     missionNode *mnode=(*iter).second;
 
     if(mname!="director"){

@@ -16,6 +16,9 @@
 //#include "cmd/unit.h"
 #include "log.h"
 
+using std::string;
+using std::vector;
+
 #define SINX 1
 #define SINY 2
 #define SINZ 4

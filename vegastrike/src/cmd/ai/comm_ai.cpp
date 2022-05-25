@@ -12,6 +12,9 @@
 #include "cmd/unit_find.h"
 #include "cmd/pilot.h"
 #include "universe_util.h"
+
+using std::string;
+
 CommunicatingAI::CommunicatingAI (int ttype, int stype,  float mood, float anger,float appeas,  float moodswingyness, float randomresp) :Order (ttype,stype),anger(anger), appease(appeas), moodswingyness(moodswingyness),randomresponse (randomresp),mood(mood) {
   if (appease>665&&appease<667) {
     static float appeas = XMLSupport::parse_float(vs_config->getVariable ("AI","EaseToAppease",".5"));

@@ -15,6 +15,9 @@
 #include "networking/lowlevel/vsnet_notify.h"
 #include "networking/lowlevel/vsnet_dloadmgr.h"
 
+using std::string;
+using std::vector;
+
 /*************************************************************/
 /**** Adds an entering client in the actual zone          ****/
 /*************************************************************/

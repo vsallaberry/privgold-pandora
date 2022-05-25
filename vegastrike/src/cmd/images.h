@@ -63,7 +63,7 @@ public:
 	mass=0; volume=0;price=0;quantity=1;mission=false;
 	functionality=maxfunctionality=1.0f;
   }
-  Cargo (std::string name, std::string cc, float pp,int qq, float mm, float vv,float func, float maxfunc) :
+  Cargo (const std::string & name, const std::string & cc, float pp,int qq, float mm, float vv,float func, float maxfunc) :
 	content(name),
 	category(cc)
   {
@@ -75,7 +75,7 @@ public:
 	functionality=func;
 	maxfunctionality=maxfunc;
   }
-  Cargo (std::string name, std::string cc, float pp,int qq, float mm, float vv) :
+  Cargo (const std::string & name, const std::string & cc, float pp,int qq, float mm, float vv) :
 	content(name),
 	category(cc)
   {
@@ -162,7 +162,7 @@ struct UnitImages {
   float equipment_volume;//this one should be more general--might want to apply it to radioactive goods, passengers, ships (hangar), etc
   float HiddenCargoVolume;
   std::vector <Cargo> cargo;
-  std::vector <string> destination;
+  std::vector <std::string> destination;
   std::vector <DockingPorts> dockingports;
   ///warning unreliable pointer, never dereference!
   std::vector <Unit *> clearedunits;

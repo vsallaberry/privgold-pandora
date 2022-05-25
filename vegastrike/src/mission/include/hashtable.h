@@ -26,7 +26,7 @@
 #include <list>
 #include <string>
 
-using namespace std;
+//using namespace std;
 
 //const int hashsize = 1001;
 

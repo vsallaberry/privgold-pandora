@@ -37,6 +37,8 @@
 using namespace XMLSupport;
 using namespace VSFileSystem;
 
+using std::string;
+
 namespace GalaxyXML {
 enum GalaxyNames {
 	UNKNOWN,

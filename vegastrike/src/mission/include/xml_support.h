@@ -14,41 +14,36 @@
 
 #define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
-using std::string;
-#ifndef WIN32
-using std::ostrstream;
-#endif
-
-string strtoupper(const string &foo);
+std::string strtoupper(const std::string &foo);
 
 namespace XMLSupport {
 
   struct Attribute {
-    string name;
-    string value;
-    Attribute(string name, string value) : name(name), value(value)
+    std::string name;
+    std::string value;
+    Attribute(const std::string & name, const std::string & value) : name(name), value(value)
     {};
   };
 
-  class AttributeList : public vector<Attribute> {
+  class AttributeList : public std::vector<Attribute> {
   public:
     AttributeList(const XML_Char **atts);
   };
-  double parse_float(const string &str);
-  int parse_int(const string &str);
-  bool parse_bool (const string &str);
+  double parse_float(const std::string &str);
+  int parse_int(const std::string &str);
+  bool parse_bool (const std::string &str);
 
   class EnumMap {
 
-    //    static inline double parse_float (const string &str) {return ::parse_float (str)};
-    Hashtable<string,const int, char[1001]> forward;
-    Hashtable<string,const string, char[1001]> reverse;
+    //    static inline double parse_float (const std::string &str) {return ::parse_float (str)};
+    Hashtable<std::string,const int, char[1001]> forward;
+    Hashtable<std::string,const string, char[1001]> reverse;
   public:
 
     struct Pair {
-      string name;
+      std::string name;
       int val;
-	  Pair (const string c, int v) {
+	  Pair (const std::string & c, int v) {
 		name = c;
 		val = v;
 	  }
@@ -57,27 +52,27 @@ namespace XMLSupport {
     EnumMap(const Pair *data, unsigned int num);
 
 
-    int lookup(const string &str) const;
-    const string &lookup(int val) const;
+    int lookup(const std::string &str) const;
+    const std::string &lookup(int val) const;
   };
 
   /*
-    string tostring(int num);
-    string tostring(float num);
+    std::string tostring(int num);
+    std::string tostring(float num);
   */
 //#ifdef WIN32
-  string inline tostring (int num) {
+  std::string inline tostring (int num) {
 	char tmp[256];
 	sprintf (tmp,"%d",num);
-	return string(tmp);
+	return std::string(tmp);
   }
-  string inline tostring (float num) {
+  std::string inline tostring (float num) {
 	char tmp[256];
 	sprintf (tmp,"%f",num);
-	return string(tmp);
+	return std::string(tmp);
   }
 /*#else
-  template<class T> inline string tostring(T num) {
+  template<class T> inline std::string tostring(T num) {
     return string(((ostrstream*)&(ostrstream() << num << '\0'))->str());
 	
   }

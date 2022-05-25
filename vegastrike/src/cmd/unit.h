@@ -33,7 +33,6 @@ struct GFXColor;
 #include "gfx/halo_system.h"
 #include "script/flightgroup.h"
 #include "unit_generic.h"
-using std::string;
 #include "gfxlib.h"
 
 /**
@@ -78,9 +77,9 @@ protected:
   GameUnit( const char *filename,
         bool        SubUnit,
        int         faction,
-       std::string customizedUnit=string(""),
+       const std::string & customizedUnit=std::string(""),
        Flightgroup *flightgroup=NULL,
-       int         fg_subnumber=0, string * netxml=NULL);
+       int         fg_subnumber=0, std::string * netxml=NULL);
 
   ~GameUnit();
 
@@ -116,7 +115,7 @@ public:
   virtual void DrawNow(const Matrix &m = identity_matrix, float lod=1000000000);
   ///Deprecated
   //virtual void ProcessDrawQueue() {}
-  void addHalo( const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, std::string halo_type,float halo_speed)
+  void addHalo( const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, const std::string & halo_type,float halo_speed)
   {
 	 halos.AddHalo (filename,loc,size,col,halo_type,halo_speed);
   }

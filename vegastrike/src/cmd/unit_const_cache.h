@@ -18,7 +18,7 @@ class StringIntKey {
   std::string key;
   int fac;
 public:
-  StringIntKey (std::string k, int f) {
+  StringIntKey (const std::string & k, int f) {
     key=k;
     fac=f;
   }

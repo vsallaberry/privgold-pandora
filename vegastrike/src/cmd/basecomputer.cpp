@@ -53,6 +53,7 @@ using VSFileSystem::SaveFile;
 #include "gamemenu.h" // network menu.
 #include "audiolib.h"
 #include "log.h"
+#include "save_util.h"
 
 //for directory thing
 #if defined(_WIN32) && !defined(__CYGWIN__)
@@ -70,6 +71,9 @@ struct dirent { char d_name[1]; };
 #endif
 #include <sys/stat.h>
 #include "options.h"
+
+using std::string;
+using std::vector;
 
 //end for directory thing
 extern const char * DamagedCategory;
@@ -94,7 +98,7 @@ std::vector<std::string> getWeapFilterVec() {
 }
 
 std::vector<std::string>weapfiltervec=getWeapFilterVec();
-bool upgradeNotAddedToCargo(std::string category) {
+bool upgradeNotAddedToCargo(const std::string & category) {
   for (unsigned int i=0;i<weapfiltervec.size();++i) {
     if (weapfiltervec[i].find(category)==0)
       return true;
@@ -193,10 +197,6 @@ static GFXColor MOUNT_POINT_FULL() {
 static const char* const MISSION_SCRIPTS_LABEL = "mission_scripts";
 static const char* const MISSION_NAMES_LABEL = "mission_names";
 static const char* const MISSION_DESC_LABEL = "mission_descriptions";
-extern unsigned int getSaveStringLength (int whichcp, string key);
-extern unsigned int eraseSaveString (int whichcp, string key, unsigned int num);
-extern std::string getSaveString (int whichcp, string key, unsigned int num);
-extern void putSaveString (int whichcp, string key, unsigned int num,std::string s);
 
 // Some new declarations.
 // These should probably be in a header file somewhere.
@@ -205,7 +205,7 @@ static const char* const NEWS_NAME_LABEL = "news";
 // Some upgrade declarations.
 // These should probably be in a header file somewhere.
 
-extern const Unit* makeFinalBlankUpgrade(string name, int faction);
+extern const Unit* makeFinalBlankUpgrade(const std::string & name, int faction);
 extern int GetModeFromName(const char *);  // 1=add, 2=mult, 0=neither.
 extern Cargo* GetMasterPartList(const char *input_buffer);
 extern Unit& GetUnitMasterPartList();
@@ -217,7 +217,7 @@ extern void SwitchUnits(Unit* ol, Unit* nw);
 extern void TerminateCurrentBase(void);
 extern void CurrentBaseUnitSet(Unit * un);
 // For ships stats.
-extern string MakeUnitXMLPretty(std::string, Unit*);
+extern std::string MakeUnitXMLPretty(const std::string &, Unit*);
 extern float totalShieldEnergyCapacitance (const Shield & shield);
 // For Options menu.
 extern void RespawnNow(Cockpit* cockpit);
@@ -233,7 +233,7 @@ string buildCargoDescription(Cargo &item);
 //put in buffer a pretty prepresentation of the POSITIVE float f (ie 4,732.17)
 void prettyPrintFloat(char * buffer,float f, int digitsBefore, int digitsAfter);
 string buildUpgradeDescription(Cargo &item);
-int basecargoassets(Unit* base,string cargoname);
+int basecargoassets(Unit* base,const string & cargoname);
 
 // "Basic Repair" item that is added to Buy UPGRADE mode.
 const string BASIC_REPAIR_NAME = "Basic Repair";
@@ -357,7 +357,7 @@ static float basicRepairPrice(void) {
 static float SellPrice(float operational, float price) {
   return usedValue(price)-RepairPrice(operational,price);
 }
-extern const Unit * makeTemplateUpgrade (string name, int faction);
+extern const Unit * makeTemplateUpgrade (const std::string & name, int faction);
 
 // Ported from old code.  Not sure what it does.
 const Unit* getUnitFromUpgradeName(const string& upgradeName, int myUnitFaction = 0);
@@ -371,7 +371,7 @@ static std::string &tolower(std::string &loweritem) {
 }
 
 // Takes in a category of an upgrade or cargo and returns true if it is any type of mountable weapon.
-extern bool isWeapon (std::string name);
+extern bool isWeapon (const std::string & name);
 
 // CONSTRUCTOR.
 BaseComputer::BaseComputer(Unit* player, Unit* base, const std::vector<DisplayMode>& modes)
@@ -409,7 +409,7 @@ BaseComputer::~BaseComputer(void) {
     }
 }
 
-GFXColor BaseComputer::getColorForGroup(std::string id) {
+GFXColor BaseComputer::getColorForGroup(const std::string & id) {
 	static bool use_faction_background=XMLSupport::parse_bool(vs_config->getVariable("graphics","use_faction_gui_background_color","true"));
         static float faction_color_darkness=XMLSupport::parse_float(vs_config->getVariable("graphics","base_faction_color_darkness",".75"));
 	if (use_faction_background) {
@@ -3791,7 +3791,7 @@ void BaseComputer::BuyUpgradeOperation::selectMount(void) {
 
 	// Create a custom list dialog to get the mount point.
 	UpgradeOperationMountDialog* dialog = new UpgradeOperationMountDialog;
-	dialog->init("Select mount for your item:");
+	dialog->initWithTitle("Select mount for your item:");
 	dialog->setCallback(this, GOT_MOUNT_ID);
 
     // Fill the dialog picker with the mount points.
@@ -3894,7 +3894,7 @@ void BaseComputer::BuyUpgradeOperation::concludeTransaction(void) {
     finish();
 }
 
-int basecargoassets(Unit* baseUnit, string cargoname){
+int basecargoassets(Unit* baseUnit, const string & cargoname){
   unsigned int dummy;
   Cargo * somecargo = baseUnit->GetCargo(cargoname,dummy);
   if (somecargo){
@@ -3985,7 +3985,7 @@ void BaseComputer::SellUpgradeOperation::selectMount(void) {
 
 	// Create a custom list dialog to get the mount point.
 	UpgradeOperationMountDialog* dialog = new UpgradeOperationMountDialog;
-	dialog->init("Select mount for your item:");
+	dialog->initWithTitle("Select mount for your item:");
 	dialog->setCallback(this, GOT_MOUNT_ID);
 
     // Fill the dialog picker with the mount points.
@@ -4236,7 +4236,7 @@ Cargo CreateCargoForOwnerStarship(Cockpit* cockpit, int i) {
 }
 
 // Create a Cargo for an owned starship from the name.
-Cargo CreateCargoForOwnerStarshipName(Cockpit* cockpit, std::string name, int& index) {
+Cargo CreateCargoForOwnerStarshipName(Cockpit* cockpit, const std::string & name, int& index) {
     for(int i=1; i < cockpit->unitfilename.size(); i+=2) {
         if(cockpit->unitfilename[i]==name) {
             index = i;
@@ -4420,7 +4420,7 @@ void BaseComputer::loadShipDealerControls(void) {
     // Make the title right.
     recalcTitle();
 }
-bool sellShip(Unit * baseUnit, Unit * playerUnit, std::string shipname, BaseComputer * bcomputer) {
+bool sellShip(Unit * baseUnit, Unit * playerUnit, const std::string & shipname, BaseComputer * bcomputer) {
     Cockpit * cockpit = _Universe->isPlayerStarship(playerUnit);
     unsigned int tempInt=1;
     Cargo* shipCargo = baseUnit->GetCargo(shipname, tempInt);
@@ -4469,7 +4469,7 @@ bool BaseComputer::sellShip(const EventCommandId& command, Control* control) {
     return ::sellShip(baseUnit,playerUnit,item->content,this);
 }
 
-bool buyShip(Unit * baseUnit, Unit * playerUnit, std::string content, bool myfleet, bool force_base_inventory, BaseComputer * bcomputer) {
+bool buyShip(Unit * baseUnit, Unit * playerUnit, const std::string & content, bool myfleet, bool force_base_inventory, BaseComputer * bcomputer) {
     unsigned int tempInt;           // Not used.
     Cargo* shipCargo = baseUnit->GetCargo(content, tempInt);
     if (shipCargo==NULL&&force_base_inventory) {

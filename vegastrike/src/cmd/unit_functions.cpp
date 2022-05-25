@@ -34,7 +34,7 @@ void deleteVSSprite(VSSprite * sprite) {
   delete sprite;
 }
 // From communication_xml.cpp
-int createSound( string file, bool val)
+int createSound( const std::string & file, bool val)
 {
 	return AUDCreateSoundWAV(file,val);
 }
@@ -43,7 +43,7 @@ int createSound( string file, bool val)
 using vsUMap;
 static vsUMap<std::string,Animation *> cached_ani;
 std::set<std::string> tempcache;
-void cache_ani (string s) {
+void cache_ani (const std::string & s) {
   tempcache.insert(s);
 }
 void update_ani_cache () {

@@ -12,6 +12,9 @@
 #include "universe_util.h"
 #include "log.h"
 
+using std::string;
+using std::vector;
+
 #define PYAI_LOG(lvl, ...) VS_LOG("pyAI", lvl, __VA_ARGS__)
 
 typedef vsUMap<string,CCScript *> HardCodedMap;
@@ -75,7 +78,7 @@ static HardCodedMap MakeHardCodedScripts() {
 }
 
 static HardCodedMap hard_coded_scripts= MakeHardCodedScripts(); 
-bool validateHardCodedScript(std::string s) {
+bool validateHardCodedScript(const std::string & s) {
    if (s.length()==0) return true;
    return hard_coded_scripts.find(s)!=hard_coded_scripts.end();
 }

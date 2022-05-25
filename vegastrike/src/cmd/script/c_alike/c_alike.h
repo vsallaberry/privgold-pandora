@@ -41,8 +41,6 @@
 #include <vector>
 #include <string>
 
-using std::string;
-
 #define YYERROR_VERBOSE
 
 #define q(x)	("\""+x+"\"")
@@ -57,7 +55,7 @@ extern bool have_yy_error;
 
 #define YYDEBUG 0
 
-#define YYSTYPE string
+#define YYSTYPE std::string
 #define YY_SKIP_YYWRAP
 
 extern std::string module_string;

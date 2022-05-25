@@ -15,7 +15,7 @@ void RingMesh::InitRing(float iradius, float oradius, int slices, const char *te
   ab[2]='\0';
   ab[1]=b+'0';
   ab[0]=a+'0';
-  hash_name = string("@@Ring") + "#" + texture + "#" + XMLSupport::tostring(slices) +  ab + "#" + XMLSupport::tostring(theta_min) + "#" + XMLSupport::tostring(theta_max);
+  hash_name = std::string("@@Ring") + "#" + texture + "#" + XMLSupport::tostring(slices) +  ab + "#" + XMLSupport::tostring(theta_min) + "#" + XMLSupport::tostring(theta_max);
   if (LoadExistant (hash_name,Vector(iradius,iradius,iradius),0)) {
     return;
   } else {
@@ -31,9 +31,9 @@ void RingMesh::InitRing(float iradius, float oradius, int slices, const char *te
   //mx = Vector (-radialSize,-radialSize,-radialSize);
   mn = Vector (0,0,0);
   mx = Vector (0,0,0);
-  vector <MeshDrawContext> *odq=NULL;
+  std::vector <MeshDrawContext> *odq=NULL;
   for (int l=0;l<numspheres;l++) {
-    draw_queue = new vector<MeshDrawContext>[NUM_ZBUF_SEQ+1];
+    draw_queue = new std::vector<MeshDrawContext>[NUM_ZBUF_SEQ+1];
     if (!odq)
       odq = draw_queue;
     if (slices>12) {

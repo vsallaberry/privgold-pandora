@@ -94,7 +94,7 @@ void FireAt::FormUpToOwner(QVector pos) {
 void FireAt::FaceDirection (float distToMatchFacing, bool finish) {
 	lastOrder  = new Orders::FaceDirection (distToMatchFacing, finish, 3);
 }
-void FireAt::XMLScript (string script) {
+void FireAt::XMLScript (const std::string & script) {
 	lastOrder  = new AIScript (script.c_str());
 }
 void FireAt::LastPythonScript () {

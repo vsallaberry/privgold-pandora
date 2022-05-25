@@ -19,7 +19,7 @@ void	NebulaUpdate( StarSystem * ss) {}
 void	SwitchUnits2( Unit * nw) {}
 void	DoCockpitKeys() {}
 void	bootstrap_draw (const std::string &message, Animation * SplashScreen) {}
-void createObjects(std::vector <std::string> &playersaveunit, std::vector <StarSystem *> &ssys, std::vector <QVector>& savedloc, vector<vector<string> > &savefiles) {}
+void createObjects(std::vector <std::string> &playersaveunit, std::vector <StarSystem *> &ssys, std::vector <QVector>& savedloc, std::vector<std::vector<std::string> > &savefiles) {}
 void	disableTerrainDraw( ContinuousTerrain *ct) {}
 void    /*GFXDRVAPI*/ GFXLight::SetProperties(enum LIGHT_TARGET lighttarg, const GFXColor &color) {}
 

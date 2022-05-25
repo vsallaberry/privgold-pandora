@@ -42,9 +42,11 @@
 #include "gui/groupcontrol.h"
 #include "gui/scroller.h"
 
-vector<unsigned int > nav_keyboard_queue;
+std::vector<unsigned int > nav_keyboard_queue;
 
-using namespace std;
+//using namespace std;
+using std::string;
+using std::vector;
 
 // The separator used between categories in a category string.
 static const char CATEGORY_SEP = '/';

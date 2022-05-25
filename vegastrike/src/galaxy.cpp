@@ -15,6 +15,9 @@
 extern vs_options game_options;
 using namespace XMLSupport;
 using namespace GalaxyXML;
+using std::string;
+using std::vector;
+
 string RemoveDotSystem (const char *input) {
   int sl = strlen (input);
   if (sl ==0) {
@@ -167,7 +170,7 @@ const vector<string>& ParseDestinations (const string &value) {
 }
 
 
-void MakeStarSystem (string file, Galaxy *galaxy, string origin, int forcerandom) {
+void MakeStarSystem (const std::string & file, Galaxy *galaxy, const std::string & origin, int forcerandom) {
   SystemInfo Ave;
   SystemInfo si;
   AvgSystems (GetSystemMin (galaxy),GetSystemMax (galaxy),Ave);
@@ -223,7 +226,7 @@ std::string Universe::getGalaxyProperty (const std::string & sys, const std::str
   string name = RemoveDotSystem (getStarSystemName (sys).c_str());
   return galaxy->getVariable (sector,name,prop,galaxy->getVariable (sector,prop,galaxy->getVariable ("unknown_sector","min",prop,"")));
 }
-std::string Universe::getGalaxyPropertyDefault (const std::string & sys, const std::string & prop, const std::string def) {
+std::string Universe::getGalaxyPropertyDefault (const std::string & sys, const std::string & prop, const std::string & def) {
   string sector = getStarSystemSector (sys);
   string name = RemoveDotSystem (getStarSystemName (sys).c_str());
   return galaxy->getVariable (sector,name,prop,def);

@@ -24,6 +24,9 @@
 #include <sys/stat.h> // for mkdir
 #include <sys/types.h>
 
+using std::string;
+using std::vector;
+
 /*
  * Globals
  */

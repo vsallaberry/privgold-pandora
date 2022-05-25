@@ -47,6 +47,7 @@
 //#include "vs_globals.h"
 //#include "vegastrike.h"
 
+using std::string;
 
 
 varInst *Mission::call_string(missionNode *node,int mode){
@@ -161,24 +162,24 @@ string Mission::call_string_getstring(missionNode *node,int mode,varInst *ovi){
 
   string *my_string=getStringObject(node,mode,ovi);
 
-  string ret=*my_string;
+  std::string ret=*my_string;
 
   return ret;
 }
 
 void Mission::call_string_print(missionNode *node,int mode,varInst *ovi){
 
-  string *my_string =getStringObject(node,mode,ovi);
+  std::string *my_string =getStringObject(node,mode,ovi);
 
   std::cout << *my_string ;
 }
 
-varInst * Mission::call_string_new(missionNode *node,int mode,string initstring){
+varInst * Mission::call_string_new(missionNode *node,int mode,const std::string & initstring){
   debug(10,node,mode,"call_string");
 
   varInst *viret=newVarInst(VI_TEMP);
 
-	string* my_string=new string(initstring);
+	std::string* my_string=new string(initstring);
 	string_counter++;
 
 	viret->type=VAR_OBJECT;

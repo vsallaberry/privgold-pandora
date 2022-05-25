@@ -629,7 +629,7 @@ void Music::Listen() {
 	}
 }
 
-void Music::GotoSong (std::string mus,int layer)
+void Music::GotoSong (const std::string & mus,int layer)
 {
     if (!g_game.music_enabled)
         return;
@@ -649,7 +649,20 @@ void Music::GotoSong (std::string mus,int layer)
     }
 }
 
-std::vector<std::string> rsplit(std::string tmpstr,std::string splitter) {
+std::vector<std::string> rsplit(const std::string & str,const std::string & splitter) {
+  std::string::size_type where, start = str.length();
+  std::vector<std::string> ret;
+  while (start > 0 && (where = str.rfind(splitter, start-1)) != std::string::npos) {
+    ret.push_back(str.substr(where+1, start-where-1));
+    start = where;
+  }
+  if (start > 0)
+      ret.push_back(str.substr(0,start));
+  return ret;
+}
+
+/*
+std::vector<std::string> rsplit(std::string tmpstr,const std::string & splitter) {
   std::string::size_type where;
   std::vector<std::string> ret;
   while ((where=tmpstr.rfind(splitter))!=std::string::npos) {
@@ -659,9 +672,9 @@ std::vector<std::string> rsplit(std::string tmpstr,std::string splitter) {
   if (tmpstr.length())
     ret.push_back(tmpstr);
   return ret;
-}
+}*/
 
-void Music::_GotoSong (std::string mus) {
+void Music::_GotoSong (const std::string & mus) {
 	if (g_game.music_enabled) {
         if (mus==cur_song_file||mus.length()==0) return;
         cur_song_file = mus;
@@ -774,7 +787,7 @@ void Music::_SkipRandList(int layer) {
 	}
 }
 
-int Music::Addlist(std::string listfile)
+int Music::Addlist(const std::string & listfile)
 {
     if (!g_game.music_enabled)
     	return -1;
@@ -784,7 +797,7 @@ int Music::Addlist(std::string listfile)
     return res;
 }
 
-int Music::_Addlist (std::string listfile) {
+int Music::_Addlist (const std::string & listfile) {
 	if (!g_game.music_enabled)
 		return -1;
 	bool retval=LoadMusic(listfile.c_str());
@@ -984,7 +997,7 @@ void Music::SetVolume(float vol, int layer,bool hardware,float latency_override)
 
 void Music::Mute(bool mute, int layer)
 {
-    static vector<float> saved_vol;
+    static std::vector<float> saved_vol;
     saved_vol.resize(muzak_count,-1);
     if (!g_game.music_enabled)
     	return;

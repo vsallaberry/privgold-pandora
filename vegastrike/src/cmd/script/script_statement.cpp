@@ -83,7 +83,7 @@ void Mission::checkStatement(missionNode *node,int mode){
 
 void Mission::doIf(missionNode *node,int mode){
   if(mode==SCRIPT_PARSE){
-    vector<easyDomNode *>::const_iterator siter;
+    std::vector<easyDomNode *>::const_iterator siter;
   
     int nr_subnodes=node->subnodes.size();
     if(nr_subnodes!=3){

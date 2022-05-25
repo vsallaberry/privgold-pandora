@@ -16,23 +16,23 @@
 #define MAXZOOM 10
 
 
-void Beautify (string systemfile, string & sector, string & system);
+extern void Beautify (const std::string & systemfile, std::string & sector, std::string & system);
 class NavigationSystem
 {
 public:
 	class SystemIterator {
-		vector <string> vstack;
+		std::vector <std::string> vstack;
 		unsigned int which;
 		unsigned int count;
 		unsigned int maxcount;
-		vsUMap<string,bool>visited;
+		vsUMap<std::string,bool>visited;
 
 	public:
 
-		SystemIterator (string current_system, unsigned int max =2);
+		SystemIterator (const std::string & current_system, unsigned int max =2);
 		bool done ()const;
 		QVector Position ();
-		string operator * ();
+		const std::string & operator * () const;
 		SystemIterator & next ();
 		SystemIterator& operator ++ ();
 	};
@@ -43,37 +43,37 @@ public:
 	public:
 		//typedef std::pair<string, QVector> SystemInfo;
 		struct SystemInfo {
-			string name;
+			std::string name;
 			QVector position;
 			std::vector<unsigned> lowerdestinations;
 			GFXColor col;
 		        bool part_of_path;
 		        std::set<NavPath *> paths;
 			void UpdateColor();
-			string &GetName();
-			const string &GetName() const;
+			std::string &GetName();
+			const std::string &GetName() const;
 			bool isDrawable() const;
 			QVector &Position ();
 			const QVector &Position () const;
 			unsigned GetDestinationIndex (unsigned index) const;
 			unsigned GetDestinationSize() const;
 			GFXColor GetColor();
-			SystemInfo(const string &name);
-		        SystemInfo(const string &name, const QVector &position, const std::vector<std::string> &destinations, CachedSystemIterator *csi);
-		        void loadData(map<string, unsigned> * index_table);
+			SystemInfo(const std::string &name);
+		        SystemInfo(const std::string &name, const QVector &position, const std::vector<std::string> &destinations, CachedSystemIterator *csi);
+		        void loadData(std::map<std::string, unsigned> * index_table);
 		};
 
 	private:
                 friend struct SystemInfo;//inner class needs to be friend in gcc-295
- 		vector<SystemInfo> systems;
+ 		std::vector<SystemInfo> systems;
 		unsigned currentPosition;
 		CachedSystemIterator(const CachedSystemIterator &other); // May be really slow. Don't try this at home.
 		CachedSystemIterator operator ++ (int); // Also really slow because it has to use the copy constructor.
 
 	public:
 		CachedSystemIterator();
-		CachedSystemIterator (string current_system, unsigned max_systems = 2);
-		void init(string current_system, unsigned max_systems = 2);
+		CachedSystemIterator (const std::string & current_system, unsigned max_systems = 2);
+		void init(const std::string & current_system, unsigned max_systems = 2);
 		bool seek(unsigned position=0);
 		unsigned getIndex() const;
 		unsigned size() const;
@@ -93,19 +93,19 @@ public:
 	public:
 		class SectorInfo {
 		public:
-			string name;
+			std::string name;
 			std::vector<unsigned> subsystems;
-			string &GetName();
-			const string &GetName() const;
+			std::string &GetName();
+			const std::string &GetName() const;
 			unsigned GetSubsystemIndex (unsigned index) const;
 			unsigned GetSubsystemSize() const;
-			SectorInfo(const string &name);
+			SectorInfo(const std::string &name);
 		        void AddSystem(unsigned index);
 		};
 
 	private:
           friend class SectorInfo;//inner class needs to be friend in gcc-295
-		vector<SectorInfo> sectors;
+		std::vector<SectorInfo> sectors;
 		unsigned currentPosition;
 		CachedSectorIterator(const CachedSectorIterator &other); // May be really slow. Don't try this at home.
 		CachedSectorIterator operator ++ (int); // Also really slow because it has to use the copy constructor.
@@ -288,7 +288,7 @@ static void DrawJump(float x, float y, float size, const GFXColor &col );
 static void DrawMissile(float x, float y, float size, const GFXColor &col );
 static void DrawTargetCorners(float x, float y, float size, const GFXColor &col );
 static void DrawNavCircle(float x, float y, float rot_x, float rot_y, float size, const GFXColor &col );
-void setCurrentSystem(string newSystem);
+void setCurrentSystem(const std::string & newSystem);
 std::string getCurrentSystem();
 std::string getSelectedSystem();
 std::string getFocusedSystem();
@@ -303,7 +303,7 @@ void DrawGrid(float &screen_x1, float &screen_x2, float &screen_y1, float &scree
 bool TestIfInRange(float &x1, float &x2, float &y1, float &y2, float tx, float ty);
 bool TestIfInRangeBlk(float &x1, float &x2, float size, float tx, float ty);
 bool TestIfInRangeRad(float &x, float &y, float size, float tx, float ty);
-bool ParseFile(string filename);
+bool ParseFile(const std::string & filename);
 bool CheckDraw();
 void DrawSystem();
 void DrawGalaxy();

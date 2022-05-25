@@ -19,6 +19,9 @@ static int unitlevel;
 using namespace XMLSupport;
 //using std::sort;
 
+using std::string;
+using std::vector;
+
 #define FACTION_LOG(lvl, ...) VS_LOG("game", lvl, __VA_ARGS__)
 
 static FSM * getFSM (const std::string & value) {

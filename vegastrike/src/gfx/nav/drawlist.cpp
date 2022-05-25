@@ -221,7 +221,7 @@ void navdrawlist::rotate()	//	take the head and stick it in the back
 
 
 
-string getUnitNameAndFgNoBase(Unit * target);
+std::string getUnitNameAndFgNoBase(Unit * target);
 void drawdescription(Unit* source, float x_, float y_, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col)	//	take the head and stick it in the back
 {
 	if(source == NULL)
@@ -238,7 +238,7 @@ void drawdescription(Unit* source, float x_, float y_, float size_x, float size_
 
 
 
-void drawdescription (string text, float x_, float y_, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col)	//	take the head and stick it in the back
+void drawdescription (const std::string & text, float x_, float y_, float size_x, float size_y, bool ignore_occupied_areas, navscreenoccupied* screenoccupation, const GFXColor &col)	//	take the head and stick it in the back
 {
 	if(text.size() == 0)
 		return;

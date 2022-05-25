@@ -64,8 +64,8 @@ protected:
   virtual void LoadXML (VSFileSystem::VSFile & f) {}
   static void beginElement(void *userData, const XML_Char *name, const XML_Char **atts);
   static void endElement(void *userData, const XML_Char *name);
-  virtual void beginElement(const string &name, const AttributeList &attributes) {}
-  virtual void endElement(const string &name) {}
+  virtual void beginElement(const std::string &name, const AttributeList &attributes) {}
+  virtual void endElement(const std::string &name) {}
   ///Destructs cockpit info for new loading
   virtual void Delete();
   ///draws the navigation symbol around targetted location
@@ -95,8 +95,8 @@ protected:
   unsigned int retry_dock;
   double TimeOfLastCollision;
   char jumpok;
-  virtual void setTargetLabel(const string &msg) {}
-  virtual string getTargetLabel() {return string();}
+  virtual void setTargetLabel(const std::string &msg) {}
+  virtual std::string getTargetLabel() {return std::string();}
   void updateAttackers();
   static bool tooManyAttackers();// checks config file and declares if too many folks are attacking any of the players (to avoid expensive tests where unnecessary).
   virtual void	ReceivedTargetInfo() {}
@@ -167,7 +167,7 @@ protected:
   virtual void SelectCamera(int) {}
   ///GFXLoadMatrix proper camera
   virtual void SetViewport() {}
-  virtual void visitSystem(std::string systemName);
+  virtual void visitSystem(const std::string & systemName);
   virtual bool SetDrawNavSystem(bool){return false;}
   virtual bool CanDrawNavSystem() {return false;}
   virtual bool DrawNavSystem() {return false;}

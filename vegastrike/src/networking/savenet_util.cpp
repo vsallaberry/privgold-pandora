@@ -7,7 +7,7 @@
 
 using std::string;
 
-void	SaveNetUtil::GetSaveStrings( ClientPtr clt, string & savestr, string & xmlstr, bool detail)
+void	SaveNetUtil::GetSaveStrings( ClientPtr clt, std::string & savestr, std::string & xmlstr, bool detail)
 {
 	if (!clt) return;
 	Unit * un = clt->game_unit.GetUnit();
@@ -26,7 +26,7 @@ void	SaveNetUtil::GetSaveStrings( ClientPtr clt, string & savestr, string & xmls
 	GetSaveStrings( cpnum, savestr, xmlstr, detail );
 }
 
-void	SaveNetUtil::GetSaveStrings( int numplayer, string & savestr, string & xmlstr, bool savevars)
+void	SaveNetUtil::GetSaveStrings( int numplayer, std::string & savestr, std::string & xmlstr, bool savevars)
 {
 	Cockpit * cp;
 	Unit * un;
@@ -36,7 +36,7 @@ void	SaveNetUtil::GetSaveStrings( int numplayer, string & savestr, string & xmls
 		if (un) {
 			xmlstr = un->WriteUnitString();
 			const QVector POS(un->LocalPosition());
-			string fname (cp->activeStarSystem->getFileName());
+			std::string fname (cp->activeStarSystem->getFileName());
 			savestr = cp->savegame->WriteSaveGame (fname.c_str(), un->LocalPosition(), cp->credits, cp->unitfilename, numplayer,
 						FactionUtil::GetFactionName( cp->GetParent()->faction), false);
 			// Only get the player data, the dynamic universe part is separated
@@ -45,7 +45,7 @@ void	SaveNetUtil::GetSaveStrings( int numplayer, string & savestr, string & xmls
 	}
 }
 
-void	SaveNetUtil::GetSaveBuffer( string savestr, string xmlstr, char * buffer)
+void	SaveNetUtil::GetSaveBuffer( const std::string & savestr, const std::string & xmlstr, char * buffer)
 {
 	unsigned int total_size = savestr.length() + xmlstr.length() + 2*sizeof(unsigned int);
 	unsigned int nxmllen, nsavelen;

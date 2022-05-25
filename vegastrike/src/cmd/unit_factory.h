@@ -48,15 +48,15 @@ public:
     static Unit* createUnit( const char *filename,
                              bool        SubUnit,
                              int         faction,
-                             std::string customizedUnit=string(""),
+                             const std::string & customizedUnit=std::string(""),
                              Flightgroup *flightgroup=NULL,
-                             int         fg_subnumber=0, string * netxml=NULL, ObjSerial netcreate=0);
+                             int         fg_subnumber=0, std::string * netxml=NULL, ObjSerial netcreate=0);
 
 
     static Unit* createServerSideUnit( const char *filename,
                              bool        SubUnit,
                              int         faction,
-                             std::string customizedUnit=string(""),
+                             const std::string & customizedUnit=std::string(""),
                              Flightgroup *flightgroup=NULL,
                              int         fg_subnumber=0 );
 
@@ -72,7 +72,7 @@ public:
 
     static Missile* createMissile( const char * filename,
                                    int faction,
-                                   const string &modifications,
+                                   const std::string &modifications,
                                    const float damage,
                                    float phasedamage,
                                    float time,
@@ -92,18 +92,18 @@ public:
 				 const char * filename,
 				 BLENDFUNC blendsrc,
 				 BLENDFUNC blenddst,
-				 const vector<string> &dest,
+				 const std::vector<std::string> &dest,
 				 const QVector &orbitcent,
 				 Unit * parent,
 				 const GFXMaterial & ourmat,
 				 const std::vector <GFXLightLocal> & ligh,
 				 int faction,
-				 string fullname ,
+				 const std::string & fullname ,
 				 bool inside_out=false, ObjSerial netcreate=0);
 
     static Enhancement* createEnhancement( const char * filename,
                                            int faction,
-					   const string &modifications,
+					   const std::string &modifications,
 					   Flightgroup * flightgrp=NULL,
 					   int fg_subnumber=0 );
 
@@ -133,15 +133,15 @@ public:
 	static ContinuousTerrain*	createContinuousTerrain( const char * file, Vector scale, float position, Matrix & t);
 
 	// Function used to put in a NetBuffer the necessary info to create the unit so that it can be send over network
-	static void addUnitBuffer( NetBuffer & netbuf, const string &filename,
-		               const string &name, const string &fullname,
+	static void addUnitBuffer( NetBuffer & netbuf, const std::string &filename,
+		               const std::string &name, const std::string &fullname,
 		               bool        SubUnit,
 		               int         faction,
-		               std::string customizedUnit,
+		               const std::string & customizedUnit,
 		               const ClientState &curr_state,
 		               Flightgroup *flightgroup,
-		               int         fg_subnumber, string * netxml, ObjSerial netcreate);
-	static void addUnitBuffer( NetBuffer & netbuf, const Unit *un, string *netxml=NULL);
+		               int         fg_subnumber, std::string * netxml, ObjSerial netcreate);
+	static void addUnitBuffer( NetBuffer & netbuf, const Unit *un, std::string *netxml=NULL);
 	static Unit *parseUnitBuffer(NetBuffer &netbuf);
 	
 	static void addPlanetBuffer( NetBuffer & netbuf, QVector x,
@@ -153,13 +153,13 @@ public:
 				   float radius,
 				   const char * filename,
 				   BLENDFUNC sr, BLENDFUNC ds,
-				   const vector<string> &dest,
+				   const std::vector<std::string> &dest,
 				   const QVector &orbitcent,
 				   Unit * parent,
 				   const GFXMaterial & ourmat,
 				   const std::vector <GFXLightLocal> & ligh,
 				   int faction,
-				   string fullname ,
+				   const std::string & fullname ,
 				   bool inside_out, ObjSerial netcreate);
 	// Not implemented: lots of orbit stuff is dissipated into private subclasses upon creation.
 	// static void addPlanetBuffer( NetBuffer & netbuf, const Planet *p);
@@ -173,11 +173,11 @@ public:
 	static void addNebulaBuffer( NetBuffer & netbuf, const Nebula *neb);
 	static Nebula *parseNebulaBuffer(NetBuffer &netbuf);
 
-	static void addMissileBuffer( NetBuffer & netbuf, const string &filename,
-                                     const string &name,
-                                     const string &fullname,
+	static void addMissileBuffer( NetBuffer & netbuf, const std::string &filename,
+                                     const std::string &name,
+                                     const std::string &fullname,
                                      int faction,
-                                     const string &modifications,
+                                     const std::string &modifications,
                                      const ClientState &curr_state,
                                      const float damage,
                                      float phasedamage,
@@ -196,7 +196,7 @@ public:
 	static void addAsteroidBuffer( NetBuffer & netbuf, const Asteroid *ast);
 	static Asteroid *parseAsteroidBuffer(NetBuffer &netbuf);
 	
-	static void addBuffer(NetBuffer &netbuf, const Unit *un, bool allowSystemTypes, string *netxml=NULL);
+	static void addBuffer(NetBuffer &netbuf, const Unit *un, bool allowSystemTypes, std::string *netxml=NULL);
 	
 	static void endBuffer(NetBuffer &netbuf); // Tells the client that we are done sending units... is this necessary?
 

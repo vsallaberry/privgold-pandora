@@ -48,9 +48,9 @@ struct GFXColor;
 
 extern VegaConfig *vs_config;
 //extern VegaSimpleConfig *server_config;
-using std::vector;
+
 // typedef list<Client *>::iterator LI;
-typedef vector<Account *>::iterator VI;
+typedef std::vector<Account *>::iterator VI;
 
 extern ObjSerial SERVER_NETVERSION;
 
@@ -83,7 +83,7 @@ class NetServer
 		
 		int				acctserver;				// Tells if we use an account server
 		// If we don't use an account server:
-		string				server_password;
+		std::string		server_password;
 		
 		timeval				srvtimeout;			// timer
 		std::queue<int>			unused_players;
@@ -105,7 +105,7 @@ class NetServer
               AddressIP u; // Client addresses waiting for login response
 	    };
 
-        std::map<string, WaitListEntry> waitList;
+        std::map<std::string, WaitListEntry> waitList;
 
         boost::shared_ptr<VsnetDownload::Server::Manager> _downloadManagerServer;
         static const char*                                _downloadSearchDirs[];
@@ -146,7 +146,7 @@ class NetServer
 		// loadCockpit will fail if a cockpit already exists when client state is CONNECTED.
 		Cockpit *		loadCockpit(ClientPtr clt );
 		bool			loadFromSavegame( ClientPtr clt, Cockpit *cp );
-		bool			loadFromNewGame( ClientPtr clt, Cockpit *cp, string shipname );
+		bool			loadFromNewGame( ClientPtr clt, Cockpit *cp, const std::string & shipname );
 		ClientPtr       getClientFromSerial( ObjSerial serial);
 	public:
 		NetServer();
@@ -164,19 +164,19 @@ class NetServer
 							float price, float mass, float volume, bool mission, unsigned int quantity,
 							int mountOffset, int subunitOffset, unsigned short zone);
 		void	BroadcastTarget( ObjSerial serial, ObjSerial oldtarg, ObjSerial target, unsigned short zone);
-		void	BroadcastUnfire( ObjSerial serial, const vector<int> &weapon_indicies, unsigned short zone);
-		void	BroadcastFire( ObjSerial serial, const vector<int> &weapon_indicies, ObjSerial missile_serial, float energy, unsigned short zone);
+		void	BroadcastUnfire( ObjSerial serial, const std::vector<int> &weapon_indicies, unsigned short zone);
+		void	BroadcastFire( ObjSerial serial, const std::vector<int> &weapon_indicies, ObjSerial missile_serial, float energy, unsigned short zone);
 		//void	sendDamages( ObjSerial serial, int zone, string shields, float recharge, char leak, unsigned short ab, unsigned short af, unsigned short al, unsigned short ar, float ppercentage, float spercentage, float amt, Vector & pnt, Vector & normal, GFXColor & color);
 	
 		bool			saveAccount(int cpnum );
 	
-		void	sendCustom( int cp, string cmd, string args, string id);
+		void	sendCustom( int cp, const std::string & cmd, const std::string & args, const std::string & id);
 		void	sendDamages( ObjSerial serial, unsigned short zone, float hull, const Shield &shields, const Armor &armor,
 							float ppercentage, float spercentage, float amt, Vector & pnt, Vector & normal, GFXColor & color);
 		//void	sendDamages( ObjSerial serial, Vector & pnt, Vector & normal, float amt, GFXColor & color, float phasedamage);
 		void	sendKill( ObjSerial serial, unsigned short zone);
 		void	sendJump( Unit * src, Unit *jumppoint,std::string destination);
-		void	sendJumpFinal( ClientPtr clt, string server, unsigned short port );
+		void	sendJumpFinal( ClientPtr clt, const std::string & server, unsigned short port );
 		void	sendForcePosition( ClientPtr clt );
 
 		void	invalidateSnapshot( ) { snapchanged = 1; }
@@ -189,14 +189,14 @@ class NetServer
 		void	addUnitCargoSnapshot( const Unit *un, NetBuffer &netbuf);
 		void	sendCargoSnapshot( ObjSerial serial, const UnitCollection &unitlist);
 
-		void	sendMessage(string from, string to, string message, float delay);
+		void	sendMessage(const std::string & from, const std::string & to, const std::string & message, float delay);
 		void	sendCommunication(Unit *from, Unit *to, const class CommunicationMessage *c);
-		void	sendSaveData( int cp, unsigned short packetType, int pos, string *key,
+		void	sendSaveData( int cp, unsigned short packetType, int pos, const std::string *key,
 							  Mission *miss, // Mission number for objectives.
-							  string *strValue, float *floatValue);
-		void	sendMission( int cp, unsigned short packetType, string mission, int pos);
+							  const std::string *strValue, float *floatValue);
+		void	sendMission( int cp, unsigned short packetType, const std::string & mission, int pos);
 
-		void	addSystem( string & sysname, string & system);
+		void	addSystem( const std::string & sysname, const std::string & system);
 		friend class ZoneMgr;
 
 		void			closeAllSockets();				// Disconnect all clients for shutdown

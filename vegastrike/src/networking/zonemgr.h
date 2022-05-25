@@ -30,13 +30,12 @@
 #include "boost/smart_ptr.hpp"
 #include "networking/clientptr.h"
 
-using std::list;
+typedef std::list<Unit *>::iterator LUI;
 
-typedef list<Unit *>::iterator LUI;
-
-typedef std::map<std::string,std::string>            SystemMap;
-typedef std::pair<std::string,std::string>           SystemPair;
-typedef std::map<std::string,std::string>::iterator  SystemIt;
+typedef std::map<std::string,std::string>            		SystemMap;
+typedef std::pair<std::string,std::string>           		SystemPair;
+typedef std::map<std::string,std::string>::iterator  		SystemIt;
+typedef std::map<std::string,std::string>::const_iterator  	SystemConstIt;
 
 class NetUI;
 class NetBuffer;
@@ -112,9 +111,9 @@ class ZoneMgr
 	        SystemMap _map;
 
 	    public:
-			std::string insert( std::string sysname, std::string systemxml );
-			std::string get( std::string sysname );
-	        bool        remove( std::string sysname );
+			std::string 		insert( const std::string & sysname, const std::string & systemxml );
+			const std::string & get( const std::string & sysname ) const;
+	        bool        		remove( const std::string & sysname );
 	    };
 		Systems			Systems;
 
@@ -126,10 +125,10 @@ class ZoneMgr
 		//ZoneMgr( int nbzones);
 		//~ZoneMgr();
 		// Serial is the zone id
-		void	addSystem( string & sysname, string & system);
-		string	getSystem( string & name);
-		StarSystem* addZone( string starsys);
-		ZoneInfo* GetZoneInfo( int serial);
+		void				addSystem( const std::string & sysname, const std::string & system);
+		const std::string & getSystem( const std::string & name) const;
+		StarSystem* 		addZone( const std::string & starsys);
+		ZoneInfo* 			GetZoneInfo( int serial);
 
 		ClientList* GetZone( int serial);
 		//void	addUnit( Unit * un, int zone);
@@ -138,7 +137,7 @@ class ZoneMgr
 	
 		void	getZoneBuffer( unsigned short zoneid, NetBuffer & netbuf);
 
-		StarSystem *	addClient( ClientPtr clt, string starsys, unsigned short & num_zone);
+		StarSystem *	addClient( ClientPtr clt, const std::string & starsys, unsigned short & num_zone);
 		void	removeClient( ClientPtr clt );
 		void    broadcast( ClientPtr clt, Packet * pckt, bool isTcp, unsigned short minVer=0, unsigned short maxVer=65535 );
         void    broadcast( int zone, ObjSerial serial, Packet * pckt, bool isTcp, unsigned short minVer=0, unsigned short maxVer=65535 );

@@ -94,20 +94,20 @@ namespace accountXML
   };
   const EnumMap element_map(element_names, 4);
   const EnumMap attribute_map(attribute_names, 5);
-  string curname;
-  string file;
+  std::string curname;
+  std::string file;
 
   Account tmpacct;
   //  Account acct;
   int level=-1;
-  vsUMap <string, Account*> accounttable;
+  vsUMap <std::string, Account*> accounttable;
   int nbaccounts = 0;
  
   void beginElement (void *userData, const XML_Char *name, const XML_Char **atts)
   {
     AttributeList attributes (atts);
     tmpacct=Account ();
-    Names elem = (Names) element_map.lookup(string (name));
+    Names elem = (Names) element_map.lookup(std::string (name));
     
     AttributeList::const_iterator iter;
     switch (elem) {
@@ -191,7 +191,7 @@ using namespace accountXML;
 
 vector<Account *> getAllAccounts() {
   vector<Account*>retval;
-  for (vsUMap<string,Account*>::iterator iter=accounttable.begin();
+  for (vsUMap<std::string,Account*>::iterator iter=accounttable.begin();
        iter!=accounttable.end();
        ++iter) {
     if(iter->second)
@@ -203,7 +203,7 @@ vector<Account *> getAllAccounts() {
 
 Account*getAcctSerial(ObjSerial ser) {
 
-  for (vsUMap<string,Account*>::iterator iter=accounttable.begin();
+  for (vsUMap<std::string,Account*>::iterator iter=accounttable.begin();
        iter!=accounttable.end();
        ++iter) {
     if (iter->second) {
@@ -218,7 +218,7 @@ Account*getAcctSerial(ObjSerial ser) {
 
 Account*getAcctAddress(SOCKETALT ser) {
 
-  for (vsUMap<string,Account*>::iterator iter=accounttable.begin();
+  for (vsUMap<std::string,Account*>::iterator iter=accounttable.begin();
        iter!=accounttable.end();
        ++iter) {
     if (iter->second) {
@@ -245,14 +245,14 @@ void LoadAccounts(const char *filename)
   f.Close();
   XML_ParserFree (parser);
 }
-void addAcct(string key, Account * acct) {
+void addAcct(const std::string & key, Account * acct) {
   accounttable[strtoupper(key)]=acct;
 }
 
-Account * getAcctNoReload(const string &key) {
+Account * getAcctNoReload(const std::string &key) {
   return accounttable[strtoupper(key)];
 }
-Account * getAcctTemplate(const string &key) {
+Account * getAcctTemplate(const std::string &key) {
   Account*acct= accounttable[strtoupper(key)];
   if (acct==NULL) {
     LoadAccounts(file.c_str());

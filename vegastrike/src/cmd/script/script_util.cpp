@@ -53,7 +53,7 @@ using std::endl;
 
 /* *********************************************************** */
 
-string Mission::modestring(int mode){
+std::string Mission::modestring(int mode){
   if(mode==SCRIPT_PARSE){
     if(parsemode==PARSE_DECL){
       return "parsedecl";
@@ -87,7 +87,7 @@ void Mission::trace(missionNode *node,int mode){
 
 /* *********************************************************** */
 
-void Mission::fatalError(missionNode *node,int mode,string message){
+void Mission::fatalError(missionNode *node,int mode,const std::string & message){
   cout << "fatal (" << modestring(mode) << ") " << message << " : ";
   printNode(node,mode);
   if(node){
@@ -127,20 +127,20 @@ void Mission::fatalError(missionNode *node,int mode,string message){
 
 /* *********************************************************** */
 
-void Mission::runtimeFatal(string message){
+void Mission::runtimeFatal(const std::string & message){
   cout << "runtime fatalError: " << message << endl;
 }
 
 /* *********************************************************** */
 
-void Mission::warning(string message){
+void Mission::warning(const std::string & message){
   cout << "warning: " << message << endl;
 }
 
 /* *********************************************************** */
 
 
-void Mission::debug(int level,missionNode *node,int mode,string message){
+void Mission::debug(int level,missionNode *node,int mode,const std::string &message){
   if(level<=debuglevel){
     debug(node,mode,message);
   }
@@ -148,7 +148,7 @@ void Mission::debug(int level,missionNode *node,int mode,string message){
 
 /* *********************************************************** */
 
-void Mission::debug(missionNode *node,int mode,string message){
+void Mission::debug(missionNode *node,int mode,const std::string & message){
 
   cout << "debug (" << modestring(mode) << ") " << message << " : " ;
   printNode(node,mode);
@@ -228,7 +228,7 @@ void Mission::printVarInst(int dbg_level,varInst *vi){
 /* *********************************************************** */
 
 void Mission::printVarmap(const varInstMap & vmap){
-	vsUMap<string,varInst *>::const_iterator iter;
+	vsUMap<std::string,varInst *>::const_iterator iter;
 
   for(iter=vmap.begin();iter!=vmap.end();iter++){
     cout << "variable " << (*iter).first ;
@@ -241,7 +241,7 @@ void Mission::printVarmap(const varInstMap & vmap){
 /* *********************************************************** */
 
 void Mission::printModules(){
-	vsUMap<string,missionNode *>::iterator iter;
+	vsUMap<std::string,missionNode *>::iterator iter;
 
   for(iter=runtime.modules.begin();iter!=runtime.modules.end();iter++){
     cout << "  module " << (*iter).first ;
@@ -249,7 +249,7 @@ void Mission::printModules(){
     printNode(mnode,0);
     cout << "        scripts" << endl;
 
-	vsUMap<string,missionNode *>::iterator iter2;
+	vsUMap<std::string,missionNode *>::iterator iter2;
 
     for(iter2=mnode->script.scripts.begin();iter2!=mnode->script.scripts.end();iter2++){
       cout << "  script " << (*iter2).first ;
@@ -267,7 +267,7 @@ void Mission::printRuntime(){
   cout << "RUNTIME" << endl;
   cout << "MODULES:" << endl;
 
-  vsUMap<string,missionNode *>::iterator iter;
+  vsUMap<std::string,missionNode *>::iterator iter;
   //=runtime.modules.begin()
 
   for(iter=runtime.modules.begin();iter!=runtime.modules.end();iter++){
@@ -286,7 +286,7 @@ void Mission::printGlobals(int dbg_level){
     return;
   }
 
-  vsUMap<string,missionNode *>::iterator iter;
+  vsUMap<std::string,missionNode *>::iterator iter;
 
   for(iter=runtime.global_variables.begin();iter!=runtime.global_variables.end();iter++){
     cout << "  global var " << (*iter).first ;
@@ -300,12 +300,12 @@ void Mission::printGlobals(int dbg_level){
 
 void Mission::printThread(missionThread *thread){
   return;
-      vector<contextStack *>::const_iterator siter;
+      std::vector<contextStack *>::const_iterator siter;
 
     for(siter= thread->exec_stack.begin() ; siter!=thread->exec_stack.end() ; siter++){
       contextStack *stack= *siter;
       
-      vector<scriptContext *>::const_iterator iter2;
+      std::vector<scriptContext *>::const_iterator iter2;
 
       cout << "SCRIPT CONTEXTS" << endl;
 
@@ -320,7 +320,7 @@ void Mission::printThread(missionThread *thread){
 
 /* *********************************************************** */
 
-varInst *Mission::searchScopestack(string name){
+varInst *Mission::searchScopestack(const std::string & name){
   int elem=scope_stack.size()-1;
   varInst *vi=NULL;
 
@@ -353,7 +353,7 @@ varInst *Mission::searchScopestack(string name){
 
 /* *********************************************************** */
 
-missionNode *Mission::lookupScript(string scriptname,string modulename){
+missionNode *Mission::lookupScript(const std::string & scriptname,const std::string & modulename){
   missionNode *module=runtime.modules[modulename];
   if(module==NULL){
     fatalError(module,SCRIPT_PARSE,"module "+modulename+" not found - maybe you forgot to import it?");

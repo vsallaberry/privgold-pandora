@@ -50,7 +50,7 @@ namespace UniverseUtil
 	void playVictoryTune () {
 		muzak->GotoSong(game_options.missionvictorysong);
 	}
-	int musicAddList(string str) {
+	int musicAddList(const string & str) {
 		return muzak->Addlist(str.c_str());
 	}
 	void musicLayerSkip(int layer) {
@@ -59,7 +59,7 @@ namespace UniverseUtil
 	void musicLayerStop(int layer) {
 		muzak->Stop(layer);
 	}
-	void musicLayerPlaySong(string str,int layer) {
+	void musicLayerPlaySong(const string & str,int layer) {
 		muzak->GotoSong(str,layer);
 	}
 	void musicLayerPlayList(int which,int layer) {
@@ -84,13 +84,13 @@ namespace UniverseUtil
 	void musicMute (bool stopSound) {
 		muzak->Mute(stopSound);
 	}
-	void playSound(string soundName, QVector loc, Vector speed) {
+	void playSound(const string & soundName, QVector loc, Vector speed) {
 		int sound = AUDCreateSoundWAV (soundName,false);
 		AUDAdjustSound (sound,loc,speed);
 		AUDStartPlaying (sound);
 		AUDDeleteSound(sound);
 	}
-  void playSoundCockpit(string soundName) {
+  void playSoundCockpit(const string & soundName) {
     int sound = AUDCreateSoundWAV (soundName,false);
     AUDStartPlaying (sound);
     AUDDeleteSound(sound);
@@ -98,14 +98,14 @@ namespace UniverseUtil
 	void StopAllSounds(void) {
 		AUDStopAllSounds();
 	}
-	void cacheAnimation(string aniName) {
+	void cacheAnimation(const string & aniName) {
 		static vector <Animation *> anis;
 		anis.push_back (new Animation(aniName.c_str()));
 	}
-	void playAnimation(string aniName, QVector loc, float size) {
+	void playAnimation(const string & aniName, QVector loc, float size) {
 		AddAnimation(loc,size,true,aniName,1);
 	}
-	void playAnimationGrow(string aniName, QVector loc, float size, float growpercent) {
+	void playAnimationGrow(const string & aniName, QVector loc, float size, float growpercent) {
 		AddAnimation(loc,size,true,aniName,growpercent);
 	}
 	unsigned int getCurrentPlayer() {
@@ -185,7 +185,7 @@ namespace UniverseUtil
 		return GetStarSystemLoading();
 	}
 
-	void sendCustom(int cp, string cmd, string args, string id) {
+	void sendCustom(int cp, const string & cmd, const string & args, const string & id) {
 		if (cp<0 || cp>=_Universe->numPlayers()) {
 			VS_LOG("universe", logvs::NOTICE, "sendCustom %s with invalid player %d", cmd.c_str(), cp);
 			return;

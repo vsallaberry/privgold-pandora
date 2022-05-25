@@ -169,7 +169,7 @@ void ScrollerButton::draw(void)
     static const float ARROW_BACK = .01;       // From center back to "bottom" of arrow.
 
     Point center = m_rect.center();
-    vector<Point> coords(3);            // 3-element vector.
+    std::vector<Point> coords(3);            // 3-element vector.
 
     switch(m_arrowType) {
         case LEFT_ARROW:

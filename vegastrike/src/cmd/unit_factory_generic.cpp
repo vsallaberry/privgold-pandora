@@ -8,6 +8,9 @@
 #include "networking/zonemgr.h"
 #include "networking/lowlevel/netbuffer.h"
 
+using std::string;
+using std::vector;
+
 Unit* UnitFactory::_masterPartList = NULL;
 Unit* UnitFactory::getMasterPartList( )
 {
@@ -29,7 +32,7 @@ void UnitFactory::addUnitBuffer( NetBuffer & netbuf, const string &filename,
 		               const string &fullname,
 		               bool        SubUnit,
 		               int         faction,
-		               std::string customizedUnit,
+		               const std::string & customizedUnit,
 		               const ClientState &curr_state,
 		               Flightgroup *flightgroup,
 		               int         fg_subnumber, string * netxml, ObjSerial netcreate)
@@ -115,7 +118,7 @@ void UnitFactory::addPlanetBuffer( NetBuffer & netbuf, QVector x,
 				   const GFXMaterial & ourmat,
 				   const std::vector <GFXLightLocal> & ligh,
 				   int faction,
-				   string fullname ,
+				   const std::string & fullname ,
 				   bool inside_out, ObjSerial netcreate)
 {
 		netbuf.addChar(ZoneMgr::AddPlanet);

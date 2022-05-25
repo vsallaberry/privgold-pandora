@@ -8,6 +8,10 @@
 #include "gfx/cockpit.h" 
 #include "networking/netclient.h"
 #include "lin_time.h"
+
+using std::string;
+using std::vector;
+
 struct StarShipControlKeyboard {
   bool switchmode;
   bool setunvel;

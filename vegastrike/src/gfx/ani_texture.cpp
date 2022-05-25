@@ -15,6 +15,9 @@
 #include <math.h>
 
 using std::set;
+using std::string;
+using std::vector;
+
 static set<AnimatedTexture *> anis;
 
 static enum ADDRESSMODE parseAddressMode(const string& addrmodestr, ADDRESSMODE defaultAddressMode) {

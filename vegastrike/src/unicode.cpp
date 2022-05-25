@@ -554,7 +554,7 @@ static Utf8Iterator find_one(std::basic_ostream<charT> & out, Utf8Iterator::valu
 }
 
 template <typename charT>
-static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::string s, const Utf8Iterator begin) { //, const Utf8Iterator _end) {
+static unsigned int test_one_str(std::basic_ostream<charT> & out, const std::string & s, const Utf8Iterator & begin) { //, const Utf8Iterator _end) {
     unsigned int errs = 0;
     Utf8Iterator end=begin.end();
 

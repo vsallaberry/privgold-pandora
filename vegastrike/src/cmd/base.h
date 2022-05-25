@@ -99,7 +99,7 @@ public:
 		};
 		class Comp : public Link {
 		public:
-			vector <BaseComputer::DisplayMode> modes;
+			std::vector <BaseComputer::DisplayMode> modes;
 			virtual void Click (::BaseInterface* base,float x, float y, int button, int state);
 			virtual ~Comp () {}
 			explicit Comp (const std::string & ind, const std::string & pythonfile) : Link(ind,pythonfile) {}

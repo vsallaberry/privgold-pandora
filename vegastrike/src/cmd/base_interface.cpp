@@ -606,7 +606,7 @@ void BaseInterface::Room::Draw (BaseInterface *base) {
 					y = (link->y + (link->hei / 2));   // get the center of the location
 
 					/* draw marker */
-					static string spritefile_marker = vs_config->getVariable("graphics","base_locationmarker_sprite","");
+					static std::string spritefile_marker = vs_config->getVariable("graphics","base_locationmarker_sprite","");
 					if (spritefile_marker.length()) {
 						static VSSprite *spr_marker = new VSSprite(spritefile_marker.c_str());
 						float wid,hei;
@@ -1166,7 +1166,7 @@ void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int butto
 					}
 					VSFileSystem::vs_fscanf(fp,"%200s",input);
 					input[200]=input[199]='\0';
-					links.back()->text=string(input);
+					links.back()->text=std::string(input);
 #ifdef _WIN32
 					VSFileSystem::vs_close(fp);
 #endif
@@ -1174,7 +1174,7 @@ void BaseInterface::Room::Click (BaseInterface* base,float x, float y, int butto
 				if (button==WS_RIGHT_BUTTON) {
 					input[200]=input[199]='\0';
 					objs.push_back(new BaseVSSprite(input,"tex"));
-					((BaseVSSprite*)objs.back())->texfile=string(input);
+					((BaseVSSprite*)objs.back())->texfile=std::string(input);
 					((BaseVSSprite*)objs.back())->spr.SetPosition(x,y);
 				} else if (button==WS_MIDDLE_BUTTON&&makingstate==0) {
 					links.back()->x=x;
@@ -1443,17 +1443,17 @@ BaseInterface::Room::Talk::Talk (const std::string & ind,const std::string & pyt
 #ifndef BASE_MAKER
 	gameMessage last;
 	int i=0;
-	vector <std::string> who;
-	string newmsg;
-	string newsound;
+	std::vector <std::string> who;
+	std::string newmsg;
+	std::string newsound;
 	who.push_back ("bar");
 	while (( mission->msgcenter->last(i++,last,who))) {
 		newmsg=last.message;
 		newsound="";
-		string::size_type first=newmsg.find_first_of("[");
+		std::string::size_type first=newmsg.find_first_of("[");
 		{
-			string::size_type last=newmsg.find_first_of("]");
-			if (first!=string::npos&&(first+1)<newmsg.size()) {
+			std::string::size_type last=newmsg.find_first_of("]");
+			if (first!=std::string::npos&&(first+1)<newmsg.size()) {
 				newsound=newmsg.substr(first+1,last-first-1);
 				newmsg=newmsg.substr(0,first);
 			}
@@ -1549,7 +1549,7 @@ BaseInterface::BaseInterface (const char *basefile, Unit *base, Unit*un)
 	Load(basefile, compute_time_of_day(base,un),fac.c_str());
         createdmusic=AUDHighestSoundPlaying();
 	if (base && un) {
-		vector <string> vec;
+		std::vector <std::string> vec;
 		vec.push_back(base->name);
 		int cpt=UnitUtil::isPlayerStarship(un);
 		if (cpt>=0) 
@@ -1616,8 +1616,8 @@ void BaseInterface::Terminate() {
   Unit *un=caller.GetUnit();
   int cpt=UnitUtil::isPlayerStarship(un);
   if (un&&cpt>=0) {
-    vector <string> vec;
-    vec.push_back(string());
+    std::vector <std::string> vec;
+    vec.push_back(std::string());
     saveStringList(cpt,mission_key,vec);
   }
   BaseInterface::CurrentBase=NULL;
@@ -1627,8 +1627,8 @@ void BaseInterface::Terminate() {
 extern void SwitchUnits(Unit* ol, Unit* nw);
 extern void SwitchUnits2(Unit* nw);
 extern void abletodock(int dock);
-extern vector <int> switchunit;
-extern vector <int> turretcontrol;
+extern std::vector <int> switchunit;
+extern std::vector <int> turretcontrol;
 #include "ai/communication.h"
 
 void BaseInterface::Room::Launch::Click (BaseInterface *base,float x, float y, int button, int state) {

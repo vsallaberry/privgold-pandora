@@ -8,7 +8,8 @@ class Box : public Mesh {
   Vector corner_min, corner_max;
  public:
   Box(const Vector &cornermin, const Vector &cornermax);
-  void ProcessDrawQueue(int whichdrawqueue);
+  //void ProcessDrawQueue(int whichdrawqueue); // renamed to ProcessDrawQueueBox() because conflicts with Mesh::ProcessDrawQueue(int whichpass, int whichdrawqueue, bool zsort, const QVector &sortctr);
+  virtual void ProcessDrawQueueBox(int whichdrawqueue);
 };
 
 #endif

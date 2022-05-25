@@ -11,6 +11,10 @@
 //#include "cmd/script/mission.h"
 
 #include "networking/lowlevel/vsnet_sockethttp.h"
+
+using std::string;
+using std::vector;
+
 extern string universe_file;
 extern bool verify_path (const vector<string> &path, bool allowmpl=false);
 extern void vschdirs (const vector<string> &path);
@@ -284,9 +288,9 @@ Cockpit * NetServer::loadCockpit(ClientPtr clt) {
 	return cp;
 }
 
-bool NetServer::loadFromNewGame( ClientPtr clt, Cockpit *cp, string fighter ) {
+bool NetServer::loadFromNewGame( ClientPtr clt, Cockpit *cp, const std::string & fighter ) {
 	ObjSerial cltserial = getUniqueSerial();
-	string PLAYER_SHIPNAME = fighter;
+	const std::string & PLAYER_SHIPNAME = fighter;
 	Mission *mission = NULL;
 	if (active_missions.size()>0) {
 		mission = active_missions[0];

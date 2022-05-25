@@ -1,9 +1,14 @@
+#ifndef VS_LOAD_MISSION_H
+#define VS_LOAD_MISSION_H
+
 void LoadMission (const char *, const std::string &scriptname,bool loadfirst);
-void delayLoadMission (std::string missionfile);
-void delayLoadMission (std::string missionfile, string script);
+void delayLoadMission (const std::string & missionfile);
+void delayLoadMission (const std::string & missionfile, const std::string & script);
 void processDelayedMissions();
-void UnpickleMission(std::string pickled);
+void UnpickleMission(const std::string & pickled);
 std::string PickleAllMissions ();
 std::string UnpickleAllMissions (FILE *);
 std::string UnpickleAllMissions (char * &buf);
-std::string PickledDataSansMissionName (std::string file);
+std::string PickledDataSansMissionName (const std::string & file);
+
+#endif // ! #ifndef VS_LOAD_MISSION_H

@@ -9,7 +9,7 @@
 #include "universe_util.h"
 #include "in_kb_data.h"
 #include "log.h"
-Hashtable <string,PyCodeObject,1023> compiled_python;
+Hashtable <std::string,PyCodeObject,1023> compiled_python;
 
 #define PY_LOG(lvl, ...) VS_LOG("python", lvl, __VA_ARGS__)
 #define PY_DBG(lvl, ...) VS_DBG("python", lvl, __VA_ARGS__)

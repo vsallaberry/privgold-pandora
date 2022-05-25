@@ -10,7 +10,7 @@ class Ikarus: public AggressiveAI {
 public:
 Ikarus();
   virtual void Execute ();
-  virtual string getOrderDescription() { return "ikarus"; };
+  virtual std::string getOrderDescription() { return "ikarus"; };
 };
 }
 

@@ -67,7 +67,7 @@ extern double interpolation_blend_factor;
 inline void BlendTrans (Matrix & drawmat, const QVector & cur_position, const QVector & prev_position) {
     drawmat.p = prev_position.Scale(1-interpolation_blend_factor) + cur_position.Scale(interpolation_blend_factor);    
 }
-int Bolt::AddTexture(bolt_draw *q, std::string file) {
+int Bolt::AddTexture(bolt_draw *q, const std::string & file) {
   int decal=q->boltdecals->AddTexture (file.c_str(),MIPMAP);
   if (decal>=(int)q->bolts.size()) {
     q->bolts.push_back (vector <Bolt>());
@@ -79,7 +79,7 @@ int Bolt::AddTexture(bolt_draw *q, std::string file) {
   }
   return decal;
 }  
-int Bolt::AddAnimation(bolt_draw*q,std::string file, QVector cur_position) {
+int Bolt::AddAnimation(bolt_draw*q,const std::string & file, QVector cur_position) {
   int decal=-1;
   for (unsigned int i=0;i<q->animationname.size();i++) {
     if (file==q->animationname[i]) {

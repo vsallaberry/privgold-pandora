@@ -26,6 +26,10 @@
 #include "cmd/unit_find.h"
 #include "faction_generic.h"
 #include "docking.h"
+
+using std::string;
+using std::vector;
+
 using namespace Orders;
 const EnumMap::Pair element_names[] = {
   EnumMap::Pair ("AggressiveAI" , AggressiveAI::AGGAI),

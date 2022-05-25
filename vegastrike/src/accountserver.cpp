@@ -30,7 +30,7 @@ void	VSExit( int code)
 
 string getStarSystemSector (const string &in) { return string( ""); }
 
-string GetUnitDir( string filename)
+string GetUnitDir( const string & filename)
 { return string( ""); }
 
 char SERVER = 2;

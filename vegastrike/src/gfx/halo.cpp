@@ -8,6 +8,8 @@
 #include "config_xml.h"
 #include "xml_support.h"
 #include "point_to_cam.h"
+using std::string;
+using std::vector;
 static DecalQueue halodecal;
 static vector <GFXQuadList *> halodrawqueue;
 

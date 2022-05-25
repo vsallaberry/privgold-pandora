@@ -29,20 +29,23 @@
 #include "networking/netclient.h"
 #define VS_PI 3.1415926536
 
+using std::string;
+using std::vector;
+
 /*ADDED FOR extensible use of unit pretty print and unit load */
 UNITLOADTYPE current_unit_load_mode = DEFAULT;
 extern float getFuelConversion();
 
 
-string KillQuadZeros(string inp) {
+std::string KillQuadZeros(std::string inp) {
 	std::string::size_type text = 0;
 	while ((text = inp.find (".000000",text))!=string::npos) {
 		inp = inp.substr(0,text)+inp.substr(text+7);
 	}
 	return inp;
 }
-string MakeUnitXMLPretty (string str, Unit * un) {
-	string writestr;
+std::string MakeUnitXMLPretty (const std::string & cstr, Unit * un) {
+	std::string str(cstr), writestr;
 		
 	if (un) {
 		writestr+= "Name: "+un->name;
@@ -53,7 +56,7 @@ string MakeUnitXMLPretty (string str, Unit * un) {
 		}
 		writestr+="\n";
 	}
-	static std::set <string> lookfor;
+	static std::set <std::string> lookfor;
 	if (lookfor.empty()) {
 		lookfor.insert ("Shie");
 		lookfor.insert ("Armo");
@@ -72,7 +75,7 @@ string MakeUnitXMLPretty (string str, Unit * un) {
 		lookfor.insert ("Rada");
 	}
 	std::string::size_type foundpos;
-		while ((foundpos = str.find ("<"))!=string::npos) {
+		while ((foundpos = str.find ("<"))!=std::string::npos) {
 			if (str.size()<=foundpos+1)
 				break;
 			str = str.substr (foundpos+1);

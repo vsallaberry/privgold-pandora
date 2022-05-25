@@ -28,7 +28,7 @@ FSM::FSM (const char * filename) {
     nodes.push_back (Node::MakeNode("Your Course is deviating! Maintain Course!",0));
     nodes.push_back (Node::MakeNode("Request Clearence To Land.",0));
     nodes.push_back (Node::MakeNode("*hit*",-.2));
-    vector <unsigned int> edges;
+    std::vector <unsigned int> edges;
     unsigned int i;
     for (i=0;i<nodes.size()-13;i++) {
       edges.push_back (i);
@@ -158,8 +158,8 @@ int FSM::getCommMessageMood (int curstate, float mood, float randomresponse,floa
     }
   }
 #endif
-	vector<unsigned int> g;
-	vector <unsigned int>b;
+	std::vector<unsigned int> g;
+	std::vector <unsigned int>b;
 	static float pos_limit =XMLSupport::parse_float(vs_config->getVariable ("AI",
 											"LowestPositiveCommChoice",
 											"0"));

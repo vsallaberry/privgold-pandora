@@ -254,13 +254,13 @@ Order* Order::findOrderList(){
   return found_order;
 }
 
-string Order::createFullOrderDescription(int level){
-  string tabs;
+std::string Order::createFullOrderDescription(int level){
+  std::string tabs;
   for(int i=0;i<level;i++){
     tabs=tabs+"   ";
   }
 
-  string desc=tabs+"+"+getOrderDescription()+"\n";
+  std::string desc=tabs+"+"+getOrderDescription()+"\n";
 
   for (unsigned int j=0;j<suborders.size();j++) {
     desc=desc+suborders[j]->createFullOrderDescription(level+1);

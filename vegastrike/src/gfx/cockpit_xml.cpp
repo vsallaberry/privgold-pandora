@@ -7,6 +7,8 @@
 #include "hud.h"
 #include "vdu.h"
 #include "mesh.h"
+using std::string;
+
 using XMLSupport::EnumMap;
 using XMLSupport::Attribute;
 using XMLSupport::AttributeList;

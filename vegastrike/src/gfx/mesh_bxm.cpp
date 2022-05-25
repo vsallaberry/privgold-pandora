@@ -12,6 +12,9 @@
 
 #include "vegastrike.h"
 
+using std::string;
+using std::vector;
+
 string inverseblend[16]={"ZERO","ZERO","ONE","SRCCOLOR","INVSRCCOLOR","SRCALPHA","INVSRCALPHA",
 "DESTALPHA","INVDESTALPHA","DESTCOLOR","INVDESTCOLOR","SRCALPHASAT","CONSTALPHA","INVCONSTALPHA",
 "CONSTCOLOR","INVCONSTCOLOR"};
@@ -27,10 +30,10 @@ FILE * aopen(...) {return NULL;}
 #define fopen aopen
 #define fclose aopen
 #else
-Texture * LoadTexture(string nam) {
+Texture * LoadTexture(const string & nam) {
   return new Texture(nam);
 }
-Texture * LoadAnimation (string Name) {
+Texture * LoadAnimation (const string & Name) {
   return new Animation(Name);
 }
 #endif
@@ -152,7 +155,7 @@ void Mesh::BFXMToXmesh(FILE* Inputfile, FILE* Outputfile, vector<Mesh*>&output, 
   static inline FILE* fignorefopen(const char *, const char *) { return 0; };
   #define bxmfprintf fignoref
   #define bxmfopen fignorefopen
-vector<Mesh*> Mesh::LoadMeshes(VSFileSystem::VSFile & Inputfile, const Vector & scalex, int faction, class Flightgroup * fg,std::string hash_name, const std::vector<std::string>&overrideTextures){
+vector<Mesh*> Mesh::LoadMeshes(VSFileSystem::VSFile & Inputfile, const Vector & scalex, int faction, class Flightgroup * fg,const std::string & hash_name, const std::vector<std::string>&overrideTextures){
   Vector overallscale=scalex;
   int fac=faction;
   FILE * Outputfile=0;

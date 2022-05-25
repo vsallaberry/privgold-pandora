@@ -28,6 +28,9 @@
 #include "cmd/script/flightgroup.h"
 #include "hashtable.h"
 
+using std::string;
+using std::vector;
+
 #ifdef max
 #undef max
 #endif
@@ -255,7 +258,7 @@ will be no need for this sort of checking
  */
 
 
-bool shouldreflect (string r) {
+bool shouldreflect (const string & r) {
     if (strtoupper(r)=="FALSE")
 		return false;
 	int i;
@@ -1178,7 +1181,7 @@ void CopyFile (VSFile &src, VSFile &dst) {
     dst.Write(srcptr,hm);
   }
 }
-bool loadObj(VSFile &f, std::string str) {
+bool loadObj(VSFile &f, const std::string & str) {
   string fullpath = f.GetFullPath();
   VSFile output;
   output.OpenCreateWrite("output.bfxm",BSPFile);
@@ -1207,8 +1210,7 @@ bool loadObj(VSFile &f, std::string str) {
 
   f.Close();
   int where = str.find_last_of(".");
-  str = str.substr(0,where)+".mtl";
-  f.OpenReadOnly(str,MeshFile);
+  f.OpenReadOnly(str.substr(0,where)+".mtl",MeshFile);
   VSFile inputmtl;
   inputmtl.OpenCreateWrite("input.mtl",BSPFile);
   CopyFile(f,inputmtl);

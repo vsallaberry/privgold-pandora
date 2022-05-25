@@ -25,9 +25,6 @@ namespace VSFileSystem {
     class VSFile;
 }
 
-using std::map;
-using std::string;
-
 class NetBuffer;
 
 namespace VsnetDownload
@@ -91,11 +88,11 @@ private:
 private:
     typedef std::list<Item*>                                  ItemList;
     typedef std::map<SOCKETALT,ItemList,SOCKETALT::CompareLt> ItemListMap;
-    typedef std::map<string,Item*>                            ItemMap;
+    typedef std::map<std::string,Item*>                       ItemMap;
     typedef std::map<SOCKETALT,ItemMap,SOCKETALT::CompareLt>  ItemMapMap;
     typedef std::map<SOCKETALT,Item*,SOCKETALT::CompareLt>    ItemSockMap;
 
-    typedef std::pair<string,Item*>                           ItemPair;
+    typedef std::pair<std::string,Item*>                      ItemPair;
     typedef std::pair<SOCKETALT,Item*>                        ItemSockPair;
 
     typedef ItemList::iterator                                ItemList_I;

@@ -9,6 +9,9 @@
 #include "networking/lowlevel/packet.h"
 #include "networking/fileutil.h"
 
+using std::string;
+using std::vector;
+
 void NetClient::send( Cmd cmd, NetBuffer &netbuf, int mode, const char *file, int line) {
 	Unit *un = this->game_unit.GetUnit();
 	int serial = 0;
@@ -36,7 +39,7 @@ void NetClient::sendCloak(bool engage) {
 
 }
 
-void	NetClient::sendCustom( string command, string args, string id)
+void	NetClient::sendCustom( const std::string & command, const std::string & args, const std::string & id)
 {
 	NetBuffer netbuf;
 
@@ -133,7 +136,7 @@ void	NetClient::shipRequest( const std::string &cargo, unsigned char type ) {
 }
 
 
-bool	NetClient::jumpRequest( string newsystem, ObjSerial jumpserial)
+bool	NetClient::jumpRequest( const std::string & newsystem, ObjSerial jumpserial)
 {
 	NetBuffer netbuf;
 	Unit *un = this->game_unit.GetUnit();
@@ -214,7 +217,7 @@ void	NetClient::dockRequest( ObjSerial utdw_serial)
 	send( CMD_DOCK, netbuf, SENDRELIABLE, __FILE__, __LINE__ );
 }
 
-void	NetClient::missionRequest( unsigned short packetType, string mission, int pos)
+void	NetClient::missionRequest( unsigned short packetType, const std::string & mission, int pos)
 {
 	NetBuffer netbuf;
 	
@@ -258,7 +261,7 @@ void	NetClient::undockRequest( ObjSerial utdw_serial)
 /*** COMMUNICATION STUFF                                                               ****/
 /******************************************************************************************/
 
-void	NetClient::createNetComm( float minfreq, float maxfreq, bool video, bool secured, string method)
+void	NetClient::createNetComm( float minfreq, float maxfreq, bool video, bool secured, const std::string & method)
 {
 	if( NetComm!=NULL)
 	{
@@ -342,7 +345,7 @@ float	NetClient::getSelectedFrequency()
 float	NetClient::getCurrentFrequency()
 { return this->current_freq;}
 
-void	NetClient::sendTextMessage( string message)
+void	NetClient::sendTextMessage( const std::string & message)
 {
 	// Only send if netcomm is active and we are connected on a frequency
 	if( NetComm!=NULL && NetComm->IsActive())

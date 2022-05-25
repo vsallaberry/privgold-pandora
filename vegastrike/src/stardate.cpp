@@ -3,11 +3,10 @@
 #include <vector>
 #include "stardate.h"
 #include "lin_time.h"
+#include "vs_log_modules.h"
 
-using std::cerr;
-using std::cout;
-using std::endl;
 using std::vector;
+using std::string;
 
 class Faction;
 extern vector <Faction *> factions;
@@ -46,7 +45,7 @@ double	StarDate::GetCurrentStarTime( int faction)
 /**** Trek Stardate stuff                                                      ****/
 /**********************************************************************************/
 
-void	StarDate::InitTrek( string date)
+void	StarDate::InitTrek( const string & date)
 {
 	if( initial_star_time != NULL )
         {
@@ -57,7 +56,7 @@ void	StarDate::InitTrek( string date)
 	initial_time = getNewTime();
 	initial_star_time = new double[factions.size()];
 	double init_time = this->ConvertTrekDate( date);
-	cerr<<"Initializing stardate from a Trek date for "<<factions.size()<<" factions"<<endl;
+	UNIV_LOG(logvs::NOTICE, "Initializing stardate from a Trek date %lg for %zu factions", init_time, factions.size());
 	for( unsigned int i=0; i<factions.size(); i++)
 		initial_star_time[i] = init_time;
 }
@@ -104,21 +103,25 @@ string	StarDate::ConvertTrekDate( double date)
 	char cdate[32];
 	unsigned int hrs = (hours*100+minutes)/HOURS_DIV;
 
-	sprintf( cdate, "%d.%.4d", days, hrs);
+	snprintf( cdate, sizeof(cdate), "%d.%.4d", days, hrs);
 	return string( cdate);
 }
 
 // Convert a StarDate into a number of seconds
-double	StarDate::ConvertTrekDate( string date)
+double	StarDate::ConvertTrekDate( const string & date)
 {
-	unsigned int days, hours, minutes, seconds, nb, pos;
+	unsigned int days, hours, minutes, seconds, nb;
 	double res;
 	// Replace the dot with 'a' so sscanf won't take it for a decimal symbol
-	pos = date.find( ".");
-	date.replace( pos, 1, "a");
-	if( (nb=sscanf( date.c_str(), "%da%4d:%2d", &days, &minutes, &seconds))!=3)
 	{
-		cerr<<"!!! ERROR reading date"<<endl;
+		std::string moddate(date);
+		std::string::size_type pos = moddate.find( ".");
+		if (pos != std::string::npos) {
+			moddate.replace( pos, 1, "a");
+		}
+		if( (nb=sscanf( moddate.c_str(), "%da%4d:%2d", &days, &minutes, &seconds))!=3) {
+			UNIV_LOG(logvs::WARN, "!!! ERROR reading date");
+		}
 	}
 	/*
 	cerr<<"!!! Read "<<nb<<" arguments"<<endl;
@@ -134,7 +137,7 @@ double	StarDate::ConvertTrekDate( string date)
 	minutes = temphours%100;
 
 	res = days*(24*60*60)+hours*(60*60)+minutes*(60)+seconds;
-	cerr<<"!!! Converted date to = "<<res<<" which stardate is "<<ConvertTrekDate(res)<<endl;
+	UNIV_LOG(logvs::INFO, "!!! Converted date to = %lg which stardate is %s", res, ConvertTrekDate(res).c_str());
 	return res;
 }
 
@@ -165,7 +168,7 @@ float	StarDate::GetFloatFromTrekDate( int faction)
 /**** DAN.A Stardate stuff                                                     ****/
 /**********************************************************************************/
 
-void	InitSDate( string date)
+void	InitSDate( const string & date)
 {
 }
 
@@ -183,12 +186,12 @@ string	GetFullSDate( int faction=0)
 /**** String stardate formats conversions                                      ****/
 /**********************************************************************************/
 
-string	SDateFromTrekDate( string trekdate)
+string	SDateFromTrekDate( const string & trekdate)
 {
 	return string( "");
 }
 
-string	TrekDateFromSDate( string sdate)
+string	TrekDateFromSDate( const string & sdate)
 {
 	return string( "");
 }

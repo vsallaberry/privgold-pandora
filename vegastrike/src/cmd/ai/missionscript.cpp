@@ -38,7 +38,7 @@
 #include "cmd/script/mission.h"
 
 //AImissionScript::AImissionScript (string modname):Order (Order::MOVEMENT|Order::FACING){
-AImissionScript::AImissionScript (string modname){
+AImissionScript::AImissionScript (const std::string & modname){
   //  cout << "AImissionScript " << modname << endl;
   //printf("addr %x\n",(int)this);
   //  mission->addModule(modname);

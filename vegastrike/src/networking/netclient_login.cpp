@@ -15,6 +15,9 @@
 #include "networking/client.h"
 #include "networking/fileutil.h"
 
+using std::string;
+using std::vector;
+
 std::string global_username;
 std::string global_password;
 /*************************************************************/
@@ -65,7 +68,7 @@ int		NetClient::authenticate()
 /**** Login loop : waiting for game server to respond     ****/
 /*************************************************************/
 
-int	NetClient::loginAuth( string str_callsign, string str_passwd, string &error)
+int	NetClient::loginAuth( const std::string & str_callsign, const std::string & str_passwd, std::string &error)
 {
 	COUT << "enter " << "NetClient::loginLoop" << endl;
 	lastsave.clear();
@@ -91,7 +94,7 @@ int	NetClient::loginAuth( string str_callsign, string str_passwd, string &error)
 	return loginLoop(error);
 }
 
-int NetClient::loginLoop(string &error) {
+int NetClient::loginLoop(std::string &error) {
 	int timeout=0, recv=0;
 	// int ret=0;
 
@@ -139,7 +142,7 @@ int NetClient::loginLoop(string &error) {
 /**** Login loop : waiting for account server to respond  ****/
 /*************************************************************/
 
-vector<string>	&NetClient::loginAcctLoop( string str_callsign, string str_passwd)
+std::vector<std::string>	&NetClient::loginAcctLoop( const std::string & str_callsign, const std::string & str_passwd)
 {
 	COUT << "enter " << "NetClient::loginAcctLoop" << endl;
 	
@@ -328,19 +331,19 @@ void NetClient::textMessage(const std::string & data )
                   __FILE__, PSEUDO__LINE__(165) );
 }
 
-void NetClient::GetCurrentServerAddress( string &addr, unsigned short &port)
+void NetClient::GetCurrentServerAddress( std::string &addr, unsigned short &port)
 {
 	addr = this->_serverip;
 	port = this->_serverport;
 }
 	
-void NetClient::SetCurrentServerAddress( string addr, unsigned short port)
+void NetClient::SetCurrentServerAddress( const std::string & addr, unsigned short port)
 {
 	this->_serverip = addr;
 	this->_serverport = port;
 }
 	
-void NetClient::SetConfigServerAddress( string &addr, unsigned short &port)
+void NetClient::SetConfigServerAddress( std::string &addr, unsigned short &port)
 {
 	bool use_acctserver = XMLSupport::parse_bool(vs_config->getVariable("network","use_account_server", "false"));
 	if (use_acctserver) {
@@ -352,7 +355,7 @@ void NetClient::SetConfigServerAddress( string &addr, unsigned short &port)
 	}
 	
 	int port_tmp;
-	string srvport = vs_config->getVariable("network","server_port", "6777");
+	std::string srvport = vs_config->getVariable("network","server_port", "6777");
 	port_tmp = atoi( srvport.c_str());
 	if (port_tmp>65535||port_tmp<0)
 		port_tmp=0;
@@ -674,22 +677,22 @@ void	NetClient::createChar()
 {
 }
 
-int NetClient::connectLoad(string username, string passwd, string &error) {
+int NetClient::connectLoad(const std::string & username, const std::string & passwd, std::string &error) {
 	localSerials.resize(0);
 	bootstrap_draw("#cc66ffNETWORK: Initializing...",NULL);
 	cout << "NETWORK: Initializing..."<<endl;
-	string srvipadr;
+	std::string srvipadr;
 	unsigned short port;
 	bool ret = false;
 	// Are we using the directly account server to identify us ?
 	GetCurrentServerAddress(srvipadr, port);
 	
 	if( !port ){ // using account server.
-		string srvipadr = vs_config->getVariable("network", "account_server_url", "http://localhost/cgi-bin/accountserver.py");
+		std::string srvipadr = vs_config->getVariable("network", "account_server_url", "http://localhost/cgi-bin/accountserver.py");
 		bootstrap_draw("#cc66ffNETWORK: Connecting to account server.",NULL);
 		cout << "NETWORK: Connecting to account server."<<endl;
 		init_acct( srvipadr);
-		vector<string> &savetmp = loginAcctLoop( username, passwd);
+		std::vector<std::string> &savetmp = loginAcctLoop( username, passwd);
 		// We don't expect a saved game...
 		if (savetmp.size()>=2 && savetmp[0].empty()) {
 			// But this is the way the acctserver code indicates an error.

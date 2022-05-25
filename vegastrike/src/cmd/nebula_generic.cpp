@@ -13,7 +13,7 @@ using XMLSupport::Attribute;
 using XMLSupport::AttributeList;
 using namespace NebulaXML;
 
-FOGMODE NebulaXML::parse_fogmode (string val) {
+FOGMODE NebulaXML::parse_fogmode (const std::string & val) {
 	if (val=="exp") {
 		return FOG_EXP;
 	} else if (val=="exp2") {
@@ -141,7 +141,7 @@ void Nebula::InitNebula(const char * unitfile, bool SubU, int faction,
 	       Flightgroup* fg, int fg_snumber)
 {
   fogme=true;
-  string fullpath( unitfile);
+  std::string fullpath( unitfile);
   fullpath += ".nebula";
 
   LoadXML(fullpath.c_str());
@@ -149,7 +149,7 @@ void Nebula::InitNebula(const char * unitfile, bool SubU, int faction,
 
 Nebula::Nebula(const char * unitfile, bool SubU, int faction,
 	       Flightgroup* fg, int fg_snumber) :
-  Unit (unitfile,SubU,faction,string(""),fg,fg_snumber)
+  Unit (unitfile,SubU,faction,std::string(""),fg,fg_snumber)
 {
 
   this->InitNebula(unitfile, SubU, faction, fg, fg_snumber);

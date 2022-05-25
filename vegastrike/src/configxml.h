@@ -34,14 +34,11 @@
 
 #define XMLCONFIG_MAKEVERSION(major,minor,rev)  ((major)/1.0 + (minor)/1000.0 + (rev)/1000000.0)
 
-using std::string;
-using std::map;
-
 using XMLSupport::AttributeList;
 
 class vColor {
  public:
-  string name;
+  std::string name;
   float r,g,b,a;
 };
 
@@ -74,20 +71,22 @@ class VegaConfig {
   VegaConfig(const char *configfile);
   virtual ~VegaConfig();
 
-  void getColor(configNode *node,string name, float color[4],bool have_color=false);
-  void getColor(string section, string name, float color[4],bool have_color=false);
-  void gethColor(string section,string name,float color[4],int hexcolor);
-  void getColor(string name, float color[4]) { getColor("default",name,color); };
+  void getColor(configNode *node, const std::string & name, float color[4],bool have_color=false);
+  void getColor(const std::string & section, const std::string & name, float color[4],bool have_color=false);
+  void gethColor(const std::string & section, const std::string & name, float color[4],int hexcolor);
+  void getColor(const std::string & name, float color[4]) { getColor("default",name,color); };
 
-  string getVariable(string section,string name,string defaultvalue);
-  string getVariable(string section,string subsection,string name,string defaultvalue);
+  std::string getVariable(const std::string & section, const std::string & name, const std::string & defaultvalue);
+  std::string getVariable(const std::string & section, const std::string & subsection,
+		             const std::string & name, const std::string & defaultvalue);
 
-  configNode *findSection(string section,configNode *startnode);
-  configNode *findEntry(string name,configNode *startnode);
+  configNode *findSection(const std::string & section, configNode *startnode);
+  configNode *findEntry(const std::string & name, configNode *startnode);
 
-  void setVariable(configNode *entry,string value);
-  bool setVariable(string section,string name,string value);
-  bool setVariable(string section,string subsection,string name,string value);
+  void setVariable(configNode *entry, const std::string & value);
+  bool setVariable(const std::string & section, const std::string & name, const std::string & value);
+  bool setVariable(const std::string & section, const std::string & subsection,
+		           const std::string & name, const std::string & value);
 
   easyDomNode *Variables() { return variables; };
   virtual void bindKeys() {}
@@ -97,14 +96,14 @@ class VegaConfig {
  protected:
   float myversion;
 
-  string getVariable(configNode *section,string name,string defaultval);
+  std::string getVariable(configNode *section, const std::string & name, const std::string & defaultval);
 
   configNode *variables;
   configNode *bindings;
   configNode *colors;
 
-  map<string,string> map_variables;
-  map<string,vColor> map_colors;
+  std::map<std::string,std::string> map_variables;
+  std::map<std::string,vColor> map_colors;
 
   int hs_value_index;
 
@@ -114,10 +113,10 @@ class VegaConfig {
   void doVariables(configNode *node);
   void checkSection(configNode *node,enum section_t section_type);
   void checkVar(configNode *node);
-  void doSection(string prefix, configNode *node,enum section_t section_type);
-  void doVar(string prefix, configNode *node);
+  void doSection(const std::string & prefix, configNode *node,enum section_t section_type);
+  void doVar(const std::string & prefix, configNode *node);
   void doColors(configNode *node);
-  bool checkColor(string prefix, configNode *node);
+  bool checkColor(const std::string & prefix, configNode *node);
 
   virtual void doBindings(configNode *node) {}
   virtual void checkBind(configNode *node) {}

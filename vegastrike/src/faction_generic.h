@@ -109,7 +109,7 @@ namespace FactionUtil {
 		* 1 is happy. 0 is neutral (btw 1 and 0 will not attack)
 		* -1 is mad. <0 will attack
 		*/
-		int GetFactionIndex(std::string name);
+		int GetFactionIndex(const std::string & name);
 		inline int GetUpgradeFaction(){return upgradefac;}
 		inline int GetNeutralFaction(){return neutralfac;}
 		inline int GetPlanetFaction(){return planetfac;}
@@ -120,7 +120,7 @@ namespace FactionUtil {
 		//float GetRelation (std::string myfaction, std::string theirfaction);
 		std::string GetFactionName(int index);
 		bool isCitizenInt(int index);
-		bool isCitizen(std::string name);
+		bool isCitizen(const std::string & name);
 		void AdjustIntRelation (const int myfaction, const int theirfaction, const float factor, const float rank);
 		//void AdjustRelation(std::string myfaction,std::string theirfaction, float factor, float rank);
 		int GetPlaylist (const int myfaction);

@@ -31,17 +31,17 @@ bolt_draw::bolt_draw () {
   boltmesh=NULL;
   boltdecals=NULL;
 }
-int Bolt::AddTexture(bolt_draw *q, std::string file) {
+int Bolt::AddTexture(bolt_draw *q, const std::string & file) {
   int decal=0;
   if (decal>=(int)q->bolts.size()) {
-    q->bolts.push_back (vector <Bolt>());
+    q->bolts.push_back (std::vector <Bolt>());
   }
   return decal;
 }  
-int Bolt::AddAnimation(bolt_draw *q, std::string file, QVector cur_position) {
+int Bolt::AddAnimation(bolt_draw *q, const std::string & file, QVector cur_position) {
   int decal=0;
   if (decal>=(int)q->balls.size()) {
-    q->balls.push_back (vector <Bolt>());
+    q->balls.push_back (std::vector <Bolt>());
   }
   return decal;
 }

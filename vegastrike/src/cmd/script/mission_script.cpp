@@ -56,7 +56,7 @@
 
 void Mission::doImport(missionNode *node,int mode){
   if(mode==SCRIPT_PARSE && parsemode==PARSE_DECL){
-    string name=node->attr_value("name");
+    std::string name=node->attr_value("name");
     if(name.empty()){
       fatalError(node,mode,"you have to give a name to import");
       assert(0);
@@ -71,7 +71,7 @@ void Mission::doImport(missionNode *node,int mode){
 
 void Mission::doModule(missionNode *node,int mode){
   if(mode==SCRIPT_PARSE){
-      string name=node->attr_value("name");
+      std::string name=node->attr_value("name");
     if(parsemode==PARSE_DECL){
       if(name.empty()){
 	fatalError(node,mode,"you have to give a module name");
@@ -111,7 +111,7 @@ void Mission::doModule(missionNode *node,int mode){
   }
 
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
   
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
     missionNode *snode=(missionNode *)*siter;
@@ -201,7 +201,7 @@ void Mission::removeContext()
   scriptContext *old=stack->contexts[lastelem];
   stack->contexts.pop_back();
 #if 0
-  vsUMap<string,varInst *>::const_iterator iter;
+  vsUMap<std::string,varInst *>::const_iterator iter;
   for(iter=old->varinsts->begin();iter!=old->varinsts->end();iter++){
     varInst *vi=(*iter).second;
     deleteVarInst(vi);
@@ -233,7 +233,7 @@ varInst * Mission::doScript(missionNode *node,int mode, varInstMap *varmap){
       node->script.nr_arguments=0;
 
       //string retvalue=node->attr_value("return");
-      string retvalue=node->attr_value("type");
+      std::string retvalue=node->attr_value("type");
       if(retvalue.empty() || retvalue=="void"){
 	node->script.vartype=VAR_VOID;
       }
@@ -253,7 +253,7 @@ varInst * Mission::doScript(missionNode *node,int mode, varInstMap *varmap){
     addContext(node);
   }
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
 
      if(mode==SCRIPT_PARSE && parsemode==PARSE_DECL){
        node->script.nr_arguments=0;
@@ -325,7 +325,7 @@ void Mission::doArguments(missionNode *node,int mode,varInstMap *varmap){
 
   if(mode==SCRIPT_PARSE){
     if(parsemode==PARSE_DECL){
-      vector<easyDomNode *>::const_iterator siter;
+      std::vector<easyDomNode *>::const_iterator siter;
   
       for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
 	missionNode *snode=(missionNode *)*siter;
@@ -471,7 +471,7 @@ void Mission::doBlock(missionNode *node,int mode){
     addContext(node);
  }
 
-    vector<easyDomNode *>::const_iterator siter;
+    std::vector<easyDomNode *>::const_iterator siter;
   
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() && !have_return(mode); siter++){
     missionNode *snode=(missionNode *)*siter;
@@ -492,14 +492,14 @@ varInst *Mission::doExec(missionNode *node,int mode){
   trace(node,mode);
 
   if(mode==SCRIPT_PARSE){
-    string name=node->attr_value("name");
+    std::string name=node->attr_value("name");
     if(name.empty()){
       fatalError(node,mode,"you have to give name to exec");
       assert(0);
     }
     node->script.name=name;
 
-    string use_modstr=node->attr_value("module");
+    std::string use_modstr=node->attr_value("module");
     missionNode *module=NULL;
     missionNode *script=NULL;
     if(!use_modstr.empty()){
@@ -666,7 +666,7 @@ void Mission::deleteVarInst(varInst *vi,bool del_local){
 }
 
 void Mission::deleteVarMap(varInstMap *vmap){
-	vsUMap<string,varInst *>::const_iterator iter;
+	vsUMap<std::string,varInst *>::const_iterator iter;
     for(iter=vmap->begin();iter!=vmap->end();iter++){
       varInst *vi=(*iter).second;
       if(vi==NULL){
@@ -678,7 +678,7 @@ void Mission::deleteVarMap(varInstMap *vmap){
     }
 }
 
-unsigned int Mission::createClassInstance(string modulename){
+unsigned int Mission::createClassInstance(const std::string & modulename){
   missionNode *module_node=runtime.modules[modulename];
   if(module_node==NULL){
     fatalError(NULL,SCRIPT_RUN,"module "+modulename+" not found");
@@ -697,10 +697,10 @@ unsigned int Mission::createClassInstance(string modulename){
 
   varInstMap *cvmap0=module_node->script.classvars[0];
 
-  vsUMap<string,varInst *>::const_iterator iter;
+  vsUMap<std::string,varInst *>::const_iterator iter;
   for(iter=cvmap0->begin();iter!=cvmap0->end();iter++){
     varInst *vi0=(*iter).second;
-    string  vi0_name=(*iter).first;
+    std::string  vi0_name=(*iter).first;
 
     varInst *vi=newVarInst(VI_CLASSVAR);
     vi->type=vi0->type;
@@ -712,7 +712,7 @@ unsigned int Mission::createClassInstance(string modulename){
   return module_node->script.classinst_counter;
 }
 
-void Mission::destroyClassInstance(string modulename,unsigned int classid){
+void Mission::destroyClassInstance(const std::string & modulename,unsigned int classid){
   missionNode *module=runtime.modules[modulename];
   if(module==NULL){
     fatalError(NULL,SCRIPT_RUN,"module "+modulename+" not found");

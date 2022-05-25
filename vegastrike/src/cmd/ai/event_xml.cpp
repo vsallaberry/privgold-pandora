@@ -11,7 +11,11 @@
 #include "vs_globals.h"
 #include "configxml.h"
 #include "log.h"
-extern bool validateHardCodedScript(std::string s);
+
+using std::string;
+using std::vector;
+
+extern bool validateHardCodedScript(const std::string & s);
 //serves to run through a XML file that nests things for "and". 
 
 #define PYAI_LOG(_lvl, ...) VS_LOG("pyAI", _lvl, __VA_ARGS__)

@@ -27,7 +27,7 @@
 using namespace GalaxyXML;
 
 extern StarSystem *GetLoadedStarSystem(const char * file);
-vector <StarSystem *> deleteQueue;
+std::vector <StarSystem *> deleteQueue;
 void Universe::clearAllSystems() {
   while (star_system.size()) {
     StarSystem * deleted = star_system.back();
@@ -50,7 +50,7 @@ void Universe::clearAllSystems() {
   script_system=NULL;
 }
 
-Cockpit * Universe::createCockpit( std::string player)
+Cockpit * Universe::createCockpit( const std::string & player)
 {
 	Cockpit * cp = new Cockpit ("",NULL,player);
 	cockpit.push_back( cp);
@@ -58,14 +58,14 @@ Cockpit * Universe::createCockpit( std::string player)
 }
 
 Unit * DockToSavedBases (int playernum, QVector &safevec) {
-	static string _str=vs_config->getVariable("AI","startDockedTo","MiningBase");
-    string str = _str;
+	static std::string _str=vs_config->getVariable("AI","startDockedTo","MiningBase");
+    std::string str = _str;
 	Unit *plr=_Universe->AccessCockpit(playernum)->GetParent();
 	if (!plr || !plr->getStarSystem()) {
 		safevec = QVector( 0, 0, 0);
 		return NULL;
 	}
-	vector <string> strs=loadStringList(playernum,mission_key);
+	std::vector <std::string> strs=loadStringList(playernum,mission_key);
 	if (strs.size()) {
 		str=strs[0];
 	}
@@ -90,7 +90,7 @@ Unit * DockToSavedBases (int playernum, QVector &safevec) {
 		dock_position = UniverseUtil::SafeEntrancePoint(dock_position,plr->rSize());
 		plr->SetPosAndCumPos(dock_position);
 
-		vector <DockingPorts> dprt=closestUnit->image->dockingports;
+		std::vector <DockingPorts> dprt=closestUnit->image->dockingports;
 		int i;
 		for (i=0;;i++) {
 			if (i>=dprt.size()) {
@@ -154,7 +154,7 @@ void Universe::SetActiveCockpit (Cockpit * cp) {
     }
   }
 }
-void Universe::SetupCockpits(vector  <string> playerNames) {
+void Universe::SetupCockpits(const std::vector  <std::string> & playerNames) {
 	for (unsigned int i=0;i<playerNames.size();i++) {
 	  cockpit.push_back( new Cockpit ("",NULL,playerNames[i]));
 	}
@@ -163,10 +163,10 @@ void SortStarSystems (std::vector <StarSystem *> &ss, StarSystem * drawn) {
   if ((*ss.begin())==drawn) {
     return;
   }
-  vector<StarSystem*>::iterator drw = std::find (ss.begin(),ss.end(),drawn);
+  std::vector<StarSystem*>::iterator drw = std::find (ss.begin(),ss.end(),drawn);
   if (drw!=ss.end()) {
     StarSystem * tmp=drawn;
-    vector<StarSystem*>::iterator i=ss.begin();
+    std::vector<StarSystem*>::iterator i=ss.begin();
     while (i<=drw) {
       StarSystem * t=*i;
       *i=tmp;
@@ -249,16 +249,16 @@ void Universe::netLock(bool enable) {
 void Universe::UnloadStarSystem (StarSystem * s) {
   //not sure what to do here? serialize?
 }
-StarSystem * Universe::Init (string systemfile, const Vector & centr,const string planetname) {
-  string fullname=systemfile+".system";
+StarSystem * Universe::Init (const std::string & systemfile, const Vector & centr,const std::string & planetname) {
+  std::string fullname=systemfile+".system";
   return GenerateStarSystem((char *)fullname.c_str(),"",centr);
 }
 
 extern void micro_sleep (unsigned int howmuch);
 
-StarSystem *Universe::getStarSystem(string name){
+StarSystem *Universe::getStarSystem(const std::string & name){
 
-  vector<StarSystem*>::iterator iter;
+  std::vector<StarSystem*>::iterator iter;
 
   for(iter = star_system.begin();iter!=star_system.end();iter++){
     StarSystem *ss=*iter;
@@ -271,8 +271,8 @@ StarSystem *Universe::getStarSystem(string name){
 }
 
 extern void SetStarSystemLoading (bool value);
-extern void MakeStarSystem (string file, Galaxy *galaxy, string origin, int forcerandom);
-extern string RemoveDotSystem (const char *input);
+extern void MakeStarSystem (const std::string & file, Galaxy *galaxy, const std::string & origin, int forcerandom);
+extern std::string RemoveDotSystem (const char *input);
 using namespace VSFileSystem;
 
 static void ss_generating(bool enable)
@@ -307,7 +307,7 @@ void Universe::Generate1( const char * file, const char * jumpback)
   }
   if( SERVER )
   {
-	string filestr( file);
+	std::string filestr( file);
 	UniverseUtil::ComputeSystemSerials( filestr );
   }
 }
@@ -328,10 +328,10 @@ void Universe::Generate2( StarSystem * ss)
 
   script_system=ss;
   UNIV_LOG(logvs::NOTICE, "Loading Star System %s",ss->getFileName().c_str());
-  const vector <std::string> &adjacent = getAdjacentStarSystems(ss->getFileName());
+  const std::vector <std::string> &adjacent = getAdjacentStarSystems(ss->getFileName());
   for (unsigned int i=0;i<adjacent.size();i++) {
     UNIV_LOG(logvs::NOTICE, "  Next To: %s",adjacent[i].c_str());
-    const vector <std::string> &adj = getAdjacentStarSystems(adjacent[i]);
+    const std::vector <std::string> &adj = getAdjacentStarSystems(adjacent[i]);
   }
   static bool first=true;
   if (!first) {
@@ -391,12 +391,12 @@ void InitUnitTables () {
 	VSFile allUnits;
 	VSError err;
 
-	static string unitdata= vs_config->getVariable("data","UnitCSV","modunits.csv");
+	static std::string unitdata= vs_config->getVariable("data","UnitCSV","modunits.csv");
 	while (unitdata.length()!=0) {
 		string::size_type  where=unitdata.find(" "), where2=where;
 		if (where==string::npos)
 			where=unitdata.length();
-		string tmp = unitdata.substr(0,where);
+		std::string tmp = unitdata.substr(0,where);
 		err = allUnits.OpenReadOnly(tmp,UnitFile);
 		if (err<=Ok) {
 			unitTables.push_back(new CSVTable(allUnits,allUnits.GetRoot()));

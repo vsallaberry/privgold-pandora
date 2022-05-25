@@ -33,8 +33,6 @@
 #include <map>
 #include "xml_support.h"
 
-using std::string;
-using std::vector;
 using std::stack;
 using std::ostream;
 

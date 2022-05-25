@@ -59,14 +59,14 @@ class SaveGame {
   void SetSavedCredits (float);
   void SetPlayerLocation (const QVector &playerloc);
   QVector GetPlayerLocation ();
-  void SetStarSystem (std::string sys);
+  void SetStarSystem (const std::string & sys);
   std::string GetStarSystem();
   std::string GetOldStarSystem();
   std::string GetPlayerFaction() { return playerfaction;}
-  void	 SetPlayerFaction( std::string faction) { playerfaction = faction;}
+  void	 SetPlayerFaction( const std::string & faction) { playerfaction = faction;}
   std::string WriteSavedUnit (SavedUnits *su);
-  std::string WriteSaveGame (const char * systemname, const class QVector &Pos,float credits, std::vector <std::string> unitname, int player_num, std::string fact="", bool write=true);
-  std::string WritePlayerData( const QVector &FP, std::vector<std::string> unitname, const char * systemname, float credits, std::string fact="");
+  std::string WriteSaveGame (const char * systemname, const class QVector &Pos,float credits, const std::vector <std::string> & unitname, int player_num, const std::string & fact="", bool write=true);
+  std::string WritePlayerData( const QVector &FP, const std::vector<std::string> & unitname, const char * systemname, float credits, const std::string & fact="");
   std::string WriteDynamicUniverse();
   void ReadSavedPackets (char * &buf, bool commitfaction, bool skip_news=false, bool select_data=false, const std::set<std::string> &select_data_filter = std::set<std::string>());
   ///cast address to size_t if you need address as integerlong
@@ -78,8 +78,8 @@ class SaveGame {
 };
 bool WriteSaveGame (class Cockpit * cp, bool auto_save);
 const std::string& GetCurrentSaveGame();
-std::string SetCurrentSaveGame(std::string newname);
+std::string SetCurrentSaveGame(const std::string & newname);
 const std::string& GetSaveDir();
-bool CopySavedShips(std::string filename, int player_num,const std::vector<std::string>&starships,bool load);
+bool CopySavedShips(const std::string & filename, int player_num,const std::vector<std::string>&starships,bool load);
 #endif
 

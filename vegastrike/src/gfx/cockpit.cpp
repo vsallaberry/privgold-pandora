@@ -85,7 +85,7 @@ std::string GameCockpit::GetNavSelectedSystem() {
   return AccessNavSystem()->getSelectedSystem();
 }
 
-void soundContainer::loadsound (string soundfile,bool looping) {
+void soundContainer::loadsound (const std::string & soundfile,bool looping) {
 	if (this->sound==-2&&soundfile.size()) {
 		string sound=GameCockpit::getsoundfile(soundfile);
 		if (sound.size()) {
@@ -146,7 +146,7 @@ void GameCockpit::LocalToRadar (const Vector & pos, float &s, float &t) {
   t = pos.j/t;
 }
 
-void GameCockpit::SetSoundFile (string sound) {
+void GameCockpit::SetSoundFile (const std::string & sound) {
 	soundfile=AUDCreateSoundWAV (sound, false);
 }
 
@@ -1713,7 +1713,10 @@ void GameCockpit::DrawGauges(Unit * un) {
   GFXColor4f (1,1,1,1);
 }
 
-void GameCockpit::Init (const char * file) {
+//void GameCockpit::Init (const char * file) { // renamed to InitGameCP because conflicts with virtual Cockpit::Init(const char *, bool)
+void GameCockpit::InitGameCP (const char * file) { //this has never been used (for privateer at least)
+#warning "'GameCockpit::Init(const char * file)' hides overloaded virtual function [-Woverloaded-virtual] 'Cockpit::Init(const char*,bool)'"
+  GFX_DBG(logvs::DBG, "GameCockpit::Init(%s)...", file);
   smooth_fov=g_game.fov;
   editingTextMessage=false;
   armor8=false;
@@ -1906,7 +1909,7 @@ bool GameCockpit::CanDrawNavSystem() {
   return ThisNav.CheckDraw();
 }
 
-void GameCockpit::visitSystem ( string systemname ) {
+void GameCockpit::visitSystem ( const std::string & systemname ) {
 	Cockpit::visitSystem(systemname);
 	if(AccessNavSystem()) {
 		static bool AlwaysUpdateNavMap=XMLSupport::parse_bool(vs_config->getVariable("graphics","update_nav_after_jump","false"));//causes occasional crash--only may have tracked it down
@@ -2246,7 +2249,7 @@ static void DrawCrosshairs (float x, float y, float wid, float hei, const GFXCol
 
 extern bool QuitAllow;
 extern bool screenshotkey;
-QVector SystemLocation(std::string system);
+QVector SystemLocation(const std::string & system);
 double howFarToJump();
 
 void GameCockpit::Draw() {
@@ -2862,7 +2865,7 @@ string GameCockpit::getsoundending(int which) {
 }
 
 #include <algorithm>
-string GameCockpit::getsoundfile(string sound) {
+string GameCockpit::getsoundfile(const std::string & sound) {
 	bool ok = false;
 	int i;
 	string lastsound="";

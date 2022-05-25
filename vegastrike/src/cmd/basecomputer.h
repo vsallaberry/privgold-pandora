@@ -71,7 +71,7 @@ public:
     // virtual bool processWindowCommand(const EventCommandId& command, Control* control);
 
     // CONSTRUCTION
-    BaseComputer(Unit* player, Unit* base, const vector<DisplayMode>& modes);
+    BaseComputer(Unit* player, Unit* base, const std::vector<DisplayMode>& modes);
     virtual ~BaseComputer(void);
 
     // These are the transactions that can happen using this object.
@@ -91,7 +91,7 @@ protected:
 
     // Association between CargoColor list, picker, and transaction type.
     struct TransactionList {
-        vector<CargoColor> masterList;          // All the items that could be in the picker.
+        std::vector<CargoColor> masterList;          // All the items that could be in the picker.
         Picker* picker;                         // The picker loaded with the list.
         TransactionType transaction;            // The kind of transaction these items will generate.
         TransactionList() : picker(NULL), transaction(NULL_TRANSACTION) {};
@@ -105,7 +105,7 @@ protected:
     public:
         
         // CONSTRUCTION.
-        LoadSaveQuitConfirm(BaseComputer* player, std::string confirmtype, std::string text) : m_parent(player), type(confirmtype), text(text) {};
+        LoadSaveQuitConfirm(BaseComputer* player, const std::string & confirmtype, const std::string & text) : m_parent(player), type(confirmtype), text(text) {};
         virtual ~LoadSaveQuitConfirm(void) {};
         
         // Set up the window and get everything ready.
@@ -198,7 +198,7 @@ protected:
     bool isTransactionOK(const Cargo& originalItem, TransactionType transType, int quantity = 1);
 
     // Create whatever cells are needed to add a category to the picker.
-    SimplePickerCell* createCategoryCell(SimplePickerCells& cells, const string& category, bool skipFirstCategory);
+    SimplePickerCell* createCategoryCell(SimplePickerCells& cells, const std::string & category, bool skipFirstCategory);
 
     // Load a picker with a list of items.
     void loadListPicker(TransactionList& list, SimplePicker& picker, TransactionType transType,
@@ -279,16 +279,16 @@ protected:
     // Contruct the controls in code.
     void constructControls(void);
 
-    GFXColor getColorForGroup(std::string id);
+    GFXColor getColorForGroup(const std::string & id);
     
     // Get a filtered list of items from a unit.
-    void loadMasterList(Unit *un, const vector<string>& filterthis,const vector<string>& invfilterthis, bool removezero, TransactionList& list);
+    void loadMasterList(Unit *un, const std::vector<std::string>& filterthis,const std::vector<std::string>& invfilterthis, bool removezero, TransactionList& list);
 
     // Load a master list with missions.
     void loadMissionsMasterList(TransactionList& list);
 
     // VARIABLES
-    vector<DisplayMode> m_displayModes;     // List of diaplays to provide.
+    std::vector<DisplayMode> m_displayModes;// List of diaplays to provide.
   public:
 
     UnitContainer m_player;                 // Ship info, etc.
@@ -310,7 +310,7 @@ protected:
     friend class BuyUpgradeOperation;
     friend class SellUpgradeOperation;
 };
-bool buyShip(Unit * base,Unit* player, std::string,bool myfleet, bool force_base_inventory, BaseComputer*);
-bool sellShip(Unit * base,Unit* player, std::string,BaseComputer*);
+bool buyShip(Unit * base,Unit* player, const std::string &,bool myfleet, bool force_base_inventory, BaseComputer*);
+bool sellShip(Unit * base,Unit* player, const std::string &,BaseComputer*);
 
 #endif   // __BASECOMPUTER_H__

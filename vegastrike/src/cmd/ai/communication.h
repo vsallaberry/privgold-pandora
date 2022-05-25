@@ -7,25 +7,25 @@ class FSM {
 
  public:
   struct Node {
-    vector <std::string> messages;
-    vector <int> sounds;//messages.size() sound for each sex
+    std::vector <std::string> messages;
+    std::vector <int> sounds;//messages.size() sound for each sex
     float messagedelta;
-    vector <unsigned int> edges;
+    std::vector <unsigned int> edges;
     int GetSound (unsigned char sex, unsigned int multiple)const;
     bool StopSound(unsigned char sex);
     std::string GetMessage(unsigned int &multiple)const;
     void AddSound (int sound, unsigned char sex);
-    Node (const vector<std::string> &message, float messagedel): messages(message),messagedelta(messagedel){if (messages.size()==0) messages.push_back("<static>");}
-    static Node MakeNode(std::string message,float messagedel) {
-      vector<string> tmp;tmp.push_back(message);
+    Node (const std::vector<std::string> &message, float messagedel): messages(message),messagedelta(messagedel){if (messages.size()==0) messages.push_back("<static>");}
+    static Node MakeNode(const std::string & message,float messagedel) {
+      std::vector<std::string> tmp;tmp.push_back(message);
       return Node(tmp,messagedel);
     }
   };
-  vector <Node> nodes;
+  std::vector <Node> nodes;
   bool StopAllSounds(unsigned char sex);
   FSM (const char * filename);
   void LoadXML(const char * factionfile);  
-  void beginElement(const string &name, const AttributeList attributes);
+  void beginElement(const std::string &name, const AttributeList attributes);
   static void beginElement(void *userData, const XML_Char *name, const XML_Char **atts);
   static void endElement(void *userData, const XML_Char *name);
   std::string GetEdgesString (int curstate);
@@ -77,7 +77,7 @@ class CommunicationMessage {
           return &fsm->nodes[0];
       }
   }
-  const vector <FSM::Node> &GetPossibleState () const;
+  const std::vector <FSM::Node> &GetPossibleState () const;
   float getDeltaRelation()const {return fsm->getDeltaRelation (prevstate,curstate);}
 };
 #endif

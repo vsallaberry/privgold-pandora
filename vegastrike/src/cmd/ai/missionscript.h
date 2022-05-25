@@ -36,20 +36,20 @@
 class AImissionScript : public FlyByWire {
 public:
   ///saves scriptname in the filename var
-  AImissionScript(string modulename);
+  AImissionScript(const std::string & modulename);
   ~AImissionScript();
   ///Loads the AI script from the hard drive, or executes if loaded
   void Execute();
 
-  virtual string getOrderDescription() {
+  virtual std::string getOrderDescription() {
     char buffer[300];
-    sprintf(buffer,"%s:%d:%s",modulename.c_str(),classid,getActionString().c_str());
+    snprintf(buffer,sizeof(buffer),"%s:%d:%s",modulename.c_str(),classid,getActionString().c_str());
     return buffer;
   };
   
  protected:
   
-  string modulename;
+  std::string modulename;
   unsigned int classid;
   bool first_run;
 };

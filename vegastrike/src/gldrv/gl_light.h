@@ -123,11 +123,11 @@ void removelightfromnewpick(int whichlight);
 ///The curren tlight context
 extern int _currentContext;
 ///The light data _llights points to one of these
-extern vector <vector <gfx_light> > _local_lights_dat;
+extern std::vector <std::vector <gfx_light> > _local_lights_dat;
 ///The ambient lights that are around
-extern vector <GFXColor> _ambient_light;
+extern std::vector <GFXColor> _ambient_light;
 ///The lights existing in a certain context. Points to _local_lights_dat
-extern vector <gfx_light> * _llights;
+extern std::vector <gfx_light> * _llights;
 ///How many lights are enabled (for fast picking)
 extern int _GLLightsEnabled;
 

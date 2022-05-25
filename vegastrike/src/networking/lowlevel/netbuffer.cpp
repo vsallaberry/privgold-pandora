@@ -22,7 +22,7 @@ char getSimpleChar(std::string &input){
 }
 int getSimpleInt(std::string &input){
   std::string::size_type where=input.find(" ");
-  if (where!=string::npos) {
+  if (where!=std::string::npos) {
     std::string num=input.substr(0,where);
     int len=XMLSupport::parse_int(num);
     input=input.substr(where+1);
@@ -30,7 +30,7 @@ int getSimpleInt(std::string &input){
   }
   return 0;  
 }
-void addSimpleString(std::string &input, const std::string adder){
+void addSimpleString(std::string &input, const std::string & adder){
   addSimpleInt(input,adder.length());
   input+=adder;
 }
@@ -644,7 +644,7 @@ unsigned char *	NetBuffer::getBuffer( int offt)
 			return tmp;
 		}
 		// Add and get a string with its length before the char * buffer part
-void	NetBuffer::addString( const string& str)
+void	NetBuffer::addString( const std::string& str)
 {
 	ADD_NB(NB_STRING);
 	unsigned int len = str.length();
@@ -667,7 +667,7 @@ void	NetBuffer::addString( const string& str)
 	}
 }
 
-string	NetBuffer::getString()
+std::string	NetBuffer::getString()
 {
 	CHECK_NB(NB_STRING);
 	unsigned short s;
@@ -678,7 +678,7 @@ string	NetBuffer::getString()
 			return std::string();
 		char c = buffer[offset+s];
 		buffer[offset+s]=0;
-	    string str( buffer+offset);
+	    std::string str( buffer+offset);
 	    buffer[offset+s]=c;
 	    offset += s;
 
@@ -692,7 +692,7 @@ string	NetBuffer::getString()
 			return std::string();
 		char c = buffer[offset+len];
 		buffer[offset+len]=0;
-	    string str( buffer+offset);
+	    std::string str( buffer+offset);
 	    buffer[offset+len]=c;
 	    offset += len;
 

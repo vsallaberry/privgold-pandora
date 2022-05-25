@@ -20,13 +20,13 @@
 #ifndef NO_GFX
 #include "gfx/cockpit.h"
 #endif
-const Unit * makeTemplateUpgrade (string name, int faction);//for percentoperational
-const Unit* getUnitFromUpgradeName(const string& upgradeName, int myUnitFaction = 0);//for percentoperational
+const Unit * makeTemplateUpgrade (const std::string & name, int faction);//for percentoperational
+const Unit* getUnitFromUpgradeName(const std::string& upgradeName, int myUnitFaction = 0);//for percentoperational
 extern const char * DamagedCategory;//for percentoperational
-extern bool isWeapon (std::string name);//for percentoperational
+extern bool isWeapon (const std::string & name);//for percentoperational
 using std::string;
 extern Unit * getTopLevelOwner();
-static bool nameIsAsteroid(std::string name){
+static bool nameIsAsteroid(const std::string & name){
   if (name.length()<8) return false;
   return (name[0]=='A'||name[0]=='a')&&
     name[1]=='s'&&
@@ -332,7 +332,7 @@ namespace UnitUtil {
 		if (!my_unit)return;
 		my_unit->SetFaction(factionname);
     }
-	void setFactionName (Unit *my_unit,string factionname) {
+	void setFactionName (Unit *my_unit,const string & factionname) {
 		if (!my_unit)return;
 		my_unit->SetFaction(FactionUtil::GetFactionIndex(factionname));
     }
@@ -375,7 +375,7 @@ namespace UnitUtil {
 		if (!my_unit)return "";
 		return my_unit->name;
 	}
-	void setName(Unit *my_unit,string name){
+	void setName(Unit *my_unit,const string & name){
 		if (!my_unit)return;
 		my_unit->name=name;
 	}
@@ -445,7 +445,7 @@ namespace UnitUtil {
 			return my_unit->getFlightgroup()->directive; else
 			return fgdirdef;
 	}
-	bool setFgDirective(Unit *my_unit,string inp){
+	bool setFgDirective(Unit *my_unit,const string & inp){
 		if (!my_unit)return false;
 		if (my_unit->getFlightgroup()!=NULL) {
 			my_unit->getFlightgroup()->directive = inp;
@@ -457,7 +457,7 @@ namespace UnitUtil {
 		if (!my_unit)return -1;
 		return my_unit->getFgSubnumber();
 	}
-	int removeCargo(Unit *my_unit,string s, int quantity, bool erasezero){
+	int removeCargo(Unit *my_unit,const string & s, int quantity, bool erasezero){
 		if (!my_unit)return 0;
 		unsigned int index;
 		if (my_unit->GetCargo(s,index)) {
@@ -510,7 +510,7 @@ namespace UnitUtil {
             }
             return my_unit->RepairUpgrade();
         }
-	float upgrade(Unit *my_unit, string file,int mountoffset,int subunitoffset, bool force,bool loop_through_mounts) {
+	float upgrade(Unit *my_unit, const string & file,int mountoffset,int subunitoffset, bool force,bool loop_through_mounts) {
 		if (!my_unit)return 0;
 		double percentage=0;
 		// printf ("upgrading %s %s %d %d %s\n",my_unit->name.get().c_str(),file.c_str(),mountoffset, subunitoffset,loop_through_mounts?"true":"false");
@@ -519,7 +519,7 @@ namespace UnitUtil {
 		my_unit->SetTurretAI();
 		return percentage;
 	}
-	int removeWeapon(Unit * my_unit, string weapon_name, int mountoffset, bool loop) {
+	int removeWeapon(Unit * my_unit, const string & weapon_name, int mountoffset, bool loop) {
           if (!my_unit)return -1;
           int maxmount=my_unit->mounts.size();
           int max=maxmount+mountoffset;
@@ -551,7 +551,7 @@ namespace UnitUtil {
           my_unit->AddCargo(carg);
 	  return carg.quantity; 
 	}
-	int hasCargo (const Unit * my_unit, string mycarg) {
+	int hasCargo (const Unit * my_unit, const string & mycarg) {
 	  if (!my_unit) return 0;
 		unsigned int i;
 		const Cargo * c = my_unit->GetCargo (mycarg,i);
@@ -559,7 +559,7 @@ namespace UnitUtil {
 			return 0;
 		return c->quantity;
 	}
-	bool JumpTo (Unit * unit, string system) {
+	bool JumpTo (Unit * unit, const string & system) {
 		if (unit!=NULL)
 			return unit->getStarSystem()->JumpTo(unit,NULL,system);
 		else
@@ -615,7 +615,7 @@ namespace UnitUtil {
 	  return ret;
 	}
 
-	Cargo GetCargo (const Unit *my_unit, std::string cargname) {
+	Cargo GetCargo (const Unit *my_unit, const std::string & cargname) {
 		if (my_unit) {
 			unsigned int indx=0;
 			const Cargo *cargptr=my_unit->GetCargo(cargname,indx);
@@ -749,7 +749,7 @@ namespace UnitUtil {
 	    un->PrimeOrders (new Orders::DockingOps (unitToDockWith, ai,actually_dock,true));
 	  }
 	}
-	float PercentOperational (Unit * un, std::string name, std::string category, bool countHullAndArmorAsFull) {
+	float PercentOperational (Unit * un, const std::string & name, const std::string & category, bool countHullAndArmorAsFull) {
 	  if (!un) return 0;
 	  if (category.find(DamagedCategory)==0) {
 	    return 0.0f;

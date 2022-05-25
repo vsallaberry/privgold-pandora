@@ -13,7 +13,7 @@ VSSprite * createVSSprite(const char *file);
 bool isVSSpriteLoaded(const VSSprite *);
 void deleteVSSprite(VSSprite *);
 
-void cache_ani (string s);
+void cache_ani (const std::string & s);
 
 /* ADDED FOR extensible use of unit pretty print and unit loading */ 
 

@@ -27,7 +27,7 @@ struct soundContainer  {//used to contain static sounds that will only be
 	soundContainer () {
 		sound=-2;
 	}
-	void loadsound (string sooundfile,bool looping=false);
+	void loadsound (const std::string & sooundfile,bool looping=false);
 	void playsound ();
 	~soundContainer ();
 };
@@ -94,7 +94,7 @@ private:
   // gets the color by looking closer at the unit
   GFXColor unitToColor (Unit *un,Unit *target, char ifflevel);
   // the style of the radar (WC|Elite)
-  string radar_type;
+  std::string radar_type;
   /// Used to display the arrow pointing to the currently selected target.
   float projection_limit_x, projection_limit_y;
   float inv_screen_aspect_ratio;  // Precomputed division 1 / g_game.aspect.
@@ -104,8 +104,8 @@ private:
 
   void LoadXML (const char *file);
   void LoadXML (VSFileSystem::VSFile & f);
-  void beginElement(const string &name, const AttributeList &attributes);
-  void endElement(const string &name);
+  void beginElement(const std::string &name, const AttributeList &attributes);
+  void endElement(const std::string &name);
   ///Destructs cockpit info for new loading
   void Delete();
   ///draws the navigation symbol around targetted location
@@ -136,12 +136,12 @@ private:
   bool editingTextMessage;
   std::string autoMessage;
   float autoMessageTime;
-  virtual void setTargetLabel(const string &msg);
-  virtual string getTargetLabel();
+  virtual void setTargetLabel(const std::string &msg);
+  virtual std::string getTargetLabel();
   void	ReceivedTargetInfo();
   static void NavScreen (const KBData&,KBSTATE k); // scheherazade
-  static string getsoundending(int which=0);
-  static string getsoundfile(string filename);
+  static std::string getsoundending(int which=0);
+  static std::string getsoundfile(const std::string & filename);
   void InitStatic ();
   void Shake (float amt, int level /*0= shield 1=armor 2=hull*/);
   int Autopilot (Unit * target);
@@ -154,7 +154,8 @@ private:
   ///Looks up a particular Gauge stat on unit
   float LookupUnitStat (int stat, Unit *target);
   ///Loads cockpit info...just as constructor
-  void Init (const char * file);
+  //void Init (const char * file); //--> renamed to InitGameCP() because conflicts with virtual Cockpit::Init(const char *, bool);
+  virtual void InitGameCP (const char * file); //this has never been used (for privateer at least), Cockpit::Init(const char*,bool) was called.
   ///Draws Cockpit then restores viewport
   void Draw();
   //void Update();//respawns and the like.
@@ -173,7 +174,7 @@ private:
   static void SwitchControl (const KBData&,KBSTATE);
   static void ForceSwitchControl (const KBData&,KBSTATE);
   static void TurretControl (const KBData&,KBSTATE);
-  void SetSoundFile (std::string sound);
+  void SetSoundFile (const std::string & sound);
   int GetSoundFile () {return soundfile;}
   void SetCommAnimation (Animation * ani, Unit * un);
   void SetStaticAnimation ();
@@ -195,6 +196,6 @@ private:
   virtual bool CanDrawNavSystem();
   virtual bool DrawNavSystem();
   virtual bool CheckCommAnimation(Unit *un);
-  virtual void visitSystem(std::string systemName);
+  virtual void visitSystem(const std::string & systemName);
 };
 #endif

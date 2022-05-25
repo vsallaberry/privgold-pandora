@@ -1161,7 +1161,7 @@ static void setup_sdl_video_mode()
     bpp = gl_options.color_depth;
 
     int rs,gs,bs,zs; rs=gs=bs=(bpp==16)?5:8;
-    string rgbfmt = vs_config->getVariable("graphics","rgb_pixel_format",((bpp==16)?"555":"888"));
+    std::string rgbfmt = vs_config->getVariable("graphics","rgb_pixel_format",((bpp==16)?"555":"888"));
     zs = XMLSupport::parse_int( vs_config->getVariable("graphics","z_pixel_format","24") );
     if ((rgbfmt.length()==3)&&isdigit(rgbfmt[0])&&isdigit(rgbfmt[1])&&isdigit(rgbfmt[2])) {
 	rs = rgbfmt[0]-'0';

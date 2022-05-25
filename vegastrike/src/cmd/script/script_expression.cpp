@@ -105,7 +105,7 @@ varInst *Mission::checkObjectExpr(missionNode *node,int mode){
 
 varInst * Mission::doMath(missionNode *node,int mode){
   //  if(mode==SCRIPT_PARSE){
-    string mathname=node->attr_value("math");
+    std::string mathname=node->attr_value("math");
 
     int len=node->subnodes.size();
     if(len<2){
@@ -183,7 +183,7 @@ varInst * Mission::doMath(missionNode *node,int mode){
 }
 
 
-int Mission::intMath(string mathname,int res1,int res2){
+int Mission::intMath(const std::string & mathname,int res1,int res2){
 int res=res1;
 
 	if(mathname=="+"){
@@ -206,7 +206,7 @@ int res=res1;
 }
 
 /* *********************************************************** */
-double Mission::floatMath(string mathname,double res1,double res2){
+double Mission::floatMath(const std::string & mathname,double res1,double res2){
 double res=res1;
 
 	if(mathname=="+"){
@@ -247,7 +247,7 @@ double Mission::doFMath(missionNode *node,int mode){
 
 
   //  if(mode==SCRIPT_PARSE){
-    string mathname=node->attr_value("math");
+    std::string mathname=node->attr_value("math");
 
     int len=node->subnodes.size();
     if(len<2){
@@ -309,7 +309,7 @@ int Mission::doIMath(missionNode *node,int mode){
 
 #if 0
   //  if(mode==SCRIPT_PARSE){
-    string mathname=node->attr_value("math");
+    std::string mathname=node->attr_value("math");
 
     int len=node->subnodes.size();
     if(len<2){
@@ -557,7 +557,7 @@ bool Mission::doAndOr(missionNode *node,int mode){
     ok=false;
   }
 
-  vector<easyDomNode *>::const_iterator siter;
+  std::vector<easyDomNode *>::const_iterator siter;
   
   int i=0;
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++,i++){
@@ -606,7 +606,7 @@ bool Mission::doNot(missionNode *node,int mode){
 
 bool Mission::doTest(missionNode *node,int mode){
   if(mode==SCRIPT_PARSE){
-    string teststr=node->attr_value("test");
+    std::string teststr=node->attr_value("test");
     if(teststr.empty()){
       fatalError(node,mode,"you have to give test an argument what to test");
       assert(0);
@@ -640,7 +640,7 @@ bool Mission::doTest(missionNode *node,int mode){
       assert(0);
     }
 
-    vector<easyDomNode *>::const_iterator siter;
+    std::vector<easyDomNode *>::const_iterator siter;
 #if 0
     int i=0;
     for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() && i<2; siter++){

@@ -51,7 +51,7 @@ void Asteroid::reactToCollision(Unit * smaller, const QVector& biglocation, cons
 }
 
 
-Asteroid::Asteroid(const char * filename, int faction, Flightgroup* fg, int fg_snumber, float difficulty):Unit (filename,false, faction,string(""),fg,fg_snumber)
+Asteroid::Asteroid(const char * filename, int faction, Flightgroup* fg, int fg_snumber, float difficulty):Unit (filename,false, faction,std::string(""),fg,fg_snumber)
 {
 	Init( difficulty);
 }

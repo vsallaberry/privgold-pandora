@@ -4,7 +4,7 @@
 
 
 
-string retrievedata(string data, string type)
+std::string retrievedata(const std::string & data, const std::string & type)
 {
 	int length = data.size();
 	if(length == 0)
@@ -16,7 +16,7 @@ string retrievedata(string data, string type)
 
 	int testlength = type.size();
 	char testchar = 'p';
-	string teststring = "";
+	std::string teststring = "";
 
 	int counter = 0;
 	while(counter < length)
@@ -43,7 +43,7 @@ string retrievedata(string data, string type)
 					//	***********************************
 					int startspaces = 0;
 					int endspaces = teststring.size()-1;
-					string possibletype = "";
+					std::string possibletype = "";
 
 					while(teststring[startspaces] == ' ')
 						startspaces += 1;
@@ -66,7 +66,7 @@ string retrievedata(string data, string type)
 					{
 				//		cout << possibletype;
 						int returncounter = counter;
-						string returnstring = "";
+						std::string returnstring = "";
 						returncounter += 1;	//	pass the =
 
 						while(data[returncounter] == ' ')

@@ -45,7 +45,7 @@ class Logo{
 
 	int refcount; //number of references to draw_queue
 	Logo *owner_of_draw_queue; // owner of the draw_queue
-	vector<DrawContext> *draw_queue;
+	std::vector<DrawContext> *draw_queue;
 	bool will_be_drawn;
 	void ProcessDrawQueue();
 public:

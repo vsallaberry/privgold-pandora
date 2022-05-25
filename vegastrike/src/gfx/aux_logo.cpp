@@ -28,7 +28,7 @@
 #include "vs_globals.h"
 #include "config_xml.h"
 #include "xml_support.h"
-vector<Logo*> undrawn_logos;
+std::vector<Logo*> undrawn_logos;
 Hashtable<int, Logo, 257> Logo::decalHash;
 
 Logo::Logo(int numberlogos,  Vector* center,Vector* normal, float* size, float* rotation, float offset,Texture* Dec, Vector * Ref)
@@ -105,7 +105,7 @@ void Logo::SetDecal(Texture *decal)
     l = new Logo (*this);//(Logo*)malloc (sizeof (Logo));
     //    memcpy (l,this,sizeof(Logo));
     decalHash.Put(decal->name, l);
-    draw_queue = l->draw_queue = new vector<DrawContext>();
+    draw_queue = l->draw_queue = new std::vector<DrawContext>();
     owner_of_draw_queue = l->owner_of_draw_queue = l;
     l->refcount = 1;
   }

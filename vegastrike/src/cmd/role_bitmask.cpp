@@ -10,6 +10,8 @@
 
 using std::string;
 using std::pair;
+using std::vector;
+
 using namespace VSFileSystem;
 
 namespace ROLES {

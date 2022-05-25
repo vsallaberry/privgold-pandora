@@ -56,7 +56,7 @@ void	NetServer::BroadcastTarget( ObjSerial serial, ObjSerial oldtarget, ObjSeria
 	*/
 }
 
-void	NetServer::BroadcastUnfire( ObjSerial serial, const vector<int> &weapon_indicies, unsigned short zone)
+void	NetServer::BroadcastUnfire( ObjSerial serial, const std::vector<int> &weapon_indicies, unsigned short zone)
 {
 	Packet p;
 	NetBuffer netbuf;
@@ -77,7 +77,7 @@ void	NetServer::BroadcastUnfire( ObjSerial serial, const vector<int> &weapon_ind
 
 // In BroadcastFire we must use the provided serial because it may not be the client's serial
 // but may be a turret serial
-void	NetServer::BroadcastFire( ObjSerial serial, const vector<int> &weapon_indicies, ObjSerial missile_serial, float player_energy, unsigned short zone)
+void	NetServer::BroadcastFire( ObjSerial serial, const std::vector<int> &weapon_indicies, ObjSerial missile_serial, float player_energy, unsigned short zone)
 {
 	Packet p;
 	NetBuffer netbuf;
@@ -172,8 +172,8 @@ void	NetServer::sendCargoSnapshot( ObjSerial cltser, const UnitCollection &list)
 			 NULL, clt->tcp_sock, __FILE__, PSEUDO__LINE__(196) );
 }
 
-void NetServer::sendSaveData( int cp, unsigned short type, int pos, string *key,
-				  Mission *miss, string *strValue, float *floatValue) {
+void NetServer::sendSaveData( int cp, unsigned short type, int pos, const std::string *key,
+				  Mission *miss, const std::string *strValue, float *floatValue) {
 	/* Note to self: This function will do absolutely nothing
 	   until it is implemented. */
 	NetBuffer netbuf;
@@ -207,7 +207,7 @@ void NetServer::sendSaveData( int cp, unsigned short type, int pos, string *key,
 			 NULL, clt->tcp_sock, __FILE__, PSEUDO__LINE__(164) );
 }
 
-void	NetServer::sendMission( int cp, unsigned short packetType, string mission, int pos)
+void	NetServer::sendMission( int cp, unsigned short packetType, const std::string & mission, int pos)
 {
 	Packet p;
 	NetBuffer netbuf;
@@ -257,7 +257,7 @@ void	NetServer::sendDamages( ObjSerial serial, unsigned short zone, float hull, 
   }
 }
 
-void	NetServer::sendCustom( int cp, string command, string args, string id)
+void	NetServer::sendCustom( int cp, const std::string & command, const std::string & args, const std::string & id)
 {
 	Packet p2;
 	NetBuffer netbuf;
@@ -279,7 +279,7 @@ void	NetServer::sendCustom( int cp, string command, string args, string id)
 			  NULL, clt->tcp_sock, __FILE__, __LINE__ );
 }
 
-void	NetServer::sendMessage( string from, string to, string message, float delay )
+void	NetServer::sendMessage( const std::string & from, const std::string & to, const std::string & message, float delay )
 {
 	NetBuffer netbuf;
 	netbuf.addString(from);
@@ -353,7 +353,7 @@ void NetServer::sendCommunication(Unit *from, Unit *to, const class Communicatio
 }
 
 // zonemgr.cpp
-extern void displayUnitInfo(Unit *un, const string callsign, const char *type);
+extern void displayUnitInfo(Unit *un, const std::string & callsign, const char *type);
 
 void	NetServer::sendKill( ObjSerial serial, unsigned short zone)
 {
@@ -387,7 +387,7 @@ void	NetServer::sendKill( ObjSerial serial, unsigned short zone)
 
 	if( !clt )
 	{
-		displayUnitInfo(un,string()," *** KILLED a npc ");
+		displayUnitInfo(un,std::string()," *** KILLED a npc ");
 		/*
 		un = zonemgr->getUnit( serial, zone);
 		if (un) {
@@ -401,7 +401,7 @@ void	NetServer::sendKill( ObjSerial serial, unsigned short zone)
 	}
 }
 
-void    NetServer::sendJumpFinal(ClientPtr clt, string server_ip, unsigned short server_port) {
+void    NetServer::sendJumpFinal(ClientPtr clt, const std::string & server_ip, unsigned short server_port) {
     Packet p2;
 	NetBuffer buf;
 	buf.addString(server_ip);

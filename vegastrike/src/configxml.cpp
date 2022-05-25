@@ -34,6 +34,9 @@
 #include "easydom.h"
 #include "log.h"
 
+using std::string;
+using std::vector;
+
 //#include "vs_globals.h"
 //#include "vegastrike.h"
 
@@ -145,7 +148,7 @@ void VegaConfig::doVariables(configNode *node){
 
 /* *********************************************************** */
 
-void VegaConfig::doSection(string prefix, configNode *node, enum section_t section_type){
+void VegaConfig::doSection(const std::string & prefix, configNode *node, enum section_t section_type){
   string section=node->attr_value("name");
   if(section.empty()){
     CONFIG_LOG(logvs::WARN, "no name given for section");
@@ -187,7 +190,7 @@ void VegaConfig::checkSection(configNode *node, enum section_t section_type){
 
 /* *********************************************************** */
 
-void VegaConfig::doVar(string prefix, configNode *node){
+void VegaConfig::doVar(const std::string & prefix, configNode *node){
   string name=node->attr_value("name");
   string value=node->attr_value("value");
   string hashname=prefix+name;
@@ -212,7 +215,7 @@ void VegaConfig::checkVar(configNode *node){
 
 /* *********************************************************** */
 
-bool VegaConfig::checkColor(string prefix, configNode *node){
+bool VegaConfig::checkColor(const std::string & prefix, configNode *node){
   if(node->Name()!="color"){
     CONFIG_LOG(logvs::WARN, "no color definition");
     return false;
@@ -311,7 +314,8 @@ void VegaConfig::doColors(configNode *node){
 
 /* *********************************************************** */
 
-string VegaConfig::getVariable(string section,string subsection,string name,string defaultvalue){
+string VegaConfig::getVariable(const std::string & section, const std::string & subsection,
+		                       const std::string & name, const std::string & defaultvalue){
   string hashname = section + "/" + subsection + "/" + name;
   std::map<string,string>::iterator it;
   if ((it=map_variables.find(hashname)) != map_variables.end())
@@ -334,7 +338,8 @@ string VegaConfig::getVariable(string section,string subsection,string name,stri
 
 /* *********************************************************** */
 
-string VegaConfig::getVariable(string section,string name,string defaultval){
+string VegaConfig::getVariable(const std::string & section,
+		                       const std::string & name, const std::string & defaultval){
   string hashname = section + "/" + name;
   std::map<string,string>::iterator it;
   if ((it=map_variables.find(hashname)) != map_variables.end())
@@ -360,7 +365,8 @@ string VegaConfig::getVariable(string section,string name,string defaultval){
 
 /* *********************************************************** */
 
-string VegaConfig::getVariable(configNode *section,string name,string defaultval){
+string VegaConfig::getVariable(configNode *section,
+		                       const std::string & name, const std::string & defaultval){
     vector<easyDomNode *>::const_iterator siter;
   
   for(siter= section->subnodes.begin() ; siter!=section->subnodes.end() ; siter++){
@@ -386,7 +392,8 @@ string VegaConfig::getVariable(configNode *section,string name,string defaultval
 
 /* *********************************************************** */
 
-void VegaConfig::gethColor(string section, string name, float color[4],int hexcolor){
+void VegaConfig::gethColor(const std::string & section, const std::string & name,
+		                   float color[4],int hexcolor){
   color[3]=((float)(hexcolor & 0xff))/256.0;
   color[2]=((float)((hexcolor & 0xff00)>>8))/256.0;
   color[1]=((float)((hexcolor & 0xff0000)>>16))/256.0;
@@ -397,7 +404,8 @@ void VegaConfig::gethColor(string section, string name, float color[4],int hexco
 
 /* *********************************************************** */
 
-void VegaConfig::getColor(string section, string name, float color[4],bool have_color){
+void VegaConfig::getColor(const std::string & section, const std::string & name,
+		                  float color[4],bool have_color){
   string hashname = section + "/" + name;
   std::map<string,vColor>::iterator it;
   if ((it=map_colors.find(hashname)) != map_colors.end()) {
@@ -438,7 +446,8 @@ void VegaConfig::getColor(string section, string name, float color[4],bool have_
 
 /* *********************************************************** */
 
-void VegaConfig::getColor(configNode *node,string name,float color[4],bool have_color){
+void VegaConfig::getColor(configNode *node, const std::string & name,
+		                  float color[4],bool have_color){
   vector<easyDomNode *>::const_iterator siter;
   
   for(siter= node->subnodes.begin() ; siter!=node->subnodes.end() ; siter++){
@@ -469,13 +478,13 @@ void VegaConfig::getColor(configNode *node,string name,float color[4],bool have_
 
 /* *********************************************************** */
 
-configNode *VegaConfig::findEntry(string name,configNode *startnode){
+configNode *VegaConfig::findEntry(const std::string & name, configNode *startnode){
   return findSection(name,startnode);
 }
 
 /* *********************************************************** */
 
-configNode *VegaConfig::findSection(string section,configNode *startnode){
+configNode *VegaConfig::findSection(const std::string & section, configNode *startnode){
    vector<easyDomNode *>::const_iterator siter;
   
   for(siter= startnode->subnodes.begin() ; siter!=startnode->subnodes.end() ; siter++){
@@ -497,13 +506,13 @@ configNode *VegaConfig::findSection(string section,configNode *startnode){
 
 /* *********************************************************** */
 
-void VegaConfig::setVariable(configNode *entry,string value){
+void VegaConfig::setVariable(configNode *entry, const std::string & value){
       entry->set_attribute("value",value);
 }
 
 /* *********************************************************** */
 
-bool VegaConfig::setVariable(string section,string name,string value){
+bool VegaConfig::setVariable(const std::string & section, const std::string & name, const std::string & value){
   configNode *sectionnode=findSection(section,variables);
   if(sectionnode!=NULL){
     configNode *varnode=findEntry(name,sectionnode);
@@ -519,7 +528,8 @@ bool VegaConfig::setVariable(string section,string name,string value){
 }
 
 
-bool VegaConfig::setVariable(string section,string subsection,string name,string value){
+bool VegaConfig::setVariable(const std::string & section, const std::string & subsection,
+		                     const std::string & name, const std::string & value){
   configNode *sectionnode=findSection(section,variables);
   if(sectionnode!=NULL){
     configNode *subnode=findSection(name,sectionnode);

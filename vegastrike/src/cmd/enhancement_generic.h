@@ -9,7 +9,7 @@ protected:
   virtual enum clsptr isUnit() const{return ENHANCEMENTPTR;}
 
   /// constructor only to be called by UnitFactory
-  Enhancement(const char * filename, int faction, const string &modifications,Flightgroup * flightgrp=NULL, int fg_subnumber=0)
+  Enhancement(const char * filename, int faction, const std::string &modifications,Flightgroup * flightgrp=NULL, int fg_subnumber=0)
     : Unit(filename,false,faction,modifications,flightgrp,fg_subnumber)
     , filename(filename) {
   }
@@ -26,8 +26,8 @@ public:
       shield.shield2fb.front=shield.shield2fb.back=shield.shield2fb.frontmax=shield.shield2fb.backmax=0;
       smaller->Upgrade (this,0,0,true,true,percent);
       memcpy (&this->shield,tempdata,sizeof(this->shield));
-      string fn (filename);
-      string fac(FactionUtil::GetFaction(faction));
+      std::string fn (filename);
+      std::string fac(FactionUtil::GetFaction(faction));
       Kill();
       _Universe->AccessCockpit()->savegame->AddUnitToSave(fn.c_str(),ENHANCEMENTPTR,fac.c_str(),this);
     }

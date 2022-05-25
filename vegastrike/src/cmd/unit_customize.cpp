@@ -24,7 +24,7 @@
 #endif
 extern int GetModeFromName (const char *);
 
-extern Unit * CreateGameTurret (std::string tur,int faction);
+extern Unit * CreateGameTurret (const std::string & tur,int faction);
 
 template <class UnitType>
 bool GameUnit<UnitType>::UpgradeSubUnits (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage)  {

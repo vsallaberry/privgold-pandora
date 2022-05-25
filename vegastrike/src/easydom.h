@@ -47,35 +47,30 @@ using VSFileSystem::AiFile;
 #include "xml_support.h"
 #include "log.h"
 
-using std::string;
-using std::vector;
-using std::stack;
-using std::ostream;
-
 using XMLSupport::AttributeList;
 
-extern string parseCalike(char const *filename);
+extern std::string parseCalike(char const *filename);
 
 class easyDomNode {
  public:
   easyDomNode();
   virtual ~easyDomNode();
     
-  void set(easyDomNode *parent,string name,const XML_Char **atts  );
+  void set(easyDomNode *parent,const std::string & name,const XML_Char **atts  );
   void printNode(std::ostringstream& out,int recurse_level,int level);
-  void printNode(ostream& out,int recurse_level,int level);
+  void printNode(std::ostream& out,int recurse_level,int level);
   void printNode(FILE * out,int recurse_level,int level);
 
   void addChild(easyDomNode *child);
 
-  string Name() { return name ; }
+  std::string Name() { return name ; }
 
   bool isValid() { return valid; }
     
-  void set_attribute(string name,string value) { attribute_map[name]=value; };
+  void set_attribute(const std::string & name, const std::string & value) { attribute_map[name]=value; };
 
-  string attr_value(string attr_name);
-  vector<easyDomNode *> subnodes;
+  std::string attr_value(const std::string & attr_name);
+  std::vector<easyDomNode *> subnodes;
 
   void setValid(bool _valid) { valid = _valid; }
     
@@ -83,14 +78,14 @@ class easyDomNode {
   bool valid;
   easyDomNode *parent;
   AttributeList *attributes;
-  vsUMap<string,string> attribute_map;
+  vsUMap<std::string,std::string> attribute_map;
   //vector<string> att_name;
   //vector<string> att_value;
 
-  string name;
+  std::string name;
 };
 
-typedef vsUMap<string,int> tagMap;
+typedef vsUMap<std::string,int> tagMap;
 
 class tagDomNode : public easyDomNode {
  public:
@@ -102,7 +97,7 @@ class tagDomNode : public easyDomNode {
       //     cout << "cannot translate tag " << Name() << endl;
     }
 
-    vector<easyDomNode *>::const_iterator siter;
+    std::vector<easyDomNode *>::const_iterator siter;
   
     for(siter= subnodes.begin() ; siter!=subnodes.end() ; siter++){
       tagDomNode *tnode=(tagDomNode *)(*siter);
@@ -148,22 +143,22 @@ domNodeType *LoadXML(const char *filename) {
   if (err>Ok) {
   	err = f.OpenReadOnly( filename, UnknownFile);
         if (err>Ok) {
-           string rootthis = string("/")+filename;
+           std::string rootthis = std::string("/")+filename;
            err = f.OpenReadOnly(rootthis,UnknownFile);
         }
   }
   if (err>Ok) {
-    string prefix=("../mission/");
+    std::string prefix=("../mission/");
     prefix+=filename;
     err = f.OpenReadOnly( prefix.c_str(), UnknownFile);
   }
   if (err>Ok) {
-    string prefix=("mission/");
+    std::string prefix=("mission/");
     prefix+=filename;
     err = f.OpenReadOnly( prefix.c_str(), UnknownFile);      
   }
   if (err>Ok) {
-    string prefix=("../");
+    std::string prefix=("../");
     prefix+=filename;
     err = f.OpenReadOnly( prefix.c_str(), UnknownFile);      
   }
@@ -225,7 +220,7 @@ domNodeType *LoadCalike(const char *filename) {
 
   const int chunk_size = 262144;
 
-  string module_str=parseCalike(filename);
+  std::string module_str=parseCalike(filename);
   if(module_str.empty()) {
     //cout << "warning: could not open file: " << filename << endl;
     //    assert(0);
@@ -304,7 +299,7 @@ void doTextBuffer() {
   xml->currentindex=0;
 }
 
-void beginElement(const string &name, const XML_Char **atts ){
+void beginElement(const std::string &name, const XML_Char **atts ){
     //  AttributeList::const_iterator iter;
 
   doTextBuffer();
@@ -331,7 +326,7 @@ void beginElement(const string &name, const XML_Char **atts ){
 
 };
 
-void endElement(const string &name){
+void endElement(const std::string &name){
 
   doTextBuffer();
   domNodeType *stacktop=nodestack.top();
@@ -347,7 +342,7 @@ void endElement(const string &name){
   
 }
 
-  stack<domNodeType *> nodestack;
+  std::stack<domNodeType *> nodestack;
 
   domNodeType *topnode;
 };

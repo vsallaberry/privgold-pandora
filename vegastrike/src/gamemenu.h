@@ -31,7 +31,7 @@ public:
 	
 	// Caller is responsible for making a return button, as well as adding the "JoinGame" WctlTableEntry
 	static void createNetworkControls(GroupControl *serverConnGroup, std::vector <unsigned int> *keyboard_input_queue);
-	static void readJoinGameControls(Window *window, string &user, string &pass);
+	static void readJoinGameControls(Window *window, std::string &user, std::string &pass);
 	
 };	
 
@@ -41,9 +41,9 @@ public:
 private:
     int player;
 	Window *m_parent;
-    string type;
-    string text;
-    string savefile;
+    std::string type;
+    std::string text;
+    std::string savefile;
 	ActionMode netAction;
 public:
 	

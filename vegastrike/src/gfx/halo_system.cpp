@@ -108,7 +108,7 @@ MyIndHalo::MyIndHalo(const QVector & loc, const Vector & size) {
     this->size = size;
 }
 
-unsigned int HaloSystem::AddHalo (const char * filename, const QVector & loc, const Vector &size, const GFXColor & col, std::string type, float activation_accel) {
+unsigned int HaloSystem::AddHalo (const char * filename, const QVector & loc, const Vector &size, const GFXColor & col, const std::string & type, float activation_accel) {
 #ifdef CAR_SIM
   ani.push_back (new Animation ("flare6.ani",1,.1,MIPMAP,true,true,col));
   ani.back()->SetDimensions (size.i,size.j);
@@ -117,7 +117,7 @@ unsigned int HaloSystem::AddHalo (const char * filename, const QVector & loc, co
 #endif
   if (mesh==NULL) {
 	  int neutralfac=FactionUtil::GetNeutralFaction();
-	  mesh = Mesh::LoadMesh ((string (filename)).c_str(), Vector(1,1,1),neutralfac,NULL);
+	  mesh = Mesh::LoadMesh ((std::string (filename)).c_str(), Vector(1,1,1),neutralfac,NULL);
     static float gs =XMLSupport::parse_float (vs_config->getVariable("physics","game_speed","1"));
     activation=activation_accel*gs;
   }
@@ -247,7 +247,7 @@ void HaloSystem::Draw(const Matrix & trans, const Vector &scale, int halo_alpha,
       minvalue = activation/maxaccel;
   }
   if ((value>minvalue)&&(scale.k>0)) {
-    vector<MyIndHalo>::iterator i = halo.begin();
+    std::vector<MyIndHalo>::iterator i = halo.begin();
     for (;i!=halo.end();++i) {
         Matrix m = trans;
         ScaleMatrix (m,Vector (scale.i*i->size.i,scale.j*i->size.j,scale.k*i->size.k*value/maxvalue));

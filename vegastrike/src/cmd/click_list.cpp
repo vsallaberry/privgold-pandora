@@ -5,7 +5,7 @@
 #include "vs_globals.h"
 #include "gfx/camera.h"
 extern Vector mouseline;
-extern vector<Vector> perplines;
+extern std::vector<Vector> perplines;
 
 Vector MouseCoordinate (int mouseX, int mouseY) {
   return GFXDeviceToEye(mouseX, mouseY);
@@ -67,7 +67,7 @@ UnitCollection * ClickList::requestIterator (int minX,int minY, int maxX, int ma
 }
 
 UnitCollection * ClickList::requestIterator (int mouseX, int mouseY) {
-  perplines = vector<Vector>();
+  perplines = std::vector<Vector>();
     UnitCollection * uc = new UnitCollection ();
     Unit * un;
 	for(un_iter myParent = parentIter->createIterator(),UAye = uc->createIterator(); (un = *myParent) != NULL; ++myParent){

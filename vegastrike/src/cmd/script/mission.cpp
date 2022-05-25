@@ -61,9 +61,8 @@
 #define MISSION_LOG(_lvl, ...) VS_LOG("mission", _lvl, __VA_ARGS__)
 
 /* *********************************************************** */
-using std::cout;
-using std::cerr;
-using std::endl;
+using std::vector;
+
 Mission::~Mission() {
   MISSION_LOG(logvs::INFO, "Mission Cleanup is experimental");
   //do not delete msgcenter...could be vital
@@ -84,7 +83,7 @@ Mission::Mission (const char * filename,const std::string & script, bool loadscr
     ConstructMission(filename,script,loadscripts);
 }
 Mission::Mission (const char * filename, bool loadscripts) {
-    ConstructMission(filename,string(""),loadscripts);
+    ConstructMission(filename,std::string(""),loadscripts);
 }
 void Mission::ConstructMission(const char *configfile, const std::string &script, bool loadscripts){
   player_autopilot=global_autopilot=AUTO_NORMAL;
@@ -191,7 +190,7 @@ bool Mission::checkMission(easyDomNode *node, bool loadscripts){
 	DirectorStart((missionNode *)*siter);
       }
     } else if (((*siter)->Name()=="python") && (!this->nextpythonmission)){ //I need to get rid of an extra whitespace at the end that expat may have added... Python is VERY strict about that... :(
-		string locals = (*siter)->attr_value(textAttr);
+		std::string locals = (*siter)->attr_value(textAttr);
       const char *constdumbstr=locals.c_str(); //get the text XML attribute
       int i=strlen(constdumbstr); //constdumbstr is the string I wish to copy... i is its length.
       char *dumbstr=new char [i+2]; //allocate 2 extra bytes for a double-null-terminated string.
@@ -275,7 +274,7 @@ void Mission::terminateMission(){
 			int num = queuenum;
 			if (num>=0) {
 				if (SERVER && num>0) {
-					VSServer->sendMission(player_num, Subcmd::TerminateMission, string(), num-1);
+					VSServer->sendMission(player_num, Subcmd::TerminateMission, std::string(), num-1);
 				}
 				/*
 				// At this point, it's too late!
@@ -319,12 +318,12 @@ void Mission::doOrigin(easyDomNode *node){
 /* *********************************************************** */
 
 #ifndef VS_MIS_SEL
-void Mission::GetOrigin(QVector &pos,string &planetname){
+void Mission::GetOrigin(QVector &pos,std::string &planetname){
   //  float pos[3];
 
   if(origin_node==NULL){
     pos.i=pos.j=pos.k=0.0;
-    planetname=string();
+    planetname=std::string();
     return;
   }
 
@@ -376,8 +375,8 @@ void Mission::checkVar(easyDomNode *node){
     return;
   }
 
-  string name=node->attr_value("name");
-  string value=node->attr_value("value");
+  std::string name=node->attr_value("name");
+  std::string value=node->attr_value("value");
 }
 
 /* *********************************************************** */
@@ -405,22 +404,22 @@ void Mission::checkFlightgroup(easyDomNode *node){
   }
 
   // nothing yet
-  string texture=node->attr_value("logo");
-  string texture_alpha=node->attr_value("logo_alpha");
-  string name=node->attr_value("name");
-  string faction=node->attr_value("faction");
-  string type=node->attr_value("type");
-  string ainame=node->attr_value("ainame");
-  string waves=node->attr_value("waves");
-  string nr_ships=node->attr_value("nr_ships");
-  string terrain_nr=node->attr_value("terrain_nr");
-  string unittype= node->attr_value("unit_type");
+  std::string texture=node->attr_value("logo");
+  std::string texture_alpha=node->attr_value("logo_alpha");
+  std::string name=node->attr_value("name");
+  std::string faction=node->attr_value("faction");
+  std::string type=node->attr_value("type");
+  std::string ainame=node->attr_value("ainame");
+  std::string waves=node->attr_value("waves");
+  std::string nr_ships=node->attr_value("nr_ships");
+  std::string terrain_nr=node->attr_value("terrain_nr");
+  std::string unittype= node->attr_value("unit_type");
   if(name.empty() || faction.empty() || type.empty() || ainame.empty() || waves.empty() || nr_ships.empty() ){
     cout << "no valid flightgroup decsription" << endl;
     return;
   }
   if (unittype.empty()) {
-    unittype = string ("unit");
+    unittype = std::string ("unit");
   }
 
   int waves_i=atoi(waves.c_str());
@@ -490,9 +489,9 @@ void Mission::checkFlightgroup(easyDomNode *node){
 /* *********************************************************** */
 
 bool Mission::doPosition(easyDomNode *node,double pos[3], CreateFlightgroup * cf){
-  string x=node->attr_value("x");
-  string y=node->attr_value("y");
-  string z=node->attr_value("z");
+  std::string x=node->attr_value("x");
+  std::string y=node->attr_value("y");
+  std::string z=node->attr_value("z");
   ///  string offset=node->attr_value("offset");
 
   //  cout << "POS: x=" << x << " y=" << y << " z=" << z << endl;
@@ -516,7 +515,7 @@ bool Mission::doPosition(easyDomNode *node,double pos[3], CreateFlightgroup * cf
 
 /* *********************************************************** */
 
-Flightgroup *Mission::findFlightgroup(const string &offset_name, const string &fac) {
+Flightgroup *Mission::findFlightgroup(const std::string &offset_name, const std::string &fac) {
   vector<Flightgroup *>::const_iterator siter;
 
   for(siter= flightgroups.begin() ; siter!=flightgroups.end() ; siter++){
@@ -540,8 +539,8 @@ bool Mission::doRotation(easyDomNode *node,float rot[3], class CreateFlightgroup
 
 void Mission::doOrder(easyDomNode *node,Flightgroup *fg){
   // nothing yet
-  string order=node->attr_value("order");
-  string target=node->attr_value("target");
+  std::string order=node->attr_value("order");
+  std::string target=node->attr_value("target");
 
   if(order.empty() || target.empty()){
     cout << "you have to give an order and a target" << endl;
@@ -555,11 +554,11 @@ void Mission::doOrder(easyDomNode *node,Flightgroup *fg){
 
 /* *********************************************************** */
 
-string Mission::getVariable(string name,string defaultval){
+std::string Mission::getVariable(const std::string & name, const std::string & defaultval){
    vector<easyDomNode *>::const_iterator siter;
   
   for(siter= variables->subnodes.begin() ; siter!=variables->subnodes.end() ; siter++){
-    string scan_name=(*siter)->attr_value("name");
+    std::string scan_name=(*siter)->attr_value("name");
     //    cout << "scanning section " << scan_name << endl;
 
     if(scan_name==name){

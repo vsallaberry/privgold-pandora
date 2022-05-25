@@ -53,7 +53,7 @@ varInst *Mission::call_olist(missionNode *node,int mode){
   varInst *viret=NULL;
 
   if(mode==SCRIPT_PARSE){
-    string cmd=node->attr_value("name");
+    std::string cmd=node->attr_value("name");
     node->script.method_id=module_olist_map[cmd];
   }
 

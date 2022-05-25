@@ -7,6 +7,8 @@
 
 #include <vector>
 
+using std::vector;
+
 Pilot::Pilot(int faction) {
   static float reaction = XMLSupport::parse_float (vs_config->getVariable ("AI","Firing","ReactionTime",".2"));
   static float ran = XMLSupport::parse_float(vs_config->getVariable ("AI","DefaultRank",".01"));
@@ -86,7 +88,7 @@ float Pilot::getAnger(const Unit *parent, const Unit * target)const {
           good=true;
           for (unsigned int i=0;i<cachedCargoNum;++i) {
             Cargo * c=&target->image->cargo[i];
-            if (c->quantity!=0&&c->GetCategory().find("upgrades")==string::npos){
+            if (c->quantity!=0&&c->GetCategory().find("upgrades")==std::string::npos){
               good=false;
               break;
             }

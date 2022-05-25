@@ -71,10 +71,8 @@
 #include "netversion.h"
 ObjSerial CLIENT_NETVERSION = NETWORK_VERSION;
 
-
-using std::cout;
-using std::endl;
-using std::cin;
+using std::string;
+using std::vector;
 
 double NETWORK_ATOM;
 
@@ -87,7 +85,7 @@ extern const Unit* getUnitFromUpgradeName(const string& upgradeName, int myUnitF
 extern int GetModeFromName(const char *);  // 1=add, 2=mult, 0=neither.
 static const string LOAD_FAILED = "LOAD_FAILED";
 extern Cargo* GetMasterPartList(const char *input_buffer);
-extern bool isWeapon (std::string name);
+extern bool isWeapon (const std::string & name);
 
 /*************************************************************/
 /**** Tool functions                                      ****/
@@ -1585,7 +1583,7 @@ void NetClient::CleanUp() {
 	}
 }
 
-void NetClient::Reconnect(std::string srvipadr, unsigned short port) {
+void NetClient::Reconnect(const std::string & srvipadr, unsigned short port) {
   vector<string> usernames;
   vector<string> passwords;
   vector <SOCKETALT*> udp;
@@ -1617,7 +1615,8 @@ void NetClient::Reconnect(std::string srvipadr, unsigned short port) {
 	if (!srvipadr.empty()) {
 		Network[k].SetCurrentServerAddress(srvipadr, port);
 	} else {
-		Network[k].SetConfigServerAddress(srvipadr, port);
+		string tmp_srvipadr(srvipadr);
+		Network[k].SetConfigServerAddress(tmp_srvipadr, port);
 	}
 	int response = Network[k].connectLoad( usernames[k], passwords[k], err);
 	if (response==0) {

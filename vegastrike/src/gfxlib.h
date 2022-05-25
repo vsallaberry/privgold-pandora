@@ -40,8 +40,6 @@
 #include <vector>
 class Matrix;
 
-using std::vector;
-
 #include <stdlib.h>
 #include "gfx/vec.h"
 #include "gfxlib_struct.h"
@@ -79,9 +77,9 @@ GFXBOOL /*GFXDRVAPI*/ GFXGetLightContextAmbient (GFXColor &amb);
 ///picks and activates local lights near to "center"
 void /*GFXDRVAPI*/ GFXPickLights(const Vector &center, const float radius);
 ///picks and does not activate local lights near to "center"
-void /*GFXDRVAPI*/ GFXPickLights(const Vector &center, const float radius, vector<int> &lights, const int maxlights);
+void /*GFXDRVAPI*/ GFXPickLights(const Vector &center, const float radius, std::vector<int> &lights, const int maxlights);
 ///activates local lights picked by GFXPickLight
-void /*GFXDRVAPI*/ GFXPickLights(vector<int>::const_iterator begin, vector<int>::const_iterator end);
+void /*GFXDRVAPI*/ GFXPickLights(std::vector<int>::const_iterator begin, std::vector<int>::const_iterator end);
 ///Sets the light model to have separate specular color (if available)
 GFXBOOL /*GFXDRVAPI*/ GFXSetSeparateSpecularColor (const GFXBOOL spec);
 ///Sets the intensity cutoff before picked lights are ignored
@@ -394,7 +392,7 @@ void /*GFXDRVAPI*/ GFXCallList(int list);
 void /*GFXDRVAPI*/ GFXBeginPick(int x, int y, int xsize, int ysize);
 void /*GFXDRVAPI*/ GFXSetPickName(int name);
 //bool GFXCheckPicked();
-vector<PickData> * /*GFXDRVAPI*/ GFXEndPick();
+std::vector<PickData> * /*GFXDRVAPI*/ GFXEndPick();
 
 //Subwindow management
 ///Creates a subwindow with the current parameters for center and size

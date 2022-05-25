@@ -18,6 +18,9 @@
 #include "universe_util.h"
 #include <utility>
 
+using std::string;
+using std::vector;
+
 extern vector<Logo*> undrawn_logos;
 
 #include <exception>
@@ -182,7 +185,7 @@ const int UNDRAWN_MESHES_SIZE= NUM_MESH_SEQUENCE;
 
 OrigMeshVector undrawn_meshes[NUM_MESH_SEQUENCE];
 
-Texture * Mesh::TempGetTexture(MeshXML * xml, std::string filename, std::string factionname, GFXBOOL detail) const{
+Texture * Mesh::TempGetTexture(MeshXML * xml, const std::string & filename, const std::string & factionname, GFXBOOL detail) const{
 	static FILTER fil = XMLSupport::parse_bool(vs_config->getVariable("graphics","detail_texture_trilinear","true"))?TRILINEAR:MIPMAP;
 	static bool factionalize_textures = XMLSupport::parse_bool( vs_config->getVariable("graphics","faction_dependant_textures","true") );
 	string faction_prefix = (factionalize_textures?(factionname+"_"):string());
@@ -237,7 +240,7 @@ void Mesh::setTextureCumulativeTime(double d) {
 			Decal[i]->setTime(d);
 	}
 }
-Texture * Mesh::TempGetTexture (MeshXML * xml, int index, std::string factionname)const {
+Texture * Mesh::TempGetTexture (MeshXML * xml, int index, const std::string & factionname)const {
 	static bool factionalize_textures = XMLSupport::parse_bool( vs_config->getVariable("graphics","faction_dependant_textures","true") );
 	string faction_prefix = (factionalize_textures?(factionname+"_"):string());
     Texture *tex=NULL;

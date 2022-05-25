@@ -112,7 +112,8 @@ public:
 	virtual void initControls(void) = 0;
 
     // Set up the window and get everything ready.
-    virtual void init(const std::string& title);
+	//virtual void init(const std::string& title); // renamed to initWithTitle() because conflict with {WindowController/ModalDialog}::init()
+    virtual void initWithTitle(const std::string& title);
 
     // Start everything up.
     virtual void run(void);

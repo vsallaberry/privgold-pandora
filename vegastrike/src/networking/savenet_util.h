@@ -4,14 +4,12 @@
 #include <string>
 #include "networking/clientptr.h"
 
-using std::string;
-
 namespace SaveNetUtil
 {
 	//void	SaveFiles( Cockpit * cp, string savestr, string xmlstr, string path);
-	void	GetSaveBuffer( string savestr, string xmlstr, char * buffer);
-	void	GetSaveStrings( int numplayer, string & savestr, string & xmlstr, bool savevars);
-	void	GetSaveStrings( ClientPtr clt, string & savestr, string & xmlstr, bool savevars);
+	void	GetSaveBuffer( const std::string & savestr, const std::string & xmlstr, char * buffer);
+	void	GetSaveStrings( int numplayer, std::string & savestr, std::string & xmlstr, bool savevars);
+	void	GetSaveStrings( ClientPtr clt, std::string & savestr, std::string & xmlstr, bool savevars);
 }
 
 #endif

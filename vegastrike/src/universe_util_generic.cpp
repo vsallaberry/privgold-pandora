@@ -45,7 +45,7 @@ extern std::string universe_path;
 extern int num_delayed_missions();
 using std::string;
 using std::set;
-
+using std::vector;
 								 //less to write
 #define activeSys _Universe->activeStarSystem()
 using namespace VSFileSystem;
@@ -154,20 +154,20 @@ namespace UniverseUtil
 			VS_LOG("universe", logvs::WARN, "ERROR --> no unit for serial %u", serial);
 		return un;
 	}
-	std::string vsConfig(std::string category,std::string option,std::string def) {
+	std::string vsConfig(const std::string & category,const std::string & option,const std::string & def) {
 		return vs_config->getVariable(category,option,def);
 	}
 
-	Unit *launchJumppoint(string name_string,
-		string faction_string,
-		string type_string,
-		string unittype_string,
-		string ai_string,
+	Unit *launchJumppoint(const string & name_string,
+		const string & faction_string,
+		const string & type_string,
+		const string & unittype_string,
+		const string & ai_string,
 		int nr_of_ships,
 		int nr_of_waves,
 		QVector pos,
-		string squadlogo,
-	string destinations) {
+		const string & squadlogo,
+		const string & destinations) {
 		if (Network) return NULL;
 		
 		int clstype=UNITPTR;
@@ -193,7 +193,7 @@ namespace UniverseUtil
 
 		return tmp;
 	}
-	Cargo getRandCargo(int quantity, string category) {
+	Cargo getRandCargo(int quantity, const string & category) {
 		Cargo *ret=NULL;
 		Unit *mpl = &GetUnitMasterPartList();
 		unsigned int max=mpl->numCargo();
@@ -252,7 +252,7 @@ namespace UniverseUtil
 		scratch_vector=un;
 	}
 
-	void pushSystem (string name) {
+	void pushSystem (const string & name) {
 		StarSystem * ss = _Universe->GenerateStarSystem (name.c_str(),"",Vector(0,0,0));
 		_Universe->pushActiveStarSystem(ss);
 	}
@@ -269,7 +269,7 @@ namespace UniverseUtil
 		return activeSys->getName();
 	}
 	///tells the respective flightgroups in this system to start shooting at each other
-	void TargetEachOther (string fgname, string faction, string enfgname, string enfaction) {
+	void TargetEachOther (const string & fgname, const string & faction, const string & enfgname, const string & enfaction) {
 		int fac = FactionUtil::GetFactionIndex(faction);
 		int enfac = FactionUtil::GetFactionIndex(enfaction);
 		Unit * un;
@@ -298,7 +298,7 @@ namespace UniverseUtil
 	}
 
 	///tells the respective flightgroups in this system to stop killing each other urgently...they may still attack--just not warping and stuff
-	void StopTargettingEachOther(string fgname, string faction, string enfgname, string enfaction) {
+	void StopTargettingEachOther(const string & fgname, const string & faction, const string & enfgname, const string & enfaction) {
 		int fac = FactionUtil::GetFactionIndex(faction);
 		int enfac = FactionUtil::GetFactionIndex(enfaction);
 		Unit * un;
@@ -316,7 +316,7 @@ namespace UniverseUtil
 		}
 	}
 
-	bool systemInMemory(string nam) {
+	bool systemInMemory(const string & nam) {
 		unsigned int nass = _Universe->star_system.size();;
 		for (unsigned int i=0;i<nass;++i) {
 			if (_Universe->star_system[i]->getFileName()==nam)
@@ -325,7 +325,7 @@ namespace UniverseUtil
 		return false;
 	}
 
-	float GetRelation(std::string myfaction,std::string theirfaction) {
+	float GetRelation(const std::string & myfaction,const std::string & theirfaction) {
 		int myfac = FactionUtil::GetFactionIndex(myfaction);
 		int theirfac = FactionUtil::GetFactionIndex(theirfaction);
 		int cp = _Universe->CurrentCockpit();
@@ -341,7 +341,7 @@ namespace UniverseUtil
 		else
 			return FactionUtil::GetIntRelation(myfac, theirfac);
 	}
-	void AdjustRelation(std::string myfaction,std::string theirfaction, float factor, float rank) {
+	void AdjustRelation(const std::string & myfaction,const std::string & theirfaction, float factor, float rank) {
 		int myfac = FactionUtil::GetFactionIndex(myfaction);
 		int theirfac = FactionUtil::GetFactionIndex(theirfaction);
 		float realfactor = factor*rank;
@@ -369,15 +369,15 @@ namespace UniverseUtil
         if (val>1) val=1;
 		return val;
 	}
-	float getRelationModifier(int which_cp, string faction) {
+	float getRelationModifier(int which_cp, const string & faction) {
 		return getRelationModifierInt(which_cp, FactionUtil::GetFactionIndex(faction));
 	}
-	float getFGRelationModifier(int which_cp, string fg) {
-		fg = "FG_Relation_" + fg;
-		if (getSaveDataLength(which_cp, fg)==0) {
+	float getFGRelationModifier(int which_cp, const string & fg) {
+		string fgid = "FG_Relation_" + fg;
+		if (getSaveDataLength(which_cp, fgid)==0) {
 			return 0.;
 		}
-		return getSaveData(which_cp, fg, 0);
+		return getSaveData(which_cp, fgid, 0);
 	}
 	void adjustRelationModifierInt(int which_cp, int faction, float delta) {
         if (delta>1)delta=1;
@@ -389,16 +389,16 @@ namespace UniverseUtil
         if (val>1) val=1;
 		return putSaveData(which_cp, saveVar, 0, val);
 	}
-	void adjustRelationModifier(int which_cp, string faction, float delta) {
+	void adjustRelationModifier(int which_cp, const string & faction, float delta) {
 		adjustRelationModifierInt(which_cp, FactionUtil::GetFactionIndex(faction),delta);
 	}
-	void adjustFGRelationModifier(int which_cp, string fg, float delta) {
-		fg = "FG_Relation_" + fg;
-		if (getSaveDataLength(which_cp, fg)==0) {
-			pushSaveData(which_cp, fg, delta);
+	void adjustFGRelationModifier(int which_cp, const string & fg, float delta) {
+		string fgid = "FG_Relation_" + fg;
+		if (getSaveDataLength(which_cp, fgid)==0) {
+			pushSaveData(which_cp, fgid, delta);
 			return;
 		}
-		putSaveData(which_cp, fg, 0, getSaveData(which_cp, fg, 0)+delta);
+		putSaveData(which_cp, fgid, 0, getSaveData(which_cp, fgid, 0)+delta);
 	}
 	
 	void setMissionOwner(int whichplayer) {
@@ -437,7 +437,7 @@ namespace UniverseUtil
 		while (it.notDone()&&((void*)(*it)!=ptr)) ++it;
 		return (((void*)(*it)==ptr)?reinterpret_cast<Unit*>(ptr):0);
 	}
-	Unit *getUnitByName(std::string name) {
+	Unit *getUnitByName(const std::string & name) {
 		un_iter iter=activeSys->getUnitList().createIterator();
 		while (iter.notDone() && UnitUtil::getName(*iter) != name)
 			++iter;
@@ -466,18 +466,18 @@ namespace UniverseUtil
 		setTimeCompression(1.0);
 	}
 	*/
-	string GetAdjacentSystem (string str, int which) {
+	string GetAdjacentSystem (const string & str, int which) {
 		return _Universe->getAdjacentStarSystems(str)[which];
 	}
-	string GetGalaxyProperty (string sys, string prop) {
+	string GetGalaxyProperty (const string & sys, const string & prop) {
 		return _Universe->getGalaxyProperty(sys,prop);
 	}
-	string GetGalaxyPropertyDefault (string sys, string prop, string def) {
+	string GetGalaxyPropertyDefault (const string & sys, const string & prop, const string & def) {
 		return _Universe->getGalaxyPropertyDefault(sys,prop,def);
 	}
 #define DEFAULT_FACTION_SAVENAME "FactionTookOver_"
 
-	string GetGalaxyFaction (string sys) {
+	string GetGalaxyFaction (const string & sys) {
 		string fac = _Universe->getGalaxyProperty (sys,"faction");
 		vector <std::string> * ans = &(_Universe->AccessCockpit(0)->savegame->getMissionStringData(string(DEFAULT_FACTION_SAVENAME)+sys));
 		if (ans->size()) {
@@ -485,7 +485,7 @@ namespace UniverseUtil
 		}
 		return fac;
 	}
-	void SetGalaxyFaction (string sys, string fac) {
+	void SetGalaxyFaction (const string & sys, const string & fac) {
 		vector <std::string> * ans = &(_Universe->AccessCockpit(0)->savegame->getMissionStringData(string(DEFAULT_FACTION_SAVENAME)+sys));
 		if (ans->size()) {
 			(*ans)[0]=fac;
@@ -494,14 +494,14 @@ namespace UniverseUtil
 			ans->push_back(std::string(fac));
 		}
 	}
-	int GetNumAdjacentSystems (string sysname) {
+	int GetNumAdjacentSystems (const string & sysname) {
 		return _Universe->getAdjacentStarSystems(sysname).size();
 	}
 	/*
-	   int musicAddList(string str) {
+	   int musicAddList(const string & str) {
 	   return muzak->Addlist(str.c_str());
 	   }
-	   void musicPlaySong(string str) {
+	   void musicPlaySong(const string & str) {
 	   muzak->GotoSong(str);
 	   }
 	   void musicPlayList(int which) {
@@ -518,20 +518,20 @@ namespace UniverseUtil
 		g_game.difficulty=diff;
 	}
 	/*
-	   void playSound(string soundName, QVector loc, Vector speed) {
+	   void playSound(const string & soundName, QVector loc, Vector speed) {
 	   int sound = AUDCreateSoundWAV (soundName,false);
 	   AUDAdjustSound (sound,loc,speed);
 	   AUDStartPlaying (sound);
 	   AUDDeleteSound(sound);
 	   }
-	   void cacheAnimation(string aniName) {
+	   void cacheAnimation(const string & aniName) {
 	   static vector <Animation *> anis;
 	   anis.push_back (new Animation(aniName.c_str()));
 	   }
-	   void playAnimation(string aniName, QVector loc, float size) {
+	   void playAnimation(const string & aniName, QVector loc, float size) {
 	   AddAnimation(loc,size,true,aniName,1);
 	   }
-	   void playAnimationGrow(string aniName, QVector loc, float size, float growpercent) {
+	   void playAnimationGrow(const string & aniName, QVector loc, float size, float growpercent) {
 	   AddAnimation(loc,size,true,aniName,growpercent);
 	   }
 	   unsigned int getCurrentPlayer() {
@@ -558,14 +558,14 @@ namespace UniverseUtil
 	}
 	static string dontBlankOut(string objective) {
 		while(1) {
-			std::string::size_type where=objective.find(".blank");
+			string::size_type where=objective.find(".blank");
 			if (where!=string::npos) {
 				objective = objective.substr(0,where)+objective.substr(where+strlen(".blank"));
 			}else return objective;
 		}
 		return objective;
 	}
-	int addObjective(string objective) {
+	int addObjective(const string & objective) {
 		float status = 0;
 		if (SERVER)
 			VSServer->sendSaveData(mission->player_num, Subcmd::Objective|Subcmd::SetValue,
@@ -573,7 +573,7 @@ namespace UniverseUtil
 		mission->objectives.push_back(Mission::Objective(status,dontBlankOut(objective)));
 		return mission->objectives.size()-1;
 	}
-	void setObjective(int which, string newobjective) {
+	void setObjective(int which, const string & newobjective) {
 		if (which<(int)mission->objectives.size() && which>=0) {
 			if (SERVER)
 				VSServer->sendSaveData(mission->player_num, Subcmd::Objective|Subcmd::SetValue,
@@ -597,7 +597,7 @@ namespace UniverseUtil
 			return 0;
 		}
 	}
-    void setTargetLabel(std::string label) {
+    void setTargetLabel(const std::string & label) {
 		_Universe->AccessCockpit()->setTargetLabel(label);
 	}
     std::string getTargetLabel() {
@@ -642,7 +642,7 @@ namespace UniverseUtil
 		}
 		return num + ::num_delayed_missions();
 	}
-	void IOmessage(int delay,string from,string to,string message) {
+	void IOmessage(int delay,const string & from,const string & to,const string & message) {
 		if (to=="news"&&(!game_options.news_from_cargolist))
 			for (int i = 0; i < _Universe->numPlayers(); ++i) {
 				pushSaveString(i, "news", std::string("#")+message);
@@ -650,18 +650,18 @@ namespace UniverseUtil
 		else if (mission && mission->msgcenter)
 			mission->msgcenter->add(from,to,message,delay);
 	}
-	Unit *GetContrabandList (string faction) {
+	Unit *GetContrabandList (const string & faction) {
 		return FactionUtil::GetContraband(FactionUtil::GetFactionIndex(faction));
 	}
-	void LoadMission (string missionname) {
+	void LoadMission (const string & missionname) {
 		::LoadMission (missionname.c_str(),"",false);
 	}
 	
-	void LoadNamedMissionScript (string title, string missionscript) {
+	void LoadNamedMissionScript (const string & title, const string & missionscript) {
 		::LoadMission (("#"+title).c_str(),missionscript,false);
 	}
 
-	void LoadMissionScript (string missionscript) {
+	void LoadMissionScript (const string & missionscript) {
 		::LoadMission ("nothing.mission",missionscript,false);
 	}
 
@@ -734,7 +734,7 @@ namespace UniverseUtil
 		return SafeStarSystemEntrancePoint(_Universe->activeStarSystem(),pos,radial_size);
 
 	}
-	Unit* launch (string name_string,string type_string,string faction_string,string unittype, string ai_string,int nr_of_ships,int nr_of_waves, QVector pos, string sqadlogo) {
+	Unit* launch (const string & name_string,const string & type_string,const string & faction_string,const string & unittype, const string & ai_string,int nr_of_ships,int nr_of_waves, QVector pos, const string & sqadlogo) {
 		if (Network) return NULL;
 		return launchJumppoint(name_string,faction_string,type_string,unittype,ai_string,nr_of_ships,nr_of_waves,pos,sqadlogo,"");
 	}
@@ -747,7 +747,7 @@ namespace UniverseUtil
 	}
 
 	static std::vector <Unit *> cachedUnits;
-	void precacheUnit (string type_string,string faction_string) {
+	void precacheUnit (const string & type_string,const string & faction_string) {
 		cachedUnits.push_back(UnitFactory::createUnit(type_string.c_str(),true,FactionUtil::GetFactionIndex(faction_string)));
 
 	}
@@ -760,21 +760,20 @@ namespace UniverseUtil
 	bool isserver() {
 		return SERVER;
 	}
-	void securepythonstr(string &message) {
-		std::replace(message.begin(),message.end(),'\'','\"');
-		std::replace(message.begin(),message.end(),'\\','/');
-		std::replace(message.begin(),message.end(),'\n',' ');
-		std::replace(message.begin(),message.end(),'\r',' ');
+	std::string securepythonstr(const string &message) {
+		std::string ret(message);
+		std::replace(ret.begin(),ret.end(),'\'','\"');
+		std::replace(ret.begin(),ret.end(),'\\','/');
+		std::replace(ret.begin(),ret.end(),'\n',' ');
+		std::replace(ret.begin(),ret.end(),'\r',' ');
+		return ret;
 	}
-	void receivedCustom(int cp, bool trusted, string cmd, string args, string id) {
+	void receivedCustom(int cp, bool trusted, const string & cmd, const string & args, const string & id) {
 		int cp_orig = _Universe->CurrentCockpit();
 		_Universe->SetActiveCockpit(cp);
 		_Universe->pushActiveStarSystem(_Universe->AccessCockpit()->activeStarSystem);
-		securepythonstr(cmd);
-		securepythonstr(args);
-		securepythonstr(id);
 		string pythonCode = game_options.custompython + "(" + (trusted?"True":"False") +
-			", r\'" + cmd + "\', r\'" + args + "\', r\'" + id + "\')\n";
+			", r\'" + securepythonstr(cmd) + "\', r\'" + securepythonstr(args) + "\', r\'" + securepythonstr(id) + "\')\n";
 		const char * cpycode = pythonCode.c_str();
         if (VS_LOG("universe", logvs::VERBOSE, "Executing python command: ") > 0) {
             logvs::log_printf("    %s\n", cpycode);
@@ -807,10 +806,10 @@ namespace UniverseUtil
 	float getPlanetRadiusPercent () {
 		return game_options.auto_pilot_planet_radius_percent;
 	}
-	std::string getVariable(std::string section,std::string name,std::string def) {
+	std::string getVariable(const std::string & section,const std::string & name,const std::string & def) {
 		return vs_config->getVariable(section,name,def);
 	}
-	std::string getSubVariable(std::string section,std::string subsection,std::string name,std::string def) {
+	std::string getSubVariable(const std::string & section,const std::string & subsection,const std::string & name,const std::string & def) {
 		return vs_config->getVariable(section,subsection,name,def);
 	}
 	double timeofday () {
@@ -932,7 +931,7 @@ namespace UniverseUtil
 		return GetSaveDir();
 	}
 
-	static std::string simplePrettySystem(std::string system) {
+	static std::string simplePrettySystem(const std::string & system) {
 		std::string::size_type where=system.find("/");
 		return std::string("Sec:")+system.substr(0,where)+" Sys:"+(where==string::npos?system:system.substr(where+1));
 	}

@@ -15,7 +15,7 @@ void deleteVSSprite(VSSprite *file)
 
 }
 void abletodock(int){}
-void cache_ani (string s) {}
+void cache_ani (const std::string & s) {}
 void update_ani_cache () {}
 
 std::string getRandomCachedAniString () {

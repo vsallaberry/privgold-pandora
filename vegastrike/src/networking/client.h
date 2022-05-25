@@ -73,12 +73,12 @@ public:
 	double			old_timeout;
 	double			latest_timeout;
 	double			elapsed_since_packet;
-	string			callsign;
-	string			name;
-	string			passwd;
+	std::string		callsign;
+	std::string		name;
+	std::string		passwd;
 
 	/* Accountserver sends this info to us. */
-	string			server_ip;
+	std::string		server_ip;
 	unsigned short	server_port;
 	
 	/* In-game parameters */
@@ -90,13 +90,13 @@ public:
 	char			portaudio;
 	char			secured;
 	char			jumpok;
-	string			jumpfile;
+	std::string		jumpfile;
 	ObjSerial		netversion;
-	vector<string>	savegame;
+	std::vector<std::string>	savegame;
 	float			comm_freq;
 	ClientState     last_packet;        // Last FullUpdate packet recieved.
 
-    string			_disconnectReason;
+    std::string		_disconnectReason;
 
 	Prediction*		prediction;
 	

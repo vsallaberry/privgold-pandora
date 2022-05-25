@@ -310,7 +310,7 @@ Unit * Unit::BeamInsideCollideTree (const QVector & start,const QVector & end, Q
 	tri.v.push_back(Vector(-mag/1024.0f,0,mag));
 	tri.v.push_back(Vector(mag/1024.0f,0,mag));
 	tri.v.push_back(Vector(mag/1024.0f,0,0));
-	vector <bsp_polygon> mesh;
+	std::vector <bsp_polygon> mesh;
 	mesh.push_back(tri);
 	csOPCODECollider smallColTree(mesh);
 	if (smallColTree.Collide (*(this->colTrees)->colTree(this,Vector(0,0,0)),

@@ -64,15 +64,15 @@ varInst *Mission::call_order(missionNode *node,int mode){
 
 
   if(mode==SCRIPT_PARSE){
-    string cmd=node->attr_value("name");
+    std::string cmd=node->attr_value("name");
     node->script.method_id=module_order_map[cmd];
   }
 
    callback_module_order_type method_id=(callback_module_order_type) node->script.method_id;
 
   if(method_id==CMT_ORDER_newAggressiveAI){
-    string filestr=getStringArgument(node,mode,0);
-    string intstr=getStringArgument(node,mode,1);
+    std::string filestr=getStringArgument(node,mode,0);
+    std::string intstr=getStringArgument(node,mode,1);
 
     Order *my_order=NULL;
 
@@ -665,7 +665,7 @@ varInst *Mission::call_order(missionNode *node,int mode){
       viret->type=VAR_VOID;
     }
     else if(method_id==CMT_ORDER_setActionString){
-      string astring=getStringArgument(node,mode,1);
+      std::string astring=getStringArgument(node,mode,1);
 
       if(mode==SCRIPT_RUN){
 	my_order->setActionString(astring);

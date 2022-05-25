@@ -2,14 +2,12 @@
 #define _STARSYSGEN_H_
 #include <vector>
 #include <string>
-using std::string;
-using std::vector;
 
 /// All the properties from the galaxy in a system.
 struct SystemInfo {
-  string sector;
-  string name;
-  string filename;
+  std::string sector;
+  std::string name;
+  std::string filename;
   float sunradius;
   float compactness;
   int numstars;
@@ -17,16 +15,16 @@ struct SystemInfo {
   bool asteroids;
   int numun1;
   int numun2;
-  string faction;
-  string names;
-  string stars;
-  string planetlist;
-  string smallun;
-  string nebulaelist;
-  string asteroidslist;
-  string ringlist;
-  string backgrounds;
-  vector <string> jumps;
+  std::string faction;
+  std::string names;
+  std::string stars;
+  std::string planetlist;
+  std::string smallun;
+  std::string nebulaelist;
+  std::string asteroidslist;
+  std::string ringlist;
+  std::string backgrounds;
+  std::vector <std::string> jumps;
   int seed;
   bool force;
 };
@@ -37,7 +35,7 @@ std::string getStarSystemFileName (const std::string &input);
 std::string getStarSystemName (const std::string &in);
 ///finds the name before the first /  this is the sector name
 std::string getStarSystemSector (const std::string &in);
-string getUniversePath ();
-void readnames (vector <string> &entity, const char *filename);
+std::string getUniversePath ();
+void readnames (std::vector <std::string> &entity, const char *filename);
 void generateStarSystem (SystemInfo &si);
 #endif

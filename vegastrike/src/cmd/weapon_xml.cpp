@@ -11,6 +11,9 @@
 #include "vsfilesystem.h"
 #include "role_bitmask.h"
 #include "endianness.h"
+
+using std::string;
+
 #if (defined(__APPLE__) == POSH_BIG_ENDIAN) || !defined(INTEL_X86)
 //pre-optimization bug with "gcc 3.1 (20021003) prerelease"
 int counts = time( NULL );

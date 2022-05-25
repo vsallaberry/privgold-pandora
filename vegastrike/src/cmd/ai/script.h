@@ -30,9 +30,9 @@ class AIScript : public Order {
   ///Pop the top vector of teh current stack
   void popv ();
   ///member function begin elements... deals with pushing vectors on stack
-  void beginElement(const string &name, const AttributeList &attributes);
+  void beginElement(const std::string &name, const AttributeList &attributes);
   ///member function end elements...deals with calling AI scripts from the stack
-  void endElement(const string &name);
+  void endElement(const std::string &name);
 public:
   ///saves scriptname in the filename var
   AIScript(const char * scriptname);

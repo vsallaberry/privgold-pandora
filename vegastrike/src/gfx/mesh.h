@@ -32,8 +32,6 @@
 #include "cmd/unit_generic.h"
 #include "gfx/technique.h"
 
-using std::vector;
-using std::string;
 class Planet;
 class Unit;
 class Logo;
@@ -80,7 +78,7 @@ struct MeshDrawContext {
   ///The matrix in world space
   Matrix mat;
   ///The special FX vector pointing to all active special FX
-  vector <MeshFX> *SpecialFX;
+  std::vector <MeshFX> *SpecialFX;
   GFXColor CloakFX;
   enum CLK {NONE=0x0,CLOAK=0x1,FOG=0x2, NEARINVIS=0x4, GLASSCLOAK=0x8, RENORMALIZE=0x10};
   char cloaked;
@@ -111,12 +109,12 @@ class Mesh
 {
 private:
     //make sure to only use TempGetTexture when xml-> is valid \|/
-    Texture * TempGetTexture (struct MeshXML * , int index, std::string factionname) const;
-	Texture * TempGetTexture (struct MeshXML *, std::string filename, std::string factionname,GFXBOOL detail) const;
+    Texture * TempGetTexture (struct MeshXML * , int index, const std::string & factionname) const;
+	Texture * TempGetTexture (struct MeshXML *, const std::string & filename, const std::string & factionname,GFXBOOL detail) const;
   ///Stores all the load-time vertex info in the XML struct FIXME light calculations
   ///Loads XML data into this mesh.
-  void LoadXML(const char *filename, const Vector & scale, int faction, class Flightgroup * fg, bool orig,const vector<string> &overrideTexture);
-  void LoadXML(VSFileSystem::VSFile & f, const Vector & scale, int faction, class Flightgroup * fg, bool orig, const vector<string> &overrideTexture);
+  void LoadXML(const char *filename, const Vector & scale, int faction, class Flightgroup * fg, bool orig,const std::vector<std::string> &overrideTexture);
+  void LoadXML(VSFileSystem::VSFile & f, const Vector & scale, int faction, class Flightgroup * fg, bool orig, const std::vector<std::string> &overrideTexture);
   ///loads binary data into this mesh
   void LoadBinary (const char * filename, int faction);
   ///Creates all logos with given XML data info
@@ -124,23 +122,23 @@ private:
   static void beginElement(void *userData, const XML_Char *name, const XML_Char **atts);
   static void endElement(void *userData, const XML_Char *name);
   
-  void beginElement(struct MeshXML *xml, const string &name, const AttributeList &attributes);
-  void endElement(struct MeshXML *xml, const string &name);
+  void beginElement(struct MeshXML *xml, const std::string &name, const AttributeList &attributes);
+  void endElement(struct MeshXML *xml, const std::string &name);
   
 protected:
-  void PostProcessLoading(struct MeshXML *xml,const vector<string> &overrideTexture);
-  void initTechnique(const string &technique);
+  void PostProcessLoading(struct MeshXML *xml,const std::vector<std::string> &overrideTexture);
+  void initTechnique(const std::string &technique);
   
 private:
   Mesh( const char *filename, const Vector & scalex,int faction,class Flightgroup * fg, bool orig, const std::vector<std::string> &textureOverride=std::vector<std::string>());
 
 protected:
   // only may be called from subclass. orig request may be denied if unit was in past usage. (not likely in the case where a unit must be constructed in orig)
-  Mesh( std::string filename, const Vector & scalex,int faction,class Flightgroup * fg, bool orig=false);
+  Mesh( const std::string & filename, const Vector & scalex,int faction,class Flightgroup * fg, bool orig=false);
 
   ///Loads a mesh that has been found in the hash table into this mesh (copying original data)
   bool LoadExistant (Mesh *mesh);
-  bool LoadExistant (const string filehash, const Vector & scale, int faction);
+  bool LoadExistant (const std::string & filehash, const Vector & scale, int faction);
   ///the position of the center of this mesh for collision detection
   Vector local_pos; 
   ///The hash table of all meshes
@@ -169,9 +167,9 @@ protected:
   ///The technique used to render this mesh
   TechniquePtr technique;
   ///The decal relevant to this mesh
-  vector <Texture *> Decal;
+  std::vector <Texture *> Decal;
   Texture * detailTexture;
-  vector <Vector> detailPlanes;
+  std::vector <Vector> detailPlanes;
   float polygon_offset;
   ///whether this should be environment mapped 0x1 and 0x2 for if it should be lit (ored together)
   char envMapAndLit;
@@ -183,17 +181,17 @@ protected:
   enum BLENDFUNC blendSrc;  enum BLENDFUNC blendDst;
 
   /// Support for reorganized rendering
-  vector<MeshDrawContext> *draw_queue;
+  std::vector<MeshDrawContext> *draw_queue;
   /// How transparent this mesh is (in what order should it be rendered in 
   int draw_sequence;
   ///The name of this unit
-  string hash_name;
+  std::string hash_name;
   ///Setting all values to defaults (good for mesh copying and stuff)
   void InitUnit();
   ///Needs to have access to our class
   friend class OrigMeshContainer;
   ///The enabled light effects on this mesh
-  vector <MeshFX> LocalFX;
+  std::vector <MeshFX> LocalFX;
   ///Returing the mesh relevant to "size" pixels LOD of this mesh
   Mesh *getLOD (float lod, bool bBypassDamping=true);
 
@@ -214,7 +212,7 @@ public:
   float getFramesPerSecond()const;
   float getCurrentFrame() const;
   void setCurrentFrame(float);
-  int getNumAnimationFrames(string which="")const;
+  int getNumAnimationFrames(const std::string & which="")const;
   int getNumLOD()const;
   int getNumTextureFrames();
   float getTextureFramesPerSecond();
@@ -229,8 +227,8 @@ public:
 //private:  
 //public:
 	static Mesh* LoadMesh(const char * filename, const Vector & scalex, int faction, class Flightgroup * fg, const std::vector<std::string> &textureOverride=std::vector<std::string>());
-  static vector<Mesh*> LoadMeshes(const char * filename, const Vector & scalex, int faction, class Flightgroup * fg, const std::vector<std::string> &textureOverride=std::vector<std::string>());
-  static vector<Mesh*> LoadMeshes(VSFileSystem::VSFile & f, const Vector & scalex, int faction, class Flightgroup * fg, std::string hash_name, const std::vector<std::string> &textureOverride=std::vector<std::string>());
+  static std::vector<Mesh*> LoadMeshes(const char * filename, const Vector & scalex, int faction, class Flightgroup * fg, const std::vector<std::string> &textureOverride=std::vector<std::string>());
+  static std::vector<Mesh*> LoadMeshes(VSFileSystem::VSFile & f, const Vector & scalex, int faction, class Flightgroup * fg, const std::string & hash_name, const std::vector<std::string> &textureOverride=std::vector<std::string>());
 
   ///Forks the mesh across the plane a,b,c,d into two separate meshes...upon which this may be deleted
   void Fork (Mesh * &one, Mesh * &two, float a, float b, float c, float d);
@@ -244,7 +242,7 @@ public:
   Texture * texture (int i) {return Decal[i];}
   void SetBlendMode (BLENDFUNC src, BLENDFUNC dst, bool lodcascade=false);
   ///Gets all polygons in this mesh for BSP computation
-  void GetPolys(vector <bsp_polygon> &);
+  void GetPolys(std::vector <bsp_polygon> &);
   ///Sets the material of this mesh to mat (affects original as well)
   void SetMaterial (const GFXMaterial & mat);
   // Gets the material back from the mesh.

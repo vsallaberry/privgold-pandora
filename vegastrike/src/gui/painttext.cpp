@@ -28,6 +28,9 @@
 #include "gldrv/gl_globals.h"
 #include "unicode.h"
 
+using std::string;
+using std::vector;
+
 const int PaintText::END_LINE = 1000000;           // Draw to the end.
 extern bool useStroke();
 // This function allows a number of formatting characters.  Here are the rules:

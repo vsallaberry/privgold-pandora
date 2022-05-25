@@ -68,6 +68,10 @@
 #include "beam.h"
 #include "python/init.h"
 #include "unit_const_cache.h"
+
+using std::string;
+using std::vector;
+
 extern double interpolation_blend_factor;
 extern double saved_interpolation_blend_factor;
 extern bool cam_setup_phase;
@@ -140,7 +144,7 @@ GameUnit<UnitType>::GameUnit (std::vector <Mesh *>& meshes, bool SubU, int fact)
 }
 extern void update_ani_cache();
 template <class UnitType>
-GameUnit<UnitType>::GameUnit(const char *filename, bool SubU, int faction,std::string unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml) : sparkle_accum(0) {
+GameUnit<UnitType>::GameUnit(const char *filename, bool SubU, int faction,const std::string & unitModifications, Flightgroup *flightgrp,int fg_subnumber, string * netxml) : sparkle_accum(0) {
 	Unit::Init( filename, SubU, faction, unitModifications, flightgrp, fg_subnumber, netxml);
 }
 template<class UnitType>

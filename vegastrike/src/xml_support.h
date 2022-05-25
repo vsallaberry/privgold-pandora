@@ -29,7 +29,7 @@ namespace XMLSupport {
   struct Attribute {
     std::string name;
     std::string value;
-    Attribute(std::string name, std::string value) : name(name), value(value)
+    Attribute(const std::string & name, const std::string & value) : name(name), value(value)
     {};
   };
 
@@ -56,7 +56,7 @@ namespace XMLSupport {
     struct Pair {
       std::string name;
       int val;
-	  Pair (const std::string c, int v) {
+	  Pair (const std::string & c, int v) {
 		name = c;
 		val = v;
 	  }

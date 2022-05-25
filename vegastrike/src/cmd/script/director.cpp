@@ -176,7 +176,7 @@ void Mission::DirectorShipDestroyed(Unit *unit){
       cf.nr_ships = fg->nr_ships;
       
       //      cf.type = fg->type;
-      call_unit_launch(&cf,UNITPTR,string(""));
+      call_unit_launch(&cf,UNITPTR,std::string(""));
     }
     else{
       mission->msgcenter->add("game","all","Flightgroup "+fg->name+" destroyed");
@@ -211,15 +211,15 @@ void Mission::BriefingLoop() {
 }
 class TextPlane * Mission::BriefingRender() {
   if (briefing) {
-    vector <std::string> who;
+    std::vector <std::string> who;
     who.push_back ("briefing");
-    string str1;
+    std::string str1;
     gameMessage g1,g2;
 	if (msgcenter->last(0,g1,who)) {
 		str1= g1.message;
 	}
     if (msgcenter->last(1,g2,who)) {
-		str1 = str1 + string("\n")+g2.message;
+		str1 = str1 + std::string("\n")+g2.message;
     }
     briefing->tp.SetText (str1);
     briefing->Render();

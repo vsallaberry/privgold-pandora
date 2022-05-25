@@ -2,7 +2,6 @@
 #define __STARDATE_H
 
 #include <string>
-using std::string;
 
 #define HOURS_DIV 8
 
@@ -21,10 +20,10 @@ class StarDate
 
 
 		// TREK Date stuff
-		string	ConvertTrekDate( double date);
-		string	ConvertFullTrekDate( double date);
-		double	ConvertTrekDate( string date);
-		float	GetFloatFromTrekDate( int faction=0);
+		std::string	ConvertTrekDate( double date);
+		std::string	ConvertFullTrekDate( double date);
+		double		ConvertTrekDate( const std::string & date);
+		float		GetFloatFromTrekDate( int faction=0);
 	public:
 		StarDate();
 		StarDate( double time);
@@ -32,18 +31,18 @@ class StarDate
 		double	GetCurrentStarTime( int faction=0);
 
 		// TREK Date stuff
-		void	InitTrek( string date);
-		string	GetTrekDate( int faction=0);
-		string	GetFullTrekDate( int faction=0);
+		void		InitTrek( const std::string & date);
+		std::string	GetTrekDate( int faction=0);
+		std::string	GetFullTrekDate( int faction=0);
 
 		// DAN.A StarDate
-		void	InitSDate( string date);
-		string	GetSDate( int faction=0);
-		string	GetFullSDate( int faction=0);
+		void		InitSDate( const std::string & date);
+		std::string	GetSDate( int faction=0);
+		std::string	GetFullSDate( int faction=0);
 
 		// Between date format conversion
-		string	SDateFromTrekDate( string trekdate);
-		string	TrekDateFromSDate( string sdate);
+		std::string	SDateFromTrekDate( const std::string & trekdate);
+		std::string	TrekDateFromSDate( const std::string & sdate);
 };
 
 #endif

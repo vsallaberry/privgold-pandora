@@ -5,8 +5,8 @@
 #include "gfx/camera.h"
 #include "config_xml.h"
 struct warptrails {
-  vector <Mesh *> factions;
-  vector <struct WarpTrail *> warps;
+  std::vector <Mesh *> factions;
+  std::vector <struct WarpTrail *> warps;
   void Draw();
 };
 warptrails wt;
@@ -94,7 +94,7 @@ Mesh * GetWarpMesh (int faction, warptrails * w) {
   while (faction >= w->factions.size()) {
     w->factions.push_back(NULL);
   }
-  string fac = FactionUtil::GetFaction (faction);
+  std::string fac = FactionUtil::GetFaction (faction);
   fac+="_warp.bfxm";
   VSError err;
   if( (err=LookForFile( fac, MeshFile))>Ok)

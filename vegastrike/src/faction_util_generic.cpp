@@ -51,8 +51,8 @@ Unit* FactionUtil::GetContraband(int faction){
 * 1 is happy. 0 is neutral (btw 1 and 0 will not attack)
 * -1 is mad. <0 will attack
 */
-int FactionUtil::GetFactionIndex(string name) {
-  static Hashtable<string,int,47> factioncache;
+int FactionUtil::GetFactionIndex(const std::string & name) {
+  static Hashtable<std::string,int,47> factioncache;
   int * tmp=factioncache.Get(name);
   if (tmp) 
     return *tmp;
@@ -65,10 +65,10 @@ int FactionUtil::GetFactionIndex(string name) {
 bool FactionUtil::isCitizenInt(int faction) {
   return factions[faction]->citizen;
 }
-bool FactionUtil::isCitizen(std::string name) {
+bool FactionUtil::isCitizen(const std::string & name) {
   return isCitizenInt(GetFactionIndex(name));
 }
-string FactionUtil::GetFactionName(int index) {
+std::string FactionUtil::GetFactionName(int index) {
 	const char * tmp=GetFaction(index);
 	if (tmp) return tmp;
 	static std::string nullstr;
@@ -132,7 +132,7 @@ void FactionUtil::SerializeFaction(FILE * fp) {
     VSFileSystem::vs_fprintf(fp,"\n");
   }
 }
-string FactionUtil::SerializeFaction() {
+std::string FactionUtil::SerializeFaction() {
   std::ostringstream ret_oss;
   ret_oss.unsetf(std::ostringstream::floatfield); // equivalent to %g
   for (unsigned int i=0;i<factions.size();i++) {
@@ -196,7 +196,7 @@ bool whitespaceNewline(char * inp) {
   }
   return false;
 }
-string savedFactions;
+std::string savedFactions;
 void FactionUtil::LoadSerializedFaction(char * &buf) {
   if (buf==NULL) {
     char * bleh = strdup (savedFactions.c_str());

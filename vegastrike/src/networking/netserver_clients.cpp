@@ -12,6 +12,8 @@
 #include "vs_random.h"
 #include "save_util.h"
 
+using std::string;
+
 extern QVector DockToSavedBases( int n);
 extern StarSystem * GetLoadedStarSystem( const char * system);
 
@@ -33,7 +35,7 @@ ClientPtr NetServer::addNewClient( SOCKETALT &sock )
 }
 
 // zonemgr.cpp
-extern void displayUnitInfo(Unit *un, const string callsign, const char *type);
+extern void displayUnitInfo(Unit *un, const std::string & callsign, const char *type);
 
 void NetServer::broadcastUnit(Unit *un, unsigned short zone) {
 	newUnits.push_back(un);

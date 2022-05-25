@@ -57,8 +57,8 @@ protected:
     /// default constructor - only to be called by UnitFactory
   Planet();
     /// constructor - only to be called by UnitFactory
-    Planet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,string fullname, bool inside_out=false, unsigned int lights_num=0);
-	void InitPlanet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const vector<string> &dest, const QVector &orbitcent, Unit * parent, int faction,string fullname, bool inside_out, unsigned int lights_num);
+    Planet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const std::vector<std::string> &dest, const QVector &orbitcent, Unit * parent, int faction,const std::string & fullname, bool inside_out=false, unsigned int lights_num=0);
+	void InitPlanet(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename, const std::vector<std::string> &dest, const QVector &orbitcent, Unit * parent, int faction,const std::string & fullname, bool inside_out, unsigned int lights_num);
 
     friend class UnitFactory;
 	Planet (std::vector <Mesh *> m,bool b,int i):Unit (m,b,i){}
@@ -66,7 +66,7 @@ public:
   UnitCollection satellites;
   virtual ~Planet();
   virtual Vector AddSpaceElevator (const std::string &name, const std::string & faction, char direction);
-  virtual void AddFog (const vector <AtmosphericFogMesh> & meshes, bool optical_illusion){}
+  virtual void AddFog (const std::vector <AtmosphericFogMesh> & meshes, bool optical_illusion){}
   virtual void AddAtmosphere (const std::string &texture, float radius, BLENDFUNC blendSrc, BLENDFUNC blendDst, bool inside_out) {}
   virtual void AddRing (const std::string &texture,float iradius,float oradius, const QVector &r,const QVector &s, int slices, int numwrapx, int numwrapy, BLENDFUNC blendSrc, BLENDFUNC blendDst) {}
   virtual void AddCity (const std::string &texture,float radius,int numwrapx, int numwrapy, BLENDFUNC blendSrc, BLENDFUNC blendDst, bool inside_out=false,bool reverse_normals=true) {}
@@ -74,9 +74,9 @@ public:
   virtual void EnableLights() {}
   void AddSatellite (Unit * orbiter);
   void endElement();
-  string getCargoUnitName () const {return getFullname();}
-  string getHumanReadablePlanetType () const ;
-  Unit * beginElement(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename,BLENDFUNC blendsrc, BLENDFUNC blenddst, const vector<string> &dest,int level, const GFXMaterial &ourmat, const std::vector <GFXLightLocal> &ligh, bool isunit, int faction,string fullname, bool inside_out);
+  std::string getCargoUnitName () const {return getFullname();}
+  std::string getHumanReadablePlanetType () const ;
+  Unit * beginElement(QVector x,QVector y,float vely,const Vector & rotvel, float pos,float gravity,float radius,const char * filename,BLENDFUNC blendsrc, BLENDFUNC blenddst, const std::vector<std::string> &dest,int level, const GFXMaterial &ourmat, const std::vector <GFXLightLocal> &ligh, bool isunit, int faction,const std::string & fullname, bool inside_out);
   Planet * GetTopPlanet (int level);
   virtual enum clsptr isUnit()const {return PLANETPTR;}
   virtual void Draw(const Transformation & quat = identity_transformation, const Matrix &m = identity_matrix) {}

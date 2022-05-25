@@ -226,7 +226,7 @@ class Unit
 		 *  the unit.
 		 */
 		// Uses a lot of stuff that does not belong to here
-		Unit( const char *filename,bool SubUnit,int faction,std::string customizedUnit=std::string(""),
+		Unit( const char *filename,bool SubUnit,int faction,const std::string & customizedUnit=std::string(""),
 			Flightgroup *flightgroup=NULL,int fg_subnumber=0, std::string * netxml=NULL);
 
 	private:
@@ -237,11 +237,11 @@ class Unit
 	public:
 		// Initialize many of the defaults inherant to the constructor
 		void Init();
-		void Init( const char *filename,bool SubUnit,int faction,std::string customizedUnit=std::string(""),
+		void Init( const char *filename,bool SubUnit,int faction,const std::string & customizedUnit=std::string(""),
 			Flightgroup *flightgroup=NULL,int fg_subnumber=0, std::string * netxml=NULL);
 		friend class UnitFactory;
 		//table can be NULL, but setting it appropriately may increase performance
-		void LoadRow(class CSVRow &row, std::string unitMod, std::string*netxml=NULL);
+		void LoadRow(class CSVRow &row, const std::string & unitMod, std::string*netxml=NULL);
 		virtual ~Unit();
 
 		/***************************************************************************************/
@@ -268,7 +268,7 @@ class Unit
 		/***************************************************************************************/
 
 		// Uses mmm... stuff not desired here ?
-		bool UpgradeSubUnitsWithFactory (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage, Unit * (*createupgradesubunit) (std::string s, int faction));
+		bool UpgradeSubUnitsWithFactory (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage, Unit * (*createupgradesubunit) (const std::string & s, int faction));
 		virtual bool UpgradeSubUnits (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, double &percentage);
 		bool UpgradeMounts (const Unit * up, int subunitoffset, bool touchme, bool downgrade, int &numave, const Unit * templ, double &percentage);
 		// the turrets and spinning parts fun fun stuff
@@ -396,7 +396,7 @@ class Unit
 		 *  Split this mesh with into 2^level submeshes at arbitrary planes
 		 *  Uses Mesh so only in Unit and maybe in NetUnit */
 		virtual void Split (int level){}
-		virtual void addHalo( const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, std::string halo_type, float activation) {}
+		virtual void addHalo( const char * filename, const QVector &loc, const Vector &size, const GFXColor & col, const std::string & halo_type, float activation) {}
 
 		// Uses Mesh -> in NetUnit and Unit only
 		std::vector <Mesh *> StealMeshes();
@@ -924,7 +924,7 @@ class Unit
 		void Target (Unit * targ);
 
 		// not used yet
-		void setTargetFg(std::string primary,std::string secondary=std::string(),std::string tertiary=std::string());
+		void setTargetFg(const std::string & primary,const std::string & secondary=std::string(),const std::string & tertiary=std::string());
 		// not used yet
 		void ReTargetFg(int which_target=0);
 		// not used yet
@@ -1139,10 +1139,10 @@ class Unit
 		// if the unit is a planet, this contains the long-name 'mars-station'
 		std::string fullname;
 	public:
-		void setFullname(std::string name)  { fullname=name; }
+		void setFullname(const std::string & name)  { fullname=name; }
 		std::string getFullname() const { return fullname; }
 
-		const string &getFilename() const { return filename.get(); }
+		const std::string &getFilename() const { return filename.get(); }
 
 		// Is this class a unit
 		virtual enum clsptr isUnit()const {return UNITPTR;}

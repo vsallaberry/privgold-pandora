@@ -10,7 +10,6 @@
 class GFXVertexList;
 class Texture;
 struct GFXColor;
-using std::vector;
 
 class Beam {
 private:

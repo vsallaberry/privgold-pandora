@@ -23,6 +23,7 @@
 #include "configxml.h"
 #include "unit_util.h"
 #include "load_mission.h"
+#include "save_util.h"
 #include "options.h"
 
 extern vs_options game_options;
@@ -35,19 +36,15 @@ extern vs_options game_options;
 #endif
 extern int GetModeFromName (const char *);
 extern void ModifyMouseSensitivity(int&,int&);
-extern unsigned int getSaveStringLength (int whichcp, string key);
-extern unsigned int eraseSaveString (int whichcp, string key, unsigned int num);
-extern std::string getSaveString (int whichcp, string key, unsigned int num);
-extern void putSaveString (int whichcp, string key, unsigned int num,std::string s);
 
 static const char *miss_script="mission_scripts";
 static const char *miss_name="mission_names";
 static const char *miss_desc="mission_descriptions";
 static const char *news_name="dynamic_newsnews";
 using std::string;
-extern const Unit * makeFinalBlankUpgrade (string name, int faction);
-extern const Unit * makeTemplateUpgrade (string name, int faction);
-extern const Unit * loadUnitByCache(std::string name,int faction);
+extern const Unit * makeFinalBlankUpgrade (const std::string & name, int faction);
+extern const Unit * makeTemplateUpgrade (const std::string & name, int faction);
+extern const Unit * loadUnitByCache(const std::string & name,int faction);
 
 static string beautify (const std::string &input) {
   string ret = input;
@@ -919,7 +916,7 @@ void SwapInNewShipName(Cockpit * cp,std::string newfilename,int SwappingShipsInd
 	  }
 	  cp->unitfilename.front()= newfilename;
 }
-void BuyShip(Unit*  base, Unit * un, std::string input_buffer,bool my_fleet, UnitContainer * buyer, UpgradingInfo * baseinfo) {
+void BuyShip(Unit*  base, Unit * un, const std::string & input_buffer,bool my_fleet, UnitContainer * buyer, UpgradingInfo * baseinfo) {
       unsigned int offset;
       Cargo *part = base->GetCargo (input_buffer, offset);
       Cargo my_fleet_part;
@@ -1365,7 +1362,7 @@ void UpgradingInfo::ProcessMouse(int type, int x, int y, int button, int state) 
 
 	}
 }
-extern string MakeUnitXMLPretty (string, Unit *);
+extern std::string MakeUnitXMLPretty (const std::string &, Unit *);
 string replaceNewline (string s) {
 	for (string::iterator i= s.begin();i!=s.end();++i) {
 		if (*i=='\n')
@@ -1513,7 +1510,7 @@ vector <CargoColor>&UpgradingInfo::MakeMissionsFromSavegame(Unit *base) {
 }
 
 
-vector <CargoColor>&UpgradingInfo::FilterCargo(Unit *un, const string filterthis, bool inv, bool removezero){
+vector <CargoColor>&UpgradingInfo::FilterCargo(Unit *un, const std::string & filterthis, bool inv, bool removezero){
   TempCargo.clear();
     for (unsigned int i=0;i<un->numCargo();i++) {
       unsigned int len = un->GetCargo(i).GetCategory().length();

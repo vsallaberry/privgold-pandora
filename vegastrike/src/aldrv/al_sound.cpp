@@ -285,8 +285,8 @@ int mem_seek (void * datasource, ogg_int64_t offset, int whence) {
  return -1;
 }
 #endif
-static void ConvertFormat (vector<char>& ogg ) {
-  vector<char> converted;
+static void ConvertFormat (std::vector<char>& ogg ) {
+  std::vector<char> converted;
 
   if (ogg.size()>4) {
     if (ogg[0]=='O'&&ogg[1]=='g'&&ogg[2]=='g'&&ogg[3]=='S') {
@@ -448,7 +448,7 @@ using namespace VSFileSystem;
 
 bool AUDLoadSoundFile(const char *s, struct AUDSoundProperties *info, bool use_fileptr) {
 	info->success=false;
-	vector <char> dat;
+	std::vector <char> dat;
 	if (use_fileptr) {
 		FILE *f = VSFileSystem::vs_fopen(s, "rb");
 		if (!f) {

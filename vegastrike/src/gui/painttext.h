@@ -161,13 +161,13 @@ protected:
         float width;                    // Width of all the chars in this line (including ellipsis).
         float x;                        // x-origin of first character, relative to boundary rect.
         float baseLine;                 // y-origin of first character, relative to top of line.
-        vector<TextFragment> fragments; // Bits of text that make up this line.
+        std::vector<TextFragment> fragments; // Bits of text that make up this line.
     };
 
     // The state used to calculate the layout.
     struct LayoutState {
-        vector<GFXColor> colorStack;        // Color stack.
-        vector<Font> fontStack;             // Font stack.
+        std::vector<GFXColor> colorStack;   // Color stack.
+        std::vector<Font> fontStack;        // Font stack.
         float currentLineSpacing;           // Line spacing for the current line.
         float permanentLineSpacing;         // New permanent line spacing.
 
@@ -227,7 +227,7 @@ protected:
 
     bool m_needLayout;          // True = something changed.  Need to recalc the layout.
     int m_layoutVersion;        // Incremented every time we re-layout things.
-    vector<TextLine> m_lines;   // List of lines.
+    std::vector<TextLine> m_lines; // List of lines.
     double m_verticalScaling;   // Vertical factor from char reference space to identity space.
     double m_horizontalScaling; // Horizontal factor from char reference space to identity space.
     LayoutState m_layout;       // Shared state for layout operation.
