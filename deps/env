@@ -431,7 +431,7 @@ configure_fun() {
     else
         destrootcmd=cp; add_destrootargs "-av"
     fi
-    add_destrootargs "${destroot}/${prefix}" "$(dirname "${prefix}")"
+    add_destrootargs "${destroot}/${prefix}" "$(dirname "$(readlink "${prefix}" || echo "${prefix}")")"
 
     # install in a temporary destroot
     local installcmd="make"
@@ -773,7 +773,8 @@ configure_fun() {
             do_autocmd ./autogen.sh
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
-                linux*)  add_args --with-x
+                linux*)  add_args --with-x \
+                                  --enable-video-opengl-egl --enable-video-opengles-v2 --enable-video-wayland
                          test "${main_arch}" = "i386" && add_args --disable-video-x11-scrnsaver;;
             esac
             add_args \
@@ -1500,6 +1501,15 @@ configure_fun() {
                 };;
             esac
             ;;
+
+        wayland)
+            export buildtools_prefix=/usr/local/gtk2
+            build_one_arch
+            build_meson
+            add_args -Ddocumentation=false -Dbuildtype=release #-Dstrip=true
+            #build_optimize_size
+            ;;
+
         *)
             echo "+ configure: using GENERIC configuration for '$prog'" > /dev/stderr ;;
     esac
@@ -1544,7 +1554,7 @@ EOF
         "${destrootcmd}" "${destrootargs[@]}"
         ret=$?
         group=$(id -gn root)
-        chown -Rh "root:${group}" "${prefix}"
+        chown -Rh "root:${group}" "$(readlink "${prefix}" || echo "${prefix}")"
         archs=
         return $ret
     fi
