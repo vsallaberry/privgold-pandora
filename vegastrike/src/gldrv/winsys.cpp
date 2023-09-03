@@ -464,14 +464,17 @@ static const char * winsys_sdl2_swapinterval_desc(int v) {
 void winsys_init( int *argc, char **argv, const char *window_title,
                   const char *icon_title )
 {
+    SDL_version sdl_ver = { SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL };
     SDL_DisplayMode display_mode;
+    int ret;
 
     winsys_common_init();
-
-    WINSYS_LOG(logvs::NOTICE, "(SDL%d) Initializing...", WINSYS_SDL_MAJOR);
+    SDL_GetVersion(&sdl_ver);
+    WINSYS_LOG(logvs::NOTICE, "(SDL%d %d.%d.%d) Initializing...", WINSYS_SDL_MAJOR,
+               sdl_ver.major, sdl_ver.minor, sdl_ver.patch);
 
     // SDL_INIT_AUDIO|
-    Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
+    Uint32 sdl_flags = SDL_INIT_JOYSTICK;
     static int maximized = XMLSupport::parse_bool (vs_config->getVariable ("graphics","maximized","false"));
     static bool vsync = XMLSupport::parse_bool (vs_config->getVariable ("graphics/sdl2","vsync","true"));
     g_game.x_resolution = XMLSupport::parse_int (vs_config->getVariable ("graphics","x_resolution","1024"));
@@ -486,6 +489,41 @@ void winsys_init( int *argc, char **argv, const char *window_title,
         WINSYS_ERR("Couldn't initialize SDL: %s", SDL_GetError() );
         exit(1);
     }
+
+    const char * const ENV_SDL_VIDEODRIVER = "SDL_VIDEODRIVER";
+    const char * env_sdl_video = SDL_getenv(ENV_SDL_VIDEODRIVER);
+    if (env_sdl_video) {
+        WINSYS_LOG(logvs::NOTICE, "(SDL%d) %s = '%s'",
+                   WINSYS_SDL_MAJOR, ENV_SDL_VIDEODRIVER, env_sdl_video);
+    }
+#if !defined(_WIN32) && !defined(__APPLE__) // __linux__
+    int num_video_drv = SDL_GetNumVideoDrivers();
+    // if ENV SDL_VIDEODRIVER is set, we use it
+    if (num_video_drv <= 0 || env_sdl_video != NULL) {
+#endif
+
+        ret = SDL_VideoInit(NULL);
+
+#if !defined(_WIN32) && !defined(__APPLE__) // __linux__
+    } else {
+        int num_video_drv = SDL_GetNumVideoDrivers();
+        // need to init wayland before x11
+        if ((ret = SDL_VideoInit("wayland")) != 0) {
+            for (int i = 0; i < num_video_drv; ++i) {
+                const char * drv = SDL_GetVideoDriver(i);
+                if (drv == NULL || !strcmp(drv, "wayland"))
+                    continue ;
+                if ((ret = SDL_VideoInit(drv)) == 0)
+                    break ;
+            }
+        }
+    }
+#endif
+    if ( ret < 0 ) {
+        WINSYS_ERR("Couldn't initialize SDL Video: %s", SDL_GetError() );
+        exit(1);
+    }
+
     SDL_StopTextInput();
 
     // signal( SIGSEGV, SIG_DFL );
