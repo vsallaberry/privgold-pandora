@@ -1,0 +1,20 @@
+--- configure.ac.orig	2023-09-03 20:08:13.726001000 +0200
++++ configure.ac	2023-09-03 20:11:18.426001000 +0200
+@@ -1538,6 +1538,8 @@
+         video_wayland=no
+         if  test x$video_opengl_egl = xyes && \
+             test x$video_opengles_v2 = xyes; then
++            old_pkg=$PKG_CONFIG_PATH
++            PKG_CONFIG_PATH="${PKG_CONFIG_PATH:+${PKG_CONFIG_PATH}:}/usr/lib/$(uname -m)-linux-gnu/pkgconfig"
+-            if $PKG_CONFIG --exists wayland-client wayland-scanner wayland-egl wayland-cursor egl xkbcommon ; then
++            if $PKG_CONFIG --exists wayland-client wayland-scanner wayland-egl wayland-cursor xkbcommon ; then
+                 WAYLAND_CFLAGS=`$PKG_CONFIG --cflags wayland-client wayland-egl wayland-cursor xkbcommon`
+                 WAYLAND_LIBS=`$PKG_CONFIG --libs wayland-client wayland-egl wayland-cursor xkbcommon`
+@@ -1547,6 +1549,7 @@
+                       [WAYLAND_SCANNER_CODE_MODE=code])
+                 video_wayland=yes
+             fi
++            PKG_CONFIG_PATH=$old_pkg
+         fi
+         AC_MSG_RESULT($video_wayland)
+ 

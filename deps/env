@@ -774,7 +774,7 @@ configure_fun() {
             case "${build_sysname}" in
                 darwin*) add_args --without-x;;
                 linux*)  add_args --with-x \
-                                  --enable-video-opengl-egl --enable-video-opengles-v2 --enable-video-wayland
+                                  --enable-video-wayland --enable-wayland-shared
                          test "${main_arch}" = "i386" && add_args --disable-video-x11-scrnsaver;;
             esac
             add_args \
