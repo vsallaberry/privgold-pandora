@@ -1,5 +1,6 @@
 #include "options.h"
 #include "configxml.h"
+#include "gldrv/winsys.h"
 
 extern VegaConfig *vs_config;
 
@@ -78,6 +79,12 @@ void vs_options::init()
 	
 	/* Player Options */
 
+
+	/* keyboard Options */
+	kb_repeat_interval = XMLSupport::parse_int(vs_config->getVariable("keyboard", "key_repeat_interval",
+																	  XMLSupport::tostring(WS_KB_REPEAT_INTERVAL)));
+	kb_repeat_delay    = XMLSupport::parse_int(vs_config->getVariable("keyboard", "key_repeat_delay",
+																	  XMLSupport::tostring(WS_KB_REPEAT_DELAY)));
 
 	/* Joystick Options */
 	joystick_exponent = XMLSupport::parse_floatf(vs_config->getVariable ("joystick","joystick_exponent","1.0"));

@@ -742,8 +742,8 @@ void winsys_set_kb_mode(unsigned unicode, int delay_ms, int interval_ms,
             //SDL_StartTextInput();
         }
         if (delay_ms == WS_KB_REPEAT_ENABLED_DEFAULT) {
-            delay_ms = WS_KB_REPEAT_DELAY;
-            interval_ms = WS_KB_REPEAT_INTERVAL;
+            delay_ms = game_options.kb_repeat_delay;
+            interval_ms = game_options.kb_repeat_interval;
         }
         kb_repeat_delay = delay_ms;
         kb_repeat_interval = interval_ms;
@@ -1393,8 +1393,8 @@ void winsys_set_kb_mode(unsigned int unicode, int delay_ms, int interval_ms,
 
     if (delay_ms != WS_KB_REPEAT_DISABLED) {
         if (delay_ms == WS_KB_REPEAT_ENABLED_DEFAULT) {
-            delay_ms = WS_KB_REPEAT_DELAY;
-            interval_ms = WS_KB_REPEAT_INTERVAL;
+            delay_ms = game_options.kb_repeat_delay;
+            interval_ms = game_options.kb_repeat_interval;
         }
 
         SDL_EnableKeyRepeat(delay_ms, interval_ms);

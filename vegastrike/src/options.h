@@ -83,6 +83,10 @@ class vs_options
 		/* Player Options */
 		std::string callsign;
 		
+		/* keyboard options */
+		int kb_repeat_delay; // ms
+		int kb_repeat_interval; // ms
+
 		/* Joystick Options */
 		float joystick_exponent; // joystick axes are 32-bit floats.
 		int polling_rate;

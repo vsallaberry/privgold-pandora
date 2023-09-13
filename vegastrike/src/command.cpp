@@ -1954,7 +1954,7 @@ void commandI::enable(bool bEnable) {
             } else {
                 commandI::current_gui_interpretor = this;
     			winsys_set_keyboard_func((winsys_keyboard_func_t)&commandI::keypress);
-	    	    winsys_set_kb_mode(WS_UNICODE_FULL, WS_KB_REPEAT_ENABLED_DEFAULT, WS_KB_REPEAT_INTERVAL,
+    			winsys_set_kb_mode(WS_UNICODE_FULL, WS_KB_REPEAT_ENABLED_DEFAULT, game_options.kb_repeat_interval,
 		        		           (unsigned int *)kbmode_backup+0, kbmode_backup+1, kbmode_backup+2);
             }
 		}
