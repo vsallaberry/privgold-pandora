@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (C) 2021-2022 Vincent Sallaberry
+# Copyright (C) 2021-2023 Vincent Sallaberry
 # vegastrike/PrivateerGold
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@ mypwd=$(pwd)
 
 # project settings
 priv_version="1.2.4"
+optim_delivery="-O3"
 priv_data="${mydir}/data"
 target="${mydir}/vegastrike"
 build_preferred="cmake configure"
@@ -31,7 +32,8 @@ build_type=RelWithDebInfo
 gfx=sdl2
 
 macos_sdk=
-optim_level="-O3"
+optim_level="${optim_delivery}"
+optim_level_given=
 do_delivery=
 do_run=
 do_debug=
@@ -124,7 +126,7 @@ parse_opts() {
             --cxx-flags=*)  _ignore=; cxx_flags="${cxx_flags}${cxx_flags:+ }${_arg#--cxx-flags=}";;
             --cxx-ldflags=*)_ignore=; cxx_ldflags="${cxx_ldflags}${cxx_ldflags:+ }${_arg#--cxx-ldflags=}";;
             --cxx-std=*)    _ignore=; cxx_standard=${_arg#--cxx-std=};;
-            -O*|--optimize=*)_ignore=; optim_level=${_arg#-O}; optim_level=${optim_level#--optimize=};;
+            -O*|--optimize=*)_ignore=; optim_level_given=yes; optim_level=${_arg#-O}; optim_level=${optim_level#--optimize=};;
             --sdk=*)        _ignore=; macos_sdk=${_arg#--sdk=};;
             -T*|--type=*)   _ignore=; build_type=${_arg#-T};build_type=${build_type#--type=};;
             --gfx=*|-G*)    _ignore=; gfx=${_arg#-G};gfx=${gfx#--gfx=};;
@@ -349,7 +351,7 @@ cxx_standard_autoconf="gnu++${cxx_standard}"
 find_macos_sdk() {
     local _cxxflags
     test -z "$1" && _cxxflags=${CXXFLAGS} || _cxxflags=$1
-    _test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^[[:space:]]*\(/[^[:space:]]*SDKs/MacOSX[0-9].*\.sdk\)/[^[:space:]]*[[:space:]]*$%\1%p' | uniq)
+    _test_sdk=$(${CC} -v --version 2>&1 | sed -n -e 's%^.*[[:space:]=:]\(/[^[:space:]]*/SDKs/MacOSX[0-9.][0-9.]*\.sdk\).*$%\1%p' | head -n1)
     sysver=$(uname -r)
     if test ${sysver%%.*} -gt 15; then # 15 is capitan
         # sierra or later
@@ -962,6 +964,9 @@ do_delivery_fun_real() {
     add_rpath_excludes() { local _arg; for _arg in "$@"; do rpath_excludes[${#rpath_excludes[@]}]="-X${_arg}"; done; } 
     add_rpath_excludes "/opt/local"
     gfxs="sdl2 glut sdl1"
+    if test -z "${optim_level_given}"; then
+        optim_level="${optim_delivery}"
+    fi
     mainbuilddir=
     cxxf=
     otherbuildflags=
@@ -1000,6 +1005,7 @@ do_delivery_fun_real() {
         *bsd*|linux*)
             case " ${cxx_flags} " in 
                 *" -m32 "*) cxxf="-m32 -D_GLIBCXX_USE_CXX11_ABI=0"; otherbuildflags="--cxx-std=98"
+                            test -z "${optim_level_given}" && optim_level="-Os"
                             configureflags="-DBOOST_INTERNAL=1_35"; add_rpath_excludes "/usr/local/linux-gl32"
                             bundle_binsuffix=32; package_sysname=linux32;; 
                 *) bundle_binsuffix=; package_sysname=linux64;;         
@@ -1102,7 +1108,7 @@ do_delivery_fun_real() {
         test "${build_tool}" = "configure" && subdir=../ || subdir=
         test -z "${mainbuilddir}" && { mainbuilddir=${builddir}; mainsubdir=${subdir}; }
 
-        "${mydir}/build.sh" --type=release --gfx=${gfx} --build="${builddir}" --optimize="-O3" \
+        "${mydir}/build.sh" --type=release --gfx=${gfx} --build="${builddir}" --optimize="${optim_level}" \
             --cxx-flags="${cxxf}" $otherbuildflags -- $configureflags || exit $?
 
         "${builddir}/tests/${subdir}test${exe}" || test -z "${delivery_check}" || exit $?

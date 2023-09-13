@@ -28,7 +28,7 @@ for f in $build_list; do
         sdl2dbg) type=RelWithDebInfo;args="--optimize=-O1";gfx=sdl2;;
         sdl2-32) args="--optimize=-O3";gfx=sdl2
                  case "${build_sysname}" in 
-                     bsd*|linux*) newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-m32 -D_GLIBCXX_USE_CXX11_ABI=0"; args="${args} --cxx-std=98";;
+                     bsd*|linux*) newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-m32 -D_GLIBCXX_USE_CXX11_ABI=0"; args="${args} --cxx-std=98 -O-Os";;
                      mingw*|cywin*|msys*|windows*) 
                         newbuildargs[${#newbuildargs[@]}]="--cc=/mingw32/bin/clang"
                         newbuildargs[${#newbuildargs[@]}]="--cxx-flags=-D_WIN32_WINNT=0x0501";;
