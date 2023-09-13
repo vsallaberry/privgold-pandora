@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2005 Rogue - Initial
+ * Copyright (C) 2022-2023 Vincent Sallaberry - utf8,Readline-like and python improvements
+ */
 #include "command.h"
 #include <sstream>
 #include <Python.h>
@@ -18,9 +22,7 @@
 #endif
 
 #include "log.h"
-
-#define CMD_LOG(level, ...) VS_LOG("interpreter", level, __VA_ARGS__)
-#define CMD_DBG(level, ...) VS_DBG("interpreter", level, __VA_ARGS__)
+#include "vs_log_modules.h"
 
 extern vs_options game_options;
 
@@ -434,7 +436,8 @@ commandI::commandI() {
 // }}}
 // {{{ command interpretor destructor
 commandI::~commandI() {
-		{
+        this->enable(false);
+        {
 			HoldCommands::procs *findme = rcCMD->getProc(this);
 			if(findme->rc.size() > 0) {
 		        coms *iter = &findme->rc.back();
@@ -488,9 +491,10 @@ void commandI::help(const char * helponthis) {
 	buf.append("But most commands are self supporting, just type them to see what they do.\n\r");
 	if (!helponthis || !*helponthis) {
 		buf.append("+ Type  Esc to exit interpreter, 'commands' to have commands list,\n\r");
-		buf.append("+ Left/Right/Home/End/ctrl+a/e to navigate through the prompt,\n\r");
-		buf.append("+ Up/Down to navigate through history, PageUp/PageDown to scroll the console,\n\r");
+		buf.append("+ Left/Right/Home/End/ctrl+a,e/Alt+Left|Right to navigate through the prompt,\n\r");
+		buf.append("+ Up/Down to navigate through history,\n\r");
 		buf.append("+ Ctrl+u/ctrl+k to delete before/after cursor.\n\r");
+		buf.append("+ Shift+PgUp|PgDown to resize console, (Ctrl?+)PgUp|PgDown, to scroll.\n\r");
 		buf.append("+ ':' is an alias for python (:print 'hello', :1+(3.1*2)), '!' an alias to repeat last command.\n\r");
 	}
     conoutf(buf);
@@ -522,6 +526,7 @@ void commandI::cmd_fflush() {
 // {{{ clear the console
 void commandI::cmd_clear() {
 	conlines.clear();
+	scrollpos = 0;
 	CMD_DBG(logvs::DBG, "clear :)");
 };
 // }}}
@@ -842,7 +847,11 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 				std::string webout(">");
 				webout.append(incommand->c_str());
 				//webout.append("\n\r");
-				conoutf(webout);
+                std::string::size_type len = webout.find_last_not_of("\n\r");
+                if (len != std::string::npos)
+                   ++len; 
+				CMD_LOG(logvs::NOTICE, "%s", webout.substr(0, len).c_str());
+                conoutf(webout);
 			}
 		}
 // }}}
@@ -940,11 +949,11 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 		// }}}
     }
 
-    if (VS_LOG_START("interpreter", logvs::INFO, "command arguments: ") > 0) {
+    if (CMD_LOG_START(logvs::INFO, "command arguments: ") > 0) {
     	for (size_t i = 0; i < strvec.size(); ++i) {
     		logvs::log_printf("<%s> ", strvec[i].c_str());
     	}
-    	VS_LOG_END("interpreter", logvs::INFO, "");
+    	CMD_LOG_END(logvs::INFO, "");
     }
 
 	try {
@@ -984,6 +993,7 @@ bool commandI::fexecute(std::string *incommand, bool isDown, int sock_in) {
 		} catch(const char *in) {
 			std::string l;
 			l.append(in);
+            CMD_LOG(logvs::NOTICE, "error : %s", in);
 			conoutf(l); //print the error to the console
 		}catch (std::exception e) {
 			std::string l;
@@ -1406,7 +1416,8 @@ void commandI::breakmenu() {
 };
 // }}}
 
-commandI *CommandInterpretor = NULL;
+// declared STATIC in command.h
+commandI *commandI::current_gui_interpretor = NULL;
 
 // ---------------------------------------------------------------------------
 # include <fcntl.h>
@@ -1528,14 +1539,14 @@ StreamWriter::threadret_type StreamWriter::thread_body(void * data) {
 #endif
 		{
 			//flockfile(swriter->outwr_get());
-#if defined STREAMWRITER_IO_UNBLOCK
-			while (1)
-#endif
-			{
+			while (1) {
 				ssize_t n = read(fd_in, buf + off, sizeof(buf)-1-off);
 				CMD_DBG(logvs::DBG, "%s(%p): read at %zu: %zd %s", __func__, swriter, off, n, n<0?strerror(errno):"");
-				if (n < 0 && errno == EINTR)
-					continue ;
+				if (n < 0) {
+					if (errno == EINTR)
+						continue ;
+					swriter->_running = false;
+				}
 				if (n <= 0)
 					break ;
 				buf[off+n] = 0;
@@ -1549,7 +1560,19 @@ StreamWriter::threadret_type StreamWriter::thread_body(void * data) {
 						off = 0;
 					}
 				}
-			}
+				if (n < sizeof(buf)-1-off) {
+					break ;
+				} else {
+#if defined(_WIN32)
+					if (WaitForSingleObject(hfoutrd, 0) != 0) { // poll
+#else
+					struct timeval polltv = { 0, 0 };
+					if (select(fd_in+1, &rd_fds, NULL, NULL, &polltv) <= 0) { // poll
+#endif
+						break ;
+					}
+				}
+	 		}
 			//funlockfile(swriter->outwr_get());
 		}
 
@@ -1648,9 +1671,11 @@ RegisterPythonWithCommandInterpreter::RegisterPythonWithCommandInterpreter(comma
 	addTo->addCommand(l, "python");
 }
 
-//#define CMD_PYTHON_THREADS
+// (vsa) experimental feature to run python console cmds in threads
+//#define CMD_PYTHON_THREADS 
+
 #ifdef CMD_PYTHON_THREADS
-static PyThreadState *gtstate = NULL;
+static PyThreadState *gmstate = NULL, * gtstate = NULL;
 static void py_threads_deinit() {
 	if (gtstate) {
 	        PyEval_AcquireThread(gtstate);
@@ -1664,8 +1689,10 @@ static void py_threads_init()
         return;
     //Py_Initialize();
     PyEval_InitThreads(); // Create (and acquire) the interpreter lock
-    gtstate = PyEval_SaveThread(); // Release the thread state
+    gtstate = PyThreadState_Get();
 }
+typedef struct { RegisterPythonWithCommandInterpreter * _this; CmdStreamWriter * writer; std::string args; } pythread_data_t;
+static void * py_thread_body(void *data);
 #endif
 
 static int close_py_file(FILE * fp) {
@@ -1676,12 +1703,42 @@ static int close_py_file(FILE * fp) {
 
 //run a python string
 void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
+#ifdef CMD_PYTHON_THREADS
+	int ret;
+	pythread_data_t * pydata = new pythread_data_t;// (pythread_data_t*) malloc(sizeof(*pydata));
+	if (pydata == NULL)
+		return ;
+	pydata->_this = this;
+	pydata->writer = &this->writer;
+	pydata->args = argsin;
+	py_threads_init();
+	Py_BEGIN_ALLOW_THREADS
+# if defined(_WIN32)
+	DWORD wtid;
+	HANDLE tid = CreateThread(NULL, 0, py_thread_body, pydata, 0, &wtid);
+	ret = (tid == INVALID_HANDLE_VALUE) ? -1 : 0;
+# else
+	pthread_t tid;
+	ret = pthread_create(&tid, NULL, py_thread_body, pydata);
+# endif
+	if (ret != 0) {
+		delete pydata;
+	}
+	usleep(50000);
+	Py_END_ALLOW_THREADS
+}
+static void * py_thread_body(void * data) {
+	pythread_data_t * pydata = (pythread_data_t*)data;
+	std::string & argsin = pydata->args;
+	commandI * cmdI = pydata->_this->interpretor();
+	CmdStreamWriter & writer(*pydata->writer);
+#endif
 	static char stdin_str[] 	= { 's','t','d','i','n',0 };
 	static char stdout_str[] 	= { 's','t','d','o','u','t',0 };
 	static char stderr_str[] 	= { 's','t','d','e','r','r',0 };
 	static char r_str[] 		= { 'r', 0 };
 	static char w_str[] 		= { 'w', 0 };
-
+	static const char * main_str= "__main__";
 	std::string pyRunString;
 
 	pyRunString.append(argsin); //append the arguments in to the string to run
@@ -1702,24 +1759,18 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 
 	char *temppython = strdup(pyRunString.c_str()); //copy to a char *
 
-	PyObject * mainmod = PyImport_AddModule("__main__");
-	PyObject * globals = PyModule_GetDict(mainmod);
-
 #ifdef CMD_PYTHON_THREADS
-	PyThreadState *tstate;
-	py_threads_init();
-	PyEval_AcquireLock();
-	tstate = Py_NewInterpreter();
-	if (tstate == NULL) {
-	    CMD_LOG(logvs::WARN, "Sorry -- can't create an interpreter");
-	    return;
-	}
-	PyObject * main_globals = globals;
-	mainmod = PyImport_AddModule("__main__");
-	globals = PyModule_GetDict(mainmod);
-	PyDict_Merge(globals, main_globals, 1);
+	PyGILState_STATE gstate;
+	gstate = PyGILState_Ensure();
+
+	PyObject * mainmod = PyImport_AddModule(main_str);
+	PyObject * globals = PyModule_GetDict(mainmod);
+#else
+    PyObject * mainmod = PyImport_AddModule(main_str);
+    PyObject * globals = PyModule_GetDict(mainmod);
 #endif
 
+	Py_INCREF(mainmod);
 	Py_INCREF(globals);
 
 	PyObject * pyStdin = PySys_GetObject(stdin_str);
@@ -1735,7 +1786,7 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 	PyFile_IncUseCount((PyFileObject *)pyNewStdin);
 	PyFile_IncUseCount((PyFileObject *)pyNewStdout);
 	PyFile_IncUseCount((PyFileObject *)pyNewStderr);
-	PyFile_SetBufSize(pyNewStdin, 1);//PIPE_BUF);
+	PyFile_SetBufSize(pyNewStdin, 1);//PIPE_BUF); //0:IO_NBF, 1:IO_LBF, >1:IO_FBF
 	PyFile_SetBufSize(pyNewStdout, 1);//PIPE_BUF);
 	PyFile_SetBufSize(pyNewStderr, 1);//PIPE_BUF);
 
@@ -1789,18 +1840,20 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
 	PyFile_DecUseCount((PyFileObject *)pyNewStdin);
 	PyFile_DecUseCount((PyFileObject *)pyNewStdout);
 	PyFile_DecUseCount((PyFileObject *)pyNewStderr);
-	Py_XDECREF(pyNewStdin);
+	/*Py_XDECREF(pyNewStdin);
 	Py_XDECREF(pyNewStdout);
-	Py_XDECREF(pyNewStderr);
+	Py_XDECREF(pyNewStderr);*/
 
 #if !defined(CMD_PYTHON_THREADS)
 	Py_XDECREF(globals);
+	Py_XDECREF(mainmod);
 #else
-	PyDict_Merge(main_globals, globals, 1);
-	Py_XDECREF(main_globals);
 	Py_XDECREF(globals);
-	Py_EndInterpreter(tstate);
-	PyEval_ReleaseLock();
+	Py_XDECREF(mainmod);
+	PyGILState_Release(gstate);
+	delete pydata;
+	free(temppython);
+	return NULL;
 #endif
 
 	free (temppython); //free the copy char *
@@ -1815,36 +1868,45 @@ void RegisterPythonWithCommandInterpreter::runPy(std::string &argsin) {
   \date    Created:  2005-8-16
 */
 
-//if(!keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode))
-void commandI::keypress(int code, int modifiers, bool released, int x, int y) {
-	if (!CommandInterpretor) {
+/** return NULL if CommandInterpretor is not created/not enabled */
+static commandI * commandI_isEnabled_orRestoreGameLoop() {
+    commandI * interpretor = commandI::getCurrent();
+    if (!interpretor) {
 		if (BaseInterface::CurrentBase) {
 			BaseInterface::CurrentBase->InitCallbacks();
 		} else {
 			restore_main_loop();
 		}
+		return NULL;
+	} else if (!interpretor->enabled()) {
+        CMD_LOG(logvs::WARN, "Warning: Interpretor was disabled without retoring the mainloop!!");
+        interpretor->enable(false);
+        return NULL;
+    }
+    return interpretor;
+}
+
+//if(!keypress(event.key.keysym.sym, event.key.state==SDL_PRESSED, event.key.keysym.unicode))
+void commandI::keypress(int code, int modifiers, bool released, int x, int y) {
+	commandI * interpretor = commandI_isEnabled_orRestoreGameLoop();
+    if (!interpretor) {		
 		return ;
 	}
-	if(CommandInterpretor->enabled()) {
-		if(code==WSK_ESCAPE || (code == 'd' && (modifiers == WSK_MOD_LCTRL || modifiers == WSK_MOD_RCTRL)
-				                && CommandInterpretor->getcurcommand().empty())) {
-			CommandInterpretor->enable(false);
-			return;
-		};
-		if(code==WSK_RETURN && !released) {
-			std::string commandBuf = CommandInterpretor->getcurcommand();
-			commandBuf.append("\r\n");
-			CommandInterpretor->execute(&commandBuf, released, 0); //execute console on enter
-			//don't return so the return get's processed by
-			//CommandInterpretor->ConsoleKeyboardI, so it can clear the
-			//command buffer
-		}
-		CommandInterpretor->ConsoleKeyboardI(code, modifiers, released);
-		return;
-	} else {
-		CommandInterpretor->enable(false);
-		return;
-	}
+    if(code==WSK_ESCAPE || (code == 'd' && (modifiers == WSK_MOD_LCTRL || modifiers == WSK_MOD_RCTRL)
+                && interpretor->getcurcommand().empty())) {
+        interpretor->enable(false);
+        return;
+    };
+    if(code==WSK_RETURN && !released) {
+        std::string commandBuf = interpretor->getcurcommand();
+        commandBuf.append("\r\n");
+        interpretor->execute(&commandBuf, released, 0); //execute console on enter
+        //don't return so the return get's processed by
+        //interpretor->ConsoleKeyboardI, so it can clear the
+        //command buffer
+    }
+    interpretor->ConsoleKeyboardI(code, modifiers, released);
+    return;	
 
 /* Proposed (Would need a couple commands inserted into the command processor
 	// one to read a keymap file and one to re-map a single key
@@ -1862,10 +1924,24 @@ void commandI::keypress(int code, int modifiers, bool released, int x, int y) {
             iter++;
         }
     }
-
-
-
 */
+}
+
+void commandI::mouse_event(int xint, int yint, int button, int state) {
+	commandI * interpretor = commandI_isEnabled_orRestoreGameLoop();
+    if (!interpretor) {		
+		return ;
+	}
+    if (state != WS_MOUSE_UP)
+        return ;
+    int key = WSK_PAGEUP;
+    switch(button) {
+        case WS_WHEEL_DOWN:
+            key = WSK_PAGEDOWN;
+        case WS_WHEEL_UP: 
+            commandI::keypress(key, WSK_MOD_NONE, true, xint, yint);
+            break ;
+    }
 }
 
 void commandI::enable(bool bEnable) {
@@ -1873,19 +1949,29 @@ void commandI::enable(bool bEnable) {
 		if (!enabled()) {
 			CMD_LOG(logvs::NOTICE, "enabling command interpreter...");
 			this->console = true;
-			winsys_set_keyboard_func((winsys_keyboard_func_t)&commandI::keypress);
-		    winsys_set_kb_mode(WS_UNICODE_FULL, WS_KB_REPEAT_ENABLED_DEFAULT, WS_KB_REPEAT_INTERVAL,
-		    		           (unsigned int *)kbmode_backup+0, kbmode_backup+1, kbmode_backup+2);
+            if (commandI::current_gui_interpretor != NULL) {
+                CMD_LOG(logvs::WARN, "Warning: Interpretor enable request while another is already using the GUI!!");
+            } else {
+                commandI::current_gui_interpretor = this;
+    			winsys_set_keyboard_func((winsys_keyboard_func_t)&commandI::keypress);
+	    	    winsys_set_kb_mode(WS_UNICODE_FULL, WS_KB_REPEAT_ENABLED_DEFAULT, WS_KB_REPEAT_INTERVAL,
+		        		           (unsigned int *)kbmode_backup+0, kbmode_backup+1, kbmode_backup+2);
+            }
 		}
-	} else if (enabled()) {
-		CMD_LOG(logvs::NOTICE, "disabling command interpreter...");
-		this->console = false;
-		winsys_set_kb_mode((unsigned int)kbmode_backup[0], kbmode_backup[1], kbmode_backup[2], NULL, NULL, NULL);
-		if (BaseInterface::CurrentBase) {
-			BaseInterface::CurrentBase->InitCallbacks();
-		} else {
-			restore_main_loop();
-		}
+	} else {
+        if (enabled()) {
+		    CMD_LOG(logvs::NOTICE, "disabling command interpreter...");
+		    this->console = false;
+        }
+        if (commandI::current_gui_interpretor == this) {
+            commandI::current_gui_interpretor = NULL;
+            winsys_set_kb_mode((unsigned int)kbmode_backup[0], kbmode_backup[1], kbmode_backup[2], NULL, NULL, NULL);
+	    	if (BaseInterface::CurrentBase) {
+		    	BaseInterface::CurrentBase->InitCallbacks();
+		    } else {
+			    restore_main_loop();
+		    }
+        }
 	}
 }
 
@@ -1917,22 +2003,6 @@ void commandI::enable(bool bEnable) {
 
 
 *************************************************************** */
-
-namespace ConsoleKeys {
-
-    void BringConsole(const KBData&,KBSTATE newState)
-    {
-        //this way, keyboard state stays synchronized
-        if(newState==RELEASE){
-			if (CommandInterpretor) {
-	            CommandInterpretor->enable();
-			}
-        }
-    }
-
-}
-
-
 
 // footer, leave at bottom
 /*

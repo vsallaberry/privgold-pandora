@@ -5,6 +5,7 @@
 #include "universe_util.h"
 #include "gldrv/winsys.h"
 #include "command.h"
+#include "vs_log_modules.h"
 
 //fmin conflicted with c++11 double std::fmin(double,double)
 static inline float vs_fminf(float a, float b) { return (a<b)?a:b; };
@@ -132,7 +133,12 @@ void ShipCommands::setkps(const char *in)
 void InitShipCommands()
 {
 	if (ship_commands) delete ship_commands;
-	ship_commands = new ShipCommands;
+    if (CommandInterpretor) {
+    	ship_commands = new ShipCommands;
+    } else {
+        CMD_LOG(logvs::ERROR, "cannot create ShipCommands: CommandInterpretor is not created");
+        ship_commands = NULL;
+    }
 }
 
 void UninitShipCommands()

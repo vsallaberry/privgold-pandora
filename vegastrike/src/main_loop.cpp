@@ -59,6 +59,7 @@
 #include "in_kb_data.h"
 #include "in_joystick.h"
 #include "vs_random.h"
+#include "command.h"
 #include "log.h"
 #include "vs_log_modules.h"
 #include "options.h"
@@ -735,9 +736,27 @@ bool cockpitfront=true;
           }
       }
     }
-}
+} // ! namespace CockpitKeys
 
 using namespace CockpitKeys;
+
+// ************************************************************
+// Key bindings: CommandInterpretor
+// ************************************************************
+
+namespace ConsoleKeys {
+    void BringConsole(const KBData&,KBSTATE newState)
+    {
+        //this way, keyboard state stays synchronized
+        if(newState==RELEASE){
+            commandI * interpretor = GetCommandInterpretor();
+			if (interpretor) {
+	            interpretor->enable();
+			}
+        }
+    }
+}
+
 
 /*
 int oldx =0;

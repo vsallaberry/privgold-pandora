@@ -1,5 +1,15 @@
+// ****************
+// Console Rendering System by Rogue
+// 2005-08-a-few-days
+// 2022-2023 Vincent Sallaberry - utf8,Readline-like, python, misc. improvements
+// ****************
 #ifndef VS_RENDERTEXT_H
 #define VS_RENDERTEXT_H
+
+#include <string>
+#include <vector>
+
+#include "gfx/hud.h"
 
 class RText {
 	protected:
@@ -23,6 +33,7 @@ class RText {
 		int curpos;
 		int scrollpos;
 		std::string commandbuf;
+		TextPlane textplane;
 	public:
 		RText();
 		virtual ~RText();

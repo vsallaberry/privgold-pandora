@@ -3,6 +3,7 @@
 /*
  * Globals 
  */
+commandI * CommandInterpretor = NULL;
 game_data_t g_game;
 ForceFeedback *forcefeedback = NULL;
 VegaConfig * vs_config = NULL;

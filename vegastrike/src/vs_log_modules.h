@@ -114,4 +114,11 @@ VSLOG_DECL_CACHE(GFX_LOGNAME)
 #define GFX_LOG_START(level, ...) VS_LOG_START_M(GFX_LOGNAME, level, __VA_ARGS__)
 #define GFX_LOG_END(level, ...) VS_LOG_END_M(GFX_LOGNAME, level, __VA_ARGS__)
 
+#define CMD_LOGNAME interpreter
+VSLOG_DECL_CACHE(CMD_LOGNAME)
+#define CMD_LOG(level, ...) VS_LOG_M(CMD_LOGNAME, level, __VA_ARGS__)
+#define CMD_DBG(level, ...) VS_DBG_M(CMD_LOGNAME, level, __VA_ARGS__)
+#define CMD_LOG_START(level, ...) VS_LOG_START_M(CMD_LOGNAME, level, __VA_ARGS__)
+#define CMD_LOG_END(level, ...) VS_LOG_END_M(CMD_LOGNAME, level, __VA_ARGS__)
+
 #endif

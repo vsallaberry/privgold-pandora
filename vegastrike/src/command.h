@@ -1,3 +1,7 @@
+/*
+ * Copyright (C) 2005 Rogue - Initial
+ * Copyright (C) 2022-2023 Vincent Sallaberry - utf8,Readline-like and python improvements
+ */
 #ifndef COMMANDINTERP
 #define COMMANDINTERP
 #include <iostream>
@@ -101,6 +105,7 @@ class commandI : public RText {
 		bool console;
 		int kbmode_backup[3];
 		bool immortal;
+        static commandI * current_gui_interpretor;
 	public:
 		commandI();		
 //                commandI(mud *mud_in);
@@ -109,8 +114,10 @@ class commandI : public RText {
 		
 		std::string get_prompt(const std::string & beforeCursor, const std::string & afterCursor);
 
+        static commandI * getCurrent() { return current_gui_interpretor; }
 		static void keypress(int code, int modifiers, bool isDown, int x, int y);
-		
+    	static void mouse_event(int xint, int yint, int button, int state);
+
 		bool getmenumode() { return menumode; };
                 //creates a coms object, adds it to the command vector
                 //if args is not supplied it assumes your function
@@ -208,6 +215,7 @@ class RegisterPythonWithCommandInterpreter {
 public:
 	RegisterPythonWithCommandInterpreter(commandI *cI);
 	void runPy(std::string &argsin);
+    commandI* interpretor() { return cmdI; }
 protected:
 	commandI * cmdI;
 	CmdStreamWriter writer;

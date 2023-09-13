@@ -25,6 +25,12 @@
 #include <string>
 #include "vec.h"
 #include "gfxlib_struct.h"
+
+#if defined(_WIN32 ) && defined(GetCharWidth)
+// Windows defines GetCharWidth to GetCharWidth[AW]: we want TextPlane::GetCharWidth()
+# undef GetCharWidth // we don't use windows GetCharWidth in vegastrike
+#endif
+
 class Texture;
 
 class TextPlane {
@@ -91,6 +97,7 @@ public:
     	return this->GetCharWidth(c, myFontMetrics.i);
     }
     float GetStringWidth(const std::string & str) const;
+    std::string GetUserString(const std::string & str) const;
 
 private:
     template<class IT>

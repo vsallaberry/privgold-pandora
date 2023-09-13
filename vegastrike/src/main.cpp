@@ -267,6 +267,18 @@ void python_terminatelog() {
 extern void InitUnitTables();
 bool isVista=false;
 
+commandI * GetCommandInterpretor() {
+    static bool interpretor_allowed = XMLSupport::parse_bool(vs_config->getVariable("general","command_interpretor","false"));
+    //Register commands
+    // COmmand Interpretor Seems to break VC8, so I'm leaving disabled for now - Patrick, Dec 24
+    if (!CommandInterpretor && interpretor_allowed) {
+		CommandInterpretor = new commandI;
+		if (CommandInterpretor)
+            InitShipCommands();
+	}
+    return CommandInterpretor;
+}
+
 int main( int argc, char *argv[] )
 {
     VSCommon::InitConsole(); // Essentially for win32: application built in GUI mode (-mwindows) attaches to console when it is run from it
@@ -410,12 +422,7 @@ int main( int argc, char *argv[] )
 
 #endif
     */
-      //Register commands
-      // COmmand Interpretor Seems to break VC8, so I'm leaving disabled for now - Patrick, Dec 24
-	if (XMLSupport::parse_bool(vs_config->getVariable("general","command_interpretor","false"))) {
-		CommandInterpretor = new commandI;
-		InitShipCommands();
-	}
+    // Do not initialize the CommandInterpretor Here, it will be done on demand, with function GetCommandInterpretor();
 
     _Universe= new GameUniverse(argc,argv,vs_config->getVariable ("general","galaxy","milky_way.xml").c_str());
 	//_Universe.Init(argc, argv, vs_config->getVariable ("general","galaxy","milky_way.xml").c_str());

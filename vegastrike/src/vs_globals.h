@@ -10,6 +10,7 @@ extern Universe * _Universe;
 
 class commandI;
 extern commandI *CommandInterpretor;
+extern commandI *GetCommandInterpretor();
 
 /*
 #ifdef _SERVER

@@ -303,11 +303,11 @@ float TextPlane::GetStringWidth(const std::string & str) const {
 	static bool use_bit = XMLSupport::parse_bool(vs_config->getVariable ("graphics","high_quality_font","false"));
 	float width = 0.0;
 
-	for (Utf8Iterator it = Utf8Iterator::begin(str); it != it.end(); ++it) {
+	for (Utf8Iterator it = Utf8Iterator::begin(str), itend = it.end(); it != itend; ++it) {
 		if (*it == '#' && *(++it) != '#' && *it != '_') { //allows escape character '##', '#_' to print a '#', or '_'
 			//Considering nexts are chars(not wchars).Could do 'if (*(text_it+5) != 0)' but it has cost.
-			if (it.pos() + 6 <= it.end().pos()) {
-				it += 6;
+			if (it.pos() + 6 <= itend.pos()) {
+				it += 6 - 1;
 			}
 			continue ;
 		}
@@ -315,6 +315,22 @@ float TextPlane::GetStringWidth(const std::string & str) const {
 				         : this->GetCharWidth(*it);
 	}
 	return width;
+}
+
+std::string TextPlane::GetUserString(const std::string & str) const {
+	std::string ret;
+	for (Utf8Iterator it = Utf8Iterator::begin(str), itend = it.end(); it != itend; ) {
+		if (*it == '#' && *(++it) != '#' && *it != '_') { //allows escape character '##', '#_' to print a '#', or '_'
+			//Considering nexts are chars(not wchars).Could do 'if (*(text_it+5) != 0)' but it has cost.
+			if (it.pos() + 6 <= itend.pos()) {
+				it += 6;
+			}
+			continue ;
+		}
+		size_t pos = (it++).pos();
+		ret.append(str.c_str() + pos, it.pos() - pos);
+	}
+	return ret;
 }
 
 template<class IT>
