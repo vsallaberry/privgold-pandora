@@ -24,7 +24,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065" name="Debug" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf" description="" id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065" name="Debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=" parent="cdt.managedbuild.config.gnu.macosx.exe.debug">
 					<folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.1742961065." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.609826816" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.182378953" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
@@ -46,6 +46,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.968570435" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -66,6 +68,9 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENGL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_GLUT_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/../../usr/include/c++/v1&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1421315348" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
@@ -85,6 +90,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1577924062" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -139,6 +146,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1940685988" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -159,6 +168,9 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_PYTHON_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/../../include/c++/v1&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1167855978" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
@@ -175,6 +187,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.162372395" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_VERSION_H=1"/>
@@ -236,6 +250,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.614292456" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -256,6 +272,9 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/../../../include/c++/v1&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.305118872" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
@@ -275,6 +294,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1838741919" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -333,6 +354,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.800173575" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -353,6 +376,9 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/../../../include/c++/v1&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1944913724" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
@@ -372,6 +398,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.550803299" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -430,6 +458,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.581164394" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -450,6 +480,9 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/../../../include/c++/v1&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.cpp.compiler.option.preprocessor.def.1879846836" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="HAVE_CONFIG_H=1"/>
@@ -469,6 +502,8 @@
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_OPENAL_FWK}/Headers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/AL&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_VEGA_PREFIX}/include/libpng16&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/usr/include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${VS_ECL_BUILD_MACOS_SDK}/System/Library/Frameworks/Kernel.framework/Headers&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1147864546" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>

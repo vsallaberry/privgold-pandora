@@ -45,13 +45,15 @@ Tested on:
 * catalina
   
 * Experimental non-tested build for macOS BigSur or later with arm64 (apple M1).  
-* Experimental build for linux-x86_64 (tested on a macbook with freshly installed debian9)
+* Experimental build for linux-x86\_64 (tested on a macbook with freshly installed debian9),
+  on debian11 with wayland and X11, on debian10 with Xorg and nvidia drivers.
 * Experimental build for linux-i386 (not tested)
-* Experimental build for Windows-x86_64 (tested with windows 10 & 7 in Virtual Machines) 
-* Experimental build for Windows-i386 (32 bits, tested with windows XP 32 bits, 10 & 7 in Virtual Machines) 
+* Experimental build for Windows-x86\_64 (tested with windows 10 & 7 in Virtual Machines, on Win7) 
+* Experimental build for Windows-i386 (32 bits, tested with windows XP 32 bits, 10 & 7 
+  in Virtual Machines, and on WinXP32) 
 
 * MacOS:
-  + supported architectures are i386, x86_64, arm64.
+  + supported architectures are i386, x86\_64, arm64.
   + open the APP with alt (option) key pressed in order to run SETUP.
 
 
@@ -70,7 +72,7 @@ Tested on:
     Last Changed Rev: 258  
     Last Changed Date: 2010-01-08 10:05:48 +0100 (Ven, 08 jan 2010)  
   
-It contains the vegastrike engine: privgold/dependencies/vs_gold_1_03.tar.bz2  
+It contains the vegastrike engine: privgold/dependencies/vs\_gold\_1\_03.tar.bz2  
 Privateer Gold Gemini Gold v1.03 (last official version, 2009, dec) 
 is SVN revision 257, the 258 contains one single fix in Privateer data.
 
@@ -85,13 +87,13 @@ is SVN revision 257, the 258 contains one single fix in Privateer data.
   <https://priv.solsector.net>
   
 * Vegastrike license (as of 2009) : GPL v2
-  <https://svn.code.sf.net/p/privateer/code/privgold> : dependencies/vs_gold_1_03.tar.bz2)
+  <https://svn.code.sf.net/p/privateer/code/privgold> : dependencies/vs\_gold\_1\_03.tar.bz2)
 
 * Extract from Privateer Gemini Gold Manual (1.03)
   
 ______  
 __Important__    
-We offer our thanks to the authors of the original Privateer for their 
+_We offer our thanks to the authors of the original Privateer for their 
 inspirational game that drove us to recreate it so that it works on our 
 computers once again. We know their hard work and effort has not gone 
 to waste with the obsolescence of the old game, but instead provided 
@@ -106,7 +108,7 @@ We would like to credit the authors of Privateer and Origin Systems Inc.
 for their ideas and images that allow Privateer Gemini Gold to be what 
 it is today...
 Some descriptions and images in this manual were extracted from the 
-original Privateer Manual created by Origin Systems Inc. © 1993.
+original Privateer Manual created by Origin Systems Inc. © 1993._
 ______  
   
 * Except some MacOS system libs, libs used by vegastrike engine are 
@@ -118,7 +120,7 @@ for macOS or linux. See [credits](#credits) for more details.
 the Windows release is shipped with open sources libraries provided
 by [MSYS2](https://sourceforge.net/projects/msys2), which is LGPL itself, and 
 the libraries it uses are open sources with various licences (mit,bsd,gpl,lgpl,...)
-There are currently two exceptions on x86_64: I rebuilt myself ffmpeg 
+There are currently two exceptions on x86\_64: I rebuilt myself ffmpeg 
 (need old version), and SDL 1 (msys2 has gcc build, needed a clang build),
 and 7 on i686: ffmpeg(old version), glut(?), 
 {glib,atk,gdk-pixbuf,harfbuzz,pango} (need Windows XP compatibility). 
@@ -145,13 +147,14 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
   + in addition to the oxford fix, now sounds are also played in the right room
   + QUINE was not displaying all on-going missions
   + probably fixed: a random crash in gl light engine when jumping
+  + fixed in 1.2.4, accept/reject option in campaign dialog remains when leaving the room
+    without answering
+  + fixed in 1.2.4, Lynch Record\_Cleanup Offer in Basque is shown before Miggs is Dead.
 * not fixed since 1.03: 
   + addition of random parts to ship, the only way to solve it
     for now is to edit the '~/.privgold100/serialized_xml/<save>/<ship>.begin.csv,
     and remove the part {...}.
   + still some memory leaks, but much less now. The game can run for hours.
-  + accept/reject option in campaign dialog remains when leaving the room
-    without answering
 * the cockpit is no more shown during game loading before to show the base
 * Navigation Screen margins computation improvement on 16/9 resolutions
 * keyboard repeat is enabled for gui text input sequences
@@ -159,10 +162,10 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
 * BaseInterface: Links navigation with keyboard or joystick
 * joystick: now joystick handling is event-based, and plug&play with SDL2.
 * 1.2.1: experimental build for macOS BigSur and Apple M1 (arm64)
-* 1.2.2: experimental build for linux-x86_64 (tested with a freshly installed
-  debian9 on a x86_64 mac)
+* 1.2.2: experimental build for linux-x86\_64 (tested with a freshly installed
+  debian9 on a x86\_64 mac)
 * 1.2.3: 
-  + EXPERIMENTAL build for windows-x86_64 (tested only with windows 10 & 7 on 
+  + EXPERIMENTAL build for windows-x86\_64 (tested only with windows 10 & 7 on 
     Virtual Machines). In this Windows release the HOME dir (where user data including 
     savegames are stored) is now in Windows UserProfile Folder instead of the data 
     directory (eg: 'c:\users\NAME\Local Settings\privgold120'). 
@@ -170,6 +173,7 @@ Updates on Vegastrike Engine and Privateer Gemini Gold scripts.
   + fix: FontHeight management in cockpit when Cockpit font is not base font
   + fix: (1.03 bug) don't crash if the savegame cannot be saved for some reasons 
     (eg:System does not allow name)
+* 1.2.4: fix and enable the non-privateer campaign bonus once Righteous Fire campaign is finished.
 * 1.2.4 and later : see data/Patch.txt
 
 ## Updates Detail
@@ -239,7 +243,7 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
 
 * engine: HashTable and Unit Container
   + don't use tr1 unordered maps
-  + use gnu hash_map or cxx11 unordered_map
+  + use gnu hash\_map or cxx11 unordered\_map
   + use New STL collection or old collection.
     Currently Old one is used.
 
@@ -250,7 +254,7 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
   - SDL: possibility to disable the SDL LockAudio workaround
 
 * Joystick/Mouse: reduce polling, joystick when docked
-  + Only SDL is polling the joystick (via SDL_PollEvent).
+  + Only SDL is polling the joystick (via SDL\_PollEvent).
     Now the mouse and joystick interface register to a joystick
     winsys event instead of polling joystick state.
   + With SDL2, the joystick can be plugged/unplugged while the
@@ -294,7 +298,7 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
   + run Setup by pressing 'alt' when running the game
   + add 3 differents graphical engines (separate binaries): GLUT, SDL1, SDL2.
 
-* main_loop:
+* main\_loop:
   + optional display of FPS and loop rate (alt+p)
   + optional display of key bindings during flight (alt+h)
   + optional display of logs during flight via message center (alt+m)
@@ -324,7 +328,7 @@ SDL2, Joystick, UTF8, MemoryLeaks, Fonts, CampaignMessages, Log, and more...
 Privateer Gold Pandora (Vincent Sallaberry, 2021-2022) is a fork of
 Privateer Gemini Gold 1.03, 2009. It includes builds for recent
 MacOS systems, updates/new features and experimental builds for
-x86_64 linux and Windows.  
+x86\_64 linux and Windows.  
 
 https://github.com/vsallaberry/privgold-pandora
 
@@ -362,5 +366,6 @@ https://github.com/vsallaberry/privgold-pandora
 * [Xorg](https://www.x.org)
 * [Mesa](https://www.mesa3d.org)
 * [VirtualBox](https://www.virtualbox.org)
+* [Wayland](https://wayland.freedesktop.org)
 * and more...
 

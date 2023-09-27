@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
-     Privateer Gemini Gold Pandora v1.2.4 -- 2022/04/15 -- Changes
+     Privateer Gemini Gold Pandora v1.2.4 -- 2023/09/30 -- Changes
 -----------------------------------------------------------------------------
 
 This file contains information about the changes between the different
@@ -10,11 +10,14 @@ Privateer Gemini Gold and Pandora versions.
 -----------------------------------------------------------------------------
 
   -------------------------------------------------------------------------
-        Privateer Gemini Gold Pandora v1.2.4 -- 2022/04/15 -- Changes
+        Privateer Gemini Gold Pandora v1.2.4 -- 2023/09/30 -- Changes
   -------------------------------------------------------------------------
   10. CHANGES FROM 1.2.3 TO 1.2.4
 
-    Vegastrike 0.4.4.5
+    Vegastrike 0.4.4.5 / PrivateerGold-pandora 1.2.4
+
+    Sorry about this release coming so late, as most of features were ready in
+    may 2022, but those times were not easy, and I additionnally had HDD failures.
 
     A. Logging to file and Log Timestamps
 
@@ -72,13 +75,28 @@ Privateer Gemini Gold and Pandora versions.
          restored the window in a shifted position. Moreover, now only Command (cmd)/Tab
          switches applications.
 
-    F. vslauncher: Old vegastrike launcher utility
+       - add the OpenGL anti-aliasing option (improves rendering of non-texture geometric forms)
+         Disabled by default. A recent processor and an highend graphic card is needed for that.
+
+       - Use SDL2 TEXTINPUT event only if available.
+
+    F. PRIVATEER CAMPAIGNS IMPROVEMENTS
+
+       - Fix: Accept/Reject Choices do not show up when exiting the conversation (Return_To_Bar).
+         If you have saved a game with previous version, you must click the fixer and end
+         conversation in order to fix the savegame.
+
+       - Fix: Lynch Record-CleanUp Offer: Lynch do not show up in Basque before miggs is killed.
+
+       - New: Fix and Enable the Bonus Campaign once Righteous Fire campaign is finished.
+
+    G. vslauncher: Old vegastrike launcher utility
 
        - enable build of old vegastrike launcher
      
        - Cross platform way of launching the game without need of specific scripts.
 
-    G. OpenAL on macOS (3D Sound Library)
+    H. OpenAL on macOS (3D Sound Library)
 
        - Rather than using the system OpenAL Framework, Now OpenAL is included in release.
 
@@ -86,13 +104,13 @@ Privateer Gemini Gold and Pandora versions.
          system one on macOS has improved sound quality and might reduce the 
          issue of ship cannon sounds not stopping when leaving/finishing the battle.
 
-    H. Vegastrike Config updates 
+    I. Vegastrike Config updates 
 
        - add graphical resolutions: 1366x768 and 1280x720
 
        - restore Privateer Gemini Gold v1.03 default sound settings ("Sound and Music",...)
 
-    I. Python Optional Libraries, Python Optimization.
+    J. Python Optional Libraries, Python Optimization.
 
        - macOS and linux python library is now built with optimization (llvm-profiler).
 
@@ -102,26 +120,54 @@ Privateer Gemini Gold and Pandora versions.
 
        - Some python standard module have been updated to 2.7 version.
 
-    J. GTK libraries on linux and macOS arm64
+    K. GTK libraries on linux and macOS arm64
 
        - GTK libraries and then graphical vssetup and vslauncher are now included on
          linux x86_64 and macOS arm64 releases.
 
-    K. EXPERIMENTAL linux-i386 and Windows-i386 (32 bits)
+    L. EXPERIMENTAL linux-i386 and Windows-i386 (32 bits)
 
        - The linux 32 version has not been tested.
 
        - The Windows 32 bits version has been tested on Windows XP SP3 32 bits, 
          Windows 10 64 bits(Virtual Machine) and Windows 7 on 32 bit machine.
 
-    L. Windows: running the game from a path containing unicode characters
+    M. Windows: running the game from a path containing unicode characters
 
-    M. The optimization level of vegastrike programs has been increased (Os -> O3)
+    N. The optimization level of vegastrike programs has been increased (Os -> O3)
 
-    N. Linux RUNPATH : vegastrike is built with Linux RUNPATH 
+    O. Linux RUNPATH : vegastrike is built with Linux RUNPATH 
        (move your installation folder without need of tunning LD_LIBRARY_PATH)
 
-    O. libpng 1.6, macOS and windows GTK themes
+    P. libpng 1.6, macOS and windows GTK themes
+
+    Q. Console (Command Interpreter)
+
+       - Enable it (Ctrl+shift+C).
+
+       - Show python command output in grapical console
+
+       - Handle some 'readline' shortcuts (up+down for history,
+         left/right alt+left/right to navigate in edited text, PageDown/Up to scroll in
+         console output,Home/End to go at beginning/end of edited text, ...)
+
+    R. Base/config file : BINDINGS
+
+       -  Handle Bindings (<bind key="..." ... scope="base") while in base the 
+          same way it is done during game (in copckpit).
+          Links navigation is done via bindings.
+
+       - Add bindings exiting the game from Base as it is done in cockpit (ESC/Atl+x)
+
+       - Fix the mouse wheel and digital hatswitch processing
+    
+       - possibility to generate digital-hatswtch events when axes are moving
+
+    S. linux64 wayland
+
+        - build (and deliver) SDL2 with wayland and x11 support
+
+        - build (and deliver) GLUT with wayland and x11 support
 
     W. Windows x86_64 tests on real windows 10 computer
 
