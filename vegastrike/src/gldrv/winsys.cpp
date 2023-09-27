@@ -2159,7 +2159,7 @@ void winsys_init( int *argc, char **argv, const char *window_title,
 			   glutGameModeGet( GLUT_GAME_MODE_PIXEL_DEPTH ),glutGameModeGet( GLUT_GAME_MODE_REFRESH_RATE ));
 
     /* Create a window */
-    if ( gl_options.fullscreen &&(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE)!=-1)) {
+    if ( gl_options.fullscreen &&((status = glutGameModeGet(GLUT_GAME_MODE_POSSIBLE))!=-1) && status) {
     	glutInitWindowPosition( 0, 0 );
     	if ((status = glutEnterGameMode()) != 0) {
             WINSYS_LOG(logvs::NOTICE, "(GLUT) Entered Game Mode, Params %dx%d at depth %d @ %d Hz",
@@ -2169,7 +2169,7 @@ void winsys_init( int *argc, char **argv, const char *window_title,
             WINSYS_LOG(logvs::WARN, "(GLUT) Cannot enter in Game Mode, trying to create a window...");
         }
     } else {
-        status = 1;
+        status = 0;
     }
     if (!status) {
         /* Set the initial window size */

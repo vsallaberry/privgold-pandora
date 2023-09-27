@@ -1023,6 +1023,7 @@ do_delivery_fun_real() {
             case "${target_sysname}" in *bsd*) chmod_args='-h';; linux*) chmod_args='';; esac
             add_bundlelibs "${bundle_libpath}/alsa-lib" "${bundle_bindir}" "${VEGA_PREFIX}/lib/libasound.so"*
             add_bundlelibs "${bundle_libpath}/alsa-lib/plugins" "${bundle_bindir}" -R"${bundle_libpath}/alsa-lib" "-X/*/libpulse*.so*|libpulse*.so*" "${VEGA_PREFIX}/lib/alsa-lib"/*.so*
+            case "${package_sysname}" in *32) true;; *) add_bundlelibs "${bundle_libpath}" "${bundle_bindir}" "${VEGA_PREFIX}/lib/libglut_x11.so.3" "${VEGA_PREFIX}/lib/libglut_wayland.so.3";; esac
             export LD_LIBRARY_PATH="${VEGA_PREFIX}/lib:${VEGA_PREFIX}/lib/${target_arch}-linux-gnu:${GTK2_PREFIX}/lib:${GTK2_PREFIX}/lib/${target_arch}-linux-gnu${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"
             ;;
         mingw*|msys*|cygwin*)

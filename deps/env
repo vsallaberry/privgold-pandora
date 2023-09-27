@@ -574,7 +574,9 @@ configure_fun() {
             3) test -n "${_f}" && { _patt=${_f}; } ;;
         esac; done
         find "${_res}" -type f -and \( -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}-*.diff" \
-                                       -or -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}_${build_sysname}-*.diff" \) | while read _f; do
+                                       -or -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}_${build_sysname}-*.diff" \
+                                       -or -ipath "${_res}/[0-9][0-9]*_${_prog}/${_patt}_${build_sysname}${archbits}-*.diff" \) \
+        | sort | while read _f; do
             echo "+ patch '${_f}'..."
             patch -N -p0 < "${_f}"
         done
@@ -917,6 +919,12 @@ configure_fun() {
             build_cmake
             del_args "-DCMAKE*RPATH*" "-DCMAKE*NAME_DIR*"
             add_args "-DFREEGLUT_WAYLAND=OFF" "-DFREEGLUT_BUILD_DEMOS=OFF" "-DFREEGLUT_BUILD_STATIC_LIBS=ON" "-DFREEGLUT_BUILD_SHARED_LIBS=ON" "-DFREEGLUT_GLES=OFF"
+            case "${build_sysname}${archbits}" in linux*64)
+                add_args "-DFREEGLUT_WAYLAND=ON" "-DFREEGLUT_BUILD_DEMOS=ON" "-DFREEGLUT_X11=ON" "-DFREEGLUT_DYNLIB_XKBCOMMON=ON" \
+                         "-DFREEGLUT_DYNLIB_X11=ON" "-DFREEGLUT_DYNLIB_WAYLAND=ON" "-DFREEGLUT_DYNLIB_GL=ON" "-DFREEGLUT_DYNLIB_EGL=ON" \
+                         "-DFREEGLUT_DYNLIB_GLES=OFF"
+                ;;
+            esac
             ;;
         pulseaudio)
             case "${build_sysname}" in linux*) add_args --without-caps;; esac

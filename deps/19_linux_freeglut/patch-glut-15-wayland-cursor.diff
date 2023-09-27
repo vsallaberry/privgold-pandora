@@ -1,0 +1,64 @@
+--- src/wayland/fg_cursor_wl.c.orig	2023-09-15 18:27:17.859000000 +0200
++++ src/wayland/fg_cursor_wl.c	2022-10-07 18:12:51.000000000 +0200
+@@ -32,7 +32,7 @@
+ /*
+  * Note: The arrangement of the table below depends on the fact that
+  * the "normal" GLUT_CURSOR_* values start a 0 and are consecutive.
++ */
+- */ 
+ static char* cursorList[] = {
+     "UNSUPPORTED",          /* GLUT_CURSOR_RIGHT_ARROW */
+     "left_ptr",             /* GLUT_CURSOR_LEFT_ARROW */
+@@ -84,7 +84,14 @@
+         switch( cursorIDToUse )
+         {
+         case GLUT_CURSOR_NONE:
++            cursor = NULL;
++            window->Window.pContext.cursor = NULL;
++            break ;
++
+         case GLUT_CURSOR_INHERIT:
++            if( window->Parent )
++              window->Window.pContext.cursor =
++                window->Parent->Window.pContext.cursor;
+             cursor = NULL;
+             break;
+ 
+@@ -94,11 +101,7 @@
+         }
+     }
+ 
++    if ( cursor ) {
+-    if ( cursorIDToUse == GLUT_CURSOR_INHERIT ) {
+-        if( window->Parent )
+-          window->Window.pContext.cursor =
+-            window->Parent->Window.pContext.cursor;
+-    } else {
+         window->Window.pContext.cursor = wl_cursor_theme_get_cursor(
+                                            fgDisplay.pDisplay.cursor_theme,
+                                            cursor );
+--- src/wayland/fg_init_wl.c.orig	2023-09-15 17:29:49.183000000 +0200
++++ src/wayland/fg_init_wl.c	2022-10-07 18:12:51.000000000 +0200
+@@ -73,6 +73,8 @@
+     fgDisplay.pDisplay.cursor_theme = wl_cursor_theme_load (
+                                         "default", 32,
+                                         fgDisplay.pDisplay.shm );
++    if (!fgDisplay.pDisplay.cursor_theme)
++        fgError( "Failed to load wl cursor theme" );
+ };
+ 
+ void fgPlatformInitialize( const char* displayName )
+--- src/wayland/fg_input_devices_wl.c.orig	2023-09-15 19:06:34.507000000 +0200
++++ src/wayland/fg_input_devices_wl.c	2022-10-07 18:12:51.000000000 +0200
+@@ -48,6 +48,11 @@
+     struct wl_cursor_image* image;
+     struct wl_buffer* buffer;
+ 
++    if (!window->Window.pContext.cursor) {
++        wl_pointer_set_cursor( pointer, serial,
++                               NULL, 0, 0 );
++        return ;
++    }
+     image = window->Window.pContext.cursor->images[0];
+     buffer = wl_cursor_image_get_buffer( image );
+ 

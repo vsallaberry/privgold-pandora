@@ -1,0 +1,493 @@
+--- src/wayland/fg_input_devices_wl.c.orig	2023-09-27 13:22:43.542000000 +0200
++++ src/wayland/fg_input_devices_wl.c	2023-09-27 13:23:19.886000000 +0200
+@@ -37,6 +37,20 @@
+ #include <GL/freeglut.h>
+ #include "../fg_internal.h"
+ 
++unsigned int fgPlatformGetModifiers_WL() {
++    unsigned int mods = 0;
++
++    if (xkb_state_mod_index_is_active(fgDisplay.pDisplay.xkb_state, fgDisplay.pDisplay.mod_index.Shift, XKB_STATE_MODS_EFFECTIVE)
++    ||  xkb_state_mod_index_is_active(fgDisplay.pDisplay.xkb_state, fgDisplay.pDisplay.mod_index.Caps, XKB_STATE_MODS_EFFECTIVE))
++        mods |= GLUT_ACTIVE_SHIFT;
++    if (xkb_state_mod_index_is_active(fgDisplay.pDisplay.xkb_state, fgDisplay.pDisplay.mod_index.Ctrl, XKB_STATE_MODS_EFFECTIVE))
++        mods |= GLUT_ACTIVE_CTRL;
++    if (xkb_state_mod_index_is_active(fgDisplay.pDisplay.xkb_state, fgDisplay.pDisplay.mod_index.Alt, XKB_STATE_MODS_EFFECTIVE))
++        mods |= GLUT_ACTIVE_ALT;
++
++    return mods;
++}
++
+ /*
+  * This function will effectively set the pointer (mouse) cursor
+  * depending on the GLUT_CURSOR_* choice.
+@@ -67,6 +81,34 @@
+                            image->hotspot_x, image->hotspot_y );
+ }
+ 
++/* updae the key_repeat context */
++void fghKeyboardSetRepeat( SFG_Window * window,
++                          uint32_t key,
++                          xkb_keysym_t sym,
++                          uint32_t state,
++                          uint32_t time)
++{
++    //fgWarning("set> repeat: %d ignore:%d key:%d", fgState.KeyRepeat, window->State.IgnoreKeyRepeat, fgDisplay.pDisplay.key_repeat.key);
++    /* key repeat */
++    if (window->State.IgnoreKeyRepeat == GL_TRUE
++    || fgState.KeyRepeat != GLUT_KEY_REPEAT_ON) {
++        if (fgDisplay.pDisplay.key_repeat.key != 0)
++            fgDisplay.pDisplay.key_repeat.key = 0;
++        return ;
++    }
++    if (!state) {
++        if (fgDisplay.pDisplay.key_repeat.key == key)
++            fgDisplay.pDisplay.key_repeat.key = 0;
++    } else {
++        if (fgDisplay.pDisplay.key_repeat.key == key)
++            fgDisplay.pDisplay.key_repeat.next_time = time + 50; // ms.
++        else
++            fgDisplay.pDisplay.key_repeat.next_time = time + 500; // ms.
++        fgDisplay.pDisplay.key_repeat.key = key;
++        fgDisplay.pDisplay.key_repeat.sym = sym;
++    }
++}
++
+ /*
+  * This function will interpret a keyboard keysym, and call the
+  * possible callbacks accordingly.
+@@ -74,7 +116,8 @@
+ void fghKeyboardInterpretKeysym(  SFG_Window* window,
+                                   uint32_t key,
+                                   xkb_keysym_t sym,
+-                                  uint32_t state )
++                                  uint32_t state,
++                                  uint32_t time )
+ {
+     FGCBKeyboardUC keyboard_cb;
+     FGCBSpecialUC special_cb;
+@@ -82,6 +125,7 @@
+     FGCBUserData special_ud;
+     char string[16];
+     int special = -1;
++    //int mod = 0;
+ 
+     /* GLUT API tells us to have two separate callbacks, one for
+      * the ASCII translateable keypresses, and one for all the
+@@ -127,21 +171,26 @@
+     case XKB_KEY_Num_Lock:  special = GLUT_KEY_NUM_LOCK;  break;
+     case XKB_KEY_Begin:     special = GLUT_KEY_BEGIN;     break;
+     case XKB_KEY_Delete:    special = GLUT_KEY_DELETE;    break;
+-    case XKB_KEY_Shift_L:   special = GLUT_KEY_SHIFT_L;   break;
+-    case XKB_KEY_Shift_R:   special = GLUT_KEY_SHIFT_R;   break;
+-    case XKB_KEY_Control_L: special = GLUT_KEY_CTRL_L;    break;
+-    case XKB_KEY_Control_R: special = GLUT_KEY_CTRL_R;    break;
+-    case XKB_KEY_Alt_L:     special = GLUT_KEY_ALT_L;     break;
+-    case XKB_KEY_Alt_R:     special = GLUT_KEY_ALT_R;     break;
++    case XKB_KEY_Shift_L:   special = GLUT_KEY_SHIFT_L; /*mod=GLUT_ACTIVE_SHIFT;*/ break;
++    case XKB_KEY_Shift_R:   special = GLUT_KEY_SHIFT_R; /*mod=GLUT_ACTIVE_SHIFT;*/ break;
++    case XKB_KEY_Control_L: special = GLUT_KEY_CTRL_L;  /*mod=GLUT_ACTIVE_CTRL;*/ break;
++    case XKB_KEY_Control_R: special = GLUT_KEY_CTRL_R;  /*mod=GLUT_ACTIVE_CTRL;*/ break;
++    case XKB_KEY_Alt_L:     special = GLUT_KEY_ALT_L;   /*mod=GLUT_ACTIVE_ALT;*/ break;
++    case XKB_KEY_Alt_R:     special = GLUT_KEY_ALT_R;   /*mod=GLUT_ACTIVE_ALT;*/ break;
+     }
+ 
+     if( special_cb && (special != -1) )
+     {
++        fghKeyboardSetRepeat(window, key, sym, state, fgElapsedTime()); //could used wl time, but fgPlatformInitWork_WL does not have it
++        fgState.Modifiers = fgPlatformGetModifiers_WL();
+         fgSetWindow( window );
+         special_cb( special, window->State.MouseX, window->State.MouseY, special_ud );
++        fgState.Modifiers = INVALID_MODIFIERS;
+     }
+     else if( keyboard_cb && (special == -1) )
+     {
++        fghKeyboardSetRepeat(window, key, sym, state, fgElapsedTime()); //could used wl time, but fgPlatformInitWork_WL does not have it
++        fgState.Modifiers = fgPlatformGetModifiers_WL();
+         fgSetWindow( window );
+         xkb_keysym_to_utf8( sym, string, sizeof( string ) );
+         for (unsigned int i = 0; string[i] && i < sizeof(string); ++i) {
+@@ -149,9 +198,25 @@
+              if ((string[ i ] & 0xC0) != 0xC0)
+                 break ;
+         }
++        fgState.Modifiers = INVALID_MODIFIERS;
+     }
+ }
+ 
++void fghPlatformHandleKeyRepeat_WL(SFG_Window * window, uint32_t time) {
++    //fgWarning("handle> repeat: %d ignore:%d key:%d", fgState.KeyRepeat, window->State.IgnoreKeyRepeat, fgDisplay.pDisplay.key_repeat.key);
++    if (fgDisplay.pDisplay.key_repeat.key == 0
++    ||  window->State.IgnoreKeyRepeat == GL_TRUE
++    ||  fgState.KeyRepeat != GLUT_KEY_REPEAT_ON) {
++        return ;
++    }
++    while (fgDisplay.pDisplay.key_repeat.next_time < time) {
++        fghKeyboardInterpretKeysym( window,
++                                    fgDisplay.pDisplay.key_repeat.key,
++                                    fgDisplay.pDisplay.key_repeat.sym,
++                                    1,
++                                    time);
++    }
++}
+ 
+ /*
+  * Touchscreen section
+@@ -166,20 +231,24 @@
+     SFG_Window* win = fgStructure.CurrentWindow;
+     win->State.MouseX = wl_fixed_to_int( x_w );
+     win->State.MouseY = wl_fixed_to_int( y_w );
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Mouse, ( GLUT_LEFT_BUTTON,
+                                GLUT_DOWN,
+                                win->State.MouseX,
+                                win->State.MouseY ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
+ static void fghTouchUp( void* data, struct wl_touch* touch,
+                         uint32_t serial, uint32_t time,
+                         int32_t id )
+ {
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     SFG_Window* win = fgStructure.CurrentWindow;
+     INVOKE_WCB( *win, Mouse, ( GLUT_LEFT_BUTTON,
+                                GLUT_UP,
+                                win->State.MouseX,
+                                win->State.MouseY ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
+ static void fghTouchMotion( void* data, struct wl_touch* touch,
+                             uint32_t time, int32_t id,
+@@ -188,8 +257,10 @@
+     SFG_Window* win = fgStructure.CurrentWindow;
+     win->State.MouseX = wl_fixed_to_int( x_w );
+     win->State.MouseY = wl_fixed_to_int( y_w );
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Motion, ( win->State.MouseX,
+                                 win->State.MouseY ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
+ static void fghTouchFrame( void* data, struct wl_touch* touch )
+ {
+@@ -203,7 +274,9 @@
+ 	fghTouchUp,
+ 	fghTouchMotion,
+ 	fghTouchFrame,
+-	fghTouchCancel
++	fghTouchCancel,
++    NULL, //fghTouchShape,
++    NULL, //fghTouchOrientation
+ };
+ 
+ 
+@@ -219,14 +292,18 @@
+     fghPointerSetCursor( win, pointer, serial );
+     win->State.MouseX = wl_fixed_to_int( x_w );
+     win->State.MouseY = wl_fixed_to_int( y_w );
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Entry, ( GLUT_ENTERED ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
+ static void fghPointerLeave( void* data, struct wl_pointer* pointer,
+                              uint32_t serial,
+                              struct wl_surface* surface )
+ {
+     SFG_Window* win = fgStructure.CurrentWindow;
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Entry, ( GLUT_LEFT ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
+ static void fghPointerMotion( void* data, struct wl_pointer* pointer,
+                               uint32_t time,
+@@ -235,6 +312,7 @@
+     SFG_Window* win = fgStructure.CurrentWindow;
+     win->State.MouseX = wl_fixed_to_int( x_w );
+     win->State.MouseY = wl_fixed_to_int( y_w );
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+ 
+     if ( win->Window.pContext.pointer_button_pressed )
+       INVOKE_WCB( *win, Motion, ( win->State.MouseX,
+@@ -242,7 +320,11 @@
+     else
+       INVOKE_WCB( *win, Passive, ( win->State.MouseX,
+                                    win->State.MouseY ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
++
++#define MAX(a, b) ((b) > (a) ? (b) : (a))
++
+ static void fghPointerButton( void* data, struct wl_pointer* pointer,
+                               uint32_t serial, uint32_t time,
+                               uint32_t button, uint32_t state )
+@@ -261,16 +343,26 @@
+     case BTN_MIDDLE:
+         button_f = GLUT_MIDDLE_BUTTON;
+         break;
++    default:
++        //fgWarning("fghPointerButton(wayland) unknown button %d", button);
++        //return ;
++        button_f = MAX(GLUT_LEFT_BUTTON, MAX(GLUT_RIGHT_BUTTON, GLUT_MIDDLE_BUTTON))
++                   + 3 /*WHEEL_UP/DOWN*/ + button;
++        break ;
+     }
+ 
+     win->Window.pContext.pointer_button_pressed =
+       state ? GL_TRUE : GL_FALSE;
+ 
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
++
+     INVOKE_WCB( *win, Mouse, ( button_f,
+                                state ? GLUT_DOWN : GLUT_UP ,
+                                win->State.MouseX,
+                                win->State.MouseY ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
++
+ static void fghPointerAxis( void* data, struct wl_pointer* pointer,
+                             uint32_t time, uint32_t axis,
+                             wl_fixed_t value )
+@@ -278,18 +370,33 @@
+     SFG_Window* win = fgStructure.CurrentWindow;
+     int direction = wl_fixed_to_int( value );
+ 
+-    INVOKE_WCB( *win, MouseWheel, ( 0,
+-                                    direction ,
+-                                    win->State.MouseX,
+-                                    win->State.MouseY ) );
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
++
++    if (!FETCH_WCB(*win, MouseWheel)) {
++      int button = MAX(GLUT_LEFT_BUTTON, MAX(GLUT_RIGHT_BUTTON, GLUT_MIDDLE_BUTTON))
++                   + 1 + ((direction < 0) ? 1 : 0);
++      INVOKE_WCB( *win, Mouse, (button, GLUT_DOWN, win->State.MouseX, win->State.MouseY) );
++      INVOKE_WCB( *win, Mouse, (button, GLUT_UP  , win->State.MouseX, win->State.MouseY) );
++    } else {
++      INVOKE_WCB( *win, MouseWheel, ( 0,
++                                      direction ,
++                                      win->State.MouseX,
++                                      win->State.MouseY ) );
++    }
++    fgState.Modifiers = INVALID_MODIFIERS;
+ }
++
+ static const struct wl_pointer_listener fghPointerListener =
+ {
+ 	fghPointerEnter,
+ 	fghPointerLeave,
+ 	fghPointerMotion,
+ 	fghPointerButton,
+-	fghPointerAxis
++	fghPointerAxis,
++    NULL, // fghPointerHandleFrame,      // v5
++    NULL, //fghPointerHandleAxisSource,  // v5
++    NULL, //fghPointerHandleAxisStop,    // v5
++    NULL, //fghPointerHandleAxisDiscrete // v5
+ };
+ 
+ 
+@@ -299,59 +406,79 @@
+ static void fghKeyboardKeymap( void* data, struct wl_keyboard* keyboard,
+                                uint32_t format, int fd, uint32_t size )
+ {
+-    SFG_PlatformDisplay* pDisplay = data;
++    SFG_PlatformDisplay* Display = data;
+     char* keymap_str;
+     struct xkb_keymap* keymap;
+ 
+     keymap_str = mmap( NULL, size, PROT_READ, MAP_SHARED, fd, 0 );
+-    keymap = xkb_keymap_new_from_string( pDisplay->xkb_context,
++    keymap = xkb_keymap_new_from_string( Display->xkb_context,
+                                          keymap_str,
+                                          XKB_KEYMAP_FORMAT_TEXT_V1,
+                                          0 );
+     munmap( keymap_str, size );
+ 
+-    if( pDisplay->xkb_state )
+-      xkb_state_unref( pDisplay->xkb_state );
+-    pDisplay->xkb_state = xkb_state_new( keymap );
++    if( Display->xkb_state )
++      xkb_state_unref( Display->xkb_state );
++    Display->xkb_state = xkb_state_new( keymap );
++
++    Display->mod_index.Shift = xkb_keymap_mod_get_index(keymap, XKB_MOD_NAME_SHIFT);
++    Display->mod_index.Ctrl = xkb_keymap_mod_get_index(keymap, XKB_MOD_NAME_CTRL);
++    Display->mod_index.Alt = xkb_keymap_mod_get_index(keymap, XKB_MOD_NAME_ALT);
++    Display->mod_index.Caps = xkb_keymap_mod_get_index(keymap, XKB_MOD_NAME_CAPS);
+ }
+ static void fghKeyboardEnter( void* data, struct wl_keyboard* keyboard,
+                               uint32_t serial, struct wl_surface* surface,
+                               struct wl_array* keys )
+ {
+     SFG_Window* win = fgStructure.CurrentWindow;
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Entry, ( GLUT_ENTERED ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
++    fgDisplay.pDisplay.key_repeat.key = 0;
+ }
+ static void fghKeyboardLeave( void* data, struct wl_keyboard* keyboard,
+                               uint32_t serial, struct wl_surface* surface )
+ {
+     SFG_Window* win = fgStructure.CurrentWindow;
++    fgState.Modifiers = fgPlatformGetModifiers_WL();
+     INVOKE_WCB( *win, Entry, ( GLUT_LEFT ) );
++    fgState.Modifiers = INVALID_MODIFIERS;
++    fgDisplay.pDisplay.key_repeat.key = 0;
+ }
+ static void fghKeyboardKey( void* data, struct wl_keyboard* keyboard,
+                             uint32_t serial, uint32_t time,
+                             uint32_t key, uint32_t state )
+ {
+-    SFG_PlatformDisplay* pDisplay = data;
++    SFG_PlatformDisplay* Display = data;
+     SFG_Window* win = fgStructure.CurrentWindow;
+-    const xkb_keysym_t* syms;
++    const xkb_keysym_t* syms = NULL;
+ 
+-    xkb_state_key_get_syms( pDisplay->xkb_state,
+-                            key + 8, &syms );
+-    fghKeyboardInterpretKeysym( win, key, syms[0], state );
++    if (xkb_state_key_get_syms( Display->xkb_state,
++                            key + 8, &syms ) > 0 && syms != NULL) {
++        fghKeyboardInterpretKeysym( win, key, syms[0], state, time );
++    }
+ }
+ static void fghKeyboardModifiers( void* data, struct wl_keyboard* keyboard,
+                                   uint32_t serial, uint32_t mods_depr,
+                                   uint32_t mods_latch, uint32_t mods_lock,
+                                   uint32_t group )
+ {
++    xkb_state_update_mask(fgDisplay.pDisplay.xkb_state, mods_depr, mods_latch,
++                          mods_lock, 0, 0, group);
++}
++static void fghKeyboardRepeat(void *data, struct wl_keyboard *wl_keyboard,
++                              int32_t rate, int32_t delay)
++{
++    //fgState.KeyboardRepeatInit = GL_TRUE;
+ }
+ static const struct wl_keyboard_listener fghKeyboardListener =
+ {
+-        fghKeyboardKeymap,
++    fghKeyboardKeymap,
+ 	fghKeyboardEnter,
+ 	fghKeyboardLeave,
+ 	fghKeyboardKey,
+-	fghKeyboardModifiers
++	fghKeyboardModifiers,
++  	fghKeyboardRepeat, // v4
+ };
+ 
+ 
+@@ -362,44 +489,49 @@
+                                  struct wl_seat* seat,
+                                  enum wl_seat_capability capabilities )
+ {
+-    SFG_PlatformDisplay* pDisplay = data;
++    SFG_PlatformDisplay* Display = data;
+ 
+     if( capabilities & WL_SEAT_CAPABILITY_KEYBOARD )
+     {
+-        pDisplay->xkb_context = xkb_context_new ( 0 );
+-        pDisplay->keyboard = wl_seat_get_keyboard( seat );
+-        wl_keyboard_add_listener( pDisplay->keyboard,
++        Display->xkb_context = xkb_context_new ( 0 );
++        Display->keyboard = wl_seat_get_keyboard( seat );
++        wl_keyboard_add_listener( Display->keyboard,
+                                   &fghKeyboardListener,
+-                                  pDisplay );
++                                  Display );
+     }
+ 
+     if( capabilities & WL_SEAT_CAPABILITY_POINTER )
+     {
+-        pDisplay->pointer = wl_seat_get_pointer( seat );
+-        wl_pointer_add_listener( pDisplay->pointer,
++        Display->pointer = wl_seat_get_pointer( seat );
++        wl_pointer_add_listener( Display->pointer,
+                                  &fghPointerListener,
+-                                 pDisplay );
++                                 Display );
+     }
+ 
+     if( capabilities & WL_SEAT_CAPABILITY_TOUCH )
+     {
+-        pDisplay->touch = wl_seat_get_touch( seat );
+-        wl_touch_add_listener( pDisplay->touch,
++        Display->touch = wl_seat_get_touch( seat );
++        wl_touch_add_listener( Display->touch,
+                                &fghTouchListener,
+-                               pDisplay );
++                               Display );
+     }
+ }
++static void fghSeatName(void *data, struct wl_seat *wl_seat, const char *name)
++{
++}
+ static const struct wl_seat_listener fghSeatListener =
+ {
+-    fghSeatCapabilities
++    fghSeatCapabilities,
++    fghSeatName
+ };
+ 
+ 
+ /*
+  * Try initializing the input device(s)
+  */
+-void fgPlatformInitialiseInputDevices( void )
++void fgPlatformInitialiseInputDevices_WL( void )
+ {
++    fgDisplay.pDisplay.key_repeat.key = 0;
+     wl_seat_add_listener( fgDisplay.pDisplay.seat,
+                           &fghSeatListener,
+                           &fgDisplay.pDisplay );
+--- src/wayland/fg_internal_wl.h.orig	2022-10-07 18:12:51.000000000 +0200
++++ src/wayland/fg_internal_wl.h	2023-09-27 13:23:19.886000000 +0200
+@@ -37,6 +37,19 @@
+ #include <xkbcommon/xkbcommon.h>
+ 
+ 
++struct tagSFG_ModIndex_WL {
++    xkb_mod_index_t Shift;
++    xkb_mod_index_t Ctrl;
++    xkb_mod_index_t Alt;
++    xkb_mod_index_t Caps;
++};
++
++struct tagSFG_KeyRepeat_WL {
++    uint32_t key;
++    uint32_t next_time;
++    xkb_keysym_t sym;
++};
++
+ /* -- GLOBAL TYPE DEFINITIONS ---------------------------------------------- */
+ /* The structure used by display initialization in fg_init.c */
+ typedef struct tagSFG_PlatformDisplay SFG_PlatformDisplay;
+@@ -55,6 +68,8 @@
+     struct wl_keyboard* keyboard;      /* The keyboard input device          */
+     struct wl_pointer* pointer;        /* The pointer input device (mouse)   */
+     struct wl_touch* touch;            /* The touchscreen input device       */
++    struct tagSFG_ModIndex_WL mod_index; /* the wl modifiers indexes of current keymap */
++    struct tagSFG_KeyRepeat_WL key_repeat; /* the wl key_repeat info */
+ 
+     struct wl_shm* shm;                    /* The software rendering engine  */
+     struct wl_cursor_theme* cursor_theme;  /* The pointer cursor theme       */
+--- src/wayland/fg_main_wl.c.orig	2022-10-07 18:12:51.000000000 +0200
++++ src/wayland/fg_main_wl.c	2023-09-27 13:23:19.886000000 +0200
+@@ -38,6 +38,7 @@
+ void fgPlatformHideWindow( SFG_Window *window );
+ void fgPlatformIconifyWindow( SFG_Window *window );
+ void fgPlatformShowWindow( SFG_Window *window );
++void fghPlatformHandleKeyRepeat_WL(SFG_Window * window, uint32_t time);
+ 
+ 
+ fg_time_t fgPlatformSystemTime( void )
+@@ -76,6 +77,9 @@
+ {
+     SFG_Window *win = fgStructure.CurrentWindow;
+ 
++    /* vsa: except for keyboard repeat where we must generate events manually */
++    fghPlatformHandleKeyRepeat_WL(win, fgElapsedTime());
++
+     wl_display_dispatch_pending( fgDisplay.pDisplay.display );
+     INVOKE_WCB( *win, Display, ( ) );
+ }

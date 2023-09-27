@@ -172,6 +172,8 @@ vsExtensionSupported(const char *extension)
 
   if (!extensions) {
     extensions = glGetString(GL_EXTENSIONS);
+    if(!extensions)
+      return 0;
   }
   /* It takes a bit of care to be fool-proof about parsing the
      OpenGL extensions string.  Don't be fooled by sub-strings,
@@ -465,6 +467,10 @@ static void Reshape (int x, int y) {
 
 extern void GFXInitTextureManager();
 
+#ifdef VS_GL_SO_NAME
+    extern "C" int vs_gl_lib_init();
+#endif
+
 void GFXInit (int argc, char ** argv){
     std::string icon_file = vs_config->getVariable ("graphics/general","icon","vega.ico");
     if (VSFileSystem::FileExistsData(icon_file))
@@ -477,6 +483,10 @@ void GFXInit (int argc, char ** argv){
     
     gl_options.anti_aliasing = XMLSupport::parse_int(vs_config->getVariable ("graphics","gl_anti_aliasing","0"));
     gl_options.stencil = XMLSupport::parse_bool(vs_config->getVariable ("graphics","stencil","true"));
+
+#ifdef VS_GL_SO_NAME
+    vs_gl_lib_init();
+#endif
 
     winsys_init (&argc,argv,"Vega Strike",(char*)icon_file.c_str());
     //winsys_show_cursor(0);

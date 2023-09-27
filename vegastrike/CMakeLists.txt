@@ -464,6 +464,7 @@ SET(VEGASTRIKE_SOURCES ${LIBGUI_SOURCES}
 					   src/gldrv/gl_texture.cpp
 					   src/gldrv/gl_vertex_list.cpp
 					   src/gldrv/winsys.cpp
+					   src/gldrv/vs_lib_gl.c
 					   src/main.cpp
 					   src/python/briefing_wrapper.cpp )
 
@@ -654,6 +655,8 @@ include (CheckIncludeFileCXX)
 # Let cmake find our in-tree modules
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${vsUTCS_SOURCE_DIR}/cmake")
 
+include (vs_utils)
+
 # Find PYTHON2
 ### With pkg-config
 foreach(tmp_python_pkg "Python2" "python2" "Python<3" "python<3" "python" "Python")
@@ -749,7 +752,17 @@ IF(NOT DISABLE_CLIENT) ##########
 find_package(OpenGL REQUIRED)
 IF(OPENGL_FOUND AND OPENGL_GLU_FOUND)
 	SET(TST_INCLUDES ${TST_INCLUDES} ${OPENGL_INCLUDE_DIR})
-	SET(TST_LIBS ${TST_LIBS} ${OPENGL_LIBRARIES})
+    IF(VS_DYNLIB_OPENGL)
+        SET(VS_LIB_SEP "")
+        LIST(REMOVE_DUPLICATES OPENGL_LIBRARIES)
+        FOREACH(VS_LIB_NAME ${OPENGL_LIBRARIES})
+            vs_find_library("${VS_LIB_NAME}" "${VS_LIB_NAME}")
+            STRING(APPEND VS_GL_SO_NAME "${VS_LIB_SEP}${VS_${VS_LIB_NAME}_MAJOR_NAME}")
+            SET(VS_LIB_SEP "\",\"")
+        ENDFOREACH()
+    ELSE()
+        SET(TST_LIBS ${TST_LIBS} ${OPENGL_LIBRARIES})
+    ENDIF()
 	message("-- OpenGL found : ${OPENGL_LIBRARIES}")
 ELSE(OPENGL_FOUND AND OPENGL_GLU_FOUND)
 	message("Why you no have GL?")
@@ -770,20 +783,25 @@ ENDIF(MACOSX)
 
 #Find GLUT
 if(MACOSX)
+    SET(vs_glut_incdir_name "GLUT")
+else()
+    SET(vs_glut_incdir_name "GL")
+endif()
+if(NOT WIN32)
     find_library(GLUT_LIBRARIES GLUT)
-    find_path(GLUT_INCLUDE_DIR GLUT/glut.h)
+    find_path(GLUT_INCLUDE_DIR ${vs_glut_incdir_name}/glut.h)
     IF(GLUT_LIBRARIES AND GLUT_INCLUDE_DIR)
         SET(GLUT_FOUND 1)
     ENDIF(GLUT_LIBRARIES AND GLUT_INCLUDE_DIR)
-else(MACOSX)
+else()
     find_package(GLUT REQUIRED)
-endif(MACOSX)
+endif()
 IF(GLUT_FOUND)
     SET(TST_INCLUDES ${TST_INCLUDES} ${GLUT_INCLUDE_DIR})
     SET(TST_LIBS ${TST_LIBS} ${GLUT_LIBRARIES})
     message("-- GLUT found : ${GLUT_LIBRARIES}")
 ELSE(GLUT_FOUND)
-    message("I can't build this, missing GLUT")
+    message(FATAL_ERROR "I can't build this, missing GLUT")
 ENDIF(GLUT_FOUND)
 
 # Force static libraries
@@ -1069,6 +1087,9 @@ endif()
 IF(NOT DISABLE_CLIENT)
 	target_link_libraries(vegastrike ${TST_LIBS})
     set_target_properties(vegastrike PROPERTIES LINK_FLAGS "-L/usr/lib ${VS_MORE_LINK_FLAGS}${PTHREAD_LDFLAGS}${VS_WINDOWS_APP_LDFLAGS}")
+    IF(VS_DYNLIB_OPENGL)
+        target_compile_options(vegastrike PUBLIC -include gldrv/vs_lib_defs_gl.h)
+    ENDIF()
     #version.h generation
     add_dependencies(vegastrike get_scm_revision)
     if (WIN32 AND (CYGWIN OR MINGW) AND NOT VS_WIN32_CONSOLE)

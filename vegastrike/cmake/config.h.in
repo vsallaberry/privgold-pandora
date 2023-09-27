@@ -70,6 +70,7 @@
 #cmakedefine WITH_MACOSX_BUNDLE 1
 #cmakedefine USE_NET_THREAD_NONE 1
 #cmakedefine USE_NET_THREAD_POSIX 1
+#cmakedefine VS_GL_SO_NAME "${VS_GL_SO_NAME}"
 #endif
 
 
